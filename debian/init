@@ -10,7 +10,6 @@
 #		Modified for Debian GNU/Linux
 #		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
 #
-# $Id: init,v 1.1 2004-01-29 10:31:05 thib Exp $
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/fcron
@@ -42,8 +41,8 @@ case "$1" in
 	;;
   reload|force-reload)
 	echo "Reloading $DESC configuration files."
+	fcron-update-crontabs >/dev/null 2>&1
 	stopdaemon --signal 1
-	update-fcron-crontabs >/dev/null 2>&1
   	;;
   restart)
 	echo -n "Restarting $DESC: "

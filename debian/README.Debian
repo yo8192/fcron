@@ -1,5 +1,4 @@
 fcron for Debian
-$Id: README.Debian,v 1.1 2004-01-29 10:32:15 thib Exp $
 -----------------------------------------------------------------
 
 While in principle this would be possible, the Debian package of fcron does

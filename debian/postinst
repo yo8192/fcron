@@ -1,6 +1,5 @@
 #! /bin/sh
 # postinst script for fcron
-# $Id: postinst,v 1.1 2004-01-29 10:31:51 thib Exp $
 
 set -e
 . /usr/share/debconf/confmodule

@@ -1,6 +1,5 @@
 #! /bin/sh
 # postrm script for fcron
-# $Id: postrm,v 1.1 2004-01-29 10:32:21 thib Exp $
 #
 # see: dh_installdeb(1)
 

@@ -4,7 +4,6 @@
 #
 # Copyright (c) 2000 Thibault Godouet
 # Released under the same license as the fcron program.
-# $Id: fcron-update-crontabs,v 1.1 2004-01-29 10:31:24 thib Exp $
 
 fcrontabdir=/var/spool/fcron
 

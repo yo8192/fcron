@@ -2,7 +2,6 @@
 # Sample debian/rules that uses debhelper.
 # GNU copyright 1997 to 1999 by Joey Hess.
 # Modified for package fcron
-# $Id: rules,v 1.1 2004-01-29 10:31:20 thib Exp $
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
