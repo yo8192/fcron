@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,12 +21,16 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: pam.h,v 1.2 2001-12-23 22:04:05 thib Exp $ */
+ /* $Id: pam.h,v 1.3 2003-12-25 22:41:15 thib Exp $ */
 
 #ifndef __PAM_H__
 #define __PAM_H__
 
+#ifdef HAVE_SECURITY_PAM_APPL_H
 #include <security/pam_appl.h>
+#elif HAVE_PAM_PAM_APPL_H
+#include <pam/pam_appl.h>
+#endif
 
 /* global variables */
 extern pam_handle_t *pamh;

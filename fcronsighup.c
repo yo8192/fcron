@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,13 +21,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.6 2003-09-12 20:49:12 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.7 2003-12-25 22:39:27 thib Exp $ */
 
 #include "fcronsighup.h"
 #include "global.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.6 2003-09-12 20:49:12 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.7 2003-12-25 22:39:27 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
@@ -54,7 +54,7 @@ usage(void)
 {
     fprintf(stderr,
 	    "fcronsighup "VERSION_QUOTED" - make fcron update its fcrontabs\n"
-	    "Copyright 2000-2002 Thibault Godouet <fcron@free.fr>\n"
+	    "Copyright 2000-2004 Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	    "\n"
