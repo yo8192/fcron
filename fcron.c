@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.60 2002-02-25 18:41:24 thib Exp $ */
+ /* $Id: fcron.c,v 1.61 2002-03-02 17:26:47 thib Exp $ */
 
 #include "fcron.h"
 
@@ -29,8 +29,11 @@
 #include "conf.h"
 #include "job.h"
 #include "temp_file.h"
+#ifdef FCRONDYN
+#include "socket.h"
+#endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.60 2002-02-25 18:41:24 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.61 2002-03-02 17:26:47 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -83,6 +86,7 @@ char sig_debug = 0;           /* is 1 when we got a SIGUSR2 */
 /* jobs database */
 struct CF *file_base;         /* point to the first file of the list */
 struct job *queue_base;       /* ordered list of normal jobs to be run */
+unsigned long int next_id;    /* id for next line to enter database */
 
 struct CL **serial_array;     /* ordered list of job to be run one by one */
 short int serial_array_size;  /* size of serial_array */
@@ -193,6 +197,10 @@ xexit(int exit_value)
      * if we don't exit quickly */
     save_file(NULL);
     
+#ifdef FCRONDYN
+    close_socket();
+#endif
+
     f = file_base;
     while ( f != NULL ) {
 	if ( f->cf_running > 0 ) {
@@ -215,8 +223,8 @@ xexit(int exit_value)
 
 void
 get_lock()
-    /* check if another fcron daemon is running : in this case, die.
-     * if not, write our pid to /var/run/fcron.pid in order to lock,
+    /* check if another fcron daemon is running with the same config (-c option) :
+     * in this case, die. if not, write our pid to /var/run/fcron.pid in order to lock,
      * and to permit fcrontab to read our pid and signal us */
 {
     int otherpid = 0;
@@ -228,18 +236,15 @@ get_lock()
 	die_e("can't open or create %s", pidfile);
 	
 #ifdef HAVE_FLOCK
-    if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
-	fscanf(daemon_lockfp, "%d", &otherpid);
-	die_e("can't lock %s, running daemon's pid may be %d",
-	    pidfile, otherpid);
-    }
+    if ( flock(fd, LOCK_EX|LOCK_NB) != 0 )
 #else /* HAVE_FLOCK */
-    if ( lockf(fileno(daemon_lockfp), F_TLOCK, 0) != 0 ) {
-	fscanf(daemon_lockfp, "%d", &otherpid);
-	die_e("can't lock %s, running daemon's pid may be %d",
-	    pidfile, otherpid);
-    }
+	if ( lockf(fileno(daemon_lockfp), F_TLOCK, 0) != 0 )
 #endif /* ! HAVE_FLOCK */
+	    {
+		fscanf(daemon_lockfp, "%d", &otherpid);
+		die_e("can't lock %s, running daemon's pid may be %d",
+		      pidfile, otherpid);
+	    }
 
     fcntl(fd, F_SETFD, 1);
 
@@ -568,6 +573,11 @@ main(int argc, char **argv)
     siginterrupt(SIGUSR1, 0);
     signal(SIGUSR2, sigusr2_handler);
     siginterrupt(SIGUSR2, 0);
+    /* we don't want SIGPIPE to kill fcron, and don't need to handle it */
+    signal(SIGPIPE, SIG_IGN);
+
+    /* initialize job database */
+    next_id = 0;
 
     /* initialize exe_array */
     exe_num = 0;
@@ -589,6 +599,11 @@ main(int argc, char **argv)
     lavg_array_size = LAVG_INITIAL_SIZE;
     if ( (lavg_array = calloc(lavg_array_size, sizeof(lavg))) == NULL )
 	die_e("could not calloc lavg_array");
+
+#ifdef FCRONDYN
+    /* initialize socket */
+    init_socket();
+#endif
 
     /* initialize random number generator :
      * WARNING : easy to guess !!! */
@@ -639,6 +654,7 @@ main_loop()
     struct timeval tv;     /* we use usec field to get more precision */
     time_t stime;          /* time to sleep until next job
 			    * execution */
+    int retcode = 0;
 
     debug("Entering main loop");
 
@@ -662,10 +678,21 @@ main_loop()
  	debug("sleep %ld seconds", stime);
 	/* */
 #ifdef HAVE_GETTIMEOFDAY
+#ifdef FCRONDYN
+	/* */
+	debug("using select()");
+	/* */
+	gettimeofday(&tv, NULL);
+	tv.tv_sec = (stime > 1) ? stime - 1 : 0;
+	tv.tv_usec = 1000000 - tv.tv_usec;
+	if((retcode = select(set_max_fd+1, &read_set, NULL, NULL, &tv)) < 0 && errno != EINTR)
+	    die_e("select return %d", errno);
+#else
 	if (stime > 1)
 	    sleep(stime - 1);
 	gettimeofday(&tv, NULL);
 	usleep( 1000000 - tv.tv_usec );
+#endif /* FCRONDYN */
 #else
 	sleep(stime);
 #endif /* HAVE_GETTIMEOFDAY */
@@ -690,6 +717,12 @@ main_loop()
 	    /* save all files */
 	    save_file(NULL);
 	}
+
+#ifdef FCRONDYN
+	/* check if there's a new connection, a new command to answer, etc ... */
+	/* we do that *after* other checks, to avoid Denial Of Service attacks */
+	check_socket(retcode);
+#endif
 
 	stime = check_lavg(save);
 	debug("next sleep time : %ld", stime);
