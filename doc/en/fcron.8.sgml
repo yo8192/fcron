@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron.8.sgml,v 1.5 2002-07-19 19:44:27 thib Exp $ -->
+<!-- $Id: fcron.8.sgml,v 1.6 2002-10-28 18:00:10 thib Exp $ -->
 
 <refentry id="fcron.8">
     <refmeta>
@@ -31,6 +31,7 @@ A copy of the license is included in gfdl.sgml.
 	    <arg>-b</arg> 
 	    <arg>-s <replaceable>time</replaceable></arg> 
 	    <arg>-m <replaceable>num</replaceable></arg> 
+	    <arg>-q <replaceable>num</replaceable></arg>
 	</cmdsynopsis>
 	<cmdsynopsis>
 	    <command>fcron</command>
@@ -123,6 +124,14 @@ compiled to run in foreground as default.</para>
 		    <para>Set to n the maximum number of serial jobs which can
 run simultaneously. By default, this value is set to &serialmaxrunning;.</para>
 		    <para>&seealso; option &optserial; in &fcrontab;(5).</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-q</option> <replaceable>num</replaceable></term>
+		<term><option>--queuelen</option> <replaceable>num</replaceable></term>
+		<listitem>
+		    <para>Set to n the number of jobs the serial queue and
+the lavg queue can contain.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
