@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: allow.c,v 1.13 2003-12-25 22:52:55 thib Exp $ */
+ /* $Id: allow.c,v 1.14 2004-11-13 19:44:01 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -56,12 +56,17 @@ in_file(char *str, char *file)
 	    continue;
 	remove_blanks(start);
 
-	if ( strcmp(str, start) == 0 )
+	if ( strcmp(str, start) == 0 ) {
+	    fclose(f);
 	    return 1;
-	if ( strcmp(start, "all") == 0 )
+	}
+	if ( strcmp(start, "all") == 0 ) {
+	    fclose(f);
 	    return 2;
+	}
     }
 
+    fclose(f);
     /* if execution gets here, string is not in file */
     return 0;
 
