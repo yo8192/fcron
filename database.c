@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.44 2001-01-27 15:44:39 thib Exp $ */
+ /* $Id: database.c,v 1.45 2001-01-30 15:54:12 thib Exp $ */
 
 #include "fcron.h"
 
@@ -927,9 +927,9 @@ set_next_exe_notrun(CL *line, char context)
     /* localtime() function seem to return every time the same pointer :
        it resets our previous changes, so we need to prevent it
        ( localtime() is used in the debug() function) */
-    memcpy(&ftime, ft, sizeof(struct tm));
+    memcpy(&ftime, ft, sizeof(ftime));
     /* we also copy it to last_nextexe which will be used in mail_notrun */
-    memcpy(&last_nextexe, ft, sizeof(struct tm));
+    memcpy(&last_nextexe, ft, sizeof(last_nextexe));
     
     ftime.tm_sec = 0;
     goto_non_matching(line, &ftime, STD);
@@ -944,11 +944,13 @@ set_next_exe_notrun(CL *line, char context)
 }
 
 void
-mail_notrun(CL *line, char context, struct tm *last_nextexe)
+mail_notrun(CL *line, char context, struct tm *since)
     /* send a mail to tell user a %-job has not run (and why) */
 {
     int pid = 0;
     int fd = 0;
+    struct tm *next2 = NULL, next;
+    char buf[LINE_LEN];
 
     switch ( pid = fork() ) {
     case -1:
@@ -987,18 +989,37 @@ mail_notrun(CL *line, char context, struct tm *last_nextexe)
 	return;
     }
 
-    if ( last_nextexe == NULL )
-	last_nextexe = localtime(&line->cl_nextexe);
+    next2 = localtime(&line->cl_nextexe);
+    memcpy(&next, next2, sizeof(next));
 
     /* create a temp file, and write in it the message to send */
     fd = create_mail(line, "Non-execution of fcron job");
 
     if (context == SYSDOWN) {
-	xwrite(fd, "Line has not run since x due to system's down state.\n");
+	snprintf(buf, sizeof(buf), "Line %s has not run since and including "
+		 "%d/%d/%d wday:%d %02d:%02d\ndue to system's down state.\n",
+		 line->cl_shell, (since->tm_mon + 1), since->tm_mday,
+		 (since->tm_year + 1900), since->tm_wday, since->tm_hour,
+		 since->tm_min);
+	xwrite(fd, buf);
+	snprintf(buf, sizeof(buf), "It will be next executed at %d/%d/%d wday:"
+		 "%d %02d:%02d\n", (next.tm_mon + 1), next.tm_mday,
+		 (next.tm_year+1900), next.tm_wday, next.tm_hour, next.tm_min);
+	xwrite(fd, buf);
     }
     else if (context == LAVG) {
-	xwrite(fd, "Line has not run since x due to a too high system load"
-	       " average or too many lavg-serial job.\n");
+	snprintf(buf, sizeof(buf), "Line %s has not run since and including "
+		 "%d/%d/%d wday:%d %02d:%02d\n", line->cl_shell,
+		 (since->tm_mon + 1), since->tm_mday, (since->tm_year + 1900),
+		 since->tm_wday, since->tm_hour, since->tm_min);
+	xwrite(fd, buf);
+	snprintf(buf, sizeof(buf), "due to a too high system load average or "
+		 "too many lavg-serial jobs.\n");
+	xwrite(fd, buf);	
+	snprintf(buf, sizeof(buf), "It will be next executed at %d/%d/%d wday:"
+		 "%d %02d:%02d\n", (next.tm_mon + 1), next.tm_mday,
+		 (next.tm_year+1900), next.tm_wday, next.tm_hour, next.tm_min);
+	xwrite(fd, buf);
     }
     
     /* become user (for security reasons) */
