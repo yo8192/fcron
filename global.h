@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.20 2000-09-30 11:57:16 thib Exp $ */
+ /* $Id: global.h,v 1.21 2000-12-04 20:17:48 thib Exp $ */
 
 
 /* 
@@ -96,7 +96,7 @@
 #include "option.h"
 
 
-#define FILEVERSION "014"  /* syntax's version of fcrontabs : 
+#define FILEVERSION "016"  /* syntax's version of fcrontabs : 
 			    * must have a length of 3 characters */
 
 /* you should not change this (nor need to do it) */
@@ -129,7 +129,7 @@ typedef struct CF {
 typedef struct CL {
     struct CL     *cl_next;
     struct CF     *cl_file;       /* the file in which the line is        */
-    unsigned short cl_option;     /* options for that line (see option.h) */
+    unsigned char  cl_option[3];  /* options for that line (see option.h) */
     char	  *cl_shell;      /* shell command			  */
     unsigned char  cl_numexe;     /* num of entries in lavg/serial queue  */
     unsigned char  cl_lavg[3];    /* load averages needed (1, 5, 15 mins) */
