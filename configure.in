@@ -68,8 +68,8 @@ fi
 AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv gethostname)
 AC_CHECK_FUNCS(mkstemp)
 AC_CHECK_FUNCS(flock lockf)
-AC_CHECK_FUNCS(setreuid, [setreuid=1], [setreuid=0])
-AC_CHECK_FUNCS(setregid, [setregid=1], [setregid=0])
+AC_CHECK_FUNCS(seteuid, [seteuid=1], [seteuid=0])
+AC_CHECK_FUNCS(setegid, [setegid=1], [setegid=0])
 
 dnl Checks for programs.
 
@@ -554,7 +554,7 @@ ROOTGROUP="$rootgroup"
 AC_SUBST(ROOTGROUP)
 AC_DEFINE_UNQUOTED(ROOTGROUP, "$rootgroup")
 
-if test \( $setreuid -eq 0 \) -o \( $setregid -eq 0 \) ; then
+if test \( $seteuid -eq 0 \) -o \( $setegid -eq 0 \) ; then
 	username="$rootname"
 	groupname="$rootgroup"
 else
@@ -567,7 +567,7 @@ AC_ARG_WITH(username,
     AC_MSG_ERROR(Need USERNAME.)
     ;;
   yes)
-    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
 	username=fcron
 	AC_MSG_RESULT(fcron)
     else
@@ -575,7 +575,7 @@ AC_ARG_WITH(username,
     fi
     ;;
   *)
-    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
 	username="$withval";
 	AC_MSG_RESULT($withval)
     else
@@ -584,7 +584,7 @@ AC_ARG_WITH(username,
     fi
     ;;
     esac ],
-    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
 	username=fcron
 	AC_MSG_RESULT(fcron)
     else
@@ -600,7 +600,7 @@ AC_ARG_WITH(groupname,
     AC_MSG_ERROR(Need GROUPNAME.)
     ;;
   yes)
-    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
 	groupname=fcron
 	AC_MSG_RESULT(fcron)
     else
@@ -608,7 +608,7 @@ AC_ARG_WITH(groupname,
     fi
     ;;
   *)
-    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
 	groupname="$withval";
 	AC_MSG_RESULT($withval)
     else
@@ -617,7 +617,7 @@ AC_ARG_WITH(groupname,
     fi
     ;;
     esac ],
-    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
 	groupname=fcron
 	AC_MSG_RESULT(fcron)
     else

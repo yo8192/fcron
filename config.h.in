@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.33 2001-07-07 17:33:03 thib Exp $ */
+ /* $Id: config.h.in,v 1.34 2001-07-08 12:41:52 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -233,11 +233,11 @@
 /* Define if you have the setenv function.  */
 #undef HAVE_SETENV
 
-/* Define if you have the setregid function.  */
-#undef HAVE_SETREGID
+/* Define if you have the setegid function.  */
+#undef HAVE_SETEGID
 
-/* Define if you have the setreuid function.  */
-#undef HAVE_SETREUID
+/* Define if you have the seteuid function.  */
+#undef HAVE_SETEUID
 
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
