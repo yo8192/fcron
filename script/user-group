@@ -4,7 +4,7 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.6 2001-02-14 13:48:30 thib Exp $
+# $Id: user-group,v 1.7 2001-03-01 18:39:03 thib Exp $
 
 # take 3 arguments : 	username
 # 			groupname
@@ -20,63 +20,6 @@ fi
 USERNAME=$1
 GROUPNAME=$2
 ANSWER=$3
-INSTALL="nothing"
-INSTALLED=0
-
-if test `uname -s` = "FreeBSD"; then
-  IS_FREEBSD=1
-else
-  IS_FREEBSD=0
-fi
-
-echo -n "Checking if $USERNAME is in /etc/passwd ... "
-if grep "^$USERNAME:" /etc/passwd > /dev/null; then
-  echo "yes."
-  INSTALLED=1
-else
-  echo "no."
-  CMD=""
-  if useradd -D 2> /dev/null; then
-    CMD="useradd -c '$USERNAME' $USERNAME"
-  elif adduser -D 2> /dev/null; then
-    CMD="adduser -c '$USERNAME' $USERNAME"
-  elif test $IS_FREEBSD -eq 1; then
-    CMD="pw useradd $USERNAME -c $USERNAME"
-  fi
-  if test -z "$CMD"; then
-    echo "Could not determine the command to use to add a user."
-    echo "Please add user \"$USERNAME\" (group \"GROUPNAME\") manually"
-    echo "(or choose another username with configure script)."
-    exit 1
-  fi
-  if test $ANSWER -eq 2; then
-    while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
-    do
-      echo "Would you like to add $USERNAME in /etc/passwd with the following command ?"
-      echo "    $CMD"
-      echo -n "Please answer with 'y' or 'n' (default: 'y'): "
-      read INSTALL NOTHING
-    done
-    if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-      if $CMD; then
-        INSTALLED=1
-      fi
-    fi
-  elif test $ANSWER -eq 1; then
-    # automatic answer given by configure script (option --with-answer-all)
-    if $CMD; then
-      INSTALLED=1
-    fi
-  fi    
-fi
-
-
-if test $INSTALLED -eq 0; then
-  echo "User $USERNAME does not exist : please create it or choose another username"
-  echo "with configure script."
-  exit 1
-fi
-
 
 INSTALL="nothing"
 INSTALLED=0
@@ -122,7 +65,79 @@ fi
 
 
 if test $INSTALLED -eq 0; then
-  echo "Group $GROUPNAME does not exist : please create it or choose another groupname"
+  echo
+  echo "Group \"$GROUPNAME\" does not exist : please create it or choose another groupname"
   echo "with configure script."
   exit 1
 fi
+
+# get the gid value :
+GID="`cat /etc/group | grep fcron | awk -F ":" '{print $3}'`"
+
+
+INSTALL="nothing"
+INSTALLED=0
+
+if test `uname -s` = "FreeBSD"; then
+  IS_FREEBSD=1
+else
+  IS_FREEBSD=0
+fi
+
+echo -n "Checking if $USERNAME is in /etc/passwd ... "
+if grep "^$USERNAME:" /etc/passwd > /dev/null; then
+  echo "yes."
+  INSTALLED=1
+else
+  echo "no."
+  CMD=""
+  if useradd -D 2> /dev/null; then
+    CMD="useradd -c '$USERNAME' -g $GROUPNAME $USERNAME"
+  elif adduser -D 2> /dev/null; then
+    CMD="adduser -c '$USERNAME' -g $GROUPNAME $USERNAME"
+  elif test $IS_FREEBSD -eq 1; then
+    CMD="pw useradd $USERNAME -c $USERNAME"
+  fi
+  if test -z "$CMD"; then
+    echo "Could not determine the command to use to add a user."
+    echo "Please add user \"$USERNAME\" (group \"GROUPNAME\") manually"
+    echo "(or choose another username with configure script)."
+    exit 1
+  fi
+  if test $ANSWER -eq 2; then
+    while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
+    do
+      echo "Would you like to add $USERNAME in /etc/passwd with the following command ?"
+      echo "    $CMD"
+      echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+      read INSTALL NOTHING
+    done
+    if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
+      if $CMD; then
+        INSTALLED=1
+      fi
+    fi
+  elif test $ANSWER -eq 1; then
+    # automatic answer given by configure script (option --with-answer-all)
+    if $CMD; then
+      INSTALLED=1
+    fi
+  fi    
+fi
+
+
+if test $INSTALLED -eq 0; then
+  echo
+  echo "User \"$USERNAME\" does not exist : please create it or choose another username"
+  echo "with configure script."
+  exit 1
+else
+  USERGID="`cat /etc/passwd | grep fcron | awk -F ':' '{print $4}'`"
+  if test "$GID" -ne "$USERGID"; then
+    echo
+    echo "User $USERNAME exists, but is not in the group $GROUPNAME."
+    echo "Please set its group to \"$GROUPNAME\" (id $GID) manually."
+    exit 1
+  fi
+fi
+
