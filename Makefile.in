@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.30 2000-09-12 19:54:49 thib Exp $
+# $Id: Makefile.in,v 1.31 2000-09-12 20:00:13 thib Exp $
 
 # Where should we install it ?
 prefix		= @prefix@
@@ -86,7 +86,7 @@ install: all
 	$(INSTALL) -c -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1
 	$(INSTALL) -c -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5
 	$(INSTALL) -c -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3
-	(cd script ; ./sysVinit-install $(INSTALL) $(DESTSBIN))
+	(cd script ; ./sysVinit-install "$(INSTALL)" $(DESTSBIN))
 	mkdir -p $(DESTDOC)/fcron-$(VERSION)
 	cd doc; $(INSTALL) -c -m 644 -o root README LICENSE CHANGES *.html \
 		 $(DESTDOC)/fcron-$(VERSION)/
