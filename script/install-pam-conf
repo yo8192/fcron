@@ -2,7 +2,7 @@
 # Install fcron and fcrontab's pam conf files.
 #
 
-# $Id: install-pam-conf,v 1.2 2001-11-04 19:00:52 thib Exp $
+# $Id: install-pam-conf,v 1.3 2003-12-29 15:40:52 thib Exp $
 
 if test $# -ne 5; then
   echo "Too few/many arguments"
@@ -17,7 +17,7 @@ INSTALL=$5
 
 for i in fcron fcrontab; do
 # test for both space and tab in the grep
-  if test -f $ETC/pam.d/$i || grep "$i[ 	]" $ETC/pam.conf 1> /dev/null; then
+  if test -f $ETC/pam.d/$i || ( test -f $ETC/pam.conf && grep "$i[ 	]" $ETC/pam.conf 1> /dev/null ); then
     echo "Seems that there is already some pam conf about $i ..."
   else
     if test -d $ETC/pam.d; then
