@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.43 2004-11-13 19:42:57 thib Exp $ */
+ /* $Id: global.h,v 1.44 2005-03-12 12:39:46 thib Exp $ */
 
 
 /* 
@@ -127,6 +127,14 @@
 #define STD 0
 
 /* macros */
+#ifndef HAVE_SETEUID
+#define seteuid(arg) setresuid(-1,(arg),-1)
+#endif
+
+#ifndef HAVE_SETEGID
+#define setegid(arg) setresgid(-1,(arg),-1)
+#endif
+
 #define Alloc(PTR, TYPE) \
         if( (PTR = calloc(1, sizeof(TYPE))) == NULL ) \
             die_e("Could not calloc.");
