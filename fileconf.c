@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.29 2000-12-14 21:19:11 thib Exp $ */
+ /* $Id: fileconf.c,v 1.30 2000-12-15 17:51:06 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -1031,7 +1031,7 @@ read_arys(char *ptr, CF *cf)
 	    } else {
 		if (i <= 1) {
 		    fprintf(stderr, "%s:%d: runfreq must be 2 or more :"
-			    " skipping line.\n");
+			    " skipping line.\n", file_name, line);
 		    goto exiterr;
 		}
 		cl->cl_runfreq = i;
@@ -1096,7 +1096,6 @@ read_period(char *ptr, CF *cf)
     /* read a line to run periodically (i.e. once a day, once a week, etc) */
 {
     CL *cl = NULL;
-    unsigned int i = 0;
     short int remain = 8;
 
     Alloc(cl, CL);
