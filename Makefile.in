@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.95 2002-10-28 17:54:31 thib Exp $
+# $Id: Makefile.in,v 1.96 2003-07-14 10:52:33 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -167,7 +167,7 @@ clean:
 
 ciclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
-	rm -fR autom4te-*
+	rm -fR autom4te*
 	@(cd doc && make clean)
 
 vclean: ciclean
