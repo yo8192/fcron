@@ -247,7 +247,7 @@ AC_ARG_WITH(spooldir,
   fi
 )
 FCRONTABS="$sp"
-AC_DEFINE(FCRONTABS, "$sp")
+AC_DEFINE_UNQUOTED(FCRONTABS, "$sp")
 AC_SUBST(FCRONTABS)
 
 if test $getloadavg -eq 0  ; then
@@ -286,7 +286,7 @@ Without proc, you won't be able to use the lavg* options
   fi
 )
 PROC="$proc"
-AC_DEFINE(PROC, "$proc")
+AC_DEFINE_UNQUOTED(PROC, "$proc")
 AC_SUBST(PROC)
 fi
 
