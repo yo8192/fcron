@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.5 2002-02-24 16:51:33 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.6 2002-02-25 18:47:17 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -16,10 +16,7 @@ A copy of the license is included in gfdl.sgml.
     <para>If you plan to help me, please send a mail at &email; to prevent two people from doing the same thing. You can send me some propositions as well.</para>
     <itemizedlist>
 	<listitem>
-	    <para>PAM support (ongoing)</para>
-	</listitem>
-	<listitem>
-	    <para>add some more checks in fileconf.c : do not allow user to use hours, days, hourly (?), daily (?), etc with &-lines : it currently does nothing (no error, no special action), and it is quite confusing for users. (those options only work with %-lines).</para>
+	    <para>PAM support (included in fcron, but need more tests by people using PAM)</para>
 	</listitem>
 	<listitem>
 	    <para>allow a non-privileged user to run fcron</para>

@@ -8,13 +8,16 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.6 2002-02-16 10:09:46 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.7 2002-02-25 18:47:19 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
 
     <itemizedlist>
 	<title>From version 2.1.0 to 2.1.1</title>
+	<listitem>
+	    <para>Added some new options to fcron : -y, -o, -l ; and some fcrontab options : stdout and volatile. All these permit to make fcron run in foreground, execute all the pending jobs (mainly %-jobs), and returns. May be used, for instance, in a ppp-up script with a dialup connection to update a software regularly.</para>
+	</listitem>
 	<listitem>
 	    <para>All the documentation has been ported to SGML DocBook.</para>
 	    <para>It results on a much better HTML version, which I recommand you use. It is installed by default in fcron documentation directory (for instance, on my system : <filename>/usr/share/doc/fcron-X.X.X/</filename>).</para>
@@ -24,6 +27,9 @@ A copy of the license is included in gfdl.sgml.
 	</listitem>
 	<listitem>
 	    <para>Added option random, which allows an entry run periodically to be run at a random time in its intervals of execution, instead of being run as soon as possible.</para>
+	</listitem>
+	<listitem>
+	    <para>added some more checks in fileconf.c : allow user to use hours, days, hourly, daily, etc options only with %-lines : it is ignored if set for a &-line, which is quite confusing for users who may type, for instance "&amp;hourly" instead of "%hourly".</para>
 	</listitem>
 	<listitem>
 	    <para>bug fixed : you can now use arguments in the var EDITOR and VISUAL.</para>
