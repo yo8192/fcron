@@ -21,7 +21,16 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.h,v 1.4 2001-12-23 22:05:19 thib Exp $ */
+ /* $Id: save.h,v 1.5 2002-02-25 18:45:51 thib Exp $ */
+
+#ifndef __SAVE_H__
+#define __SAVE_H__
+
+/* functions defined by save.c */
+extern int save_type(FILE *f, short int type);
+extern int save_str(FILE *f, short int type, char *str);
+extern int save_strn(FILE *f, short int type, char *str, short int size);
+extern int save_lint(FILE *f, short int type, long int value);
 
 
 /* here is the format fcron(tab) uses to save the fcrontabs :
@@ -71,4 +80,6 @@
 #define S_MONS_T       2015  /* mons boolean array */
 #define S_DOW_T        2016  /* dow boolean array */
 #define S_OPTION_T     2017  /* options for that line (see option.h) */
+#define S_FIRST_T      2018  /* wait time before first execution */
 
+#endif /* __SAVE_H__ */
