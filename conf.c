@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.7 2000-06-15 20:10:11 thib Exp $ */
+ /* $Id: conf.c,v 1.8 2000-06-16 11:51:11 thib Exp $ */
 
 #include "fcron.h"
 
@@ -501,7 +501,7 @@ delete_file(const char *user_name)
      *   otherwise free all files */
 {
     CF *file;
-    CF *prev_file=NULL;
+    CF *prev_file = NULL;
     CL *line;
     CL *cur_line;
     env_t *env = NULL;
