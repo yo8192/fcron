@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.15 2000-06-21 14:58:44 thib Exp $ */
+ /* $Id: database.c,v 1.16 2000-06-22 12:31:57 thib Exp $ */
 
 #include "fcron.h"
 
@@ -97,15 +97,6 @@ add_serial_job(CL *line)
 	serial_array[i] = line;
 
 	serial_num++;
-
-    }
-
-    else {
-	/* job is already in serial queue : advance his execution */
-
-	///////////////
-	// Put the corresponding code
-	//////////////
 
     }
 
@@ -551,13 +542,14 @@ time_to_sleep(time_t lim)
     /* we set tts to a big value, unless some problems can occurs
      * with files without any line */
     time_t tts = lim;
+    time_t ti = time(NULL);
 
     if ( queue_base != NULL ) {
 	if ( queue_base->j_line->cl_nextexe < lim )
 	    tts = queue_base->j_line->cl_nextexe;
     }
 	    
-    if ( (tts = tts - now) < 0)
+    if ( (tts = tts - ti) < 0)
 	tts = 0;
 
     debug("Time to sleep: %lds", tts);
