@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.30 2000-12-15 17:51:06 thib Exp $ */
+ /* $Id: fileconf.c,v 1.31 2000-12-23 20:16:10 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -569,30 +569,36 @@ read_opt(char *ptr, CL *cl)
 
 	/* options to run once per interval :
 	 * ignore every fields below the limit */
-	else if (strcmp(opt_name, "mins") == 0)
+	else if (strcmp(opt_name, "mins") == 0) {
 	    /* nothing to do */
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
 	else if (strcmp(opt_name, "hours") == 0) {
 	    set_freq_mins(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 	else if (strcmp(opt_name, "days") == 0) {
 	    set_freq_mins(cl->cl_option);
 	    set_freq_hrs(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 	else if (strcmp(opt_name, "mons") == 0) {
 	    set_freq_mins(cl->cl_option);
 	    set_freq_hrs(cl->cl_option);
 	    set_freq_days(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 	else if (strcmp(opt_name, "dow") == 0) {
 	    set_freq_mins(cl->cl_option);
 	    set_freq_hrs(cl->cl_option);
 	    set_freq_days(cl->cl_option);
 	    set_freq_mons(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 
 	/* run once an element of the selected field 
@@ -600,22 +606,26 @@ read_opt(char *ptr, CL *cl)
 	else if (strcmp(opt_name, "hourly") == 0) {
 	    set_freq_hrs(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 	else if (strcmp(opt_name, "daily") == 0) {
 	    set_freq_days(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 	else if (strcmp(opt_name, "monthly") == 0) {
 	    set_freq_mons(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 	else if (strcmp(opt_name, "weekly") == 0) {
 	    set_freq_dow(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 
 	/* run once an element of the selected field 
@@ -625,26 +635,30 @@ read_opt(char *ptr, CL *cl)
 	    set_freq_hrs(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
 	    set_freq_mid(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 	else if (strcmp(opt_name, "middaily") == 0 
 		 || strcmp(opt_name, "nightly") == 0) {
 	    set_freq_days(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
 	    set_freq_mid(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 	else if (strcmp(opt_name, "midmonthly") == 0) {
 	    set_freq_mons(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
 	    set_freq_mid(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 	else if (strcmp(opt_name, "midweekly") == 0) {
 	    set_freq_dow(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
 	    set_freq_mid(cl->cl_option);
-	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 
 	else if ( strcmp(opt_name, "lavg") == 0 ) {
