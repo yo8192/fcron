@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.6 2000-06-19 12:41:43 thib Exp $ */
+ /* $Id: config.h.in,v 1.7 2000-06-20 20:36:19 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -85,6 +85,13 @@
 
 /* *** memory *** */
 
+#define EXE_ARRAY_INITIAL_SIZE 10 /* initial number of possible running job 
+				   * if more job have to be run simultaneously,
+				   * fcron will have to perform a realloc() */
+#define EXE_ARRAY_GROW_SIZE 10 /* this is the number of entries that will be
+				* added to exe_array each time it has to grow
+				* up */
+
 #define MAXENTRIES  256  /* max lines in non-root fcrontabs */
 
 #define LINE_LEN    1024     /* max line length in user's config file */
@@ -95,9 +102,12 @@
 
 
 /* *** time *** */
-#define FIRST_SLEEP 60      /* fcron sleep at least this time after startup
+#define FIRST_SLEEP 20      /* fcron sleep at least this time after startup
 			     * before executing a job, to avoid to run jobs
 			     * during system boot */
+#define FIRST_SLEEP_SERIAL 60 /* fcron sleep at least this time after startup
+			       * before executing a serial job (job executed
+			       * by option bootrun are serialized) */ 
 #define SAVE_VARIATION 120  /* if a job is run at less than SAVE_VARIATION
 			     * from normal time to save, save is performed
 			     * after execution of the job.
