@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.h,v 1.6 2001-04-21 08:44:46 thib Exp $ */
+ /* $Id: fcrontab.h,v 1.7 2001-04-29 22:14:29 thib Exp $ */
 
 #ifndef __FCRONTABH__
 #define __FCRONTABH__
@@ -44,34 +44,9 @@ extern CF *file_base;
 extern int read_file(char *filename, char *user);
 extern void delete_file(const char *user_name);
 extern int save_file(char *path);
-/* end of fileconf.c */
 
-/* subs.c */
-extern int remove_blanks(char *str);
-extern char *strdup2(const char *);
-extern int save_type(FILE *f, short int type);
-extern int save_str(FILE *f, short int type, char *str);
-extern int save_strn(FILE *f, short int type, char *str, short int size);
-extern int save_lint(FILE *f, short int type, long int value);
-/* end of subs.c */
-
-/* log.c */
-extern void xcloselog(void);
-extern char *make_msg(char *fmt, va_list args);
-extern void explain(char *fmt, ...);
-extern void explain_e(char *fmt, ...);
-extern void warn(char *fmt, ...);
-extern void warn_e(char *fmt, ...);
-extern void error(char *fmt, ...);
-extern void error_e(char *fmt, ...);
-extern void die(char *fmt, ...);
-extern void die_e(char *fmt, ...);
-extern void Debug(char *fmt, ...);
-/* end of log.c */
-
-/* allow.c */
-extern int is_allowed(char *user);
-/* end of allow.c */
-
+#include "log.h"
+#include "subs.h"
+#include "allow.h"
 
 #endif /* __FCRONTABH__ */
