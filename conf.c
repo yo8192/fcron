@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.52 2001-12-23 22:04:51 thib Exp $ */
+ /* $Id: conf.c,v 1.53 2002-02-25 18:42:41 thib Exp $ */
 
 #include "fcron.h"
 
@@ -430,7 +430,7 @@ read_file(const char *file_name, CF *cf)
 
     /* open file */
     if ( (ff = fopen(file_name, "r")) == NULL ) {
-	error_e("Could not read %s", file_name);
+	warn_e("Could not read %s (may have just been removed)", file_name);
 	goto err;
     }
 
@@ -545,6 +545,11 @@ read_file(const char *file_name, CF *cf)
 	case S_NEXTEXE_T:
 	    Read(bufi, size, "Error while reading nextexe field");
 	    cl->cl_nextexe = (time_t) bufi;
+	    break;
+
+	case S_FIRST_T:
+	    Read(bufi, size, "Error while reading first field");
+	    cl->cl_first = (time_t) bufi;
 	    break;
 
 	case S_OPTION_T:
@@ -767,22 +772,27 @@ add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str, time_t t_save)
 	    insert_nextexe(cl);
     } else {  /* is_td(cl->cl_option) */
 	/* standard @-lines */
-	if ( cl->cl_timefreq < 60 ) {
+	if ( is_volatile(cl->cl_option) || cl->cl_first > 0 ) {
+	    /* cl_first is always saved for a volatile line */
+ 	    cl->cl_nextexe = now + cl->cl_first;
+ 	} else
+ 	    cl->cl_nextexe += slept;
+ 
+	if ( cl->cl_timefreq < 10 ) {
 	    error("Invalid timefreq for %s: set to 1 day",
 		  cl->cl_shell);
 	    cl->cl_timefreq = 3600*24;
 	}
-	cl->cl_nextexe += slept;
 	insert_nextexe(cl);
     }	    
 
     if (debug_opt) {
 	struct tm *ftime;
 	ftime = localtime( &(cl->cl_nextexe) );
-	debug("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d",
+	debug("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d:%02d",
 	      cl->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
 	      (ftime->tm_year + 1900), ftime->tm_wday,
-	      ftime->tm_hour, ftime->tm_min); 
+	      ftime->tm_hour, ftime->tm_min, ftime->tm_sec); 
     } 
 
     /* add the current line to the list, and allocate a new line */
@@ -1045,10 +1055,14 @@ save_file(CF *arg_file)
 	    Save_str(f, S_SHELL_T, line->cl_shell);
 	    Save_str(f, S_RUNAS_T, line->cl_runas);
 	    Save_str(f, S_MAILTO_T, line->cl_mailto);
-	    Save_lint(f, S_NEXTEXE_T, line->cl_nextexe);
 	    Save_strn(f, S_OPTION_T, line->cl_option, OPTION_SIZE);
 
 	    /* the following are saved only if needed */
+	    if ( is_volatile(line->cl_option) && is_freq(line->cl_option) ) {
+		Save_lint(f, S_FIRST_T, line->cl_first);
+	    }
+	    else
+		Save_lint(f, S_NEXTEXE_T, line->cl_nextexe);
 	    if ( line->cl_numexe )
 		Save_strn(f, S_NUMEXE_T, &line->cl_numexe, 1);
 	    if ( is_lavg(line->cl_option) )
