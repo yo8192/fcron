@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.45 2001-01-30 15:54:12 thib Exp $ */
+ /* $Id: database.c,v 1.46 2001-01-30 21:27:28 thib Exp $ */
 
 #include "fcron.h"
 
@@ -536,8 +536,15 @@ goto_non_matching(CL *line, struct tm *ftime, char option)
     /* search the first the nearest time and date that does
      * not match the line */
 {
-    if ( is_freq_periodically(line->cl_option) && option != END_OF_INTERVAL) {
+    struct tm next_period;
+
+    if ( is_freq_periodically(line->cl_option) ) {
 	int max = get_nb_mdays(ftime->tm_year, ftime->tm_mon);
+	struct tm ftime_initial;
+
+	if (option == END_OF_INTERVAL)
+	    memcpy(&ftime_initial, ftime, sizeof(ftime_initial));
+
 	if (is_freq_mid(line->cl_option)) {
 	    if (is_freq_mins(line->cl_option))
 		/* nothing to do : return */
@@ -612,8 +619,8 @@ goto_non_matching(CL *line, struct tm *ftime, char option)
 	    ftime->tm_mday++;
 	}
 	/* the month field may have changed */
-	max = get_nb_mdays(ftime->tm_year, ftime->tm_mon);
-	if (ftime->tm_mday >= max) {
+	max = get_nb_mdays((ftime->tm_year + 1900), ftime->tm_mon);
+	if (ftime->tm_mday > max) {
 	    ftime->tm_mday = 1;
 	    ftime->tm_mon++;
 	}
@@ -621,18 +628,30 @@ goto_non_matching(CL *line, struct tm *ftime, char option)
 	    ftime->tm_mon = 0;
 	    ftime->tm_year++;
 	}
-	if (debug_opt)
-	    set_wday(ftime);
-	debug("   %s beginning of next period %d/%d/%d wday:%d %02d:%02d",
-	      line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
-	      (ftime->tm_year + 1900), ftime->tm_wday,
-	      ftime->tm_hour, ftime->tm_min);
 
-	return;
+	if (option != END_OF_INTERVAL) {
+	    if (debug_opt)
+		set_wday(ftime);
+	    debug("   %s beginning of next period %d/%d/%d wday:%d %02d:%02d",
+		  line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
+		  (ftime->tm_year + 1900), ftime->tm_wday,
+		  ftime->tm_hour, ftime->tm_min);
+
+	    return;
+	}
+	else {
+	    memcpy(&next_period, ftime, sizeof(next_period));
+	    /* set ftime as we get it */
+	    memcpy(ftime, &ftime_initial, sizeof(ftime_initial));
+	}
     }
-    else { 
+
+    /* if the line is a periodical one without option END_OF_INTERVAL,
+     * execution doesn't come here */
+
+    {
 	/* this line should be run once per interval of the selected field */
-	
+
 	/* to prevent from invinite loop with unvalid lines : */
 	short int year_limit = MAXYEAR_SCHEDULE_TIME;
 	/* we have to ignore the fields containing single numbers */
@@ -679,11 +698,11 @@ goto_non_matching(CL *line, struct tm *ftime, char option)
 		if (ftime->tm_hour >= 24) {
 		    ftime->tm_hour = 0;
 		    if (ignore_days && ignore_hrs && ignore_mins && ignore_dow)
-			ftime->tm_mday = 32;
+			ftime->tm_mday = 32; /* go to next month */
 		    else ftime->tm_mday++;
-		    if (ftime->tm_mday >= 
+		    if (ftime->tm_mday > 
 			get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
-			ftime->tm_mday = 0;
+			ftime->tm_mday = 1;
 			if(ignore_mons && ignore_days && ignore_dow
 			   && ignore_hrs && ignore_mins)
 			    ftime->tm_mon = 12;
@@ -704,12 +723,37 @@ goto_non_matching(CL *line, struct tm *ftime, char option)
 		    set_wday(ftime);
 		}
 	    }
+	    
+	    if (option == END_OF_INTERVAL &&
+		ftime->tm_year <= next_period.tm_year &&
+		ftime->tm_mon <= next_period.tm_mon &&
+		ftime->tm_mday <= next_period.tm_mday &&
+		ftime->tm_hour <= next_period.tm_hour &&
+		ftime->tm_min <= next_period.tm_min) {
+		/* we don't want to go in the next period ... */
+		memcpy(ftime, &next_period, sizeof(next_period));
+		break;
+	    }
 	}
 
-	if (option == END_OF_INTERVAL)
+	if (option == END_OF_INTERVAL) {
 	    /* we want the end of the current interval, not the beginning
 	     * of the first non-matching interval */
-	    ftime->tm_min--;
+	    if (--ftime->tm_min < 0) {
+		ftime->tm_min = 59;
+		if (--ftime->tm_hour < 0) {
+		    ftime->tm_hour = 23;
+		    if (--ftime->tm_mday < 1) {
+			if (--ftime->tm_mon < 0) {
+			    ftime->tm_mon = 11;
+			    ftime->tm_year--;
+			}
+			ftime->tm_mday = get_nb_mdays( (ftime->tm_year + 1900),
+						       ftime->tm_mon);
+		    }
+		}
+	    }
+	}
 	
 	debug("   %s %s %d/%d/%d wday:%d %02d:%02d", line->cl_shell,
 	      (option == STD) ? "first non matching" : "end of interval",
