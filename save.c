@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.c,v 1.1 2002-02-25 18:45:18 thib Exp $ */
+ /* $Id: save.c,v 1.2 2002-09-07 13:12:10 thib Exp $ */
 
 #include "global.h"
 #include "save.h"
@@ -30,13 +30,13 @@
 extern char debug_opt;
 
 int
-save_type(FILE *f, short int type)
+save_type(int fd, short int type)
 /* save a single type (with no data attached) in a binary fcrontab file */
 {
     short int size = 0;
 
-    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
+    if ( write(fd, &type, sizeof(type)) < sizeof(type) ) goto err;
+    if ( write(fd, &size, sizeof(size)) < sizeof(size) ) goto err;
     
     return OK;
 
@@ -46,15 +46,15 @@ save_type(FILE *f, short int type)
 }
 
 int
-save_str(FILE *f, short int type, char *str)
+save_str(int fd, short int type, char *str)
 /* save a string of type "type" in a binary fcrontab file */
 {
     short int size = 0;
     size = strlen(str);
 
-    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
-    if ( write(fileno(f), str, size) < size ) goto err;
+    if ( write(fd, &type, sizeof(type)) < sizeof(type) ) goto err;
+    if ( write(fd, &size, sizeof(size)) < sizeof(size) ) goto err;
+    if ( write(fd, str, size) < size ) goto err;
 
     return OK;
 
@@ -64,13 +64,13 @@ save_str(FILE *f, short int type, char *str)
 }
 
 int
-save_strn(FILE *f, short int type, char *str, short int size)
+save_strn(int fd, short int type, char *str, short int size)
 /* save a "size"-length string of type "type" in a binary fcrontab file */
 {
 
-    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
-    if ( write(fileno(f), str, size) < size ) goto err;
+    if ( write(fd, &type, sizeof(type)) < sizeof(type) ) goto err;
+    if ( write(fd, &size, sizeof(size)) < sizeof(size) ) goto err;
+    if ( write(fd, str, size) < size ) goto err;
 
     return OK;
 
@@ -80,14 +80,14 @@ save_strn(FILE *f, short int type, char *str, short int size)
 }
 
 int
-save_lint(FILE *f, short int type, long int value)
+save_lint(int fd, short int type, long int value)
 /* save an integer of type "type" in a binary fcrontab file */
 {
     short int size = sizeof(value);
 
-    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
-    if ( write(fileno(f), &value, size) < size ) goto err;
+    if ( write(fd, &type, sizeof(type)) < sizeof(type) ) goto err;
+    if ( write(fd, &size, sizeof(size)) < sizeof(size) ) goto err;
+    if ( write(fd, &value, size) < size ) goto err;
 
     return OK;
 
