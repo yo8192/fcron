@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.13 2002-08-30 20:06:07 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.14 2002-09-07 13:12:31 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -28,10 +28,13 @@ well.</para>
 	</listitem>
 	<listitem>
 	    <para>find a way to get user's job pid (not the fcron process
-	    controling it) (use pipe() ?)</para>
+	    controlling it) (use pipe() ?)</para>
 	</listitem>
 	<listitem>
 	    <para>Use (or remove from config.h.in) MAX_USER_CON & MAX_IDLE_TIME.</para>
+	</listitem>
+	<listitem>
+	    <para>Use directory notifications (?) (portable ?) (cf. dnotify)</para>
 	</listitem>
 	<listitem>
 	    <para>PAM support (included in fcron, but need more tests by people 

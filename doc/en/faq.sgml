@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.6 2002-08-11 20:27:54 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.7 2002-09-07 13:12:16 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
@@ -91,8 +91,8 @@ How can I avoid the mail?</para>
 if you still want to receive the standard output as mail, you can add an command
 which always evaluates to 0, like "/bin/true", after your primary command. This
 will not affect your job nor create additional output. For example:</para>
-		<programlisting>* * * * * /a/non/zero/status/job ;
-/bin/true</programlisting>
+		<programlisting>
+* * * * * /a/non/zero/status/job ; /bin/true</programlisting>
 	    </answer>
 	</qandaentry>
 
@@ -113,11 +113,12 @@ processes running within a specified period. The load averages are computed from
 active task count. They are updated each time active task counts are taken.
 		</para>
 		<para>
-<!-- It sure would be nice for some MathML here. --> <programlisting> The load
-average formula is: loadavg(d,n) = active_task_cnt - (active_task_cnt -
-old_loadavg)*(1/exp(d/n); where: d is the time interval between active task
-count readings, typically every 5 seconds. n is the time over which the readings
-are averaged. </programlisting>
+<!-- It sure would be nice for some MathML here. --> 
+The load average formula is: <programlisting>
+loadavg(d,n) = active_task_cnt - (active_task_cnt - old_loadavg)*(1/exp(d/n)
+</programlisting>
+where: d is the time interval between active task count readings, typically every
+5 seconds; n is the time over which the readings are averaged.
 		</para>
 	    </answer>
 	</qandaentry>
@@ -131,8 +132,7 @@ are averaged. </programlisting>
       You can use pipes with "<command>fcrontab -l</command>" (list the
 fcrontab) and "<command>fcrontab -</command>" (read the new fcrontab from
 input). For example : </para>
-		<screen><command>echo -e "`fcrontab -l | grep -v exim`\n0 * * *
-*	/usr/sbin/exim -q" | fcrontab -</command></screen>
+		<screen> <command>echo -e "`fcrontab -l | grep -v exim`\n0 * * * *	/usr/sbin/exim -q" | fcrontab -</command></screen>
 		<para>
 		  can be used to add a line. Another way to do it would be to:
 list the fcrontab settings into a temporary file ("<command>fcrontab -l >
@@ -159,13 +159,15 @@ for instance, only once every week.</para>
 every day, week, etc, at dialup connection</title>
 			<para>You can use a script like :</para>
 			<programlisting>
-# A ppp-up script ... # run the jobs pending, then returns : fcron -f -y -o
+# A ppp-up script ... 
+# run the jobs pending, then returns : 
+fcron -f -y -o
 </programlisting>
 			<para>in conjunction with a fcrontab file like :</para>
 			<programlisting>
-# a fcrontab file ... %random(no),weekly,stdout * *
-/a/command/to/download/latest/mozilla/release %monthly,stdout * * *
-/update/junkbuster/config/files
+# a fcrontab file ... 
+%random(no),weekly,stdout * * /a/command/to/download/latest/mozilla/release 
+%monthly,stdout * * * /update/junkbuster/config/files
 </programlisting>
 		    </example></para>
 		<para>You can also use fcron to run some jobs until the end of
@@ -178,16 +180,21 @@ for mails every 5 minutes while connected.</para>
 end of the connection</title>
 			<para>ppp-up script :</para>
 			<programlisting>
-# A ppp-up script ... # run fcron at the beginning of the connection : fcron -b
+# A ppp-up script ... 
+# run fcron at the beginning of the connection : 
+fcron -b
 </programlisting>
 			<para>ppp-down script :</para>
 			<programlisting>
-# A ppp-down script ... # stop fcron at the end of the connection : # -- Warning
-: killall may have unwanted effect on non linux systems -- killall -TERM fcron
+# A ppp-down script ... 
+# stop fcron at the end of the connection : 
+# -- Warning : killall may have unwanted effect on non linux systems -- 
+killall -TERM fcron
 </programlisting>
 			<para>the fcrontab :</para>
 			<programlisting>
-# a fcrontab file ... @volatile,first(0) 5 fetchmail
+# a fcrontab file ... 
+@volatile,first(0) 5 fetchmail
 </programlisting>
 		    </example></para>
 
