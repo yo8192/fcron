@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.41 2001-02-14 13:52:38 thib Exp $ */
+ /* $Id: fcron.c,v 1.42 2001-04-21 08:46:20 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.41 2001-02-14 13:52:38 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.42 2001-04-21 08:46:20 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -56,7 +56,8 @@ char  *cdir = FCRONTABS;      /* the dir where are stored users' fcrontabs */
 time_t save_time = SAVE;
 
 /* process identity */
-pid_t daemon_pid;               
+pid_t daemon_pid;
+mode_t saved_umask;           /* default root umask */
 char *prog_name = NULL;         
 
 /* locking */
@@ -349,7 +350,7 @@ main(int argc, char **argv)
 
     /* we set it to 022 in order to get a PIDFILE readable by fcrontab
      * (will be set to 066 later) */
-    umask(022);
+    saved_umask = umask(022);
 
     /* parse options */
 
@@ -444,7 +445,8 @@ main(int argc, char **argv)
 #endif
 
     /* this program belongs to root : we set default permission mode
-     * to  600 for security reasons */
+     * to  600 for security reasons, but we reset them to the saved
+     * umask just before we run a job */
     umask(066);
 
     explain("%s[%d] " VERSION_QUOTED " started", prog_name, daemon_pid);
