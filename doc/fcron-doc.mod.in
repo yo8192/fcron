@@ -19,7 +19,7 @@
 <!ENTITY fcron.conf.location "@@FCRON_CONF@">
 <!ENTITY fcron.deny "@@FCRON_DENY@">
 <!ENTITY fcron.pid "@@PIDFILE@">
-<!ENTITY fcron.pid "@@FIFOFILE@">
+<!ENTITY fcron.fifo "@@FIFOFILE@">
 <!ENTITY fcrontabsdir "@@FCRONTABS@">
 <!ENTITY firstsleep "@@FIRST_SLEEP@">
 <!ENTITY lavgoncedef "@@LAVG_ONCE@">
