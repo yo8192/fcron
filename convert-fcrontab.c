@@ -22,12 +22,12 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.c,v 1.18 2003-12-25 22:51:55 thib Exp $ */
+ /* $Id: convert-fcrontab.c,v 1.19 2004-07-11 18:09:41 thib Exp $ */
 
 #include "convert-fcrontab.h"
 #include "global.h"
 
-char rcs_info[] = "$Id: convert-fcrontab.c,v 1.18 2003-12-25 22:51:55 thib Exp $";
+char rcs_info[] = "$Id: convert-fcrontab.c,v 1.19 2004-07-11 18:09:41 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -216,7 +216,8 @@ convert_file(char *file_name)
     /* open a temp file in write mode and truncate it */
     strcpy(buf, "tmp_");
     strncat(buf, file_name, sizeof(buf) - sizeof("tmp_") - 1);
-    
+    buf[sizeof(buf)-1]='\0';
+
     /* everything's ok : we can override the src file safely */
     if ( rename(buf, file_name) != 0 )
 	error_e("Could not rename %s to %s", buf, file_name);
