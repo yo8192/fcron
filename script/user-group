@@ -4,7 +4,7 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.13 2001-08-20 11:01:35 thib Exp $
+# $Id: user-group,v 1.14 2001-08-20 20:03:20 thib Exp $
 
 # take 4 arguments : 	username
 # 			groupname
@@ -145,7 +145,8 @@ else
   if test "$GID" -ne "$USERGID"; then
     echo
     echo "User $USERNAME exists, but is not in the group $GROUPNAME."
-    echo "Please set its group to \"$GROUPNAME\" (id $GID) manually."
+    echo "Please set its group to \"$GROUPNAME\" (id $GID) manually"
+    echo "(or choose another user and/or group)."
     exit 1
   fi
 fi
