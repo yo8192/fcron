@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.64 2002-07-19 19:36:10 thib Exp $ */
+ /* $Id: fcron.c,v 1.65 2002-08-25 17:11:52 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.64 2002-07-19 19:36:10 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.65 2002-08-25 17:11:52 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -204,7 +204,10 @@ xexit(int exit_value)
     f = file_base;
     while ( f != NULL ) {
 	if ( f->cf_running > 0 ) {
-	    wait_all( &f->cf_running );
+	    /* */
+	    debug("waiting jobs for %s ...", f->cf_user);
+	    /* */
+	    wait_all( &f->cf_running );	    
 	    save_file(f);
 	}
 	delete_file(f->cf_user);    
