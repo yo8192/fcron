@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.12 2000-08-22 18:01:32 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.13 2000-09-05 19:52:33 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.12 2000-08-22 18:01:32 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.13 2000-09-05 19:52:33 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -658,7 +658,9 @@ parseopt(int argc, char *argv[])
     }
 
     if ( user == NULL ) {
-	if ((user = getenv("USER")) == NULL) {
+	/* we need to strdup2 the value given by getenv() because we free
+	 * file->cf_user in delete_file */
+	if ((user = strdup2(getenv("USER"))) == NULL) {
 	    fprintf(stderr, "Could not get user name.\n");
 	    xexit(EXIT_ERR);
 	}
