@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.5 2002-08-10 20:41:52 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.6 2002-08-11 20:27:54 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
@@ -205,11 +205,12 @@ linkend="fcrontab.5">&fcrontab;(5)</link></para>
 	
 	<qandaentry>
 	    <question>
-		<para>Can I run fcron without root privileges ?</para>
+		<para>Can I run fcron without root's privileges ?</para>
 	    </question>
 	    <answer>
-		<para>Yes, you can. To do that, see the following instructions, but
-please note that fcrondyn currently does *not* work without root privileges.</para>
+		<para>Yes, you can. To do that, see the
+following instructions, but please note that fcrondyn currently does *not* work
+without root privileges.</para>
 		<orderedlist>
 		    <listitem>
 			<para>First, create a directory where you'll install fcron,
@@ -223,6 +224,13 @@ please note that fcrondyn currently does *not* work without root privileges.</pa
 			<para>Then, run configure with option 
 <option>--with-run-non-privileged</option>, set all user names and groups to yours,
 and set appropriately the paths :</para>
+			<para><warning>
+			    <para>This option allows a non privileged user to run
+	fcron. When used, fcron does not change its rights before running a job
+	(i.e., if joe runs fcron, every job will run as joe).  It means that
+	<emphasis>YOU SHOULD NOT RUN FCRON AS A PRIVILEGED USER WHEN COMPILED
+	WITH THIS OPTION</emphasis> or you'll have a serious security
+	hole.</para> </warning></para>
 			<screen><prompt>bash$
 </prompt> <command>./configure --with-run-non-privileged --with-rootname=thib
 --with-rootgroup=thib --with-username=thib --with-groupname=thib
