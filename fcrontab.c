@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000 Thibault Godouet <sphawk@free.fr>
+ *  Copyright 2000 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.3 2000-05-17 19:20:36 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.4 2000-05-30 19:26:58 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.3 2000-05-17 19:20:36 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.4 2000-05-30 19:26:58 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -80,7 +80,7 @@ info(void)
 {
     fprintf(stderr,
 	    "fcrontab " VERSION " - user interface to daemon fcron\n"
-	    "Copyright 2000 Thibault Godouet <sphawk@free.fr>\n"
+	    "Copyright 2000 Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed\n"
 	    "WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
