@@ -13,7 +13,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.7)
 
-vers="2.9.0"
+vers="2.9.1"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -81,6 +81,7 @@ AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv gethostname)
 AC_CHECK_FUNCS(getopt_long)
 AC_CHECK_FUNCS(mkstemp)
 AC_CHECK_FUNCS(flock lockf)
+AC_CHECK_FUNCS(setlinebuf)
 AC_CHECK_FUNCS(seteuid, [seteuid=1], [seteuid=0])
 AC_CHECK_FUNCS(setegid, [setegid=1], [setegid=0])
 
@@ -507,6 +508,7 @@ AC_ARG_WITH(debug,
     ;;
   yes)
     cflags="-DDEBUG -g -Wall -DFOREGROUND -DMALLOC_CHECK_=2 -Wpointer-arith -Wstrict-prototypes"
+    bootinstall=0
     debug="1"
     ;;
   *)
@@ -537,6 +539,36 @@ AC_ARG_WITH(cflags,
 )
 CFLAGS=$cflags
 AC_DEFINE_UNQUOTED(CFLAGS, "$cflags")
+
+
+if test "$bootinstall" = ""; then
+  bootinstall=1
+fi
+AC_MSG_CHECKING(install interactively a boot script)
+AC_ARG_WITH(boot-install,
+[  --with-boot-install=[yes|no]	Install (interactively) a boot script (default: yes).],
+[ case "$withval" in
+  no)
+    bootinstall=0
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    bootinstall=1
+    AC_MSG_RESULT(yes)
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+    if test "$bootinstall" = "1"; then
+      AC_MSG_RESULT(yes)
+    else
+      AC_MSG_RESULT(no)
+    fi
+)
+BOOTINSTALL="$bootinstall"
+AC_DEFINE_UNQUOTED(BOOTINSTALL, "$bootinstall")
+AC_SUBST(BOOTINSTALL)
 
 
 AC_MSG_CHECKING(automatic answer to make install's questions)
@@ -887,7 +919,7 @@ AC_SUBST(DB2MAN_BEFORE)
 AC_SUBST(DB2MAN_AFTER)
 
 
-DSSSL_DIR="/usr/share/sgml/docbook/dsssl-stylesheets-1.72/"
+DSSSL_DIR="/usr/share/sgml/docbook/dsssl-stylesheets-1.74b/"
 
 AC_MSG_CHECKING(Looking for dsssl stylsheets)
 AC_ARG_WITH(dsssl-dir,
@@ -909,6 +941,13 @@ AC_ARG_WITH(dsssl-dir,
     ;;
   esac ],
   AC_MSG_RESULT(default)
+  if ! test -f "$DSSSL_DIR/html/docbook.dsl"; then
+    AC_MSG_WARN([
+
+$DSSSL_DIR/html/docbook.dsl does not exist. You will probably not be able to generate the documentation from the DocBook source files.])
+    AC_MSG_WARN([Use --with-dssl-dir to specify a directory.
+])
+  fi
 )
 AC_SUBST(DSSSL_DIR)
 
