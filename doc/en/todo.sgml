@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.25 2004-04-29 19:38:19 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.26 2004-04-29 20:51:25 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -22,7 +22,8 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>port to HP-UX : mails from Scott Tinsley : everything merged ?</para>
+	       <para>port to HP-UX : mails from Scott Tinsley : test in autoconf
+	       to remove call to "ioctl(fd, TIOCNOTTY, 0);"</para>
 	    </listitem>
 	    <listitem>
 	       <para>mails from B. Wohler : improve the doc + change (?)  the
