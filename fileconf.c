@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.57 2002-02-24 16:50:56 thib Exp $ */
+ /* $Id: fileconf.c,v 1.58 2002-02-25 18:42:00 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -30,7 +30,7 @@
 
 char *get_string(char *ptr);
 int get_line(char *str, size_t size, FILE *file);
-char *get_time(char *ptr, time_t *time);
+char *get_time(char *ptr, time_t *time, int zero_allowed);
 char *get_num(char *ptr, int *num, int max, short int decimal,
 	      const char **names);
 char *get_nice(char *ptr, int *nice);
@@ -559,12 +559,12 @@ read_opt(char *ptr, CL *cl)
 		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 
-	else if(strcmp(opt_name, "f") == 0 || strcmp(opt_name, "first") == 0){
-	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_nextexe)))==NULL)
+	else if(strcmp(opt_name, "f") == 0 || strcmp(opt_name, "first") == 0) {
+	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_first), 1)) == NULL )
 		Handle_err;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\" %ld\n", opt_name,
-			(long int)cl->cl_nextexe);
+			(long int)cl->cl_first);
 	}
 
 	else if(strcmp(opt_name, "r")==0 || strcmp(opt_name, "runfreq")==0) {
@@ -705,8 +705,8 @@ read_opt(char *ptr, CL *cl)
 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
-	else if(strcmp(opt_name, "u") == 0 || strcmp(opt_name, "until") == 0){
-	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_until)))==NULL)
+	else if(strcmp(opt_name, "u") == 0 || strcmp(opt_name, "until") == 0) {
+	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_until), 0)) == NULL )
 		Handle_err;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\" %ld\n", opt_name,
@@ -784,7 +784,7 @@ read_opt(char *ptr, CL *cl)
 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
-	else if( strcmp(opt_name, "nolog") == 0 ) {
+	else if ( strcmp(opt_name, "nolog") == 0 ) {
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
 	    if ( i == 0 )
@@ -795,6 +795,28 @@ read_opt(char *ptr, CL *cl)
 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
+ 	else if ( strcmp(opt_name, "volatile") == 0 ) {
+ 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+ 		Handle_err;
+ 	    if ( i == 0 )
+ 		clear_volatile(cl->cl_option);
+ 	    else
+ 		set_volatile(cl->cl_option);	
+  	    if (debug_opt)
+ 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+ 	}
+ 
+ 	else if ( strcmp(opt_name, "stdout") == 0 ) {
+ 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+ 		Handle_err;
+ 	    if ( i == 0 )
+ 		clear_stdout(cl->cl_option);
+ 	    else
+ 		set_stdout(cl->cl_option);	
+  	    if (debug_opt)
+ 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+ 	}
+ 
 	else if(strcmp(opt_name, "n") == 0 || strcmp(opt_name, "nice") == 0) {
 	    if( ! in_brackets || (ptr = get_nice(ptr, &i)) == NULL )
 		Handle_err;
@@ -971,7 +993,7 @@ read_opt(char *ptr, CL *cl)
 
 
 char *
-get_time(char *ptr, time_t *time)
+get_time(char *ptr, time_t *time, int zero_allowed)
     /* convert time read in string in time_t format */
 {
     time_t sum;
@@ -999,6 +1021,7 @@ get_time(char *ptr, time_t *time)
 	    sum *= 24;
 	case 'h':               /* hours */
 	    sum *= 3600;
+	case 's':               /* seconds */
 	    ptr++;
 	    break;
 	case ' ':
@@ -1016,7 +1039,7 @@ get_time(char *ptr, time_t *time)
     }
 
     Skip_blanks(ptr);
-    if (*time == 0) {
+    if (*time == 0 && ! zero_allowed) {
 	need_correction = 1;
 	return NULL;
     }
@@ -1070,13 +1093,14 @@ read_freq(char *ptr, CF *cf)
     memcpy(cl, &default_line, sizeof(CL));
     cl->cl_runas = strdup2(default_line.cl_runas);
     cl->cl_mailto = strdup2(default_line.cl_mailto);
+    cl->cl_first = -1; /* 0 is a valid value, so we have to use -1 to detect unset */
 
     /* skip the @ */
     ptr++;
 
     /* get the time before first execution or the options */
     if ( isdigit( (int) *ptr) ) {
-	if ( (ptr = get_time(ptr, &(cl->cl_nextexe))) == NULL ) {
+	if ( (ptr = get_time(ptr, &(cl->cl_first), 1)) == NULL ) {
 	    fprintf(stderr, "%s:%d: Error while reading first delay:"
 		    " skipping line.\n", file_name, line);
 	    goto exiterr;
@@ -1096,9 +1120,10 @@ read_freq(char *ptr, CF *cf)
     set_freq(cl->cl_option);
 
     /* then cl_timefreq */
-    if ( (ptr = get_time(ptr, (time_t *) &(cl->cl_timefreq))) == NULL) {
-	fprintf(stderr, "%s:%d: Error while reading frequency:"
-		" skipping line.\n", file_name, line);
+    if ( (ptr = get_time(ptr, (time_t *) &(cl->cl_timefreq), 0)) == NULL 
+	 || cl->cl_timefreq < 10 ) {
+	fprintf(stderr, "%s:%d: Error while reading frequency %s: skipping line.\n",
+		file_name, line, (cl->cl_timefreq < 10) ? "(lower than 10s) " : "");
 	goto exiterr;
     }
 	
@@ -1108,9 +1133,9 @@ read_freq(char *ptr, CF *cf)
 	goto exiterr;
     }
 
-    if ( cl->cl_nextexe == 0 )
+    if ( cl->cl_first == -1 )
 	/* time before first execution is not specified */
-	cl->cl_nextexe = cl->cl_timefreq;
+	cl->cl_first = cl->cl_timefreq;
 
     /* check for inline runas */
     ptr = check_username(ptr, cf, cl);
@@ -1137,7 +1162,7 @@ read_freq(char *ptr, CF *cf)
 
     if ( debug_opt )
 	fprintf(stderr, "  Cmd \"%s\", timefreq %ld, first %ld\n",
-		cl->cl_shell, cl->cl_timefreq, (long int)cl->cl_nextexe);
+		cl->cl_shell, cl->cl_timefreq, (long int)cl->cl_first);
     
     return;
 
@@ -1749,7 +1774,7 @@ save_file(char *path)
 		     
 	    if ( is_freq(line->cl_option) ) {
 		/* save the frequency and the first wait time */
-		Save_lint(f, S_NEXTEXE_T, line->cl_nextexe);
+		Save_lint(f, S_FIRST_T, line->cl_first);
 		Save_lint(f, S_TIMEFREQ_T, line->cl_timefreq);
 	    }
 	    else {
