@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.46 2002-08-30 20:06:01 thib Exp $ */
+ /* $Id: config.h.in,v 1.47 2002-10-28 17:54:56 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -41,11 +41,11 @@
 #define SENDMAIL_ARGS	 "-Ffcron", "-odi"   /* args of mail command */
 
 /* *** time *** */
-#define FIRST_SLEEP 20      /* fcron sleep at least this time after startup
-			     * before executing a job, to avoid to run jobs
-			     * during system boot */
+#define FIRST_SLEEP 20        /* fcron sleep at least this time after startup
+			       * before executing a job, to avoid to run jobs
+			       * during system boot */
 
-#define LAVG_SLEEP 30 /* the time we sleep when some jobs are in lavg queue */
+#define LAVG_SLEEP 30         /* the time we sleep when some jobs are in lavg queue */
 
 #define SAVE            1800  /* save every n seconds */
 
@@ -106,14 +106,16 @@
 
 #define MAX_MSG 150          /* max length of a log message */
 
+#define WRITE_BUF_LEN 1024   /* length of the buffer used for saving files to disk */
+
 
 /* *** socket *** */
 #define MAX_CONNECTION 25    /* max simultaneous connection allowed */
-#define MAX_USER_CON 3       /* max number of connection for a normal user */
-#define MAX_IDLE_TIME 300    /* time (in sec) a socket stay idle before being closed */
+#define MAX_IDLE_TIME 600    /* time (in sec) a socket stay idle before being closed */
+#define MAX_AUTH_TIME 60     /* time (in sec) before a socket is closed if not auth'ed */
 #define MAX_WAIT_TIME 10     /* time (in sec) we wait for data on a socket */
 #define MAX_AUTH_FAIL 10     /* auth nobody for some time if more than x fails */
-#define AUTH_WAIT 60     /* if too many fails, wait this time (seconds) before auth
+#define AUTH_WAIT 60         /* if too many fails, wait this time (seconds) before auth
                               * another client */
 
 
@@ -276,6 +278,9 @@
 /* Define if you have the setlinebuf function.  */
 #undef HAVE_SETLINEBUF
 
+/* Define if you have the setpriority function.  */
+#undef HAVE_SETPRIORITY
+
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
 
@@ -347,6 +352,9 @@
 
 /* Define if you have the <sys/ndir.h> header file.  */
 #undef HAVE_SYS_NDIR_H
+
+/* Define if you have the <sys/resource.h> header file.  */
+#undef HAVE_SYS_RESOURCE_H
 
 /* Define if you have the <sys/socket.h> header file.  */
 #undef HAVE_SYS_SOCKET_H
