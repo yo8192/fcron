@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.14 2004-07-11 18:11:00 thib Exp $ */
+ /* $Id: socket.c,v 1.15 2004-08-12 09:50:36 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -29,6 +29,7 @@
 #include "fcron.h"
 #include "socket.h"
 #include "getloadavg.h"
+#include "database.h"
 
 
 void remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client);
@@ -42,6 +43,7 @@ void cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 void cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index,
 		int is_root);
 void cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index);
+void cmd_run(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root);
 
 fcrondyn_cl *fcrondyn_cl_base; /* list of connected fcrondyn clients */
 int fcrondyn_cl_num = 0;       /* number of fcrondyn clients currently connected */    
@@ -78,7 +80,6 @@ char err_others_nallowed_str[] = "You are not allowed to list other users' jobs.
         { \
           send(FD, MSG, sizeof(MSG), 0); \
           Tell_no_more_data(FD); \
-          return; \
         }
 
 /* which bit corresponds to which field ? */
@@ -401,6 +402,7 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 	if ( all && ! is_root) {
 	    warn("User %s tried to list *all* jobs.", client->fcl_user);
 	    Send_err_msg_end(fd, err_all_nallowed_str);
+	    return;
 	}
 	if ( all )
 	    bit_set(fields, FIELD_USER);
@@ -417,11 +419,13 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 		if ( (pass = getpwuid( (uid_t) cmd[1] )) == NULL ) {
 		    warn_e("Unable to find passwd entry for %ld", cmd[1]);
 		    Send_err_msg_end(fd, err_invalid_user_str);
+		    return;
 		}
 		if ( ! is_root && strcmp(pass->pw_name, client->fcl_user) != 0 ) {
 		    warn_e("%s is not allowed to see %s's jobs. %ld", client->fcl_user,
 			   pass->pw_name);
 		    Send_err_msg_end(fd, err_others_nallowed_str);
+		    return;
 		}
 		user = pass->pw_name;
 #ifdef SYSFCRONTAB
@@ -437,8 +441,18 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 	    break;
 
 	case CMD_LIST_EXEQ:
-	    for ( i = 0; i < exe_num; i++)
-		Test_line(exe_array[i].e_line, exe_array[i].e_job_pid, 0, 0);
+	    for ( i = 0; i < exe_num; i++) {
+		if ( exe_array[i].e_line == NULL ) {
+		    if ( is_root ) {
+			send_msg_fd(fd, "job no more in an fcrontab: pid %d", 
+				    exe_array[i].e_job_pid);
+			found = 1;
+		    }
+		}
+		else
+		    Test_line(exe_array[i].e_line, exe_array[i].e_job_pid,
+			      0, 0)
+	    }
 	    break;
 
 	case CMD_LIST_LAVGQ:
@@ -481,7 +495,8 @@ cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 
     /* find the corresponding job */
     for ( exe_index = 0 ; exe_index < exe_num; exe_index++ )
-	if ( cmd[2] == exe_array[exe_index].e_line->cl_id ) {
+	if ( exe_array[exe_index].e_line != NULL 
+	     && cmd[2] == exe_array[exe_index].e_line->cl_id ) {
 	    found = 1;
 	    break;
 	}
@@ -498,6 +513,7 @@ cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 
 	warn(err_str, cmd[2], client->fcl_user);
 	Send_err_msg_end(fd, err_rjob_nfound_str);
+	return;
     }
     
     /* check if the request is valid */
@@ -514,14 +530,17 @@ cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 
 	warn(err_str, client->fcl_user, cmd[1], cmd[2], client->fcl_user);
 	Send_err_msg_end(fd, err_job_nallowed_str);
+	return;
     }
 
     if ( cmd[0] == CMD_SEND_SIGNAL )
 	cmd_send_signal(client, cmd, fd, exe_index);
     else if ( cmd[0] == CMD_RENICE )
 	cmd_renice(client, cmd, fd, exe_index, is_root);
-    else
+    else {
 	Send_err_msg_end(fd, err_cmd_unknown_str);
+	return;
+    }
 }
 
 
@@ -532,11 +551,12 @@ cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index, int
 
 #ifdef HAVE_SETPRIORITY
     /* check if arguments are valid */
-    if ( exe_array[exe_index].e_job_pid <= 0 || ( (int)cmd[1] < 0 && ! is_root )
+    if ( exe_array[exe_index].e_job_pid <= 0 || ((int)cmd[1] < 0 && ! is_root)
 	|| (int)cmd[1] > 20 || (int)cmd[1] < -20 ) {
 	warn("renice: invalid args : pid: %d nice_value: %d user: %s.",
 	     exe_array[exe_index].e_job_pid, (int)cmd[1], client->fcl_user);	
 	Send_err_msg_end(fd, err_invalid_args_str);
+	return;
     }
 
     /* ok, now setpriority() the job */
@@ -544,9 +564,12 @@ cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index, int
 	error_e("could not setpriority(PRIO_PROCESS, %d, %d)",
 		exe_array[exe_index].e_job_pid, (int)cmd[1]);
 	Send_err_msg_end(fd, err_unknown_str);
+	return;
     }
-    else
+    else {
 	Send_err_msg_end(fd, err_no_err_str);
+	return;
+    }
 
 #else /* HAVE_SETPRIORITY */
     warn("System has no setpriority() : cannot renice. pid: %d nice_value: %d user: %s.",
@@ -565,17 +588,56 @@ cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index
 	warn("send_signal: invalid args : pid: %d signal: %d user: %s",
 	     exe_array[exe_index].e_job_pid, (int)cmd[1], client->fcl_user);	
 	Send_err_msg_end(fd, err_invalid_args_str);
+	return;
     }
 
     /* ok, now kill() the job */
     if ( kill(exe_array[exe_index].e_job_pid, (int)cmd[1]) != 0) {
 	error_e("could not kill(%d, %d)", exe_array[exe_index].e_job_pid, (int)cmd[1]);
 	Send_err_msg_end(fd, err_unknown_str);
+	return;
     }
-    else
+    else {
 	Send_err_msg_end(fd, err_no_err_str);
+	return;
+    }
 }
 
+
+void
+cmd_run(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
+    /* Run a job and rescheduled if requested  */
+{
+
+    struct job_t *j = NULL;
+
+    for ( j = queue_base; j != NULL; j = j->j_next ) {
+	if ( cmd[1] == j->j_line->cl_id ) {
+	    if (strcmp(client->fcl_user, j->j_line->cl_file->cf_user) == 0
+		|| is_root ) {
+
+		if ( is_lavg(j->j_line->cl_option) )
+		    add_lavg_job(j->j_line, fd);
+		else if ( is_serial(j->j_line->cl_option) )
+		    add_serial_job(j->j_line, fd);
+		else
+		    run_normal_job(j->j_line, fd);
+
+		if ( cmd[0] == CMD_RUNNOW )
+		    set_next_exe(j->j_line, FROM_CUR_NEXTEXE, fd);
+
+		Tell_no_more_data(fd);
+
+		return;
+
+	    }
+	}
+    }
+	
+    /* we don't come here if a job has been found */
+    Send_err_msg_end(fd, err_job_nfound_str);
+
+}
 
 void
 exe_cmd(struct fcrondyn_cl *client)
@@ -608,6 +670,11 @@ exe_cmd(struct fcrondyn_cl *client)
     case CMD_LIST_SERIALQ:
     case CMD_LIST_EXEQ:
 	cmd_ls(client, cmd, fd, is_root);
+	break;
+
+    case CMD_RUN:
+    case CMD_RUNNOW:
+	cmd_run(client, cmd, fd, is_root);
 	break;
 
     default:
