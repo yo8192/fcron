@@ -6,7 +6,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.7)
 
-vers="0.9.2.1"
+vers="1.0.0"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -175,12 +175,8 @@ AC_ARG_WITH(etcdir,
     fi
     ;;
   *)
-    if test -d "$withval"; then
-      etcdir="$withval"
-      AC_MSG_RESULT($withval)
-    else
-      AC_MSG_ERROR(directory $withval does not exist)
-    fi
+    etcdir="$withval"
+    AC_MSG_RESULT($withval)
     ;;
   esac ],
   if test -d "/etc"; then
@@ -228,12 +224,8 @@ AC_ARG_WITH(spooldir,
     fi
     ;;
   *)
-    if test -d "$withval"; then
-      sp="$withval"
-      AC_MSG_RESULT($withval)
-    else
-      AC_MSG_ERROR(directory $withval does not exist)
-    fi
+    sp="$withval"
+    AC_MSG_RESULT($withval)
     ;;
   esac ],
   if test -d /var/spool/fcron ; then
@@ -311,7 +303,7 @@ AC_ARG_WITH(debug,
 
 
 AC_MSG_CHECKING(location of man directory)
-AC_ARG_WITH(MANDIR,
+AC_ARG_WITH(mandir,
 [  --with-mandir=PATH	Root directory for manual pages.],
 [ case "$withval" in
   no)
@@ -328,16 +320,12 @@ AC_ARG_WITH(MANDIR,
        mandir="$prefix/local/share/man"
        AC_MSG_RESULT($prefix/local/share/man)
     else
-       AC_MSG_ERROR(Cannot determine value for man directory: try option --with-man=PATH)
+       AC_MSG_ERROR(Cannot determine value for man directory: try option --with-mandir=PATH)
     fi
     ;;
   *)
-    if test -d "$withval"; then
-      mandir="$withval"
-      AC_MSG_RESULT($withval)
-    else
-      AC_MSG_ERROR(directory $withval does not exist)
-    fi
+    mandir="$withval"
+    AC_MSG_RESULT($withval)
     ;;
   esac ],
   if test -d "$prefix/man" ; then
@@ -350,7 +338,7 @@ AC_ARG_WITH(MANDIR,
      mandir="$prefix/local/share/man"
      AC_MSG_RESULT($prefix/local/share/man)
   else
-     AC_MSG_ERROR(Cannot determine value for man directory: try option --with-man=PATH)
+     AC_MSG_ERROR(Cannot determine value for man directory: try option --with-mandir=PATH)
   fi
 )
 MANDIR="$mandir"
@@ -359,7 +347,7 @@ AC_SUBST(MANDIR)
 
 
 AC_MSG_CHECKING(location of doc directory)
-AC_ARG_WITH(DOCDIR,
+AC_ARG_WITH(docdir,
 [  --with-docdir=PATH	Directory containing documentation.],
 [ case "$withval" in
   no)
@@ -376,16 +364,12 @@ AC_ARG_WITH(DOCDIR,
        docdir="$prefix/local/share/doc"
        AC_MSG_RESULT($prefix/local/share/doc)
     else
-       AC_MSG_ERROR(Cannot determine value for doc directory: try option --with-doc=PATH)
+       AC_MSG_ERROR(Cannot determine value for doc directory: try option --with-docdir=PATH)
     fi
     ;;
   *)
-    if test -d "$withval"; then
-      docdir="$withval"
-      AC_MSG_RESULT($withval)
-    else
-      AC_MSG_ERROR(directory $withval does not exist)
-    fi
+    docdir="$withval"
+    AC_MSG_RESULT($withval)
     ;;
   esac ],
   if test -d "$prefix/doc" ; then
@@ -398,7 +382,7 @@ AC_ARG_WITH(DOCDIR,
      docdir="$prefix/local/share/doc"
      AC_MSG_RESULT($prefix/local/share/doc)
   else
-     AC_MSG_ERROR(Cannot determine value for doc directory: try option --with-doc=PATH)
+     AC_MSG_ERROR(Cannot determine value for doc directory: try option --with-docdir=PATH)
   fi
 )
 DOCDIR="$docdir"
