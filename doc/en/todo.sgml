@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.4 2002-02-16 09:58:35 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.5 2002-02-24 16:51:33 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -19,16 +19,10 @@ A copy of the license is included in gfdl.sgml.
 	    <para>PAM support (ongoing)</para>
 	</listitem>
 	<listitem>
-	    <para>convert the doc into DocBook(ongoing), and make it easier to read and understand</para>
-	</listitem>
-	<listitem>
 	    <para>add some more checks in fileconf.c : do not allow user to use hours, days, hourly (?), daily (?), etc with &-lines : it currently does nothing (no error, no special action), and it is quite confusing for users. (those options only work with %-lines).</para>
 	</listitem>
 	<listitem>
 	    <para>allow a non-privileged user to run fcron</para>
-	</listitem>
-	<listitem>
-	    <para>add a "random" option to %-lines, to change policy from : "run as soon as possible" to "set a random time to sleep before execing asap" (and then run - if the system hasn't gone down ...).</para>
 	</listitem>
 	<listitem>
 	    <para>add a return code for jobs which would mean that they should not be run again (in case of an error, etc...).</para>
