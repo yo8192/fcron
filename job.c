@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.40 2001-07-08 12:40:43 thib Exp $ */
+ /* $Id: job.c,v 1.41 2001-07-10 12:03:38 thib Exp $ */
 
 #include "fcron.h"
 #include "job.h"
@@ -61,7 +61,6 @@ change_user(char *user_name)
     }
 #endif /* HAVE_SETENV */
 
-    debug("*** uid:%d euid:%d gid:%d egid:%d\n", getuid(), geteuid(), getgid(), getegid());
     /* Change running state to the user in question */
     if (initgroups(pas->pw_name, pas->pw_gid) < 0)
 	die_e("initgroups failed: %s", pas->pw_name);
@@ -71,7 +70,6 @@ change_user(char *user_name)
     
     if (setuid(pas->pw_uid) < 0) 
 	die("setuid failed: %s %d", pas->pw_name, pas->pw_uid);
-    debug("*** uid:%d euid:%d gid:%d egid:%d\n", getuid(), geteuid(), getgid(), getegid());
 
     return(pas->pw_uid);
 }

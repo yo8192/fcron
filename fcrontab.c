@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.43 2001-07-08 12:41:30 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.44 2001-07-10 12:03:48 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.43 2001-07-08 12:41:30 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.44 2001-07-10 12:03:48 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -414,7 +414,6 @@ edit_file(char *buf)
 		    goto exiterr;
 		}
 	    }
-	    debug("*** uid:%d euid:%d gid:%d egid:%d\n", getuid(), geteuid(), getgid(), getegid());
 
 	    execlp(cureditor, cureditor, tmp_str, NULL);
 	    error_e("Error while running \"%s\"", cureditor);
@@ -755,8 +754,6 @@ int
 main(int argc, char **argv)
 {
 
-    debug("*** uid:%d euid:%d gid:%d egid:%d\n", getuid(), geteuid(), getgid(), getegid());
-
     memset(buf, 0, sizeof(buf));
     memset(file, 0, sizeof(file));
 
@@ -806,8 +803,6 @@ main(int argc, char **argv)
     }
 #endif
     
-
-    debug("*** uid:%d euid:%d gid:%d egid:%d\n", getuid(), geteuid(), getgid(), getegid());
     /* this program is seteuid : we set default permission mode
      * to  640 for security reasons */
     umask(026);
