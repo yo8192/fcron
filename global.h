@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.17 2000-08-28 17:59:40 thib Exp $ */
+ /* $Id: global.h,v 1.18 2000-08-30 09:09:07 thib Exp $ */
 
 
 /* 
@@ -117,7 +117,7 @@ typedef struct job {
 
 typedef struct lavg {
     struct CL  *l_line;  
-    time_t      l_since;   /* the time of the line admission in the queue */
+    time_t      l_until;   /* the timeout of the wait for load averages */
 } lavg;
 
 #endif /* __GLOBALH__ */
