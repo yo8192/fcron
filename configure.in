@@ -1,7 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(allow.c)
-prefix="/usr"
+if test \( "$prefix" = "NONE" \) -o \( -z "$prefix" \); then
+  prefix="/usr/"
+fi
 AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.7)
