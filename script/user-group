@@ -4,7 +4,7 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.1 2000-11-18 14:51:47 thib Exp $
+# $Id: user-group,v 1.2 2001-01-04 15:50:41 thib Exp $
 
 # take 2 arguments : 	username
 # 			groupname
@@ -27,10 +27,17 @@ if grep "^$USERNAME:" /etc/passwd > /dev/null; then
     INSTALLED=1
 else
     echo "no."
+    CMD=""
     if useradd -D 2> /dev/null; then
 	CMD="useradd -c 'fcron' fcron"
     elif adduser -D 2> /dev/null; then
 	CMD="adduser -c 'fcron' fcron"
+    fi
+    if test -z "$CMD"; then
+	echo "Could not determine the command to use to add a user."
+	echo "Please add user \"$USERNAME\" (group \"GROUPNAME\") manually"
+	echo "(or choose another username with configure script)."
+	exit 1
     fi
     while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
 	do
