@@ -47,10 +47,26 @@ AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
 AC_FUNC_WAIT3
 AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
-AC_FUNC_GETLOADAVG
+AC_CHECK_FUNC(kstat_open, [kstat=1], [kstat=0])
+if test $getloadavg -eq 1; then
+dnl Nothing to do ...
+  AC_FUNC_GETLOADAVG
+  AC_MSG_CHECKING(function to use for lavg* options)  
+  AC_MSG_RESULT(getloadavg())
+elif test $kstat -eq 1;  then
+  AC_MSG_CHECKING(function to use for lavg* options)  
+  LIBS="$LIBS -lkstat"
+  AC_DEFINE_UNQUOTED(HAVE_KSTAT, 1)
+  AC_MSG_RESULT(kstat)
+else
+dnl Try to use the /proc/loadavg file ...
+  AC_FUNC_GETLOADAVG
+  AC_MSG_CHECKING(function to use for lavg* options)  
+  AC_MSG_RESULT(/proc/loadavg)
+fi
 AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv gethostname)
 AC_CHECK_FUNCS(mkstemp)
-AC_CHECK_FUNCS(flock, lockf)
+AC_CHECK_FUNCS(flock lockf)
 AC_CHECK_FUNCS(setreuid, [setreuid=1], [setreuid=0])
 AC_CHECK_FUNCS(setregid, [setregid=1], [setregid=0])
 
@@ -77,12 +93,12 @@ Cannot determine path to sendmail: try option --with-sendmail=PATH])
     ;;
   *)
     AC_MSG_CHECKING(sendmail)
-    if test -f "$withval"; then
+    if test -x "$withval"; then
       AC_DEFINE_UNQUOTED(SENDMAIL, "$withval")
       AC_MSG_RESULT($withval)
     else
       AC_MSG_ERROR([
-file $withval does not exist])
+File $withval is not an executable file])
     fi
     ;;
   esac ], [
@@ -113,12 +129,12 @@ Cannot determine path to sh: try option --with-shell=PATH])
     ;;
   *)
     AC_MSG_CHECKING(shell)
-    if test -f "$withval"; then
+    if test -x "$withval"; then
       AC_DEFINE_UNQUOTED(SHELL, "$withval")
       AC_MSG_RESULT($withval)
     else
       AC_MSG_ERROR([
-file $withval does not exist])
+File $withval is not an executable file])
     fi
     ;;
   esac ], [
@@ -149,12 +165,12 @@ Cannot determine path to vi: try option --with-editor=PATH])
     ;;
   *)
     AC_MSG_CHECKING(editor)
-    if test -f "$withval"; then
+    if test -x "$withval"; then
       AC_DEFINE_UNQUOTED(EDITOR, "$withval")
       AC_MSG_RESULT($withval)
     else
       AC_MSG_ERROR([
-file $withval does not exist])
+File $withval is not an executable file])
     fi
     ;;
   esac ], [
@@ -179,36 +195,72 @@ AC_ARG_WITH(etcdir,
       etcdir=/etc
       AC_MSG_RESULT(/etc)
     else
-      AC_MSG_ERROR(directory /etc does not exist: try option --with-etcdir=PATH)
+      AC_MSG_ERROR([
+Directory /etc does not exist: try option --with-etcdir=PATH])
     fi
     ;;
   *)
-    etcdir="$withval"
-    AC_MSG_RESULT($withval)
+    if test -d "$withval"; then
+      etcdir="$withval"
+      AC_MSG_RESULT($withval)
+    else
+      AC_MSG_ERROR([
+Directory $withval does not exist])
+    fi
     ;;
   esac ],
   if test -d "/etc"; then
     etcdir="/etc"
     AC_MSG_RESULT(/etc)
   else
-    AC_MSG_ERROR(directory /etc does not exist: try option --with-etcdir=PATH)
+    AC_MSG_ERROR([
+Directory /etc does not exist: try option --with-etcdir=PATH])
   fi
 )
 ETC="$etcdir"
 AC_DEFINE_UNQUOTED(ETC, "$etcdir")
 AC_SUBST(ETC)
 
-AC_MSG_CHECKING(location of pid file)
-if test -d /var/run ; then
-    AC_DEFINE(PIDFILE, "/var/run/fcron.pid")
-    AC_MSG_RESULT(/var/run)
-elif test -d /usr/run ; then
-    AC_DEFINE(PIDFILE, "/usr/run/fcron.pid")
-    AC_MSG_RESULT(/usr/run)
-else
-    AC_DEFINE_UNQUOTED(PIDFILE, "$ETC/fcron.pid")
-    AC_MSG_RESULT($ETC)
-fi
+AC_MSG_CHECKING(location of pid files)
+AC_ARG_WITH(piddir,
+[  --with-piddir=PATH	Directory containing pid files.],
+[ case "$withval" in
+  no)
+    AC_MSG_ERROR(Need PIDDIR.)
+    ;;
+  yes)
+    if test -d /var/run ; then
+      AC_DEFINE(PIDFILE, "/var/run/fcron.pid")
+      AC_MSG_RESULT(/var/run)
+    elif test -d /usr/run ; then
+      AC_DEFINE(PIDFILE, "/usr/run/fcron.pid")
+      AC_MSG_RESULT(/usr/run)
+    else
+      AC_DEFINE_UNQUOTED(PIDFILE, "$ETC/fcron.pid")
+      AC_MSG_RESULT($ETC)
+    fi
+    ;;
+  *)
+    if test -d "$withval"; then
+      AC_DEFINE_UNQUOTED(PIDFILE, "$withval/fcron.pid")
+      AC_MSG_RESULT($withval)
+    else
+      AC_MSG_ERROR([
+Directory $withval does not exist])
+    fi
+    ;;
+  esac ],
+    if test -d /var/run ; then
+      AC_DEFINE(PIDFILE, "/var/run/fcron.pid")
+      AC_MSG_RESULT(/var/run)
+    elif test -d /usr/run ; then
+      AC_DEFINE(PIDFILE, "/usr/run/fcron.pid")
+      AC_MSG_RESULT(/usr/run)
+    else
+      AC_DEFINE_UNQUOTED(PIDFILE, "$ETC/fcron.pid")
+      AC_MSG_RESULT($ETC)
+    fi
+)
 
 AC_MSG_CHECKING(location of spool directory)
 AC_ARG_WITH(spooldir,
@@ -228,7 +280,8 @@ AC_ARG_WITH(spooldir,
        sp=/usr/spool/fcron
        AC_MSG_RESULT(/usr/spool/fcron)
     else
-       AC_MSG_ERROR(Cannot determine value for spool directory: try option --with-spooldir=PATH)
+       AC_MSG_ERROR([
+Cannot determine value for spool directory: try option --with-spooldir=PATH])
     fi
     ;;
   *)
@@ -246,14 +299,15 @@ AC_ARG_WITH(spooldir,
       sp=/usr/spool/fcron
       AC_MSG_RESULT(/usr/spool/fcron)
   else
-      AC_MSG_ERROR(Cannot determine value for spool directory: try option --with-spooldir=PATH)
+      AC_MSG_ERROR([
+Cannot determine value for spool directory: try option --with-spooldir=PATH])
   fi
 )
 FCRONTABS="$sp"
 AC_DEFINE_UNQUOTED(FCRONTABS, "$sp")
 AC_SUBST(FCRONTABS)
 
-if test $getloadavg -eq 0  ; then
+if test \( $getloadavg -eq 0 \) -a \( $kstat -eq 0 \); then
 AC_MSG_CHECKING(proc directory)
 AC_ARG_WITH(proc,
 [  --with-proc=PATH	Directory where linux procfs is mounted (default /proc).],
@@ -269,7 +323,9 @@ Without proc, you won't be able to use the lavg* options
         proc="/proc"
         AC_MSG_RESULT(/proc)
     else
-       AC_MSG_ERROR(Cannot determine value for proc directory: try option --with-proc=PATH)
+       AC_MSG_WARN([
+Cannot determine value for proc directory: try option --with-proc=PATH])
+       AC_MSG_ERROR(Use --with-proc=no to disable the lavg* options)
     fi
     ;;
   *)
@@ -285,7 +341,9 @@ Without proc, you won't be able to use the lavg* options
       proc="/proc"
       AC_MSG_RESULT(/proc)
   else
-     AC_MSG_ERROR(Cannot determine value for proc directory: try option --with-proc=PATH)
+       AC_MSG_WARN([
+Cannot determine value for proc directory: try option --with-proc=PATH])
+       AC_MSG_ERROR(Use --with-proc=no to disable the lavg* options)
   fi
 )
 PROC="$proc"
@@ -352,7 +410,8 @@ AC_ARG_WITH(docdir,
        docdir="${prefix}/local/share/doc"
        AC_MSG_RESULT(${prefix}/local/share/doc)
     else
-       AC_MSG_ERROR(Cannot determine value for doc directory: try option --with-docdir=PATH)
+       AC_MSG_ERROR([
+Cannot determine value for doc directory: try option --with-docdir=PATH])
     fi
     ;;
   *)
@@ -370,7 +429,8 @@ AC_ARG_WITH(docdir,
      docdir="${prefix}/local/share/doc"
      AC_MSG_RESULT(${prefix}/local/share/doc)
   else
-     AC_MSG_ERROR(Cannot determine value for doc directory: try option --with-docdir=PATH)
+     AC_MSG_ERROR([
+Cannot determine value for doc directory: try option --with-docdir=PATH])
   fi
 )
 DOCDIR="$docdir"
@@ -422,7 +482,8 @@ AC_ARG_WITH(rootname,
 	rootname=root
         AC_MSG_RESULT($rootname)
     else
-	AC_MSG_ERROR(Cannot determine root's username: try option --with-rootname=USERNAME)
+	AC_MSG_ERROR([
+Cannot determine root's username: try option --with-rootname=USERNAME])
     fi
     ;;
   *)
@@ -430,7 +491,8 @@ AC_ARG_WITH(rootname,
 	rootname=$withval
         AC_MSG_RESULT($rootname)
     else
-	AC_MSG_ERROR(Invalid root's username : not in /etc/passwd)
+	AC_MSG_ERROR([
+Invalid root's username : not in /etc/passwd])
     fi
     ;;
     esac ],
@@ -438,7 +500,8 @@ AC_ARG_WITH(rootname,
 	rootname=root
         AC_MSG_RESULT($rootname)
     else
-	AC_MSG_ERROR(Cannot determine root's username: try option --with-rootname=USERNAME)
+	AC_MSG_ERROR([
+Cannot determine root's username: try option --with-rootname=USERNAME])
     fi
 )
 
@@ -457,7 +520,8 @@ AC_ARG_WITH(rootgroup,
 	rootgroup=wheel
         AC_MSG_RESULT($rootgroup)
     else
-	AC_MSG_ERROR(Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME)
+	AC_MSG_ERROR([
+Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME])
     fi
     ;;
   *)
@@ -465,7 +529,8 @@ AC_ARG_WITH(rootgroup,
 	rootgroup=$withval
         AC_MSG_RESULT($rootgroup)
     else
-	AC_MSG_ERROR(Invalid root's groupname : not in /etc/group)
+	AC_MSG_ERROR([
+Invalid root's groupname : not in /etc/group])
     fi
     ;;
     esac ],
@@ -476,7 +541,8 @@ AC_ARG_WITH(rootgroup,
 	rootgroup=wheel
         AC_MSG_RESULT($rootgroup)
     else
-	AC_MSG_ERROR(Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME)
+	AC_MSG_ERROR([
+Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME])
     fi
 )
 
