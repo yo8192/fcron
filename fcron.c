@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.27 2000-09-13 15:37:43 thib Exp $ */
+ /* $Id: fcron.c,v 1.28 2000-09-13 15:45:14 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.27 2000-09-13 15:37:43 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.28 2000-09-13 15:45:14 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -503,9 +503,13 @@ main_loop()
 
     for (;;) {
 	
+#ifdef HAVE_GETTIMEOFDAY
 	sleep(stime - 1);
 	gettimeofday(&tv, NULL);
 	usleep( 1000000 - tv.tv_usec );
+#else
+	sleep(stime);
+#endif /* HAVE_GETTIMEOFDAY */
 
 	now = time(NULL);
 
