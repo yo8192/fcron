@@ -480,9 +480,9 @@ if test \( $setreuid -eq 0 \) -o \( $setregid -eq 0 \) ; then
 	groupname="$rootgroup"
 else
 
-AC_MSG_CHECKING(username to run under)
+AC_MSG_CHECKING(username to run fcrontab under)
 AC_ARG_WITH(username,
-[ --with-username=USERNAME	Username to run under (default fcron) ],
+[ --with-username=USERNAME	Username to run fcrontab under (default fcron) ],
 [ case "$withval" in
   no)
     AC_MSG_ERROR(Need USERNAME.)
@@ -513,9 +513,9 @@ AC_ARG_WITH(username,
     fi
 )
 
-AC_MSG_CHECKING(groupname to run under)
+AC_MSG_CHECKING(groupname to run fcrontab under)
 AC_ARG_WITH(groupname,
-[ --with-groupname=GROUPNAME	Groupname to run under (default fcron) ],
+[ --with-groupname=GROUPNAME	Groupname to run fcrontab under (default fcron) ],
 [ case "$withval" in
   no)
     AC_MSG_ERROR(Need GROUPNAME.)
