@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.63 2001-04-30 03:02:03 thib Exp $
+# $Id: Makefile.in,v 1.64 2001-05-05 19:08:20 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -173,11 +173,3 @@ tar: updatedoc configure vclean
 	@(cd ..; rm -f fcron-$(VERSION))
 
 	@(cd ..; mv -f fcron-$(VERSION).src.tar.gz old-fcron-pkg/)
-
-	@(cd ../old-fcron-pkg/; gpg -a -o fcron-$(VERSION).src.tar.gz.sign --detach-sign fcron-$(VERSION).src.tar.gz)
-
-
-
-
-
-
