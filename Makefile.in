@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.19 2000-06-21 13:46:53 thib Exp $
+# $Id: Makefile.in,v 1.20 2000-06-22 15:35:59 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -72,8 +72,9 @@ OBJS= fcrontab.o fileconf.o subs.o log.o allow.c
 HEADERSD = fcron.h config.h global.h
 HEADERS = fcrontab.h config.h global.h
 
-# this is a regular expression
+# this is two regular expressions
 RCSNOLOG=.*\(.html\|VERSION\|MANIFEST\)
+REXP_MANPAGES=.*[158]
 
 all: fcron fcrontab
 
@@ -124,7 +125,9 @@ clean:
 vclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
 
-%.html: %
+
+%.html: %.in Makefile config.h
+	script/gen-manpage.pl $*.in $*
 	groff -Thtml -mandoc $* > ./tmp
 	sed "s:<body.*>:<body BGCOLOR="\#000000" TEXT="\#FFFFFF" \
 		LINK="\#0FA0FF" VLINK="\#B000B0" ALINK="\#FF0000"> \
@@ -140,7 +143,7 @@ tar: vclean updatedoc
 	echo $(VERSION) > ./VERSION
 
 	@(find ./ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOLOG)" \
-             -exec ci -l {} \;)
+             ! -regex "$(REXP_MANPAGES)" -exec ci -l {} \;)
 
 	@(find ./ -type f ! -regex '.*RCS.*' | \
              sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
