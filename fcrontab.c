@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.13 2000-09-05 19:52:33 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.14 2000-09-12 19:53:03 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.13 2000-09-05 19:52:33 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.14 2000-09-12 19:53:03 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -57,7 +57,13 @@ char edit_opt = 0;
 char reinstall_opt = 0;
 char ignore_prev = 0;
 int file_opt = 0;
-char debug_opt = DEBUG;
+
+#ifdef DEBUG
+char debug_opt = 1;       /* set to 1 if we are in debug mode */
+#else
+char debug_opt = 0;       /* set to 1 if we are in debug mode */
+#endif
+
 char *user = NULL;
 uid_t uid = 0 ;
 char  *cdir = FCRONTABS;

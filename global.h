@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.18 2000-08-30 09:09:07 thib Exp $ */
+ /* $Id: global.h,v 1.19 2000-09-12 19:53:10 thib Exp $ */
 
 
 /* 
@@ -32,27 +32,62 @@
 #ifndef __GLOBALH__
 #define __GLOBALH__
 
+/* config.h must be included before every other includes */
+#include "config.h"
+
+
 #include <ctype.h>
+
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#ifdef __linux__
+#endif
+
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif
+
 #include <pwd.h>
 #include <signal.h>
+
+#ifdef HAVE_STDARG_H
 #include <stdarg.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
+#endif
+
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h>
-#include <syslog.h>
-#include <time.h>
-#include <unistd.h>
-#include <fcntl.h>
 
-#include "config.h"
+#ifdef HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+
+#ifdef HAVE_SYSLOG_H
+#include <syslog.h>
+#endif
+
+#ifdef TIME_WITH_SYS_TIME
+#include <time.h>
+#elif HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#elif HAVE_SYS_FCNTL_H
+#include <sys/fcntl.h>
+#endif
+
 #include "bitstring.h"         
 #include "option.h"
 

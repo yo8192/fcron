@@ -21,27 +21,37 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.25 2000-09-03 13:15:46 thib Exp $ */
+ /* $Id: fcron.c,v 1.26 2000-09-12 19:52:34 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.25 2000-09-03 13:15:46 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.26 2000-09-12 19:52:34 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
 void info(void);
 void usage(void);
-void sighup_handler(int x);
-void sigterm_handler(int x);
-void sigchild_handler(int x);
-void sigusr1_handler(int x);
+RETSIGTYPE sighup_handler(int x);
+RETSIGTYPE sigterm_handler(int x);
+RETSIGTYPE sigchild_handler(int x);
+RETSIGTYPE sigusr1_handler(int x);
 int parseopt(int argc, char *argv[]);
 void get_lock(void);
 
 
 /* command line options */
-char debug_opt = DEBUG;       /* set to 1 if we are in debug mode */
-char foreground = FOREGROUND; /* set to 1 when we are on foreground, else 0 */
+#ifdef DEBUG
+char debug_opt = 1;       /* set to 1 if we are in debug mode */
+#else
+char debug_opt = 0;       /* set to 1 if we are in debug mode */
+#endif
+
+#ifdef FOREGROUND
+char foreground = 1; /* set to 1 when we are on foreground, else 0 */
+#else
+char foreground = 0; /* set to 1 when we are on foreground, else 0 */
+#endif
+
 char  *cdir = FCRONTABS;      /* the dir where are stored users' fcrontabs */
 
 /* process identity */
@@ -262,7 +272,7 @@ parseopt(int argc, char *argv[])
 }
 
 
-void
+RETSIGTYPE
 sigterm_handler(int x)
   /* exit safely */
 {
@@ -271,7 +281,7 @@ sigterm_handler(int x)
     xexit(EXIT_OK);
 }
 
-void
+RETSIGTYPE
 sighup_handler(int x)
   /* update configuration */
 {
@@ -289,7 +299,7 @@ sighup_handler(int x)
     sig_conf = 1;
 }
 
-void
+RETSIGTYPE
 sigchild_handler(int x)
   /* call wait_chld() to take care of finished jobs */
 {
@@ -306,7 +316,7 @@ sigchild_handler(int x)
 }
 
 
-void
+RETSIGTYPE
 sigusr1_handler(int x)
   /* reload all configurations */
 {
@@ -405,12 +415,12 @@ main(int argc, char **argv)
     
     explain("%s[%d] " VERSION " started", prog_name, daemon_pid);
 
-    (void)signal(SIGTERM, sigterm_handler);
-    (void)signal(SIGHUP, sighup_handler);
+    signal(SIGTERM, sigterm_handler);
+    signal(SIGHUP, sighup_handler);
     siginterrupt(SIGHUP, 0);
-    (void)signal(SIGCHLD, sigchild_handler);
+    signal(SIGCHLD, sigchild_handler);
     siginterrupt(SIGCHLD, 0);
-    (void)signal(SIGUSR1, sigusr1_handler);
+    signal(SIGUSR1, sigusr1_handler);
     siginterrupt(SIGUSR1, 0);
 
 

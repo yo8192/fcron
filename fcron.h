@@ -21,18 +21,38 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.10 2000-08-28 17:59:15 thib Exp $ */
+ /* $Id: fcron.h,v 1.11 2000-09-12 19:52:50 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
 
 #include "global.h"
 
+#ifdef HAVE_DIRENT_H
 #include <dirent.h>
+#elif HAVE_SYS_DIRENT_H
+#include <sys/dirent.h>
+#elif HAVE_SYS_DIR_H
+#include <sys/dir.h>
+#endif
+
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+
 #include <grp.h>
+
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
+
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+
+#ifndef HAVE_GETLOADAVG
+#include "getloadavg.h"
+#endif
 
 
 /* global variables */
