@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.15 2000-06-29 21:12:51 thib Exp $ */
+ /* $Id: global.h,v 1.16 2000-08-22 18:01:37 thib Exp $ */
 
 
 /* 
@@ -57,7 +57,7 @@
 #include "option.h"
 
 
-#define FILEVERSION "009"  /* syntax's version of fcrontabs : 
+#define FILEVERSION "010"  /* syntax's version of fcrontabs : 
 			    * must have a length of 3 characters */
 
 #define ERR     -1           
@@ -81,7 +81,6 @@ typedef struct CF {
     struct CF    *cf_next;
     struct CL    *cf_line_base;
     char	 *cf_user;	/* user-name			        */
-    char         *cf_mailto;    /* mail output's to mail_user           */
     struct env_t *cf_env_base;  /* list of all env variables to set     */
     int		 cf_running;	/* number of jobs running               */
 } CF;
@@ -95,6 +94,7 @@ typedef struct CL {
     char	  *cl_shell;      /* shell command			  */
     char           cl_nice;       /* nice value to control priority       */
     uid_t          cl_runas;      /* determine permissions of the job     */
+    uid_t          cl_mailto;     /* mail output to cl_mailto             */
     pid_t	   cl_pid;	  /* running pid, 0, or armed (-1)        */
     time_t         cl_nextexe;    /* time and date of the next execution  */
     short int      cl_remain;     /* remaining until next execution       */

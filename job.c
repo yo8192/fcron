@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.18 2000-06-28 14:01:18 thib Exp $ */
+ /* $Id: job.c,v 1.19 2000-08-22 18:01:39 thib Exp $ */
 
 #include "fcron.h"
 
@@ -252,7 +252,7 @@ void
 launch_mailer(CL *line, int mailfd)
     /* mail the output of a job to user */
 {
-    char *mailto = NULL;
+    struct passwd *pass;
 
     foreground = 0;
 
@@ -263,11 +263,11 @@ launch_mailer(CL *line, int mailfd)
     xcloselog();
 
     /* determine which will be the mail receiver */
-    if ( (mailto = line->cl_file->cf_mailto) == NULL )
-	mailto = line->cl_file->cf_user;
-
+    if ( (pass = getpwuid(line->cl_mailto)) == NULL )
+	die("uid unknown: %d : no mail will be sent");
+    
     /* run sendmail with mail file as standard input */
-    execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, mailto, NULL);
+    execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, pass->pw_name, NULL);
     die_e("Can't exec " SENDMAIL);
 
 }

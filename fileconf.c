@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.12 2000-06-29 21:12:44 thib Exp $ */
+ /* $Id: fileconf.c,v 1.13 2000-08-22 18:01:34 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -45,6 +45,7 @@ CL default_line;    /* default options for a line */
 char *file_name;
 int line;
 extern char *user;
+extern uid_t uid;
 
 /* warning : all names must have the same length */
 const char *dows_ary[] = {
@@ -173,6 +174,8 @@ read_file(char *filename, char *user)
 
     Alloc(cf, CF);
     default_line.cl_file = cf;
+    default_line.cl_runas = uid;
+    default_line.cl_mailto = uid;
 
     if ( debug_opt )
 	fprintf(stderr, "FILE %s\n", file_name);
@@ -250,13 +253,6 @@ read_file(char *filename, char *user)
 
     fclose(file);
     
-    if ( cf->cf_mailto != NULL && cf->cf_mailto[0] == '\0' ) {
-	CL *line;
-
-	for (line = cf->cf_line_base; line; line = line->cl_next)
-	    clear_mail(line->cl_option);
-    }    
-
     if ( ! need_correction )
 	return OK;
     else
@@ -317,9 +313,18 @@ read_env(char *ptr, CF *cf)
     /* the MAILTO assignment is, in fact, an fcron option :
      *  we don't store it in the same way. */
     if ( strcmp(name, "MAILTO") == 0 ) {
-	if ( cf->cf_mailto != NULL )
-	    free(cf->cf_mailto);
-	cf->cf_mailto = val;
+	if ( strcmp(val, "\0") == 0 )
+	    clear_mail(default_line.cl_option);
+	else {
+	    struct passwd *pass = NULL;
+	    if ( (pass = getpwnam(val)) == 0 ) {
+		fprintf(stderr, "%s:%d: %s is not in passwd.\n",
+			file_name, line, val);	
+		need_correction = 1;
+	    } else
+		default_line.cl_mailto = pass->pw_uid;
+	}
+	    
     }
     else {
 
@@ -532,6 +537,7 @@ read_opt(char *ptr, CL *cl)
 
 	else if( strcmp(opt_name, "mailto") == 0) {
 	    char buf[50];
+	    struct passwd *pass = NULL;
 	    bzero(buf, sizeof(buf));
 
 	    if( ! in_brackets )
@@ -540,9 +546,12 @@ read_opt(char *ptr, CL *cl)
 	    i = 0;
 	    while ( isalnum(*ptr) )
 		buf[i++] = *ptr++;
-	    if ( cl->cl_file->cf_mailto != NULL )
-		free(cl->cl_file->cf_mailto);
-	    cl->cl_file->cf_mailto = strdup2(buf);
+	    if ( (pass = getpwnam(buf)) == NULL ) {
+		fprintf(stderr, "%s:%d: %s is not in passwd.\n",
+			file_name, line, buf);	
+		need_correction = 1;
+	    } else
+	    cl->cl_mailto = pass->pw_uid;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' '%s'\n", opt_name, buf);
 	}
@@ -1077,7 +1086,6 @@ delete_file(const char *user_name)
 
     /* finally free file itself */
     free(file->cf_user);
-    free(file->cf_mailto);
     free(file);
 
 }
@@ -1093,7 +1101,6 @@ save_file(char *path)
     CL *line = NULL;
     FILE *f = NULL;
     env_t *env = NULL;
-    struct passwd *pas = NULL;
 
     if (debug_opt)
 	fprintf(stderr, "Saving ...\n");
@@ -1119,13 +1126,6 @@ save_file(char *path)
 	 * the system down time. As it is a new file, we set it to 0 */
 	fprintf(f, "%d", 0);
 
-	/*   mailto, */
-	if ( file->cf_mailto != NULL ) {
-	    fprintf(f, "m");
-	    fprintf(f, "%s%c", file->cf_mailto, '\0');
-	} else
-	    fprintf(f, "e");
-
 	/*   env variables, */
 	for (env = file->cf_env_base; env; env = env->e_next) {
 	    fprintf(f, "%s%c", env->e_name, '\0');
@@ -1138,11 +1138,6 @@ save_file(char *path)
 	    if ( fwrite(line, sizeof(CL), 1, f) != 1 )
 		perror("save");
 	    fprintf(f, "%s%c", line->cl_shell, '\0');
-	    if ( is_runas(line->cl_option) ) {
-		if ( (pas = getpwuid(line->cl_runas)) == NULL )
-		    die_e("could not getpwuid() %d", line->cl_runas);
-		fprintf(f, "%s%c", pas->pw_name, '\0');
-	    }
 	}
 
 //	/* finally, write the number of lines to permit to check if the file

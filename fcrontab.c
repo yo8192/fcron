@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.11 2000-06-25 20:02:32 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.12 2000-08-22 18:01:32 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.11 2000-06-25 20:02:32 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.12 2000-08-22 18:01:32 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -59,6 +59,7 @@ char ignore_prev = 0;
 int file_opt = 0;
 char debug_opt = DEBUG;
 char *user = NULL;
+uid_t uid = 0 ;
 char  *cdir = FCRONTABS;
 
 char need_sig = 0;           /* do we need to signal fcron daemon */
@@ -663,8 +664,10 @@ parseopt(int argc, char *argv[])
 	}
     }
     else {
-	if ( ! getpwnam(user) )
+	struct passwd *pass;
+	if ( ! (pass = getpwnam(user)) )
 	    die("user '%s' is not in passwd file. Aborting.", user);
+	uid = pass->pw_uid;
     }
 
     if ( ! is_allowed(user) ) {

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.17 2000-06-29 21:12:22 thib Exp $ */
+ /* $Id: conf.c,v 1.18 2000-08-22 18:01:30 thib Exp $ */
 
 #include "fcron.h"
 
@@ -386,11 +386,7 @@ read_file(const char *file_name, CF *cf)
     char buf[LINE_LEN];
     time_t t_save = 0;
     time_t slept = 0;
-    char c;
-    int i;
     char *user = NULL;
-    char *runas = NULL;
-    struct passwd *pas = NULL;
 
 
     /* open file */
@@ -429,21 +425,6 @@ read_file(const char *file_name, CF *cf)
     slept = now - t_save;
 
 
-    /* check if there is a mailto field in file */
-    if ( (c = getc(ff)) == 'm' ) {
-	/* there is one : read it */
-
-	for (i = 0; i < sizeof(buf); i++)
-	    if ( (buf[i] = fgetc(ff)) == '\0')
-		break;
-	cf->cf_mailto = strdup2(buf);
-
-	debug("  MailTo: '%s'", cf->cf_mailto);
-    } else
-	/* if there is no mailto field, the first letter is not a 'm',
-	 * but a 'e' : there is no need to lseek */
-	;
-	    
     /* read env variables */
     Alloc(env, env_t);
     while( (env->e_name = read_str(ff, buf, sizeof(buf))) != NULL ) {
@@ -489,20 +470,6 @@ read_file(const char *file_name, CF *cf)
 	if ( cl->cl_pid == -1 ) {
 	    cl->cl_pid = 0;
 	    add_serial_job(cl);
-	}
-
-	/* set the uid  */
-	if ( is_runas(cl->cl_option) ) {
-	    struct passwd *p = NULL;
-	    runas = read_str(ff, buf, sizeof(buf));
-	    if ( (p = getpwnam(runas)) == NULL )
-		die_e("could not getpwnam() %s", runas);
-	    cl->cl_runas = p->pw_uid;
-	}
-	else {
-	    if ( pas == NULL && (pas = getpwnam(user)) == NULL )
-		die_e("could not getpwnam() %s", user);
-	    cl->cl_runas = pas->pw_uid;
 	}
 
 
@@ -621,7 +588,6 @@ delete_file(const char *user_name)
 
     /* finally free file itself */
     free(file->cf_user);
-    free(file->cf_mailto);
     free(file);
 
 }
@@ -637,7 +603,6 @@ save_file(CF *file, char *path)
     FILE *f = NULL;
     CF *start = NULL;
     env_t *env = NULL;
-    struct passwd *pas = NULL;
 
     if (file != NULL)
 	start = file;
@@ -673,13 +638,6 @@ save_file(CF *file, char *path)
 	 * the system down time */
 	fprintf(f, "%ld", now);
 
-	/*   mailto, */
-	if ( cf->cf_mailto != NULL ) {
-	    fprintf(f, "m");
-	    fprintf(f, "%s%c", cf->cf_mailto, '\0');
-	} else
-	    fprintf(f, "e");
-
 	/*   env variables, */
 	for (env = cf->cf_env_base; env; env = env->e_next) {
 	    fprintf(f, "%s%c", env->e_name, '\0');
@@ -692,11 +650,6 @@ save_file(CF *file, char *path)
 	    if ( fwrite(cl, sizeof(CL), 1, f) != 1 )
 		error_e("save");
 	    fprintf(f, "%s%c", cl->cl_shell, '\0');
-	    if ( is_runas(cl->cl_option) ) {
-		if ( (pas = getpwuid(cl->cl_runas)) == NULL )
-		    die_e("could not getpwuid() %d", cl->cl_runas);
-		fprintf(f, "%s%c", pas->pw_name, '\0');
-	    }
 
 	}
     
