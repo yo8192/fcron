@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.16 2001-02-01 20:53:11 thib Exp $ */
+ /* $Id: option.h,v 1.17 2001-04-21 08:56:28 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -47,7 +47,13 @@
  *
  */
 
+
 /* read and set options of a line */
+
+/* WARNING : do not change any option number, nor remove any option, nor change
+ *           the meaning of a value (i.e. bit set to 1 -> true).
+ *           It can lead to errors with fcrontabs save to disk/load in memory.
+ */
 
 /*
   
@@ -81,8 +87,6 @@
 
 */
 
-/* default value corresponds to a bit value of 0 */
-
 #ifndef __OPTIONH__
 #define __OPTIONH__
 
@@ -105,6 +109,16 @@
 
 
 /* external macros */
+
+/* default value generally corresponds to a bit value of 0 : if you want to
+ * change the default value of an option, do it by modifying the following
+ * macro (set to 1 the needed bits) */
+#define set_default_opt(opt)  \
+       { \
+          if ( SERIAL_ONCE >= 1 ) clear_serial_sev(opt); \
+          if ( LAVG_ONCE == 0 ) set_lavg_sev(opt); \
+       }
+
 
 /*
   bit 0 : set to 1 : line is based on system up time
@@ -244,18 +258,6 @@
 	(_bit_clear(opt, 10))
 
 
-#if ( SERIAL_ONCE == 1 )
-/*
-  bit 11 : set to 1 : can be put several times in serial queue simultaneously
-           set to 0 : can only be put once in serial queue simultaneously
-*/
-#define	is_serial_sev(opt) \
-	(_bit_test(opt, 11))
-#define	set_serial_sev(opt) \
-	(_bit_set(opt, 11))
-#define clear_serial_sev(opt) \
-	(_bit_clear(opt, 11))
-#else
 /*
   bit 11 : set to 1 : can only be put once in serial queue simultaneously
            set to 0 : can be put several times in serial queue simultaneously
@@ -266,13 +268,11 @@
 	(_bit_clear(opt, 11))
 #define clear_serial_sev(opt) \
 	(_bit_set(opt, 11))
-#endif /* SERIAL_ONCE == 0 */
 
 
-#if ( LAVG_ONCE == 1 )
 /*
-  bit 12 : set to 1 : can be put several times in lavg queue simultaneously
-           set to 0 : can only be put once in lavg queue simultaneously
+  bit 12 : set to 1 : can only be put once in lavg queue simultaneously
+           set to 0 : can be put several times in lavg queue simultaneously
 */
 #define	is_lavg_sev(opt) \
 	(_bit_test(opt, 12))
@@ -280,18 +280,6 @@
 	(_bit_set(opt, 12))
 #define clear_lavg_sev(opt) \
 	(_bit_clear(opt, 12))
-#else
-/*
-  bit 12 : set to 1 : can only be put once in lavg queue simultaneously
-           set to 0 : can be put several times in lavg queue simultaneously
-*/
-#define	is_lavg_sev(opt) \
-	( ! _bit_test(opt, 12))
-#define	set_lavg_sev(opt) \
-	(_bit_clear(opt, 12))
-#define clear_lavg_sev(opt) \
-	(_bit_set(opt, 12))
-#endif /* LAVG_ONCE == 0 */
 
 
 /*
