@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.36 2000-11-02 19:15:03 thib Exp $ */
+ /* $Id: database.c,v 1.37 2000-11-03 13:23:20 thib Exp $ */
 
 #include "fcron.h"
 
@@ -110,8 +110,8 @@ run_serial_job(void)
 /*      debug("running next serial job"); */
 /*      //     */
 
-    debug("num: %d running:%d  index:%d", serial_num, serial_running,
-	  serial_array_index);
+/*      debug("num: %d running:%d  index:%d", serial_num, serial_running, */
+/*  	  serial_array_index); */
     if ( serial_num != 0 ) {
 	run_queue_job(serial_array[serial_array_index]);
 	serial_array[serial_array_index] = NULL;
@@ -233,9 +233,7 @@ add_serial_job(CL *line)
 	return;
     }
 
-/*  	// */
-    debug("inserting in serial queue %s", line->cl_shell);
-/*  	// */
+/*      debug("inserting in serial queue %s", line->cl_shell); */
 
     if ( serial_num >= serial_array_size ) {
 	if ( serial_num >= SERIAL_QUEUE_MAX )
@@ -270,8 +268,9 @@ add_serial_job(CL *line)
     serial_num++;
     line->cl_numexe += 1;
 
-    debug("num: %d size:%d index:%d curline:%d running:%d", serial_num,
-	  serial_array_size, serial_array_index, i, serial_running);
+    debug("serial num: %d size:%d index:%d curline:%d running:%d (%s)",
+	  serial_num, serial_array_size, serial_array_index, i,
+	  serial_running, line->cl_shell);
 
 
 }
@@ -357,7 +356,7 @@ wait_chld(void)
 		else {
 		    
 		    line = exe_array[i].e_line;
-		    debug("job finished: %s", line->cl_shell);
+/*  		    debug("job finished: %s", line->cl_shell); */
 		    line->cl_numexe -= 1;
 		    line->cl_file->cf_running -= 1;
 		    
