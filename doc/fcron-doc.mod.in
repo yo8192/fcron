@@ -28,6 +28,7 @@
 <!ENTITY serialoncedef "@@SERIAL_ONCE@">
 <!ENTITY serialqueuemax "@@SERIAL_QUEUE_MAX@">
 <!ENTITY shell "@@SHELL@">
+<!ENTITY sysfcrontab "@@SYSFCRONTAB@">
 
 
 <!ENTITY seealso "<emphasis>see also</emphasis> :">

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.1.sgml,v 1.5 2002-07-19 19:45:14 thib Exp $ -->
+<!-- $Id: fcrontab.1.sgml,v 1.6 2002-10-05 14:29:00 thib Exp $ -->
 
 <refentry id="fcrontab.1">
     <refmeta>
@@ -97,7 +97,8 @@ a non privileged user.</para>
 	    <varlistentry>
 		<term><option>-u</option> <replaceable>user</replaceable></term>
 		<listitem>
-		    <para>Specify the user whose &fcrontabf; will be managed.
+		    <para>Specify the user whose &fcrontabf; will be managed,
+or "&sysfcrontab;" for the system fcrontab.
 Should only be used by root. If not given, the &fcrontabf; file of the user
 invoking &fcrontab; will be handled. It may be useful since the
 <application>su</application>(8) command may confuse &fcrontab;.
