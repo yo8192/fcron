@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.50 2003-12-29 14:31:28 thib Exp $ */
+ /* $Id: config.h.in,v 1.51 2003-12-29 17:06:16 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -192,16 +192,6 @@
 
 /* special user for the system fcrontab */
 #undef SYSFCRONTAB
-
-/* some systems (*BSD, ...) use O_FSYNC instead of O_SYNC for open() */
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#elif HAVE_SYS_FCNTL_H
-#include <sys/fcntl.h>
-#endif
-#ifndef O_SYNC
-#define O_SYNC O_FSYNC
-#endif
 
 /* Define to empty if the keyword does not work.  */
 #undef const
@@ -407,3 +397,14 @@
 
 /* Define if you have the xnet library (-lxnet).  */
 #undef HAVE_LIBXNET
+
+/* some systems (*BSD, ...) use O_FSYNC instead of O_SYNC for open() */
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#elif HAVE_SYS_FCNTL_H
+#include <sys/fcntl.h>
+#endif
+#ifndef O_SYNC
+#define O_SYNC O_FSYNC
+#endif
+
