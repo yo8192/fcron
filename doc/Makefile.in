@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.8 2002-03-02 17:31:20 thib Exp $
+# $Id: Makefile.in,v 1.9 2002-03-31 15:07:40 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -34,8 +34,8 @@ ANSWERALL	= @ANSWERALL@
 STYLESHEET = stylesheets/fcron-doc.dsl
 MODFILE = fcron-doc.mod
 VERSION = @VERSION@
-SGMLFILES = faq.sgml fcron-doc.sgml fdl.sgml thanks.sgml gpl.sgml todo.sgml fcron.8.sgml fcrontab.1.sgml install.sgml fcron.conf.5.sgml fcrontab.5.sgml fcrondyn.1.sgml readme.sgml
-TXTFILES = readme install thanks faq gpl todo
+SGMLFILES = fcron-doc.sgml readme.sgml relnotes.sgml changes.sgml faq.sgml thanks.sgml todo.sgml fcron.8.sgml fcrontab.1.sgml install.sgml fcron.conf.5.sgml fcrontab.5.sgml fcrondyn.1.sgml fdl.sgml gpl.sgml 
+TXTFILES = readme install thanks faq gpl todo relnotes
 MANPAGES = fcron.8 fcron.conf.5 fcrontab.1 fcrontab.5 fcrondyn.1
 
 # this is a regular expression :
@@ -157,3 +157,9 @@ tar: doc tarclean
 # during the ci-ing
 	@(cd ..; find ./doc/ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
              -exec ci -l {} \;)
+
+tarhtmldoc: doc
+	ln -s HTML fcron-$(VERSION)-doc-html
+	rm -f fcron-doc-html.tar.gz
+	tar -czvf fcron-doc-html.tar.gz fcron-$(VERSION)-doc-html/*
+	rm -f fcron-$(VERSION)-doc-html
