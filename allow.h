@@ -21,8 +21,12 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: allow.h,v 1.1 2001-04-29 22:24:55 thib Exp $ */
+ /* $Id: allow.h,v 1.2 2001-05-15 00:51:55 thib Exp $ */
 
+#ifndef __ALLOW_H__
+#define __ALLOW_H__
 
 /* functions prototypes */
 extern int is_allowed(char *user);
+
+#endif /* __ALLOW_H__ */

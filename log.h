@@ -21,8 +21,10 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: log.h,v 1.1 2001-04-29 22:14:13 thib Exp $ */
+ /* $Id: log.h,v 1.2 2001-05-15 00:43:29 thib Exp $ */
 
+#ifndef __LOG_H__
+#define __LOG_H__
 
 /* functions prototypes */
 extern void xcloselog(void);
@@ -36,3 +38,5 @@ extern void error_e(char *fmt, ...);
 extern void die(char *fmt, ...);
 extern void die_e(char *fmt, ...);
 extern void Debug(char *fmt, ...);
+
+#endif /* __LOG_H__ */

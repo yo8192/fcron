@@ -21,13 +21,18 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.h,v 1.1 2001-04-29 22:24:48 thib Exp $ */
+ /* $Id: subs.h,v 1.2 2001-05-15 00:51:17 thib Exp $ */
 
+#ifndef __SUBS_H__
+#define __SUBS_H__
 
 /* functions prototypes */
 extern int remove_blanks(char *str);
 extern char *strdup2(const char *);
+extern int temp_file(char **name);
 extern int save_type(FILE *f, short int type);
 extern int save_str(FILE *f, short int type, char *str);
 extern int save_strn(FILE *f, short int type, char *str, short int size);
 extern int save_lint(FILE *f, short int type, long int value);
+
+#endif /* __SUBS_H__ */

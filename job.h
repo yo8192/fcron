@@ -21,8 +21,10 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.h,v 1.1 2001-04-29 22:13:57 thib Exp $ */
+ /* $Id: job.h,v 1.2 2001-05-15 00:42:05 thib Exp $ */
 
+#ifndef __JOB_H__
+#define __JOB_H__
 
 /* functions prototypes */
 extern int change_user(char *user_name);
@@ -30,3 +32,5 @@ extern void run_job(struct exe *exeent);
 extern int create_mail(CL *line, char *subject);
 extern void launch_mailer(CL *line, int mailfd);
 extern void xwrite(int fd, char *string);
+
+#endif /* __JOB_H__ */

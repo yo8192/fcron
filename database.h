@@ -21,8 +21,10 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.h,v 1.1 2001-04-29 22:22:50 thib Exp $ */
+ /* $Id: database.h,v 1.2 2001-05-15 00:48:58 thib Exp $ */
 
+#ifndef __DATABASE_H__
+#define __DATABASE_H__
 
 /* functions prototypes */
 extern void test_jobs(void);
@@ -31,9 +33,15 @@ extern void wait_all(int *counter);
 extern time_t time_to_sleep(time_t lim);
 extern time_t check_lavg(time_t lim);
 extern void set_next_exe(CL *line, char option);
+#define NO_GOTO 1      /* set_next_exe() : no goto_non_matching() */
+#define NO_GOTO_LOG 2  /* set_next_exe() : NO_GOTO but also log nextexe time */
 extern void set_next_exe_notrun(CL *line, char context);
+#define LAVG 1         /* set_next_exe_notrun() : context */
+#define SYSDOWN 2      /* set_next_exe_notrun() : context */
 extern void mail_notrun(CL *line, char context, struct tm *since);
 extern void insert_nextexe(CL *line);
 extern void add_serial_job(CL *line);
 extern void add_lavg_job(CL *line);
 extern void run_serial_job(void);
+
+#endif /* __DATABASE_H__ */
