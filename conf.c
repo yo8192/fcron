@@ -22,12 +22,14 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.48 2001-07-10 14:22:15 thib Exp $ */
+ /* $Id: conf.c,v 1.49 2001-08-17 19:44:51 thib Exp $ */
 
 #include "fcron.h"
 #include "conf.h"
 
 int read_file(const char *file_name, CF *cf);
+int add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str,
+		     time_t t_save);
 int read_strn(int fd, char **str, short int size);
 int read_type(int fd, short int *type, short int *size);
 void synchronize_file(char *file_name);
@@ -418,7 +420,6 @@ read_file(const char *file_name, CF *cf)
     char buf[LINE_LEN];
     long int bufi = 0;
     time_t t_save = 0;
-    time_t slept = 0;
     uid_t runas = 0;
     char *runas_str = NULL;
     struct stat file_stat;
@@ -505,9 +506,6 @@ read_file(const char *file_name, CF *cf)
 	goto err;
     }
 	
-    slept = now - t_save;
-
-
     Alloc(cl, CL);
     /* main loop : read env variables, and lines */
     while ( read_type(fileno(ff), &type, &size) == OK ) {
@@ -607,131 +605,22 @@ read_file(const char *file_name, CF *cf)
 	    break;
 
 	case S_ENDLINE_T:
-	    /* make checks on the current line to make sure it is usable */
-	    if ( cl->cl_shell == NULL || cl->cl_runas == NULL ||
-		 cl->cl_mailto == NULL ) {
-		error("Line is not valid (empty shell, runas or mailto field)"
-		      " : ignored");
-		bzero(cl, sizeof(cl));
-		if (cl->cl_shell) free(cl->cl_shell);
-		if (cl->cl_runas) free(cl->cl_runas);
-		if (cl->cl_mailto) free(cl->cl_mailto);
-		continue;
-	    }
-
-	    /* set runas field if necessary (to improve security) */
-	    if (runas > 0) {
-		if (strcmp(cl->cl_runas, runas_str) != 0)
-		    warn("warning: runas(%s) is not owner (%s): overridden.",
-			 cl->cl_runas, runas_str);
-		Set(cl->cl_runas, runas_str);
-	    }
-	    
-	    /* we need that here because the user's name contained in the
-	     * struct CF may be required */
-	    cl->cl_file = cf;
-
-
-	    /* check if the job hasn't been stopped during execution and insert
-	     * it in lavg or serial queue if it was in one at fcron's stops  */
-	    if (cl->cl_numexe > 0) {
-		cl->cl_numexe = 0;
-		if ( ! is_strict(cl->cl_option) ) {
-		    if ( is_lavg(cl->cl_option) )
-			add_lavg_job(cl);
-		    else if ( is_serial(cl->cl_option) 
-			      || is_serial_once(cl->cl_option) )
-			add_serial_job(cl);
-		    else {
-			/* job has been stopped during execution :
-			 * launch it again */
-			warn("job %s did not finish : running it again.",
-			     cl->cl_shell);
-			set_serial_once(cl->cl_option);
-			add_serial_job(cl);
-		    }
-		}
-	    }
-
-	    if ( is_td(cl->cl_option) ) {
-    
-		/* set the time and date of the next execution  */
-		if ( cl->cl_nextexe <= now ) {
-		    if ( cl->cl_nextexe == 0 )
-			/* the is a line from a new file */
-			set_next_exe(cl, NO_GOTO);		    
-		    else if (cl->cl_runfreq == 1 &&
-			     is_notice_notrun(cl->cl_option))
-			set_next_exe_notrun(cl, SYSDOWN);
-		    else if ( is_bootrun(cl->cl_option) && t_save != 0 
-			      && cl->cl_runfreq != 1) {
-			if ( cl->cl_remain > 0 && --cl->cl_remain > 0 ) {
-			    debug("    cl_remain: %d", cl->cl_remain);
-			}
-			else {
-			    /* run bootrun jobs */
-			    cl->cl_remain = cl->cl_runfreq;
-			    debug("   boot-run %s", cl->cl_shell);
-			    if ( ! is_lavg(cl->cl_option) ) {
-				set_serial_once(cl->cl_option);
-				add_serial_job(cl);
-			    }
-			    else
-				add_lavg_job(cl);			    
-			}
-			set_next_exe(cl, STD);
-		    }
-		    else {
-			if ( is_notice_notrun(cl->cl_option) ) {
-			    /* set next exe and mail user */
-			    struct tm *since2 = localtime(&cl->cl_nextexe);
-			    struct tm since;
-			    memcpy(&since, since2, sizeof(since));
-			    set_next_exe(cl, NO_GOTO);
-			    mail_notrun(cl, SYSDOWN, &since);
-			} 
-			else
-			    set_next_exe(cl, NO_GOTO);
-		    }
-		}
-		else
-		    /* value of nextexe is valid : just insert line in queue */
-		    insert_nextexe(cl);
-	    } else {  /* is_td(cl->cl_option) */
-		/* standard @-lines */
-		if ( cl->cl_timefreq < 60 ) {
-		    error("Invalid timefreq for %s: set to 1 day",
-			  cl->cl_shell);
-		    cl->cl_timefreq = 3600*24;
-		}
-		cl->cl_nextexe += slept;
-		insert_nextexe(cl);
-	    }	    
-
-	    if (debug_opt) {
-		struct tm *ftime;
-		ftime = localtime( &(cl->cl_nextexe) );
-		debug("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d",
-		      cl->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
-		      (ftime->tm_year + 1900), ftime->tm_wday,
-		      ftime->tm_hour, ftime->tm_min); 
-	    } 
-
-	    /* add the current line to the list, and allocate a new line */
-	    cl->cl_next = cf->cf_line_base;
-	    cf->cf_line_base = cl;
-	    Alloc(cl, CL);
+	    if (add_line_to_file(cl, cf, runas, runas_str, t_save) == 0)
+		Alloc(cl, CL);
 	    break;
-	    /* end of "case S_ENDLINE_T" in "switch(type)" */
 
 	    /* default case in "switch(type)" */
 	default:
 	    error("Error while loading %s : unknown field type %d (ignored)",
 		  file_name, type);
 	    /* skip the data corresponding to the unknown field */
-	    if ( fseek(ff, size, SEEK_CUR) < 0 ) {
-		error_e("Could not fseek file %s", file_name);
-		goto err;
+	    {
+		/* we avoid using fseek(), as it seems not to work correctly
+		 * on some systems when we use read() on the FILE stream */
+		int i;
+		for (i = 0; i < size; i++)
+		    if ( getc(ff) == EOF )
+			goto err;
 	    }
 	}
     }
@@ -778,6 +667,127 @@ read_file(const char *file_name, CF *cf)
 
 }
 
+
+int
+add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str, time_t t_save)
+    /* check if the line is valid, and if yes, add it to the file cf */
+{
+    time_t slept = now - t_save;
+
+    if ( cl->cl_shell == NULL || cl->cl_runas == NULL ||
+	 cl->cl_mailto == NULL ) {
+	error("Line is not valid (empty shell, runas or mailto field)"
+	      " : ignored");
+	bzero(cl, sizeof(cl));
+	if (cl->cl_shell) free(cl->cl_shell);
+	if (cl->cl_runas) free(cl->cl_runas);
+	if (cl->cl_mailto) free(cl->cl_mailto);
+	return 1;
+    }
+
+    /* set runas field if necessary (to improve security) */
+    if (runas > 0) {
+	if (strcmp(cl->cl_runas, runas_str) != 0)
+	    warn("warning: runas(%s) is not owner (%s): overridden.",
+		 cl->cl_runas, runas_str);
+	Set(cl->cl_runas, runas_str);
+    }
+	    
+    /* we need that here because the user's name contained in the
+     * struct CF may be required */
+    cl->cl_file = cf;
+
+
+    /* check if the job hasn't been stopped during execution and insert
+     * it in lavg or serial queue if it was in one at fcron's stops  */
+    if (cl->cl_numexe > 0) {
+	cl->cl_numexe = 0;
+	if ( ! is_strict(cl->cl_option) ) {
+	    if ( is_lavg(cl->cl_option) )
+		add_lavg_job(cl);
+	    else if ( is_serial(cl->cl_option) 
+		      || is_serial_once(cl->cl_option) )
+		add_serial_job(cl);
+	    else {
+		/* job has been stopped during execution :
+		 * launch it again */
+		warn("job %s did not finish : running it again.",
+		     cl->cl_shell);
+		set_serial_once(cl->cl_option);
+		add_serial_job(cl);
+	    }
+	}
+    }
+
+    if ( is_td(cl->cl_option) ) {
+    
+	/* set the time and date of the next execution  */
+	if ( cl->cl_nextexe <= now ) {
+	    if ( cl->cl_nextexe == 0 )
+		/* the is a line from a new file */
+		set_next_exe(cl, NO_GOTO);		    
+	    else if (cl->cl_runfreq == 1 &&
+		     is_notice_notrun(cl->cl_option))
+		set_next_exe_notrun(cl, SYSDOWN);
+	    else if ( is_bootrun(cl->cl_option) && t_save != 0 
+		      && cl->cl_runfreq != 1) {
+		if ( cl->cl_remain > 0 && --cl->cl_remain > 0 ) {
+		    debug("    cl_remain: %d", cl->cl_remain);
+		}
+		else {
+		    /* run bootrun jobs */
+		    cl->cl_remain = cl->cl_runfreq;
+		    debug("   boot-run %s", cl->cl_shell);
+		    if ( ! is_lavg(cl->cl_option) ) {
+			set_serial_once(cl->cl_option);
+			add_serial_job(cl);
+		    }
+		    else
+			add_lavg_job(cl);			    
+		}
+		set_next_exe(cl, STD);
+	    }
+	    else {
+		if ( is_notice_notrun(cl->cl_option) ) {
+		    /* set next exe and mail user */
+		    struct tm *since2 = localtime(&cl->cl_nextexe);
+		    struct tm since;
+		    memcpy(&since, since2, sizeof(since));
+		    set_next_exe(cl, NO_GOTO);
+		    mail_notrun(cl, SYSDOWN, &since);
+		} 
+		else
+		    set_next_exe(cl, NO_GOTO);
+	    }
+	}
+	else
+	    /* value of nextexe is valid : just insert line in queue */
+	    insert_nextexe(cl);
+    } else {  /* is_td(cl->cl_option) */
+	/* standard @-lines */
+	if ( cl->cl_timefreq < 60 ) {
+	    error("Invalid timefreq for %s: set to 1 day",
+		  cl->cl_shell);
+	    cl->cl_timefreq = 3600*24;
+	}
+	cl->cl_nextexe += slept;
+	insert_nextexe(cl);
+    }	    
+
+    if (debug_opt) {
+	struct tm *ftime;
+	ftime = localtime( &(cl->cl_nextexe) );
+	debug("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d",
+	      cl->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
+	      (ftime->tm_year + 1900), ftime->tm_wday,
+	      ftime->tm_hour, ftime->tm_min); 
+    } 
+
+    /* add the current line to the list, and allocate a new line */
+    cl->cl_next = cf->cf_line_base;
+    cf->cf_line_base = cl;
+    return 0;
+}
 
 void
 delete_file(const char *user_name)
