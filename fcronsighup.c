@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.4 2002-02-25 18:37:36 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.5 2002-08-25 17:09:33 thib Exp $ */
 
 #include "global.h"
 
@@ -30,7 +30,7 @@
 #include "subs.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.4 2002-02-25 18:37:36 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.5 2002-08-25 17:09:33 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
@@ -105,7 +105,7 @@ sig_daemon(void)
 	int	fd = 0;
 	struct tm *tm = NULL;
 	char sigfile[PATH_LEN];
-	char buf[FNAME_LEN];
+	char buf[PATH_LEN];
 
 	t = time(NULL);
 	tm = localtime(&t);
