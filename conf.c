@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.14 2000-06-25 19:57:37 thib Exp $ */
+ /* $Id: conf.c,v 1.15 2000-06-28 14:00:51 thib Exp $ */
 
 #include "fcron.h"
 
@@ -530,9 +530,17 @@ read_file(const char *file_name, CF *cf)
 	cl->cl_file = cf;
 	Alloc(cl, CL);
     }
+    /* check for an error */
+    if ( ferror(ff) != 0 )
+	error("file '%s' is truncated : you should reinstall it", file_name);
+
     /* free last calloc : unused */
     free(cl);
     
+    if (fgets(buf, sizeof(buf), ff) == NULL ||
+	strncmp(buf, "eof\n", sizeof("eof\n")) != 0)
+	error("file '%s' is truncated : you should reinstall it", file_name);
+
     fclose(ff);
 
     return 0;
@@ -625,9 +633,7 @@ save_file(CF *file, char *path)
     CF *cf = NULL;
     CL *cl = NULL;
     FILE *f = NULL;
-    char check[FNAME_LEN];
     CF *start = NULL;
-    int fd = 0;
     env_t *env = NULL;
     struct passwd *pas = NULL;
 
@@ -640,10 +646,6 @@ save_file(CF *file, char *path)
     for (cf = start; cf; cf = cf->cf_next) {
 
 	debug("Saving %s...", cf->cf_user);
-
-	/* create a file in order to detect unattended stop */
-	snprintf(check, sizeof(check), "%s.saving", cf->cf_user);
-	fd = open (check, O_CREAT);
 
 	/* open file for writing */
 	if ( path == NULL ) {
@@ -683,7 +685,7 @@ save_file(CF *file, char *path)
 	}
 	fprintf(f, "%c", '\0');
 
-	/*   finally, lines. */
+	/* finally, lines. */
 	for (cl = cf->cf_line_base; cl; cl = cl->cl_next) {
 	    if ( fwrite(cl, sizeof(CL), 1, f) != 1 )
 		error_e("save");
@@ -696,11 +698,13 @@ save_file(CF *file, char *path)
 
 	}
     
+	/* then, write the number of lines to permit to check if the file
+	 * is complete (i.e. fcron may has been interrupted during
+	 * save process */
+	fprintf(f, "eof\n");
+	
 	fclose(f);
 
-	close(fd);
-	remove(check);
-	
 	if (file != NULL)
 	    break ;
 

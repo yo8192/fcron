@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.10 2000-06-25 20:03:22 thib Exp $ */
+ /* $Id: fileconf.c,v 1.11 2000-06-28 14:01:05 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -377,7 +377,7 @@ get_nice(char *ptr, int *nice)
 	ptr++;
     }
 
-    if ( (ptr = get_num(ptr, nice, 20, NULL)) == NULL )
+    if ( (ptr = get_num(ptr, nice, 21, NULL)) == NULL )
 	return NULL;
 
     if ( negative == 1 ) {
@@ -1133,7 +1133,7 @@ save_file(char *path)
 	}
 	fprintf(f, "%c", '\0');
 
-	/*   finally, lines. */
+	/*   then, lines. */
 	for (line = file->cf_line_base; line; line = line->cl_next) {
 	    if ( fwrite(line, sizeof(CL), 1, f) != 1 )
 		perror("save");
@@ -1144,8 +1144,14 @@ save_file(char *path)
 		fprintf(f, "%s%c", pas->pw_name, '\0');
 	    }
 	}
-    
+
+	/* finally, write the number of lines to permit to check if the file
+	 * is complete (i.e. fcron may has been interrupted during
+	 * save process */
+	fprintf(f, "eof\n");
+	    
 	fclose(f);
 
     }
 }
+
