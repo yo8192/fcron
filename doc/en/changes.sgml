@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.3 2002-01-27 16:37:33 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.5 2002-02-02 14:52:52 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
@@ -20,7 +20,10 @@ A copy of the license is included in gfdl.sgml.
 	    <para>It results on a much better HTML version, which I recommand you use. It is installed by default in fcron documentation directory (for instance, on my system : <filename>/usr/share/doc/fcron-X.X.X/</filename>).</para>
 	</listitem>
 	<listitem>
-	    <para>Added option random, which allows an entry run periodically to be run at a random time in its intervals of execution, instead of being run as soon as possible</para>
+	    <para>Added option random, which allows an entry run periodically to be run at a random time in its intervals of execution, instead of being run as soon as possible.</para>
+	</listitem>
+	<listitem>
+	    <para>bug fixed : you can now use arguments in the var EDITOR and VISUAL.</para>
 	</listitem>
     </itemizedlist>
 	    

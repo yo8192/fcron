@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.2 2002-01-27 16:37:19 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.3 2002-02-02 14:52:49 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -25,13 +25,22 @@ A copy of the license is included in gfdl.sgml.
 	    <para>allow a non-privileged user to run fcron</para>
 	</listitem>
 	<listitem>
-	    <para>add a "random" option to %-lines, to change policy from : "run as soon as possible" to "set a random time to sleep before execing asap" (and then run - if the system hasn't gone down ...)/</para>
+	    <para>add a "random" option to %-lines, to change policy from : "run as soon as possible" to "set a random time to sleep before execing asap" (and then run - if the system hasn't gone down ...).</para>
+	</listitem>
+	<listitem>
+	    <para>add a return code for jobs which would mean that they should not be run again (in case of an error, etc...).</para>
 	</listitem>
 	<listitem>
 	    <para>possibility to display a list of jobs including their options, time and date of next execution, status, of only the running jobs, all the jobs, in order of execution or classified by user, etc.</para>
 	</listitem>
 	<listitem>
 	    <para>run one of this job, change its nice value, stop it...</para>
+	</listitem>
+	<listitem>
+	    <para>add a system of modules : at startup, fcron loads some modules
+                  (.so files). Then, when fcron should run the job, it calls a function
+                  of the module, and let it manage the job (threads ?). (do linux
+                  dlopen(), etc exist on other systems ?).</para>
 	</listitem>
 	<listitem>
 	    <para>add a system of data flow</para>
