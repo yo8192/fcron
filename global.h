@@ -21,14 +21,16 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.2 2000-05-15 18:28:53 thib Exp $ */
+ /* $Id: global.h,v 1.3 2000-05-24 17:51:55 thib Exp $ */
 
 #ifndef __GLOBALH__
 #define __GLOBALH__
 
 #include <ctype.h>
 #include <errno.h>
+#ifdef __linux__
 #include <getopt.h>
+#endif
 #include <pwd.h>
 #include <signal.h>
 #include <stdarg.h>

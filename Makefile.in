@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.7 2000-05-17 19:20:46 thib Exp $
+# $Id: Makefile.in,v 1.8 2000-05-24 17:51:59 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -11,7 +11,13 @@
 # Where should we install it ?
 DESTSBIN= /usr/sbin/
 DESTBIN= /usr/bin/
+
+#DESTMAN= /usr/share/man/
 DESTMAN= /usr/man/
+
+#DESTDOC= /usr/share/
+DESTDOC= /usr/doc/
+
 FCRONTABS=/var/spool/fcron/
 ETC=/etc/
 
@@ -57,7 +63,7 @@ INSTALL= install
 # Should not be changed under this #
 ####################################
 
-export VERSION= 0.8.0
+VERSION= 0.8.1
 CFLAGS= $(INCLUDE) $(OPTIM) $(OTHERFLAGS) $(OPTION) -DVERSION=\"$(VERSION)\" -DFCRONTABS=\"$(FCRONTABS)\" -DETC=\"$(ETC)\"
 OBJSD = fcron.o subs.o database.o job.o log.o conf.o
 OBJS= fcrontab.o fileconf.o subs.o log.o allow.c
@@ -89,18 +95,18 @@ allow.o:  allow.c $(HEADERS)
 
 install: all
 
-	$(INSTALL) -m 111 -o root -s fcron $(DESTSBIN)/
-	$(INSTALL) -m 4111 -o root -s fcrontab $(DESTBIN)/
-	$(INSTALL) -m 700 -o root files/fcron.allow $(ETC)/
-	$(INSTALL) -m 700 -o root files/fcron.deny $(ETC)/
-	$(INSTALL) -m 644 -o root doc/fcron.8 $(DESTMAN)/man8/
-	$(INSTALL) -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1/
-	$(INSTALL) -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5/
-	$(INSTALL) -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3/
+	$(INSTALL) -c -m 111 -o root -s fcron $(DESTSBIN)/
+	$(INSTALL) -c -m 4111 -o root -s fcrontab $(DESTBIN)/
+	$(INSTALL) -c -m 700 -o root files/fcron.allow $(ETC)/
+	$(INSTALL) -c -m 700 -o root files/fcron.deny $(ETC)/
+	$(INSTALL) -c -m 644 -o root doc/fcron.8 $(DESTMAN)/man8/
+	$(INSTALL) -c -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1/
+	$(INSTALL) -c -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5/
+	$(INSTALL) -c -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3/
 	script/sysVinit-install "$(CFLAGS)" $(INSTALL)
 	mkdir -p /usr/doc/fcron-$(VERSION)
-	cd doc; $(INSTALL) -m 644 -o root README LICENSE CHANGES *.html \
-		 /usr/doc/fcron-$(VERSION)/
+	cd doc; $(INSTALL) -c -m 644 -o root README LICENSE CHANGES *.html \
+		 $(DESTDOC)/fcron-$(VERSION)/
 	mkdir -p $(FCRONTABS)
 	chmod 700 $(FCRONTABS)
 
@@ -140,6 +146,7 @@ tar: vclean updatedoc
 	@(cd ..; rm -f fcron-$(VERSION))
 
 	@(cd ..; mv -f fcron-$(VERSION).src.tar.gz old-fcron-pkg/)
+
 
 
 

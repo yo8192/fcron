@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.6 2000-05-22 17:53:05 thib Exp $ */
+ /* $Id: fcron.c,v 1.7 2000-05-24 17:51:37 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.6 2000-05-22 17:53:05 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.7 2000-05-24 17:51:37 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -182,6 +182,8 @@ parseopt(int argc, char *argv[])
 
     char c;
     int i;
+
+#ifdef __linux__
     static struct option opt[] =
     {
 	{"debug",0,NULL,'d'},
@@ -191,13 +193,19 @@ parseopt(int argc, char *argv[])
 	{"version",0,NULL,'V'},
 	{0,0,0,0}
     };
+#endif
+
     extern char *optarg;
     extern int optind, opterr, optopt;
 
     /* constants and variables defined by command line */
 
     while(1) {
+#ifdef __linux
 	c = getopt_long(argc, argv, "dfbhV", opt, NULL);
+#else
+	c = getopt(argc, argv, "dfbhV");
+#endif
 	if (c == -1) break;
 	switch (c) {
 
