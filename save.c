@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.c,v 1.5 2002-11-17 13:13:55 thib Exp $ */
+ /* $Id: save.c,v 1.6 2003-07-14 10:53:34 thib Exp $ */
 
 #include "global.h"
 #include "save.h"
@@ -298,6 +298,11 @@ save_one_file(cf_t *file, char *filename, uid_t own_uid, gid_t own_gid, time_t s
     int fd;
 
     /* open file */
+#ifdef CONFIG_FLASK
+    if ( is_flask_enabled() )
+	fd = open_secure(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR | S_IWUSR, file->cf_file_sid);
+    else
+#endif
     fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR|S_IWUSR);
     if ( fd == -1 ) {
 	error_e("Could not open %s", filename);
@@ -353,7 +358,7 @@ save_file_safe(cf_t *file, char *final_path, char *prog_name, uid_t own_uid,
     }
     else {
 	error("Since %s has not been able to save %s's file, it will keep "
-	      "the previous version (if any) of %s.", prog_name, final_path);
+	      "the previous version (if any) of %s.", prog_name, final_path, final_path);
 	return ERR;
     }
 
