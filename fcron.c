@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.16 2000-06-19 12:42:32 thib Exp $ */
+ /* $Id: fcron.c,v 1.17 2000-06-20 20:37:51 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.16 2000-06-19 12:42:32 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.17 2000-06-20 20:37:51 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -55,7 +55,9 @@ char sig_chld = 0;            /* is 1 when we got a SIGCHLD */
 struct CF *file_base;         /* point to the first file of the list */
 struct job *queue_base;       /* ordered list of normal jobs to be run */
 struct job *serial_base;      /* ordered list of job to be run one by one */
-struct job *exe_base;         /* jobs which are executed */
+struct CL **exe_array;        /* jobs which are executed */
+short int exe_array_size;     /* size of exe_array */
+short int exe_num;            /* number of job being executed */
 
 time_t begin_sleep;           /* the time at which sleep began */
 time_t now;                   /* the current time */
@@ -421,6 +423,12 @@ main(int argc, char **argv)
     (void)signal(SIGUSR1, sigusr1_handler);
     siginterrupt(SIGUSR1, 0);
 
+
+    /* initialize exe_array */
+    exe_array_size = EXE_ARRAY_INITIAL_SIZE;
+    if ( (exe_array = calloc(exe_array_size, sizeof(CL *))) == NULL )
+	die_e("could not calloc exe_array");
+
     main_loop();
 
     /* never reached */
@@ -447,9 +455,9 @@ void main_loop()
     save = now + SAVE;
 
     if ( (stime = time_to_sleep(save)) < FIRST_SLEEP )
-	/* force first execution after 60 sec : execution of job during
-	   system boot time is not what we want */
-	stime = 60;
+	/* force first execution after FIRST_SLEEP sec : execution of jobs
+	 * during system boot time is not what we want */
+	stime = FIRST_SLEEP;
     
 
     for (;;) {

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.7 2000-06-15 20:16:38 thib Exp $ */
+ /* $Id: fcron.h,v 1.8 2000-06-20 20:38:30 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -36,6 +36,7 @@
 
 
 /* global variables */
+extern time_t now;
 extern char debug_opt;
 extern char foreground;
 extern char *cdir;
@@ -46,8 +47,9 @@ extern char sig_hup;
 extern CF *file_base;
 extern struct job *queue_base;
 extern struct job *serial_base;
-extern struct job *exe_base;
-extern time_t now;
+extern struct CL **exe_array;
+extern short int exe_array_size;
+extern short int exe_num;
 /* end of global variables */
 
 

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.10 2000-06-19 12:43:27 thib Exp $ */
+ /* $Id: job.c,v 1.11 2000-06-20 20:38:45 thib Exp $ */
 
 #include "fcron.h"
 
@@ -81,13 +81,24 @@ run_job(CL *line)
 {
 
     pid_t pid;
-    struct job *j;
+    short int i = 0;
 
     /* append job to the list of executed job */
-    Alloc(j, job);
-    j->j_line = line;
-    j->j_next = exe_base;
-    exe_base = j;
+    if ( exe_num >= exe_array_size ) {
+	CL **ptr = NULL;
+	short int old_size = exe_array_size;
+
+	debug("Resizing exe_array");
+	exe_array_size = (exe_array_size + EXE_ARRAY_GROW_SIZE);
+	
+	if ( (ptr = calloc(exe_array_size, sizeof(CL *))) == NULL )
+	    die_e("could not calloc exe_array");
+
+	memcpy(ptr, exe_array, (sizeof(CL *) * old_size));
+	free(exe_array);
+	exe_array = ptr;
+    }
+    exe_array[exe_num++] = line;
 
     /* prepare the job execution */
     switch ( pid = fork() ) {
@@ -240,7 +251,7 @@ end_job(CL *line, int status, int mailfd, short mailpos)
 
     if (mail_output == 1) launch_mailer(line, mailfd);
 
-    /* if MAILTO is "", temp file is already closed */
+    /* if mail is sent, execution doesn't get here : close /dev/null */
     if ( close(mailfd) != 0 )
 	die_e("Can't close file descriptor %d", mailfd);
 

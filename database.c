@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.11 2000-06-19 12:42:16 thib Exp $ */
+ /* $Id: database.c,v 1.12 2000-06-20 20:36:26 thib Exp $ */
 
 #include "fcron.h"
 
@@ -42,7 +42,7 @@ test_jobs(time_t t2)
 
     while ( (j=queue_base) && j->j_line->cl_nextexe <= t2 ){
 	set_next_exe(j->j_line, 0);
-	if ( j->j_line->cl_remain > 0 && (j->j_line->cl_remain)-- > 0) {
+	if ( j->j_line->cl_remain > 0 && --(j->j_line->cl_remain) > 0) {
 	    debug("    cl_remain: %d", j->j_line->cl_remain);
 	    continue ;
 	}
@@ -66,27 +66,34 @@ void
 wait_chld(void)
   /* wait_chld() - check for job completion */
 {
-    struct job *j;
-    struct job *jprev = NULL;
+    short int i = 0;
     int pid;
+    CL *line = NULL;
 
+
+//
+    debug("wait_chld");
+//
     while ( (pid = wait3(NULL, WNOHANG, NULL)) > 0 ) {
-	for (j = exe_base; j != NULL ; j = j->j_next) {
-	    if (pid < 0 || pid == j->j_line->cl_pid) {
-		j->j_line->cl_pid = 0;
-		j->j_line->cl_file->cf_running -= 1;
-
-		/* remove file from exe list */
-		if (jprev != NULL)
-		    jprev->j_next = j->j_next;
+	i = 0;
+	while ( i < exe_array_size ) {
+	    line = exe_array[i];
+	    if (line != NULL && pid == line->cl_pid) {
+		exe_array[i]->cl_pid = 0;
+		exe_array[i]->cl_file->cf_running -= 1;
+		if (i < --exe_num) {
+		    exe_array[i] = exe_array[exe_num];
+		    exe_array[exe_num] = NULL;
+		}
 		else
-		    exe_base = j->j_next;
-		free(j);
-		
+		    exe_array[i] = NULL;
+
 		goto nextloop;
 	    }
-	    jprev = j;
-	}	
+	    i++;
+	}
+	/* execution shouldn't come here */
+	error("not in exe_array !");
       nextloop:
     }
 
@@ -97,30 +104,30 @@ void
 wait_all(int *counter)
    /* return after all jobs completion. */
 {
-    struct job *j;
-    struct job *jprev = NULL;
+    short int i = 0;
     int pid;
 
     debug("Waiting for all jobs");
 
     while ( (*counter > 0) && (pid = wait3(NULL, 0, NULL)) > 0 ) {
-	for (j = exe_base; j != NULL ; j = j->j_next) {
-	    if (pid < 0 || pid == j->j_line->cl_pid) {
-
-		j->j_line->cl_pid = 0;
-		j->j_line->cl_file->cf_running -= 1;
-
-		/* remove file from exe list */
-		if (jprev != NULL)
-		    jprev->j_next = j->j_next;
+	i = 0;
+	while ( i < exe_array_size ) {
+	    if (pid == exe_array[i]->cl_pid) {
+		exe_array[i]->cl_pid = 0;
+		exe_array[i]->cl_file->cf_running -= 1;
+		if (i < --exe_num) {
+		    exe_array[i] = exe_array[exe_num];
+		    exe_array[exe_num] = NULL;
+		}
 		else
-		    exe_base = j->j_next;
-		free(j);
-		
+		    exe_array[i] = NULL;
+
 		goto nextloop;
 	    }
-	    jprev = j;
+	    i++;
 	}
+	/* execution shouldn't come here */
+	error("not in exe_array !");
       nextloop:
     }    
 
