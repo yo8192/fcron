@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.4 2002-08-10 20:41:46 thib Exp $ */
+ /* $Id: socket.c,v 1.5 2002-08-22 21:34:15 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -31,8 +31,9 @@
 
 void exe_cmd(struct fcrondyn_cl *client);
 void auth_client(struct fcrondyn_cl *client);
-int print_fields(int fd, char print_user, char print_details);
-int print_line(int fd, struct CL *line, char print_user, char print_details);
+void print_fields(int fd, unsigned char *details);
+void print_line(int fd, struct CL *line,  unsigned char *details, pid_t pid, int index,
+		time_t until);
 
 fcrondyn_cl *fcrondyn_cl_base; /* list of connected fcrondyn clients */
 int fcrondyn_cl_num = 0;       /* number of fcrondyn clients currently connected */    
@@ -42,6 +43,25 @@ int set_max_fd = 0;            /* needed by select() */
 int listen_fd = -1;            /* fd which catches incoming connection */
 int auth_fail = 0;             /* number of auth failure */
 time_t auth_nofail_since = 0;       /* we refuse auth since x due to too many failures */
+
+/* some error messages ... */
+char err_cmd_unknown_str[] = "Not implemented yet or erroneous command.\n";
+char err_job_nfound_str[] = "No corresponding job found.\n";
+char err_invalid_user_str[] = "Invalid user : unable to find a passwd entry.\n";
+char err_job_nallowed_str[] = "You are not allowed to see/change this line.\n";
+char err_all_nallowed_str[] = "You are not allowed to list all jobs.\n";
+char err_others_nallowed_str[] = "You are not allowed to list other users' jobs.\n";
+
+/* which bit corresponds to which field ? */
+#define FIELD_USER 0
+#define FIELD_RQ 1
+#define FIELD_PID 2
+#define FIELD_SCHEDULE 3
+#define FIELD_UNTIL 4
+#define FIELD_INDEX 5
+
+/* the number of char we need (8 bits (i.e. fields) per char) */
+#define FIELD_NUM_SIZE 1
 
 void
 init_socket(void)
@@ -171,55 +191,213 @@ auth_client(struct fcrondyn_cl *client)
 }
 
 
+#define Test_add_field(field_nb, field_str) \
+    if ( (bit_test(details, field_nb)) ) { \
+        strncat(fields, field_str, sizeof(fields)-1 - len); \
+        len += (sizeof(field_str)-1); \
+    }
+#define Add_field(field_str) \
+    strncat(fields, field_str, sizeof(fields) - len); \
+    len += (sizeof(field_str)-1);
 
-int
-print_fields(int fd, char print_user, char print_details)
+void
+print_fields(int fd, unsigned char *details)
     /* print a line describing the field types used in print_line() */
 {
-    char fields[] =  "  USER ID   SCHEDULE         CMD\n";
-    char fields_details[] = "  USER ID    R&Q SCHEDULE         CMD\n";
-    char *str = NULL;
+    char fields[TERM_LEN];
+    char field_user[] = "   USER";
+    char field_id[] = "ID   ";
+    char field_rq[] = " R&Q ";
+    char field_schedule[] = " SCHEDULE        ";
+    char field_until[] = " UNTIL           ";
+    char field_pid[] = " PID    ";
+    char field_index[] = " INDEX";
+    char field_cmd[] = " CMD";
+    char field_endline[] = "\n";
     int len = 0;
 
-    str = (print_details) ? fields_details : fields;
-    len = (print_details) ? sizeof(fields_details) : sizeof(fields);
-    if ( ! print_user ) {
-	str += 7;
-	len -= 7;
-    }
+    fields[0] = '\0';
 
-    if ( send(fd, str, len, 0) < 0 )
+    Add_field(field_id);
+    Test_add_field(FIELD_USER, field_user);
+    Test_add_field(FIELD_PID, field_pid);
+    Test_add_field(FIELD_INDEX, field_index);
+    Test_add_field(FIELD_RQ, field_rq);
+    Test_add_field(FIELD_UNTIL, field_until);
+    Test_add_field(FIELD_SCHEDULE, field_schedule);
+    Add_field(field_cmd);
+    Add_field(field_endline);
+
+    fields[TERM_LEN-1] = '\0';
+
+    if ( send(fd, fields, len, 0) < 0 )
 	error_e("error in send()");
 
-    return OK;
 }
 
 
-int
-print_line(int fd, struct CL *line, char print_user, char print_details)
+void
+print_line(int fd, struct CL *line,  unsigned char *details, pid_t pid, int index,
+	   time_t until)
     /* print some basic fields of a line, and some more if details == 1 */
 {
-    char buf[LINE_LEN];
+    char buf[TERM_LEN];
     int len = 0;
     struct tm *ftime;
 
 
-    ftime = localtime( &(line->cl_nextexe) );
-    len = snprintf(buf, sizeof(buf), "%*s%s%-4ld ",
-		   (print_user) ? 6 : 0, (print_user) ? line->cl_file->cf_user : "",
-		   (print_user) ? " " : "",
-		   line->cl_id);
-    if (print_details)
-	len += snprintf(buf+len, sizeof(buf)-len, "%4d ", line->cl_numexe);
-    len += snprintf(buf+len, sizeof(buf)-len, "%02d/%02d/%d %02d:%02d %s\n",
-		   (ftime->tm_mon + 1), ftime->tm_mday, (ftime->tm_year + 1900),
-		   ftime->tm_hour, ftime->tm_min,
-		   line->cl_shell);
+    len = snprintf(buf, sizeof(buf), "%-5ld", line->cl_id);
+    if ( bit_test(details, FIELD_USER) )
+	len += snprintf(buf+len, sizeof(buf)-len, " %6s", line->cl_file->cf_user);
+    if ( bit_test(details, FIELD_PID) )
+	len += snprintf(buf+len, sizeof(buf)-len, " %-7d", pid);
+    if ( bit_test(details, FIELD_INDEX) )
+	len += snprintf(buf+len, sizeof(buf)-len, " %-5d", index);
+    if ( bit_test(details, FIELD_RQ) )
+	len += snprintf(buf+len, sizeof(buf)-len, " %-4d", line->cl_numexe);
+    if ( bit_test(details, FIELD_UNTIL) ) {
+	if ( until > 0 ) {
+	    ftime = localtime( &until );
+	    len += snprintf(buf+len, sizeof(buf)-len, " %02d/%02d/%d %02d:%02d",
+			    (ftime->tm_mon + 1), ftime->tm_mday, (ftime->tm_year + 1900),
+			    ftime->tm_hour, ftime->tm_min );
+	}
+	else
+	    len += snprintf(buf+len, sizeof(buf)-len, " %16s", " (no until set) ");
+    }
+    if ( bit_test(details, FIELD_SCHEDULE) ) {
+	ftime = localtime( &(line->cl_nextexe) );
+	len += snprintf(buf+len, sizeof(buf)-len, " %02d/%02d/%d %02d:%02d",
+			(ftime->tm_mon + 1), ftime->tm_mday, (ftime->tm_year + 1900),
+			ftime->tm_hour, ftime->tm_min );
+    }
+    len += snprintf(buf+len, sizeof(buf)-len, " %s\n", line->cl_shell);
 
     if ( send(fd, buf, len + 1, 0) < 0 )
 	error_e("error in send()");
+    
+}
 
-    return OK;
+
+#define Test_line(line, pid, index, until) \
+            { \
+                if (all || strcmp(user, line->cl_file->cf_user) == 0 ) { \
+		    print_line(fd, line, fields, pid, index, until); \
+		    found = 1; \
+                } \
+            }
+void
+cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
+    /* run a command which lists some jobs */
+{
+    int found = 0;
+    int all = (cmd[1] == ALL) ? 1 : 0;
+    char *user = NULL;
+    struct job *j;
+    int i;
+    unsigned char fields[FIELD_NUM_SIZE];
+    
+    switch ( cmd[0] ) {
+    case CMD_DETAILS:
+	bit_set(fields, FIELD_SCHEDULE);
+	bit_set(fields, FIELD_RQ);
+	bit_set(fields, FIELD_USER);
+	print_fields(fd, fields);
+	for ( j = queue_base; j != NULL; j = j->j_next ) {
+	    if ( cmd[1] == j->j_line->cl_id ) {
+		if (strcmp(client->fcl_user, j->j_line->cl_file->cf_user) == 0
+		    || is_root )
+		    print_line(fd, j->j_line, fields, 0, 0, 0);
+		else
+		    send(fd, err_job_nallowed_str,sizeof(err_job_nallowed_str), 0);
+		found = 1;
+		break;
+	    }
+	}
+	break;
+
+    case CMD_LIST_JOBS:
+    case CMD_LIST_LAVGQ:
+    case CMD_LIST_SERIALQ:
+    case CMD_LIST_EXEQ:
+	if ( cmd[0] == CMD_LIST_LAVGQ )
+	    bit_set(fields, FIELD_UNTIL);
+	else
+	    bit_set(fields, FIELD_SCHEDULE);
+
+	if ( cmd[0] == CMD_LIST_SERIALQ )
+	    bit_set(fields, FIELD_INDEX);
+
+	if ( cmd[0] == CMD_LIST_EXEQ )
+	    bit_set(fields, FIELD_PID);
+
+	if ( all && ! is_root) {
+	    warn("User %s tried to list *all* jobs.", client->fcl_user);
+	    send(fd, err_all_nallowed_str, sizeof(err_all_nallowed_str), 0);
+	    send(fd, END_STR, sizeof(END_STR), 0);
+	    return;
+	}
+	if ( all )
+	    bit_set(fields, FIELD_USER);
+	print_fields(fd, fields);
+
+	if (! all) {
+	    struct passwd *pass;
+	    
+	    if ( (pass = getpwuid( (uid_t) cmd[1] )) == NULL ) {
+		warn_e("Unable to find passwd entry for %ld", cmd[1]);
+		send(fd, err_invalid_user_str, sizeof(err_invalid_user_str), 0);
+		send(fd, END_STR, sizeof(END_STR), 0);
+		return;
+	    }
+	    if ( ! is_root && strcmp(pass->pw_name, client->fcl_user) != 0 ) {
+		warn_e("%s is not allowed to see %s's jobs. %ld", client->fcl_user,
+		       pass->pw_name);
+		send(fd, err_others_nallowed_str, sizeof(err_others_nallowed_str), 0);
+		send(fd, END_STR, sizeof(END_STR), 0);
+		return;
+	    }
+	    user = pass->pw_name;
+	}
+
+	/* list all jobs one by one and find the corresponding ones */
+	switch ( cmd[0] ) {
+	case CMD_LIST_JOBS:
+	    for ( j = queue_base; j != NULL; j = j->j_next )
+		Test_line(j->j_line, 0, 0, 0);
+	    break;
+
+	case CMD_LIST_EXEQ:
+	    for ( i = 0; i < exe_num; i++)
+		Test_line(exe_array[i].e_line, exe_array[i].e_pid, 0, 0);
+	    break;
+
+	case CMD_LIST_LAVGQ:
+	    for ( i = 0; i < lavg_num; i++)
+		Test_line(lavg_array[i].l_line, 0, 0, lavg_array[i].l_until);
+	    break;
+
+	case CMD_LIST_SERIALQ:
+	{
+	    int j;
+	    i = serial_array_index;
+	    for ( j = 0; j < serial_num; j++ ) {
+		Test_line(serial_array[i], 0, j, 0);
+		if ( ++i >= serial_array_size )
+		    i -= serial_array_size;
+	    }
+	    break;
+	}
+
+	}
+	
+	break;
+    }
+
+    if ( ! found )
+	send(fd, err_job_nfound_str, sizeof(err_job_nfound_str), 0);
+    /* to tell fcrondyn there's no more data to wait */
+    send(fd, END_STR, sizeof(END_STR), 0);
     
 }
 
@@ -230,67 +408,30 @@ exe_cmd(struct fcrondyn_cl *client)
 {
     long int *cmd;
     int fd;
-    char not_found_str[] = "No corresponding job found.\n";
-    char not_allowed_str[] = "You are not allowed to see/change this line.\n";
-    char cmd_unknown_str[] = "Not implemented yet or erroneous command.\n";
-    char details = 0;
-    char found = 0;
-    char is_root = 0;
+    int is_root = 0;
 
-    /* to make seems clearer (avoid repeating client->fcl_ all the time */
+    is_root = (strcmp(client->fcl_user, ROOTNAME) == 0) ? 1 : 0;
+
+    /* to make things clearer (avoid repeating client->fcl_ all the time) */
     cmd = client->fcl_cmd;
     fd = client->fcl_sock_fd;
 
     /* */
     debug("exe_cmd [0,1,2] : %d %d %d", cmd[0], cmd[1], cmd[2]);
     /* */
-
-    switch ( client->fcl_cmd[0] ) {
-    case CMD_DETAILS:
-	details = 1;
-    case CMD_LIST_JOBS:
-    {
-	struct job *j;
-	char all = (client->fcl_cmd[1] == ALL) ? 1 : 0;
-
-	is_root = (strcmp(client->fcl_user, ROOTNAME) == 0) ? 1 : 0;
-	if ( all && ! is_root) {
-	    warn("User %s tried to list *all* jobs.", client->fcl_user);
-	    send(fd, "you are not allowed to list all jobs.\n",
-		 sizeof("you are not allowed to list all jobs.\n"), 0);
-	    send(fd, END_STR, sizeof(END_STR), 0);
-	    return;
-	}
-	print_fields(fd, details ? 1 : all, details);
-	if ( details ) {
-	    for ( j = queue_base; j != NULL; j = j->j_next ) {
-		if ( client->fcl_cmd[1] == j->j_line->cl_id ) {
-		    if (strcmp(client->fcl_user, j->j_line->cl_file->cf_user) == 0
-			|| is_root )
-			print_line(fd, j->j_line, 1, 1);
-		    else
-			send(fd, not_allowed_str, sizeof(not_allowed_str), 0);
-		    found = 1;
-		    break;
-		}
-	    }
-	}
-	else
-	    for ( j = queue_base; j != NULL; j = j->j_next ) {
-		if (all || strcmp(client->fcl_user, j->j_line->cl_file->cf_user) == 0 ) {
-		    print_line(fd, j->j_line, all, 0);
-		    found = 1;
-		}
-	    }
-	if ( ! found )
-	    send(fd, not_found_str, sizeof(not_found_str), 0);
-	/* to tell fcrondyn there's no more data to wait */
-	send(fd, END_STR, sizeof(END_STR), 0);
-    }
-    break;
     
+    switch ( cmd[0] ) {
+
+    case CMD_DETAILS:
+    case CMD_LIST_JOBS:
+    case CMD_LIST_LAVGQ:
+    case CMD_LIST_SERIALQ:
+    case CMD_LIST_EXEQ:
+	cmd_ls(client, cmd, fd, is_root);
+	break;
+
     default:
-	send(fd, cmd_unknown_str, sizeof(cmd_unknown_str), 0);
+	send(fd, err_cmd_unknown_str, sizeof(err_cmd_unknown_str), 0);
 	     
 	/* to tell fcrondyn there's no more data to wait */
 	send(fd, END_STR, sizeof(END_STR), 0);
@@ -325,6 +466,7 @@ check_socket(int num)
 	    /* set fd to O_NONBLOCK : we do not want fcron to be stopped on error, etc */
 	    if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK) == -1) {
 		error_e("Could not set fd attribute O_NONBLOCK : connection rejected.");
+		shutdown(fd, SHUT_RDWR);
 		close(fd);
 	    }
 	    else {
@@ -362,6 +504,7 @@ check_socket(int num)
 	if ( (read_len = recv(client->fcl_sock_fd, buf_int, sizeof(buf_int), 0)) <= 0 ) {
 	    if (read_len == 0) {
 		/* connection closed by client */
+		shutdown(client->fcl_sock_fd, SHUT_RDWR);
 		close(client->fcl_sock_fd);
 		FD_CLR(client->fcl_sock_fd, &master_set);
 		debug("connection closed : fd : %d", client->fcl_sock_fd);
@@ -409,11 +552,13 @@ close_socket(void)
     struct fcrondyn_cl *client, *client_buf = NULL;
 
     if ( listen_fd ) {
+	shutdown(listen_fd, SHUT_RDWR);
 	close(listen_fd);
 	unlink(fifofile);
 
 	client = fcrondyn_cl_base;
 	while ( client != NULL ) {
+	    shutdown(client->fcl_sock_fd, SHUT_RDWR);
 	    close(client->fcl_sock_fd);
 
 	    client_buf = client->fcl_next;
