@@ -39,6 +39,7 @@ AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
 AC_FUNC_WAIT3
+AC_CHECK_FUNC(getloadavg, [getloadavg = 1], [getloadavg = 0])
 AC_FUNC_GETLOADAVG
 AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror)
 
@@ -250,7 +251,7 @@ AC_ARG_WITH(spooldir,
 FCRONTABS="$sp"
 AC_SUBST(FCRONTABS)
 
-if test $HAVE_GETLOADAVG -eq 1  ; then
+if test $getloadavg -eq 0  ; then
 AC_MSG_CHECKING(proc directory)
 AC_ARG_WITH(proc,
 [  --with-proc=PATH    Directory where procfs is mounted (default /proc).],
@@ -308,4 +309,5 @@ AC_ARG_WITH(debug,
 )
 
 AC_OUTPUT(Makefile)
+
 
