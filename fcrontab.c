@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.8 2000-06-21 13:46:14 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.9 2000-06-21 14:59:07 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.8 2000-06-21 13:46:14 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.9 2000-06-21 14:59:07 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -103,7 +103,7 @@ usage(void)
 	    "  -l         list user's current fcrontab.\n"
 	    "  -r         remove user's current fcrontab.\n"
 	    "  -e         edit user's current fcrontab.\n"
-	    "  -z         reinstall user's fcrontab from source.\n"
+	    "  -z         reinstall user's fcrontab from source code.\n"
 	    "  -n         ignore previous version of file.\n"
 	    "  -d         set up debug mode.\n"
 	    "  -h         display this help message.\n"
@@ -148,10 +148,19 @@ sig_daemon(void)
     tm = localtime(&t);
     
     if ( (sl = 60 - (t % 60) - 10) < 0 ) {
-	snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min + 2);
+	if ( (tm->tm_min = tm->tm_min + 2) >= 60 ) {
+	    tm->tm_hour++;
+	    tm->tm_min -= 60;
+	}
+	snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
 	sl = 60 - (t % 60) + 50;
-    } else
-	snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min + 1);
+    } else {
+	if ( ++tm->tm_min >= 60 ) {
+	    tm->tm_hour++;
+	    tm->tm_min -= 60;
+	}
+	snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
+    }
 
     fprintf(stderr, "Modifications will be take into account"
 	    " at %s.\n", buf);
