@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.23 2000-12-15 17:50:00 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.24 2000-12-16 19:01:38 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.23 2000-12-15 17:50:00 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.24 2000-12-16 19:01:38 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -450,12 +450,15 @@ edit_file(char *buf)
 	error_e("could not fdopen");
 	goto exiterr;
     }
-#if ! (defined(HAVE_SETREGID) && defined(HAVE_SETREUID))
-    if (fchown(file, asuid, asgid) != 0) {
-  	error_e("Could not fchown %s to asuid and asgid", tmp);
-  	goto exiterr;
-    }
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    if (uid == 0)
+#else
+    if (1)
 #endif
+	if (fchown(file, asuid, asgid) != 0) {
+	    error_e("Could not fchown %s to asuid and asgid", tmp);
+	    goto exiterr;
+	}
     /* copy user's fcrontab (if any) to a temp file */
     if ( (f = fopen(buf, "r")) == NULL ) {
 	if ( errno != ENOENT ) {
