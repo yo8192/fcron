@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.11 2002-08-22 21:37:52 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.12 2002-08-29 17:34:57 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -27,14 +27,12 @@ well.</para>
 	    <para>bug fix (?) : "already running" bug (? - unconfirmed) </para>
 	</listitem>
 	<listitem>
-	    <para>PAM support (included in fcron, but need more tests by people
-using PAM - not implemented in fcrondyn)</para>
+	    <para>find a way to get user's job pid (not the fcron process
+	    controling it) (use pipe() ?)</para>
 	</listitem>
 	<listitem>
-	    <para>fcrondyn : possibility to display a list of jobs including
-their options, time and date of next execution, status, of only the running
-jobs, all the jobs, in order of execution or classified by user, etc. (some of
-these functions or not implemented yet)</para>
+	    <para>PAM support (included in fcron, but need more tests by people 
+using PAM - not implemented in fcrondyn)</para>
 	</listitem>
 	<listitem>
 	    <para>run one of this job, change its nice value, stop it...</para>

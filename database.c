@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.64 2002-08-25 17:26:26 thib Exp $ */
+ /* $Id: database.c,v 1.65 2002-08-29 17:34:03 thib Exp $ */
 
 #include "fcron.h"
 
@@ -1255,7 +1255,7 @@ time_to_sleep(time_t lim)
     if ( (tts = tts - ti) < 0)
 	tts = 0;
 
-/*      // debug("Time to sleep: %lds", tts); */
+/*      debug("Time to sleep: %lds", tts); */
 
     return tts;
 }

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.18 2002-03-02 17:29:03 thib Exp $ */
+ /* $Id: subs.c,v 1.19 2002-08-29 17:34:41 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -210,7 +210,7 @@ read_conf(void)
 /*  	debug("  fcrondeny=%s", fcrondeny); */
 /*  	debug("  fcrontabs=%s", fcrontabs); */
 /*  	debug("  pidfile=%s", pidfile); */
-  	debug("  fifofile=%s", fifofile);
+/*   	debug("  fifofile=%s", fifofile); */
 /*  	debug("  editor=%s", editor); */
 /*  	debug("  shell=%s", shell); */
 /*  	debug("  sendmail=%s", sendmail); */
