@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.13 2001-07-07 17:44:57 thib Exp $ */
+ /* $Id: subs.c,v 1.14 2001-07-09 11:50:13 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -237,13 +237,13 @@ read_conf(void)
 
     if (debug_opt) {
 	debug("  fcronconf=%s", fcronconf);
-	debug("  fcronallow=%s", fcronallow);
-	debug("  fcrondeny=%s", fcrondeny);
-	debug("  fcrontabs=%s", fcrontabs);
-	debug("  pidfile=%s", pidfile);
-	debug("  editor=%s", editor);
-	debug("  shell=%s", shell);
-	debug("  sendmail=%s", sendmail);
+/*  	debug("  fcronallow=%s", fcronallow); */
+/*  	debug("  fcrondeny=%s", fcrondeny); */
+/*  	debug("  fcrontabs=%s", fcrontabs); */
+/*  	debug("  pidfile=%s", pidfile); */
+/*  	debug("  editor=%s", editor); */
+/*  	debug("  shell=%s", shell); */
+/*  	debug("  sendmail=%s", sendmail); */
     }
 
     fclose(f);
