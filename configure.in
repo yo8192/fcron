@@ -634,6 +634,15 @@ GROUPNAME="$groupname"
 AC_SUBST(GROUPNAME)
 AC_DEFINE_UNQUOTED(GROUPNAME, "$groupname")
 
+dnl We set exec_prefix to $prefix (also done in Makefile)
+exec_prefix=$prefix
+BINDIREX=`eval echo $bindir`
+SBINDIREX=`eval echo $sbindir`
+AC_DEFINE_UNQUOTED(BINDIREX, "$BINDIREX")
+AC_DEFINE_UNQUOTED(SBINDIREX, "$SBINDIREX")
+AC_SUBST(BINDIREX)
+AC_SUBST(SBINDIREX)
+
 AC_OUTPUT(Makefile)
 
 
