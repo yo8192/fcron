@@ -4,7 +4,7 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.9 2001-07-09 13:12:08 thib Exp $
+# $Id: user-group,v 1.10 2001-07-10 10:54:23 thib Exp $
 
 # take 4 arguments : 	username
 # 			groupname
@@ -12,6 +12,9 @@
 #                       the src dir
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
+if test -d /usr/ucb; then
+    PATH=/usr/ucb:$PATH
+fi
 
 if test $# -ne 4; then
     echo "Too few/many arguments"
@@ -39,7 +42,7 @@ else
 fi
 
 echo -n "Checking if group $GROUPNAME exists ... "
-if $SRCDIR/script/has_group.pl $GROUPNAME; then
+if $SRCDIR/script/has_usrgrp.pl -group "$GROUPNAME"; then
   echo "yes."
   INSTALLED=1
 else
@@ -75,20 +78,16 @@ fi
 
 if test $INSTALLED -eq 0; then
   echo
-  echo "Group \"$GROUPNAME\" does not exist : please create it or choose another groupname"
-  echo "with configure script."
+  echo "Group \"$GROUPNAME\" does not exist : please create it or choose"
+  echo "another groupname with configure script."
   exit 1
 fi
-
-# get the gid value :
-GID="`cat /etc/group | grep fcron | awk -F ":" '{print $3}'`"
-
 
 INSTALL="nothing"
 INSTALLED=0
 
 echo -n "Checking if user $USERNAME exists ... "
-if $SRCDIR/script/has_user.pl $USERNAME; then
+if $SRCDIR/script/has_usrgrp.pl -user "$USERNAME"; then
   echo "yes."
   INSTALLED=1
 else
@@ -132,11 +131,15 @@ fi
 
 if test $INSTALLED -eq 0; then
   echo
-  echo "User \"$USERNAME\" does not exist : please create it or choose another username"
-  echo "with configure script."
+  echo "User \"$USERNAME\" does not exist : please create it or choose another"
+  echo "username with configure script."
   exit 1
 else
-  USERGID="`cat /etc/passwd | grep fcron | awk -F ':' '{print $4}'`"
+  (USERGID="`$SRCDIR/script/has_usrgrp.pl -user "$USERNAME" -printgid`" && \
+    GID="`$SRCDIR/script/has_usrgrp.pl -group "$GROUPNAME" -printgid`") || \
+  (echo "Could not check if \"$USERNAME\" is in the group \"$GROUPNAME\" :" &&\
+   echo "please do it manually.")
+
   if test "$GID" -ne "$USERGID"; then
     echo
     echo "User $USERNAME exists, but is not in the group $GROUPNAME."
