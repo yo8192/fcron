@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.21 2000-09-04 13:09:31 thib Exp $ */
+ /* $Id: job.c,v 1.22 2000-09-05 19:55:57 thib Exp $ */
 
 #include "fcron.h"
 
@@ -188,8 +188,9 @@ run_job(CL *line)
 #endif /* CHECKJOBS */
 
 	    execl(shell, shell, "-c", line->cl_shell, NULL);
-
 	    /* execl returns only on error */
+	    error_e("Can't find '%s'. Trying a execlp(\"sh\", ...)", shell);
+	    execlp("sh", "sh",  "-c", line->cl_shell, NULL);
 	    die_e("execl() '%s -c %s' error", shell, line->cl_shell);
 
 	    /* execution never gets here */
@@ -280,7 +281,7 @@ launch_mailer(CL *line, int mailfd)
     
     /* run sendmail with mail file as standard input */
     execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, pass->pw_name, NULL);
-    error_e("Can't find sendmail. Trying a execlp(\"sendmail\")");
+    error_e("Can't find '"SENDMAIL"'. Trying a execlp(\"sendmail\")");
     execlp("sendmail", "sendmail", SENDMAIL_ARGS, pass->pw_name, NULL);
     die_e("Can't exec " SENDMAIL);
 
