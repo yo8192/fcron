@@ -7,7 +7,7 @@
 <!ENTITY email "<email>&emailadr;</email>">
 <!ENTITY webpageadr "http://fcron.free.fr">
 <!ENTITY webpage '<ulink url="&webpageadr;">&webpageadr;</ulink>'>
-<!ENTITY docurl '<ulink url="&webpageadr/fcron-doc.tar.gz">&webpageadr/fcron-doc.tar.gz</ulink>'>
+<!ENTITY docurl '<ulink url="&webpageadr/fcron-doc-html.tar.gz">&webpageadr/fcron-doc-html.tar.gz</ulink>'>
 
 <!ENTITY editor "@@EDITOR@">
 <!ENTITY etc "@@ETC@">
@@ -46,6 +46,7 @@
 <!ENTITY todo SYSTEM "todo.sgml">
 <!ENTITY thanks SYSTEM "thanks.sgml">
 <!ENTITY changes SYSTEM "changes.sgml">
+<!ENTITY relnotes SYSTEM "relnotes.sgml">
 <!ENTITY fcron.8 SYSTEM "fcron.8.sgml">
 <!ENTITY fcron.conf.5 SYSTEM "fcron.conf.5.sgml">
 <!ENTITY fcrontab.1 SYSTEM "fcrontab.1.sgml">
@@ -80,5 +81,7 @@
 <!ENTITY optrunfreq '<link linkend="fcrontab.5.runfreq"><varname>runfreq</varname></link>'>
 <!ENTITY optserial '<link linkend="fcrontab.5.serial"><varname>serial</varname></link>'>
 <!ENTITY optserialonce '<link linkend="fcrontab.5.serialonce"><varname>serialonce</varname></link>'>
+<!ENTITY optstdout '<link linkend="fcrontab.5.stdout"><varname>stdout</varname></link>'>
 <!ENTITY optstrict '<link linkend="fcrontab.5.strict"><varname>strict</varname></link>'>
 <!ENTITY optuntil '<link linkend="fcrontab.5.until"><varname>until</varname></link>'>
+<!ENTITY optvolatile '<link linkend="fcrontab.5.volatile"><varname>volatile</varname></link>'>
