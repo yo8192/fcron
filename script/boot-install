@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.28 2001-03-01 18:40:03 thib Exp $
+# $Id: boot-install,v 1.29 2001-03-01 19:18:32 thib Exp $
 
 # take 5 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -44,6 +44,10 @@ echo "The installation process is going to try to install fcron in them."
 echo
 echo "Note that if you answer no to a proposition made at this point by"
 echo "the installation script, it will try to propose another way to do it."
+echo
+echo "If you answer no to all the propositions of the script, or if the script"
+echo "fails, a message will be printed telling you what you should do"
+echo "manually."
 echo
 
 INSTALL="nothing"
