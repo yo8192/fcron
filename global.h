@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.32 2001-08-20 10:58:07 thib Exp $ */
+ /* $Id: global.h,v 1.33 2001-09-12 13:45:25 thib Exp $ */
 
 
 /* 
@@ -99,6 +99,10 @@
 
 #ifdef HAVE_LIMITS_H
 #include <limits.h>
+#endif
+
+#ifdef HAVE_LIBPAM
+#include "pam.h"
 #endif
 
 

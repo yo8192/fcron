@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.36 2001-08-20 20:02:53 thib Exp $ */
+ /* $Id: config.h.in,v 1.37 2001-09-12 13:50:09 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -287,6 +287,9 @@
 /* Define if you have <nlist.h>.  */
 #undef NLIST_STRUCT
 
+/* Define if you have the <security/pam_appl.h> header file.  */
+#undef HAVE_SECURITY_PAM_APPL_H
+
 /* Define if you have the <stdarg.h> header file.  */
 #undef HAVE_STDARG_H
 
@@ -325,3 +328,6 @@
 
 /* Define if you have the dgc library (-ldgc).  */
 #undef HAVE_LIBDGC
+
+/* Define if you have the pam library (-lpam).  */
+#undef HAVE_LIBPAM
