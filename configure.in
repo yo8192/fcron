@@ -250,7 +250,7 @@ AC_ARG_WITH(spooldir,
 FCRONTABS="$sp"
 AC_SUBST(FCRONTABS)
 
-if test "X$HAVE_GETLOADAVG" = "X"  ; then
+if test $HAVE_GETLOADAVG -eq 1  ; then
 AC_MSG_CHECKING(proc directory)
 AC_ARG_WITH(proc,
 [  --with-proc=PATH    Directory where procfs is mounted (default /proc).],
@@ -267,7 +267,7 @@ Without proc, you won't be able to use the lavg* options
         AC_DEFINE(PROC, "/proc")
         AC_MSG_RESULT(/proc)
     else
-       AC_MSG_ERROR(Cannot determine value for spool directory)
+       AC_MSG_ERROR(Cannot determine value for proc directory)
     fi
     ;;
   *)
@@ -284,7 +284,7 @@ Without proc, you won't be able to use the lavg* options
       AC_DEFINE(PROC, "/proc")
       AC_MSG_RESULT(/proc)
   else
-     AC_MSG_ERROR(Cannot determine value for spool directory)
+     AC_MSG_ERROR(Cannot determine value for proc directory)
   fi
 )
 PROC="$proc"
