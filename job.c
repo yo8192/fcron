@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.55 2002-10-28 17:49:00 thib Exp $ */
+ /* $Id: job.c,v 1.56 2003-07-14 10:50:03 thib Exp $ */
 
 #include "fcron.h"
 
@@ -39,6 +39,10 @@ void die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str);
 char env_user[PATH_LEN];
 char env_home[PATH_LEN];
 char env_shell[PATH_LEN];
+#endif
+
+#ifdef CONFIG_FLASK
+extern char **environ;
 #endif
 
 #ifdef HAVE_LIBPAM
@@ -180,6 +184,7 @@ create_mail(cl_t *line, char *subject)
     /* create temporary file for stdout and stderr of the job */
     int mailfd = temp_file(NULL);
     FILE *mailf = fdopen(mailfd, "r+");
+    char hostname[USER_NAME_LEN];
 
     if ( mailf == NULL )
 	die_e("Could not fdopen() mailfd");
@@ -187,16 +192,26 @@ create_mail(cl_t *line, char *subject)
     /* write mail header */
     fprintf(mailf, "To: %s", line->cl_file->cf_user);
 #ifdef HAVE_GETHOSTNAME
-    {
-	char hostname[USER_NAME_LEN];
-	memset(hostname, 0, sizeof(hostname));
-	if (gethostname(hostname, sizeof(hostname)) != 0)
-	    error_e("Could not get hostname");
-	else
-	    fprintf(mailf, "@%s", hostname);
+    if (gethostname(hostname, sizeof(hostname)) != 0) {
+	error_e("Could not get hostname");
+	hostname[0] = '\0';
     }
+    else {
+	/* it is unspecified whether a truncated hostname is NUL-terminated */
+	hostname[USER_NAME_LEN-1] = '\0';
+	fprintf(mailf, "@%s", hostname);
+    }
+#else
+    hostname[0] = '\0';
 #endif /* HAVE_GETHOSTNAME */
-    fprintf(mailf, "\nSubject: %s: '%s'\n\n", subject, line->cl_shell);
+
+    if (subject)
+	fprintf(mailf, "\nSubject: fcron <%s@%s> %s: %s\n\n", line->cl_file->cf_user,
+		( hostname[0] != '\0')? hostname:"?" , subject, line->cl_shell);
+    else
+	fprintf(mailf, "\nSubject: fcron <%s@%s> %s\n\n", line->cl_file->cf_user,
+		( hostname[0] != '\0')? hostname:"?" , line->cl_shell);
+
 
     return mailf;
 }
@@ -232,6 +247,9 @@ run_job(struct exe_t *exeent)
  	int to_stdout = foreground && is_stdout(line->cl_option);
 	int pipe_fd[2];
 	short int mailpos = 0;	/* 'empty mail file' size */
+#ifdef CONFIG_FLASK
+	int flask_enabled = is_flask_enabled();
+#endif
  
 	/* */
  	debug("sent output to %s, %s, %s\n", to_stdout ? "stdout" : "file",
@@ -244,7 +262,7 @@ run_job(struct exe_t *exeent)
 	     * as temp_file() needs the root privileges */
 	    /* if we run in foreground, stdout and stderr point to the console.
 	     * Otherwise, stdout and stderr point to /dev/null . */
-	    mailf = create_mail(line, "Output of fcron job");
+	    mailf = create_mail(line, NULL);
 	    mailpos = ftell(mailf);
 	    if (pipe(pipe_fd) != 0) 
 		die_e("could not pipe()");
@@ -332,6 +350,11 @@ run_job(struct exe_t *exeent)
 	    debug("Execing \"%s -c %s\"", curshell, line->cl_shell);
 #endif /* CHECKJOBS */
 
+#ifdef CONFIG_FLASK
+	    if(flask_enabled)
+		execle_secure(shell, line->cl_file->cf_user_sid, shell, "-c", line->cl_shell, NULL, environ);
+	    else
+#endif
 	    execl(curshell, curshell, "-c", line->cl_shell, NULL);
 	    /* execl returns only on error */
 	    error_e("Can't find \"%s\". Trying a execlp(\"sh\",...)",curshell);
