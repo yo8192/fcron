@@ -13,7 +13,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.7)
 
-vers="2.1.1"
+vers="2.9.0"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
