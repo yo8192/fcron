@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.14 2002-09-07 13:12:31 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.15 2002-09-15 18:09:52 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -32,6 +32,9 @@ well.</para>
 	</listitem>
 	<listitem>
 	    <para>Use (or remove from config.h.in) MAX_USER_CON & MAX_IDLE_TIME.</para>
+	</listitem>
+	<listitem>
+	    <para>Change macros to make parameters clearly different from vars.</para>
 	</listitem>
 	<listitem>
 	    <para>Use directory notifications (?) (portable ?) (cf. dnotify)</para>
