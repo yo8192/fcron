@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.51 2003-12-29 17:06:16 thib Exp $ */
+ /* $Id: config.h.in,v 1.52 2004-01-29 10:34:46 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -393,7 +393,7 @@
 #undef HAVE_LIBSHADOW
 
 /* Have SE Linux support */
-#undef CONFIG_FLASK
+#undef WITH_SELINUX
 
 /* Define if you have the xnet library (-lxnet).  */
 #undef HAVE_LIBXNET

@@ -13,7 +13,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.57)
 
-vers="2.9.4"
+vers="2.9.5"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -44,7 +44,6 @@ AC_CHECK_HEADERS(strings.h)
 AC_CHECK_HEADERS(sys/types.h sys/socket.h sys/un.h)
 AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h crypt.h shadow.h)
 AC_CHECK_HEADERS(sys/resource.h)
-AC_CHECK_HEADERS(flask_util.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -61,7 +60,7 @@ AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
 AC_FUNC_WAIT3
 AC_CHECK_LIB(xnet, shutdown)
-AC_CHECK_LIB(secure, getsecsid, [flaskavail=1], [flaskavail=0])
+AC_CHECK_LIB(selinux, getcon, [selinuxavail=1], [selinuxavail=0])
 AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
 AC_CHECK_LIB(kstat, kstat_open, [kstat=1], [kstat=0])
 if test $getloadavg -eq 1; then
@@ -925,7 +924,7 @@ AC_ARG_WITH(selinux,
     AC_MSG_RESULT(no)
     ;;
   yes)
-    if test "$flaskavail" -eq 1; then
+    if test "$selinuxavail" -eq 1; then
 	useselinux=1
 	AC_MSG_RESULT(yes)
     else
@@ -940,7 +939,7 @@ AC_ARG_WITH(selinux,
     AC_MSG_ERROR(Must be set to either "yes" or "no".)
     ;;
   esac ],
-  if test "$useselinux" != "0" && test "$flaskavail" -eq 1; then
+  if test "$useselinux" != "0" && test "$selinuxavail" -eq 1; then
     useselinux=1
     AC_MSG_RESULT(yes)
   else
@@ -949,8 +948,9 @@ AC_ARG_WITH(selinux,
   fi
 )
 if test "$useselinux" -eq 1; then
-  LIBS="$LIBS -lsecure"
-  AC_DEFINE(CONFIG_FLASK)
+  LIBS="$LIBS -lselinux"
+  AC_DEFINE(WITH_SELINUX)
+  CFLAGS="$CFLAGS -I/usr/include/selinux"
 fi
 
 
@@ -1123,9 +1123,9 @@ fi
 
 echo "fcron's user (resp. group) name :   $username (resp. $groupname)"
 
-echo -n "systab :                            "
+echo -n "sysfcrontab :                       "
 if test "$use_sysfcrontab" -eq 1; then
-	echo "yes"
+	echo "yes ($sysfcrontab)"
 else
 	echo "no"
 fi

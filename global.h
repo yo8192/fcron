@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.41 2003-12-25 22:43:53 thib Exp $ */
+ /* $Id: global.h,v 1.42 2004-01-29 10:30:12 thib Exp $ */
 
 
 /* 
@@ -43,12 +43,11 @@
 #include <errno.h>
 #endif
 
-#ifdef CONFIG_FLASK
-#include <flask_util.h>
-#include <fs_secure.h>
-#include <ss.h>
-#include <linux/flask/av_permissions.h>
-#include <get_sid_list.h>
+#ifdef WITH_SELINUX
+#include <selinux.h>
+#include <get_context_list.h>
+#include <selinux/flask.h>
+#include <selinux/av_permissions.h>
 #endif
 
 #ifdef HAVE_GETOPT_H
@@ -167,9 +166,9 @@ typedef struct cf_t {
     struct env_t *cf_env_base;  /* list of all env variables to set          */
     int		  cf_running;	/* number of jobs running                    */
     signed char	  cf_tzdiff;    /* time diff between system and local hour   */
-#ifdef CONFIG_FLASK
-    security_id_t cf_user_sid;
-    security_id_t cf_file_sid;
+#ifdef WITH_SELINUX
+    security_context_t cf_user_context;
+    security_context_t cf_file_context;
 #endif
 } cf_t;
 

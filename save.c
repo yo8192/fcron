@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.c,v 1.7 2003-12-25 22:52:03 thib Exp $ */
+ /* $Id: save.c,v 1.8 2004-01-29 10:34:55 thib Exp $ */
 
 #include "global.h"
 #include "save.h"
@@ -298,12 +298,18 @@ save_one_file(cf_t *file, char *filename, uid_t own_uid, gid_t own_gid, time_t s
     int fd;
 
     /* open file */
-#ifdef CONFIG_FLASK
-    if ( is_flask_enabled() )
-	fd = open_secure(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR | S_IWUSR, file->cf_file_sid);
-    else
+#ifdef WITH_SELINUX
+    if ( is_selinux_enabled() && setfscreatecon(file->cf_file_context) )
+    {
+	error_e("Could not set create context for file %s", filename);
+	return ERR;
+    }
 #endif
     fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR|S_IWUSR);
+#ifdef WITH_SELINUX
+    if ( is_selinux_enabled() )
+	setfscreatecon(NULL);
+#endif
     if ( fd == -1 ) {
 	error_e("Could not open %s", filename);
 	return ERR;
