@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.22 2000-12-14 21:17:07 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.23 2000-12-15 17:50:00 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.22 2000-12-14 21:17:07 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.23 2000-12-15 17:50:00 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -173,7 +173,7 @@ sig_daemon(void)
 	snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
     }
 
-    fprintf(stderr, "Modifications will be take into account"
+    fprintf(stderr, "Modifications will be taken into account"
 	    " at %s.\n", buf);
 
 
@@ -238,7 +238,7 @@ xexit(int exit_val)
 	    sig_daemon();
 	else
 	    fprintf(stderr, "fcron is not running :\n  modifications will"
-		    " be take into account at its next execution.\n");
+		    " be taken into account at its next execution.\n");
     }
 
     exit(exit_val);
@@ -450,10 +450,12 @@ edit_file(char *buf)
 	error_e("could not fdopen");
 	goto exiterr;
     }
-/*      if (fchown(file, asuid, asgid) != 0) { */
-/*  	error_e("Could not fchown %s to asuid and asgid", tmp); */
-/*  	goto exiterr; */
-/*      } */
+#if ! (defined(HAVE_SETREGID) && defined(HAVE_SETREUID))
+    if (fchown(file, asuid, asgid) != 0) {
+  	error_e("Could not fchown %s to asuid and asgid", tmp);
+  	goto exiterr;
+    }
+#endif
     /* copy user's fcrontab (if any) to a temp file */
     if ( (f = fopen(buf, "r")) == NULL ) {
 	if ( errno != ENOENT ) {
@@ -751,7 +753,6 @@ parseopt(int argc, char *argv[])
     if ( ! is_allowed(user) ) {
 	die("User '%s' is not allowed to use %s. Aborting.",
 	    user, prog_name);	    
-
     }
 
     if (optind < argc)
@@ -762,7 +763,6 @@ parseopt(int argc, char *argv[])
 int
 main(int argc, char **argv)
 {
-    struct passwd *pass;
 
     memset(buf, 0, sizeof(buf));
     memset(file, 0, sizeof(file));
@@ -776,14 +776,17 @@ main(int argc, char **argv)
     uid = getuid();
 
 #if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if ( ! (pass = getpwnam(USERNAME)) )
-	die("user '%s' is not in passwd file. Aborting.", USERNAME);
-    fcrontab_uid = pass->pw_uid;
-    fcrontab_gid = pass->pw_gid;
-    if (seteuid(uid) != 0) 
-	die_e("Could not change uid to uid[%d]", uid); 
-    if (setegid(fcrontab_gid) != 0) 
-	die_e("Could not change gid to " GROUPNAME "[%d]", fcrontab_gid); 
+    {
+	struct passwd *pass;
+	if ( ! (pass = getpwnam(USERNAME)) )
+	    die("user '%s' is not in passwd file. Aborting.", USERNAME);
+	fcrontab_uid = pass->pw_uid;
+	fcrontab_gid = pass->pw_gid;
+	if (seteuid(uid) != 0) 
+	    die_e("Could not change uid to uid[%d]", uid); 
+	if (setegid(fcrontab_gid) != 0) 
+	    die_e("Could not change gid to " GROUPNAME "[%d]", fcrontab_gid); 
+    }
 #else
     if (setuid(0) != 0 ) 
 	die_e("Could not change uid to 0"); 
