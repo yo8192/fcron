@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.13 2000-11-14 21:38:49 thib Exp $
+# $Id: boot-install,v 1.14 2000-11-16 17:56:28 thib Exp $
 
 # take 4 arguments : the name of the BSD-like install program
 #                    the DESTSBIN directory, the value of DEBUG
@@ -96,7 +96,7 @@ fi
 if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
     while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
       do
-      echo "Would you like to add fcron in the directory $ROOTDIR and in runlevel 2, 3, 4 and 5 ?"
+      echo "Would you like to add fcron in the directory $ROOTDIR/init.d/ and in runlevel 2, 3, 4 and 5 ?"
       read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
       done
     if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
