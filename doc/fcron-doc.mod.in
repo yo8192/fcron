@@ -2,9 +2,11 @@
 
 <!ENTITY date "@@Date@">
 <!ENTITY version "@@VERSION@">
-<!ENTITY copyrightdate "2000-2002">
+<!ENTITY copyrightdate "2000-2003">
 <!ENTITY emailadr "fcron@free.fr">
+<!ENTITY selinuxadr "russell@coker.com.au">
 <!ENTITY email "<email>&emailadr;</email>">
+<!ENTITY selinuxemail "<email>&emailadr;</email>">
 <!ENTITY webpageadr "http://fcron.free.fr">
 <!ENTITY webpage '<ulink url="&webpageadr;">&webpageadr;</ulink>'>
 <!ENTITY docurl '<ulink url="&webpageadr/fcron-doc-html.tar.gz">&webpageadr/fcron-doc-html.tar.gz</ulink>'>
@@ -31,7 +33,7 @@
 <!ENTITY sysfcrontab "@@SYSFCRONTAB@">
 
 
-<!ENTITY seealso "<emphasis>see also</emphasis> :">
+<!ENTITY seealso "<emphasis>See also</emphasis> :">
 <!ENTITY fcron "<application>fcron</application>">
 <!ENTITY Fcron "<application>Fcron</application>">
 <!ENTITY fcrontab "<application>fcrontab</application>">
