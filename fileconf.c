@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.72 2003-12-29 20:00:40 thib Exp $ */
+ /* $Id: fileconf.c,v 1.73 2004-04-29 19:29:36 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -433,7 +433,7 @@ read_opt(char *ptr, cl_t *cl)
     /* read one or several options and fill in the field "option" */
 {
     char opt_name[20];
-    unsigned int i;
+    int i;
     char in_brackets;
     
 #define Handle_err \
