@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.7 2002-10-05 14:25:16 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.8 2002-10-28 17:50:24 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.7 2002-10-05 14:25:16 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.8 2002-10-28 17:50:24 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -136,7 +136,9 @@ RETSIGTYPE
 sigpipe_handler(int x)
     /* handle broken pipes ... */
 {
-    fprintf(stderr, "Broken pipe : check if fcron is still running.\n");
+    fprintf(stderr, "Broken pipe : fcron may have closed the connection\nif it has been "
+	    "idle for more than %ds, otherwise check if fcron is still running.\n",
+	    MAX_IDLE_TIME);
     fprintf(stderr, "Exiting ...\n");
 
     xexit(EXIT_ERR);
@@ -321,7 +323,7 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 		    cmd_str += word_size;
 		}
 		/* after strtol(), cmd_str will be updated (first non-number char) */
-		else if((int_buf=strtol(cmd_str, &cmd_str, 10)) < 0 || int_buf>=LONG_MAX
+		else if((int_buf=strtol(cmd_str, &cmd_str, 10)) <= 0 || int_buf>=LONG_MAX
 		     || (! isspace( (int) *cmd_str) && *cmd_str != '\0') ) {
 		    fprintf(stderr, "Error : invalid signal value.\n");
 		    return INVALID_ARG;
@@ -439,34 +441,31 @@ talk_fcron(char *cmd_str, int fd)
 	break;
     case HELP_CMD:
     {
-	int i, j;
+	int i, j, len;
 	printf("Command recognized by fcrondyn :\n");
 	printf("------------------------------\n");
 	for (i = 0; i < NUM_CMD; i++) {
-	    printf("%s ", cmd_list[i].cmd_name);
+	    len = printf("%s ", cmd_list[i].cmd_name);
 
 	    /* print args : */
 	    for (j = 0; j < cmd_list[i].cmd_numopt; j++) {
 		if ( cmd_list[i].cmd_default[j] != ARG_REQUIRED )
-		    printf("[");
+		    len += printf("[");
 		switch ( cmd_list[i].cmd_opt[j] ) {
-		case USER: printf("user"); break;
-		case JOBID: printf("jobid"); break;
-		case TIME_AND_DATE: printf("time"); break;
-		case NICE_VALUE: printf("niceval"); break;
-		case SIGNAL: printf("sig"); break;
-		case BOOLEAN: printf("bool"); break;
-		default: printf("unknown_arg!");
+		case USER: len += printf("user"); break;
+		case JOBID: len += printf("jobid"); break;
+		case TIME_AND_DATE: len += printf("time"); break;
+		case NICE_VALUE: len += printf("niceval"); break;
+		case SIGNAL: len += printf("sig"); break;
+		case BOOLEAN: len += printf("bool"); break;
+		default: len += printf("unknown_arg!");
 		}
 		if ( cmd_list[i].cmd_default[j] != ARG_REQUIRED )
-		    printf("]");
-		printf(" ");
+		    len += printf("]");
+		len += printf(" ");
 	    }
-
-	    if (cmd_list[i].cmd_numopt + (strlen(cmd_list[i].cmd_name)/8) <= 1.5)
-		printf("\t\t%s\n", cmd_list[i].cmd_desc);
-	    else
-		printf("\t%s\n", cmd_list[i].cmd_desc);
+	    /* Align correctly the descriptions : */
+	    printf("%*s%s\n", 24 - len, "",  cmd_list[i].cmd_desc);
 	}
 	printf("\n");
 	printf("help\t\t\tDisplay this help message\n");
