@@ -643,6 +643,7 @@ AC_ARG_WITH(pam,
 [ --with-pam=[yes|no]	Use (or not) PAM if available (default: yes).],
 [ case "$withval" in
   no)
+    usepam=0
     AC_MSG_RESULT(no)
     ;;
   yes)
@@ -656,6 +657,13 @@ AC_ARG_WITH(pam,
   AC_MSG_RESULT(yes)
   AC_CHECK_LIB(pam, pam_start)
 )
+if echo "$LIBS" | grep -e "-lpam" > /dev/null ; then
+  usepam=1
+else
+  usepam=0
+fi
+USEPAM="$usepam"
+AC_SUBST(USEPAM)
 
 
 dnl We set exec_prefix to $prefix (also done in Makefile)
