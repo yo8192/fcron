@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.53 2001-01-07 12:46:56 thib Exp $
+# $Id: Makefile.in,v 1.54 2001-01-12 21:42:57 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -17,7 +17,7 @@ prefix		= @prefix@
 exec_prefix	= @exec_prefix@
 DESTSBIN	= @sbindir@
 DESTBIN		= @bindir@
-DESTMAN		= @MANDIR@
+DESTMAN		= @mandir@
 DESTDOC		= @DOCDIR@
 FCRONTABS	= @FCRONTABS@
 ETC		= @ETC@
