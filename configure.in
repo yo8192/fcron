@@ -416,6 +416,29 @@ DOCDIR="$docdir"
 AC_DEFINE_UNQUOTED(DOCDIR, "$docdir")
 AC_SUBST(DOCDIR)
 
+AC_MSG_CHECKING(automatic answer to make install's questions)
+AC_ARG_WITH(answer-all,
+[  --with-answer-all=[yes|no]	Answer the argument to every make install's questions.],
+[ case "$withval" in
+  no)
+    answerall=0
+    AC_MSG_RESULT(yes (answer "no"))
+    ;;
+  yes)
+    answerall=1
+    AC_MSG_RESULT(yes (answer "yes"))
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+    answerall=2
+    AC_MSG_RESULT(no)
+)
+ANSWERALL="$answerall"
+AC_DEFINE_UNQUOTED(ANSWERALL, "$answerall")
+AC_SUBST(ANSWERALL)
+
 
 AC_MSG_CHECKING(root's username)
 AC_ARG_WITH(rootname,
@@ -457,7 +480,7 @@ AC_ARG_WITH(rootgroup,
     AC_MSG_ERROR(Need rootgroup.)
     ;;
   yes)
-    if cat /etc/passwd | grep "^root:" > /dev/null ; then
+    if cat /etc/group | grep "^root:" > /dev/null ; then
 	rootgroup=root
         AC_MSG_RESULT(root)
     else
@@ -465,7 +488,7 @@ AC_ARG_WITH(rootgroup,
     fi
     ;;
   *)
-    if cat /etc/passwd | grep "^$withval:" > /dev/null ; then
+    if cat /etc/group | grep "^$withval:" > /dev/null ; then
 	rootgroup=$withval
         AC_MSG_RESULT(root)
     else
@@ -473,7 +496,7 @@ AC_ARG_WITH(rootgroup,
     fi
     ;;
     esac ],
-    if cat /etc/passwd | grep "^root:" > /dev/null ; then
+    if cat /etc/group | grep "^root:" > /dev/null ; then
 	rootgroup=root
         AC_MSG_RESULT(root)
     else
