@@ -8,13 +8,14 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrondyn.1.sgml,v 1.3 2002-03-31 15:08:26 thib Exp $ -->
+<!-- $Id: fcrondyn.1.sgml,v 1.4 2002-07-19 19:43:56 thib Exp $ -->
 
 <refentry id="fcrondyn.1">
     <refmeta>
 	<refentrytitle>fcrondyn</refentrytitle>
 	<manvolnum>1</manvolnum>
-	<refmiscinfo>Fcron &version; <![%devrelease; [ (<emphasis>development</emphasis> release)]]></refmiscinfo>
+	<refmiscinfo>Fcron &version; <![%devrelease; [
+(<emphasis>development</emphasis> release)]]></refmiscinfo>
 	<refmiscinfo>&date;</refmiscinfo>
     </refmeta>
     <refnamediv>
@@ -41,7 +42,9 @@ A copy of the license is included in gfdl.sgml.
 
     <refsect1>
 	<title>Description</title>
-	<para>&Fcrondyn; is a user tool intended to interact with a running fcron daemon. It can, for instance, list user's jobs loaded by fcron, run one of them, renice a running job, send a signal to a running job, etc.</para>
+	<para>&Fcrondyn; is a user tool intended to interact with a running
+fcron daemon. It can, for instance, list user's jobs loaded by fcron, run one of
+them, renice a running job, send a signal to a running job, etc.</para>
     </refsect1>
 
     <refsect1>
@@ -54,21 +57,29 @@ A copy of the license is included in gfdl.sgml.
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-		<term><option>-x</option> <replaceable>command</replaceable></term>
+		<term><option>-x</option>
+<replaceable>command</replaceable></term>
 		<listitem>
-		    <para>Run <replaceable>command</replaceable> and returns immediately. <link linkend="fcrondyn.1.cmd.descp">See below</link> for syntax and a list of commands.</para>
+		    <para>Run <replaceable>command</replaceable> and returns
+immediately. <link linkend="fcrondyn.1.cmd.descp">See below</link> for syntax
+and a list of commands.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><option>-c</option> <replaceable>file</replaceable></term>
 		<listitem>
-		    <para>Make &fcrontab; use config file <replaceable>file</replaceable> instead of default config file <filename>&etc;/&fcron.conf.location;</filename>. To interact with a running &fcron; process, &fcrontab; must use the same config file as the process. That way, several &fcron; processes can run simultaneously on an only system.</para>
+		    <para>Make &fcrontab; use config file
+<replaceable>file</replaceable> instead of default config file
+<filename>&etc;/&fcron.conf.location;</filename>. To interact with a running
+&fcron; process, &fcrontab; must use the same config file as the process. That
+way, several &fcron; processes can run simultaneously on an only system.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><option>-d</option></term>
 		<listitem>
-		    <para>Run in debug mode. In this mode, many informational messages will be output in order to check if anything went wrong.</para>
+		    <para>Run in debug mode. In this mode, many informational
+messages will be output in order to check if anything went wrong.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -80,7 +91,8 @@ A copy of the license is included in gfdl.sgml.
 	    <varlistentry>
 		<term><option>-V</option></term>
 		<listitem>
-		    <para>Display an informational message about &fcrontab;, including its version and the license under which it is distributed.</para>
+		    <para>Display an informational message about &fcrontab;,
+including its version and the license under which it is distributed.</para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
@@ -90,9 +102,11 @@ A copy of the license is included in gfdl.sgml.
 	<title>Command description</title>
 	<para>&Fcrondyn;'s command syntax is the following : </para>
 	<blockquote>
-	    <para><command>command</command> <replaceable>arg1</replaceable> <replaceable>arg2</replaceable> [...]</para>
+	    <para><command>command</command> <replaceable>arg1</replaceable>
+<replaceable>arg2</replaceable> [...]</para>
 	</blockquote>
-	<para>An argument of a &fcrondyn; command is of one of the following type :</para>
+	<para>An argument of a &fcrondyn; command is of one of the following
+type :</para>
 	<variablelist>
 	    <title>Argument types of &fcrondyn;'s commands</title>
 	    <varlistentry>
@@ -104,30 +118,37 @@ A copy of the license is included in gfdl.sgml.
 	    <varlistentry>
 		<term><emphasis><type>jobid</type></emphasis></term>
 		<listitem>
-		    <para>A job id given by one of &fcrondyn;'s <command>ls*</command> commands (i.e. an integer).</para>
+		    <para>A job id given by one of &fcrondyn;'s
+<command>ls*</command> commands (i.e. an integer).</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><emphasis><type>sig</type></emphasis></term>
 		<listitem>
-		    <para>A signal number, or its name (case does not matter). For instance, "term" or "15".</para>
+		    <para>A signal number, or its name (case does not matter).
+For instance, "term" or "15".</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><emphasis><type>niceval</type></emphasis></term>
 		<listitem>
-		    <para>A job priority value. A <emphasis><type>niceval</type></emphasis> is an integer from -20 (highest priority) to 19 (lowest) (only root is allowed to use a negative value with this option).</para>
+		    <para>A job priority value. A
+<emphasis><type>niceval</type></emphasis> is an integer from -20 (highest
+priority) to 19 (lowest) (only root is allowed to use a negative value with this
+option).</para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
-	<para>Last, but not least, the following commands are recognized (optional arguments are between []) :</para>
+	<para>Last, but not least, the following commands are recognized
+(optional arguments are between []) :</para>
 	<variablelist>
 	    <title>Valid &fcrondyn;'s commands</title>
 	    <varlistentry>
 		<term><command>help</command></term>
 		<term><command>h</command></term>
 		<listitem>
-		    <para>Print an help message about fcrondyn's commands.</para>
+		    <para>Print an help message about fcrondyn's
+commands.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -138,55 +159,70 @@ A copy of the license is included in gfdl.sgml.
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-		<term><command>ls</command> [<emphasis><type>user</type></emphasis>]</term>
+		<term><command>ls</command>
+[<emphasis><type>user</type></emphasis>]</term>
 		<listitem>
-		    <para>List all jobs of user. When <command>ls</command> is run by root, all users are listed unless a user name is given as argument. <link linkend="fcrondyn.1.ls.fields">See below</link> for some explanations about the fields used by <command>ls*</command> commands.</para>
+		    <para>List all jobs of user. When <command>ls</command> is
+run by root, all users are listed unless a user name is given as argument. <link
+linkend="fcrondyn.1.ls.fields">See below</link> for some explanations about the
+fields used by <command>ls*</command> commands.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-		<term><command>ls_lavgq</command> [<emphasis><type>user</type></emphasis>]</term>
-		<listitem>
-		    <para></para>
-		</listitem>
-	    </varlistentry>
-	    <varlistentry>
-		<term><command>ls_serialq</command> [<emphasis><type>user</type></emphasis>]</term>
-		<listitem>
-		    <para></para>
-		</listitem>
-	    </varlistentry>
-	    <varlistentry>
-		<term><command>ls_exeq</command> [<emphasis><type>user</type></emphasis>]</term>
+		<term><command>ls_lavgq</command>
+[<emphasis><type>user</type></emphasis>]</term>
 		<listitem>
 		    <para></para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-		<term><command>detail</command> <emphasis><type>jobid</type></emphasis></term>
-		<listitem>
-		    <para>Print details about a job. jobid is the one given by <command>ls</command></para>
-		</listitem>
-	    </varlistentry>
-	    <varlistentry>
-		<term><command>runnow</command> <emphasis><type>jobid</type></emphasis></term>
+		<term><command>ls_serialq</command>
+[<emphasis><type>user</type></emphasis>]</term>
 		<listitem>
 		    <para></para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-		<term><command>run</command> <emphasis><type>jobid</type></emphasis></term>
+		<term><command>ls_exeq</command>
+[<emphasis><type>user</type></emphasis>]</term>
 		<listitem>
 		    <para></para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-		<term><command>kill</command> <emphasis><type>sig</type></emphasis> <emphasis><type>jobid</type></emphasis></term>
+		<term><command>detail</command>
+<emphasis><type>jobid</type></emphasis></term>
+		<listitem>
+		    <para>Print details about a job. jobid is the one given by
+<command>ls</command></para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>runnow</command>
+<emphasis><type>jobid</type></emphasis></term>
 		<listitem>
 		    <para></para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-		<term><command>renice</command> <emphasis><type>niceval</type></emphasis> <emphasis><type>jobid</type></emphasis></term>
+		<term><command>run</command>
+<emphasis><type>jobid</type></emphasis></term>
+		<listitem>
+		    <para></para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>kill</command>
+<emphasis><type>sig</type></emphasis>
+<emphasis><type>jobid</type></emphasis></term>
+		<listitem>
+		    <para></para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>renice</command>
+<emphasis><type>niceval</type></emphasis>
+<emphasis><type>jobid</type></emphasis></term>
 		<listitem>
 		    <para></para>
 		</listitem>
@@ -209,7 +245,8 @@ A copy of the license is included in gfdl.sgml.
 	    <varlistentry>
 		<term>R&amp;Q</term>
 		<listitem>
-		    <para>The job has this number instances running or queued in serial or lavg queue.</para>
+		    <para>The job has this number instances running or queued in
+serial or lavg queue.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -230,7 +267,8 @@ A copy of the license is included in gfdl.sgml.
 
     <refsect1>
 	<title>Return values</title>
-	<para>&Fcrondyn; returns &exitok; on normal exit and &exiterr; on error.</para>
+	<para>&Fcrondyn; returns &exitok; on normal exit and &exiterr; on
+error.</para>
     </refsect1>
 
     <refsect1>
@@ -244,46 +282,38 @@ A copy of the license is included in gfdl.sgml.
 	    <varlistentry>
 		<term><filename>&etc;/&fcron.conf.location;</filename></term>
 		<listitem>
-		    <para>Configuration file for &fcron;, &fcrontab; and &fcrondyn; : contains paths (spool dir, pid file) and default programs to use (editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf;(5)</link> for more details.</para>
+		    <para>Configuration file for &fcron;, &fcrontab; and
+&fcrondyn; : contains paths (spool dir, pid file) and default programs to use
+(editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf;(5)</link>
+for more details.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><filename>&etc;/&fcron.allow;</filename></term>
 		<listitem>
-		    <para>Users allowed to use &fcrontab; and &fcrondyn; (one name per line, special name "all" acts for everyone)</para>
+		    <para>Users allowed to use &fcrontab; and &fcrondyn; (one
+name per line, special name "all" acts for everyone)</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><filename>&etc;/&fcron.deny;</filename></term>
 		<listitem>
-		    <para>Users who are not allowed to use &fcrontab; and &fcrondyn; (same format as allow file)</para>
+		    <para>Users who are not allowed to use &fcrontab; and
+&fcrondyn; (same format as allow file)</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-		<term><filename>&etc;/pam.d/fcron</filename> (or <filename>&etc;/pam.conf</filename>)</term>
+		<term><filename>&etc;/pam.d/fcron</filename> (or
+<filename>&etc;/pam.conf</filename>)</term>
 		<listitem>
-		    <para><productname>PAM</productname> configuration file for &fcron;. Take a look at pam(8) for more details.</para>
+		    <para><productname>PAM</productname> configuration file for
+&fcron;. Take a look at pam(8) for more details.</para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
     </refsect1>
 
-    <refsect1>
-	<title>See also</title>
-	<simplelist>
-	    <member><link linkend="fcrontab.1">&fcrontab;(1)</link></member>
-	    <member><link linkend="fcrontab.5">&fcrontab;(5)</link></member>
-	    <member><link linkend="fcron.8">&fcron;(8)</link></member>
-	    <member><link linkend="fcron.conf.5">&fcron.conf;(5)</link></member>
-	    <member>The HTML version of the documentation, if you are not reading it right now, which is far better than these man pages :)).</member>
-	</simplelist>
-    </refsect1>
-
-    <refsect1>
-	<title>Author</title>
-	<para>Thibault Godouet &email;</para>
-    </refsect1>
-
+    &manpage-foot;
 
 </refentry>
 

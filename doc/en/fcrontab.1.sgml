@@ -8,13 +8,14 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.1.sgml,v 1.4 2002-03-31 15:09:57 thib Exp $ -->
+<!-- $Id: fcrontab.1.sgml,v 1.5 2002-07-19 19:45:14 thib Exp $ -->
 
 <refentry id="fcrontab.1">
     <refmeta>
 	<refentrytitle>fcrontab</refentrytitle>
 	<manvolnum>1</manvolnum>
-	<refmiscinfo>Fcron &version; <![%devrelease; [ (<emphasis>development</emphasis> release)]]></refmiscinfo>
+	<refmiscinfo>Fcron &version; <![%devrelease; [
+(<emphasis>development</emphasis> release)]]></refmiscinfo>
 	<refmiscinfo>&date;</refmiscinfo>
     </refmeta>
     <refnamediv>
@@ -56,11 +57,38 @@ A copy of the license is included in gfdl.sgml.
 
     <refsect1>
 	<title>Description</title>
-	<para>&Fcrontab; is the program intended to install, edit, list and remove the tables used by <link linkend="fcron.8">&fcron;(8)</link> daemon. As &fcron; internally uses a non-human readable format (this is needed because &fcron; saves more informations than the user gives, for example the time and date of next execution), the user cannot edit directly his &fcrontabf; (the one used by &fcron;).</para>
-	<para>When a user installs a &fcrontabf;, the source file is saved in the spool directory (<filename>&fcrontabsdir;</filename>) to allow future editions, a formatted file is generated for the &fcron; daemon, which is signaled once about ten seconds before the next minute for all changes made previously. The daemon is not signaled immediately to keep ill disposed users from blocking the daemon by installing &fcrontabf;s over and over.
-We will call "<emphasis>fcrontab</emphasis>" the source file of the &fcrontabf; in the following.</para>
-	<para>A user can install a &fcrontabf; if he is listed in the <filename>&etc;/&fcron.allow;</filename> and not (unless by the keyword all) listed in <filename>&etc;/&fcron.deny;</filename> (see section "<link linkend="fcrontab.1.files">files</link>" below). If neither <filename>fcron.allow</filename> nor <filename>fcron.deny</filename> exist, every users are allowed. None of these files have to exist, but if they do, the deny file takes precedence.</para>
-	<para>The first form of the command is used to install a new &fcrontabf; file, from any named file or from standard input if the pseudo-filename "-" is given, replacing the previous one (if any) : each user can have only one &fcrontabf;.</para>
+	<para>&Fcrontab; is the program intended to install, edit, list and
+remove the tables used by <link linkend="fcron.8">&fcron;(8)</link> daemon. As
+&fcron; internally uses a non-human readable format (this is needed because
+&fcron; saves more informations than the user gives, for example the time and
+date of next execution), the user cannot edit directly his &fcrontabf; (the one
+used by &fcron;).</para>
+	<para>When a user installs a &fcrontabf;, the source file is saved in
+the spool directory (<filename>&fcrontabsdir;</filename>) to allow future
+editions, a formatted file is generated for the &fcron; daemon, which is
+signaled once about ten seconds before the next minute for all changes made
+previously. The daemon is not signaled immediately to keep ill disposed users
+from blocking the daemon by installing &fcrontabf;s over and over. We will call
+"<emphasis>fcrontab</emphasis>" the source file of the &fcrontabf; in the
+following.</para>
+	<para>A user can install a &fcrontabf; if he is listed in the
+<filename>&etc;/&fcron.allow;</filename> and not (unless by the keyword all)
+listed in <filename>&etc;/&fcron.deny;</filename> (see section "<link
+linkend="fcrontab.1.files">files</link>" below). If neither
+<filename>fcron.allow</filename> nor <filename>fcron.deny</filename> exist,
+every users are allowed. None of these files have to exist, but if they do, the
+deny file takes precedence.</para>
+	<para>The first form of the command is used to install a new &fcrontabf;
+file, from any named file or from standard input if the pseudo-filename "-" is
+given, replacing the previous one (if any) : each user can have only one
+&fcrontabf;.</para>
+	<para>For instance, root can create a systemwide fcrontab file, say
+<filename>/etc/fcrontab</filename>, and run "<command>fcrontab</command>
+<filename>/etc/fcrontab</filename>" to install the new version after each change
+of the file. Or (s)he can create a new fcrontab running a simple
+"<command>fcrontab</command>", and then maintain it using
+"<command>fcrontab</command> <option>-e</option>". Same considerations apply to
+a non privileged user.</para>
     </refsect1>
 
     <refsect1>
@@ -69,21 +97,30 @@ We will call "<emphasis>fcrontab</emphasis>" the source file of the &fcrontabf; 
 	    <varlistentry>
 		<term><option>-u</option> <replaceable>user</replaceable></term>
 		<listitem>
-		    <para>Specify the user whose &fcrontabf; will be managed. Should only be used by root. If not given, the &fcrontabf; file of the user invoking &fcrontab; will be handled. It may be useful since the <application>su</application>(8) command may confuse &fcrontab;.
-<note><para>the '<replaceable>user</replaceable>' in the <link linkend="fcrontab.1.synopsis">synopsys</link> is equivalent to a '<option>-u</option> <replaceable>user</replaceable>'.</para>
+		    <para>Specify the user whose &fcrontabf; will be managed.
+Should only be used by root. If not given, the &fcrontabf; file of the user
+invoking &fcrontab; will be handled. It may be useful since the
+<application>su</application>(8) command may confuse &fcrontab;.
+<note><para>the '<replaceable>user</replaceable>' in the <link
+linkend="fcrontab.1.synopsis">synopsys</link> is equivalent to a
+'<option>-u</option> <replaceable>user</replaceable>'.</para>
 			</note></para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><option>-l</option></term>
 		<listitem>
-		    <para>List user's current &fcrontabf; to standard output.</para>
+		    <para>List user's current &fcrontabf; to standard
+output.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><option>-e</option></term>
 		<listitem>
-		    <para>Edit user's current &fcrontabf; using either the editor specified by the environment variable <envar>VISUAL</envar>, or <envar>EDITOR</envar> if <envar>VISUAL</envar> is not set. If none or them are set, <command>&editor;</command> will be used.</para>
+		    <para>Edit user's current &fcrontabf; using either the
+editor specified by the environment variable <envar>VISUAL</envar>, or
+<envar>EDITOR</envar> if <envar>VISUAL</envar> is not set. If none or them are
+set, <command>&editor;</command> will be used.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -95,25 +132,36 @@ We will call "<emphasis>fcrontab</emphasis>" the source file of the &fcrontabf; 
 	    <varlistentry>
 		<term><option>-z</option></term>
 		<listitem>
-		    <para>Reinstall user's &fcrontabf; from its source code. All informations &fcron; may have kept in the binary &fcrontabf; (such as the last execution time and date) will be forgotten.</para>
+		    <para>Reinstall user's &fcrontabf; from its source code. All
+informations &fcron; may have kept in the binary &fcrontabf; (such as the last
+execution time and date) will be forgotten.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><option>-n</option></term>
 		<listitem>
-		    <para>Ignore previous version. If this option is not given, &fcron; will try to keep as much information as possible between old and new version of the &fcrontabf; (time and date of next execution, if job is in serial queue, etc) if the line hasn't been modified (same fields, same shell command).</para>
+		    <para>Ignore previous version. If this option is not given,
+&fcron; will try to keep as much information as possible between old and new
+version of the &fcrontabf; (time and date of next execution, if job is in serial
+queue, etc) if the line hasn't been modified (same fields, same shell
+command).</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><option>-c</option> <replaceable>file</replaceable></term>
 		<listitem>
-		    <para>Make &fcrontab; use config file <replaceable>file</replaceable> instead of default config file <filename>&etc;/&fcron.conf.location;</filename>. To interact with a running &fcron; process, &fcrontab; must use the same config file as the process. That way, several &fcron; processes can run simultaneously on an only system.</para>
+		    <para>Make &fcrontab; use config file
+<replaceable>file</replaceable> instead of default config file
+<filename>&etc;/&fcron.conf.location;</filename>. To interact with a running
+&fcron; process, &fcrontab; must use the same config file as the process. That
+way, several &fcron; processes can run simultaneously on an only system.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><option>-d</option></term>
 		<listitem>
-		    <para>Run in debug mode. In this mode, many informational messages will be output in order to check if anything went wrong.</para>
+		    <para>Run in debug mode. In this mode, many informational
+messages will be output in order to check if anything went wrong.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -125,7 +173,8 @@ We will call "<emphasis>fcrontab</emphasis>" the source file of the &fcrontabf; 
 	    <varlistentry>
 		<term><option>-V</option></term>
 		<listitem>
-		    <para>Display an informational message about &fcrontab;, including its version and the license under which it is distributed.</para>
+		    <para>Display an informational message about &fcrontab;,
+including its version and the license under which it is distributed.</para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
@@ -133,7 +182,8 @@ We will call "<emphasis>fcrontab</emphasis>" the source file of the &fcrontabf; 
 
     <refsect1>
 	<title>Return values</title>
-	<para>&Fcrontab; returns &exitok; on normal exit and &exiterr; on error.</para>
+	<para>&Fcrontab; returns &exitok; on normal exit and &exiterr; on
+error.</para>
     </refsect1>
 
     <refsect1>
@@ -147,45 +197,38 @@ We will call "<emphasis>fcrontab</emphasis>" the source file of the &fcrontabf; 
 	    <varlistentry>
 		<term><filename>&etc;/&fcron.conf.location;</filename></term>
 		<listitem>
-		    <para>Configuration file for &fcron;, &fcrontab; and &fcrondyn; : contains paths (spool dir, pid file) and default programs to use (editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf;(5)</link> for more details.</para>
+		    <para>Configuration file for &fcron;, &fcrontab; and
+&fcrondyn; : contains paths (spool dir, pid file) and default programs to use
+(editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf;(5)</link>
+for more details.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><filename>&etc;/&fcron.allow;</filename></term>
 		<listitem>
-		    <para>Users allowed to use &fcrontab; and &fcrondyn; (one name per line, special name "all" acts for everyone)</para>
+		    <para>Users allowed to use &fcrontab; and &fcrondyn; (one
+name per line, special name "all" acts for everyone)</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><filename>&etc;/&fcron.deny;</filename></term>
 		<listitem>
-		    <para>Users who are not allowed to use &fcrontab; and &fcrondyn; (same format as allow file)</para>
+		    <para>Users who are not allowed to use &fcrontab; and
+&fcrondyn; (same format as allow file)</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
-		<term><filename>&etc;/pam.d/fcron</filename> (or <filename>&etc;/pam.conf</filename>)</term>
+		<term><filename>&etc;/pam.d/fcron</filename> (or
+<filename>&etc;/pam.conf</filename>)</term>
 		<listitem>
-		    <para><productname>PAM</productname> configuration file for &fcron;. Take a look at pam(8) for more details.</para>
+		    <para><productname>PAM</productname> configuration file for
+&fcron;. Take a look at pam(8) for more details.</para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
     </refsect1>
 
-    <refsect1>
-	<title>See also</title>
-	<simplelist>
-	    <member><link linkend="fcrontab.5">&fcrontab;(5)</link></member>
-	    <member><link linkend="fcron.8">&fcron;(8)</link></member>
-	    <member><link linkend="fcron.conf.5">&fcron.conf;(5)</link></member>
-	    <member><link linkend="fcrondyn.1">&fcrondyn;(1)</link></member>
-	    <member>The HTML version of the documentation, if you are not reading it right now, which is far better than these man pages :)).</member>
-	</simplelist>
-    </refsect1>
-
-    <refsect1>
-	<title>Author</title>
-	<para>Thibault Godouet &email;</para>
-    </refsect1>
+    &manpage-foot;
 
 </refentry>
 

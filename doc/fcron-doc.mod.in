@@ -52,6 +52,7 @@
 <!ENTITY fcrontab.1 SYSTEM "fcrontab.1.sgml">
 <!ENTITY fcrontab.5 SYSTEM "fcrontab.5.sgml">
 <!ENTITY fcrondyn.1 SYSTEM "fcrondyn.1.sgml">
+<!ENTITY manpage-foot SYSTEM "manpage-foot.sgml">
 <!ENTITY faq SYSTEM "faq.sgml">
 <!ENTITY fdl SYSTEM "fdl.sgml">
 <!ENTITY gpl SYSTEM "gpl.sgml">
