@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.6 2000-06-25 20:07:48 thib Exp $ */
+ /* $Id: option.h,v 1.7 2000-08-22 21:20:11 thib Exp $ */
 
 /* read and set options of a line */
 
@@ -37,7 +37,7 @@
   4      should we run this job at fcron startup if it should have been
            executed during system down?
   5      should this job be run serially ?
-  6      is this job run serially only once (for bootrun) ?
+  6      is this job should be run serially only once (for bootrun) ?
   7      does the output have to be mailed to user ?
   8      does the output (even if zero-length) must be mailed to user ?
   9      does this line use option runas ?
