@@ -5,7 +5,7 @@
 #   even if NYS (or similar) is used)
 
 sub usage {
-    return "usage:\n  has_usrgrp.pl [-user user|-group group] [-printgid]\n";
+    return "usage:\n  has_usrgrp.pl [-user user|-group group] [-printuid|-printgid]\n";
 }
 
 if ( @ARGV < 2 || @ARGV > 3) {
@@ -22,12 +22,20 @@ else {
     die usage();
 }
 
-if ($name) {
-    if ( @ARGV == 3 && $ARGV[2] eq "-printgid" ) {
-	print $gid, "\n";
-    }
-    exit 0;
-}
-else {
+if ( ! $name) {
     exit 1;
 }
+
+if ( @ARGV == 3 ) {
+    if ( $ARGV[2] eq "-printgid" ) {
+	print $gid, "\n";
+    }
+    elsif ( $ARGV[2] eq "-printuid" ) {
+	if ( defined $uid ) {
+	    print $uid, "\n";
+	} else {
+	    die usage();
+	}
+    }
+}
+exit 0;
