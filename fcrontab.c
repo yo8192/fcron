@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.14 2000-09-12 19:53:03 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.15 2000-09-15 19:49:24 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.14 2000-09-12 19:53:03 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.15 2000-09-15 19:49:24 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -247,7 +247,7 @@ copy(char *orig, char *dest)
 
     if ( (from = fopen(orig, "r")) == NULL
 	 || (to = fopen(dest, "w")) == NULL) {
-	perror("copy");
+	error_e("copy");
 	return ;
     }
 
@@ -282,7 +282,7 @@ remove_fcrontab(char rm_orig)
 	    if ( errno == ENOENT )
 		return ENOENT;
 	    else
-		perror(buf);		
+		error_e("could not removing %s", buf);		
 	}
 
     }
@@ -412,15 +412,21 @@ edit_file(char *buf)
 	
     sprintf(tmp, "/tmp/fcrontab.%d", getpid());
 
-    if ( (file = open(tmp, O_CREAT|O_EXCL|O_WRONLY, 0600)) == -1 )
-	die_e("could not create file %s", tmp);
-    if ( (fi = fdopen(file, "w")) == NULL )
-	die_e("could not fdopen");
+    if ( (file = open(tmp, O_CREAT|O_EXCL|O_WRONLY, 0600)) == -1 ) {
+	error_e("could not create file %s", tmp);
+	goto exiterr;
+    }
+    if ( (fi = fdopen(file, "w")) == NULL ) {
+	error_e("could not fdopen");
+	goto exiterr;
+    }
 
     /* copy user's fcrontab (if any) to a temp file */
     if ( (f = fopen(buf, "r")) == NULL ) {
-	if ( errno != ENOENT )
-	    die_e("could not open file %s", buf);
+	if ( errno != ENOENT ) {
+	    error_e("could not open file %s", buf);
+	    goto exiterr;
+	}
 	else
 	    fprintf(stderr, "no fcrontab for %s - using an empty one\n",
 		    user);
@@ -432,8 +438,10 @@ edit_file(char *buf)
 	fclose(f);
     }
 
-    if ( fchown(file, getuid(), getgid()) != 0 )
-	die_e("could not chown %s", tmp);
+    if ( fchown(file, getuid(), getgid()) != 0 ) {
+	error_e("could not chown %s", tmp);
+	goto exiterr;
+    }
     
     fclose(fi);
     close(file);
@@ -442,24 +450,25 @@ edit_file(char *buf)
 
 	if ( stat(tmp, &st) == 0 )
 	    mtime = st.st_mtime;
-	else
-	    die_e("could not stat '%s'", buf);
-    
+	else {
+	    error_e("could not stat '%s'", buf);
+	    goto exiterr;
+	}
 
 	switch ( pid = fork() ) {
 	case 0:
 	    /* child */
 	    if (setuid(getuid()) < 0) {
-		perror("setuid(getuid())");
-		xexit(EXIT_ERR);
+		error_e("setuid(getuid())");
+		goto exiterr;
 	    }
 	    execlp(editor, editor, tmp, NULL);
-	    perror(editor);
-	    xexit(EXIT_ERR);
+	    error_e(editor);
+	    goto exiterr;
 
 	case -1:
-	    perror("fork");
-	    xexit(EXIT_ERR);
+	    error_e("fork");
+	    goto exiterr;
 
 	default:
 	    /* parent */
@@ -471,12 +480,14 @@ edit_file(char *buf)
 	if ( ! WIFEXITED(status) ) {
 	    fprintf(stderr, "Editor exited abnormally:"
 		    " fcrontab is unchanged.\n");
-	    xexit(EXIT_ERR);
+	    goto exiterr;
 	}
 
 	/* check if file has been modified */
-	if ( stat(tmp, &st) != 0 )
-	    die_e("could not stat %s", tmp);
+	if ( stat(tmp, &st) != 0 ) {
+	    error_e("could not stat %s", tmp);
+	    goto exiterr;
+	}
     
 	else if ( st.st_mtime > mtime || correction == 1) {
 
@@ -484,9 +495,7 @@ edit_file(char *buf)
 
 	    switch ( read_file(tmp, user) ) {
 	    case ERR:
-		if ( remove(tmp) != 0 )
-		    error("could not remove %s", tmp);
-		xexit (EXIT_ERR);
+		goto exiterr;
 	    case 2:
 		fprintf(stderr, "\nFile contains some errors. "
 			"Ignore [i] or Correct [c] ? ");
@@ -508,7 +517,7 @@ edit_file(char *buf)
 	else {
 	    fprintf(stderr, "Fcrontab is unchanged :"
 		    " no need to install it.\n"); 
-	    xexit(EXIT_OK);
+	    goto end;
 	}
 
     } while ( correction == 1);
@@ -521,10 +530,16 @@ edit_file(char *buf)
     /* tell daemon to update the conf */
     need_sig = 1;
     
+  end:
     if ( remove(tmp) != 0 )
 	error("could not remove %s", tmp);
-	    
     xexit (EXIT_OK);
+
+  exiterr:
+    if ( remove(tmp) != 0 )
+	error("could not remove %s", tmp);
+    xexit (EXIT_ERR);
+
 }
 
 
@@ -546,17 +561,21 @@ install_stdin(void)
 
     fclose(tmp_file);
 
-    if ( chown(tmp, getuid(), getgid()) != 0 )
-	die_e("could not chown %s", tmp);
-
-    if ( make_file(tmp) == ERR ) {
-	remove(tmp);
-	xexit ( EXIT_ERR );
+    if ( chown(tmp, getuid(), getgid()) != 0 ) {
+	error_e("could not chown %s", tmp);
+	goto exiterr;
     }
+
+    if ( make_file(tmp) == ERR )
+	goto exiterr;
     else {
 	remove(tmp);
 	xexit ( EXIT_OK );
     }
+
+  exiterr:
+    remove(tmp);
+    xexit ( EXIT_ERR );
 
 }
 
@@ -713,11 +732,11 @@ main(int argc, char **argv)
 
     /* get current dir */
     if ( (orig_dir = getcwd(NULL, 0)) == NULL )
-	perror("getcwd");
+	error_e("getcwd");
 
     /* change directory */
     if (chdir(cdir) != 0) {
-	perror("Could not chdir to " FCRONTABS );
+	error_e("Could not chdir to " FCRONTABS );
 	xexit (EXIT_ERR);
     }
 
