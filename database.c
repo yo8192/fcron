@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.37 2000-11-03 13:23:20 thib Exp $ */
+ /* $Id: database.c,v 1.38 2000-11-13 15:48:23 thib Exp $ */
 
 #include "fcron.h"
 
@@ -514,67 +514,49 @@ goto_non_matching(CL *line, struct tm *ftime)
     /* to prevent from invinite loop with unvalid lines : */
     short int year_limit = MAXYEAR_SCHEDULE_TIME;
     
-    /* check if we are in an interval of execution */
-    if( ! ( bit_test(line->cl_mins, ftime->tm_min) &&
-	    bit_test(line->cl_hrs, ftime->tm_hour) &&
-	    (
-		(is_dayand(line->cl_option) &&
-		 bit_test(line->cl_days, ftime->tm_mday) &&
-		 bit_test(line->cl_dow, ftime->tm_wday))
-		||
-		(is_dayor(line->cl_option) && (
-		    bit_test(line->cl_days, ftime->tm_mday) ||
-		    bit_test(line->cl_dow, ftime->tm_wday)))
-		) &&
-	    bit_test(line->cl_mons, ftime->tm_mon)
-	) )
-	return;
-    
 
-  start:
-    for(i=ftime->tm_min; bit_test(line->cl_mins, i) && (i<60); i++);
-    ftime->tm_min = i;
-    if (i == 60) {
-	ftime->tm_min = 0;
-	if (++ftime->tm_hour == 24) {
-	    ftime->tm_hour = 0;
-	    set_wday(ftime);
-	    if(++ftime->tm_mday == 
-	       get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
-		ftime->tm_mday = 0;
-		if(++ftime->tm_mon == 12) {
-		    ftime->tm_mon = 0;
-		    ftime->tm_year++;
-		    if (--year_limit <= 0) {
-			error("Can't found a non matching date for %s "
-			      "in the next %d years. Maybe this line is "
-			      "corrupted : consider reinstalling the fcrontab",
-			      line->cl_shell, MAXYEAR_SCHEDULE_TIME);
-			return;
+    /* check if we are in an interval of execution */    
+    while ( ( bit_test(line->cl_mins, ftime->tm_min) &&
+	      bit_test(line->cl_hrs, ftime->tm_hour) &&
+	      (
+		  (is_dayand(line->cl_option) &&
+		   bit_test(line->cl_days, ftime->tm_mday) &&
+		   bit_test(line->cl_dow, ftime->tm_wday))
+		  ||
+		  (is_dayor(line->cl_option) && (
+		      bit_test(line->cl_days, ftime->tm_mday) ||
+		      bit_test(line->cl_dow, ftime->tm_wday)))
+		  ) &&
+	      bit_test(line->cl_mons, ftime->tm_mon)
+	) ) {
+
+	for(i=ftime->tm_min; bit_test(line->cl_mins, i) && (i<60); i++);
+	ftime->tm_min = i;
+	if (i == 60) {
+	    ftime->tm_min = 0;
+	    if (++ftime->tm_hour == 24) {
+		ftime->tm_hour = 0;
+		set_wday(ftime);
+		if(++ftime->tm_mday == 
+		   get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
+		    ftime->tm_mday = 0;
+		    if(++ftime->tm_mon == 12) {
+			ftime->tm_mon = 0;
+			ftime->tm_year++;
+			if (--year_limit <= 0) {
+			    error("Can't found a non matching date for %s in "
+				  "the next %d years. Maybe this line is "
+				  "corrupted : consider reinstalling the "
+				  "fcrontab", line->cl_shell, 
+				  MAXYEAR_SCHEDULE_TIME);
+			    return;
+			}
 		    }
 		}
 	    }
 	}
-
-	if( ! ( bit_test(line->cl_mins, ftime->tm_min) &&
-		bit_test(line->cl_hrs, ftime->tm_hour) &&
-		(
-		    (is_dayand(line->cl_option) &&
-		     bit_test(line->cl_days, ftime->tm_mday) &&
-		     bit_test(line->cl_dow, ftime->tm_wday))
-		    ||
-		    (is_dayor(line->cl_option) && (
-			bit_test(line->cl_days, ftime->tm_mday) ||
-			bit_test(line->cl_dow, ftime->tm_wday)))
-		    ) &&
-		bit_test(line->cl_mons, ftime->tm_mon)
-	    ) )
-	    goto exit_fct;
-
-	goto start;
     }
 	  
-  exit_fct:
     debug("   '%s' first non matching %d/%d/%d wday:%d %02d:%02d",
 	  line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
 	  (ftime->tm_year + 1900), ftime->tm_wday,
