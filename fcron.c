@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.30 2000-09-30 11:55:58 thib Exp $ */
+ /* $Id: fcron.c,v 1.31 2000-10-05 14:59:49 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.30 2000-09-30 11:55:58 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.31 2000-10-05 14:59:49 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -75,6 +75,7 @@ short int serial_running;     /* number of running serial jobs */
 struct lavg *lavg_array;      /* jobs waiting for a given system load value */
 short int lavg_array_size;    /* size of lavg_array */
 short int lavg_num;           /* number of job being queued */
+short int lavg_serial_running;/* number of serialized lavg job being running */
 
 struct exe *exe_array;        /* jobs which are executed */
 short int exe_array_size;     /* size of exe_array */
@@ -440,6 +441,7 @@ main(int argc, char **argv)
 
     /* initialize lavg_array */
     lavg_num = 0;
+    lavg_serial_running = 0;
     lavg_array_size = LAVG_INITIAL_SIZE;
     if ( (lavg_array = calloc(lavg_array_size, sizeof(lavg))) == NULL )
 	die_e("could not calloc lavg_array");

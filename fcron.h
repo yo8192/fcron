@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.12 2000-09-30 11:56:59 thib Exp $ */
+ /* $Id: fcron.h,v 1.13 2000-10-05 15:01:23 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -76,6 +76,7 @@ extern short int exe_num;
 extern struct lavg *lavg_array;
 extern short int lavg_array_size;
 extern short int lavg_num;
+extern short int lavg_serial_running;
 /* end of global variables */
 
 
