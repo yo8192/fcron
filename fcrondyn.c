@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.2 2002-03-02 17:23:55 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.3 2002-03-31 15:03:46 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.2 2002-03-02 17:23:55 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.3 2002-03-31 15:03:46 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -71,9 +71,10 @@ pid_t daemon_pid = 0;
 char *user_str;
 uid_t user_uid;
 
+/* if you change this structure, please update NUM_CMD value in dyncom.h */
 struct cmd_list_ent cmd_list[NUM_CMD] = {
     /* name, desc, num opt, cmd code, cmd opts, cmd defaults */
-    {"ls_job", "List all jobs of user", 1, CMD_LIST_JOBS,
+    {"ls", "List all jobs of user", 1, CMD_LIST_JOBS,
      {USER}, {CUR_USER} },
     {"ls_lavgq", "List jobs of user which are in lavg queue", 1, CMD_LIST_LAVGQ,
      {USER}, {CUR_USER}},
@@ -89,7 +90,7 @@ struct cmd_list_ent cmd_list[NUM_CMD] = {
      {JOBID}, {ARG_REQUIRED}},
     {"run", "Run job now (without changing its current schedule)", 1, CMD_RUN,
      {JOBID}, {ARG_REQUIRED}},
-    {"send_signal", "Send signal to running job", 2, CMD_SEND_SIGNAL,
+    {"kill", "Send signal to running job", 2, CMD_SEND_SIGNAL,
      {SIGNAL, JOBID}, {ARG_REQUIRED, ARG_REQUIRED}},
     {"renice", "Renice running job", 2, CMD_RENICE,
      {NICE_VALUE, JOBID}, {ARG_REQUIRED, ARG_REQUIRED}}
@@ -165,7 +166,7 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 {
     long int buf[SOCKET_MSG_LEN];
     int word_size = 0;
-    int i = 0, rank = -1;
+    int i = 0, j = 0, rank = -1;
     long int int_buf = 0;
     struct passwd *pass = NULL;
 
@@ -198,7 +199,7 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 	}
     }
     if ( rank == (-1) ) {
-	fprintf(stderr, "Error : Command not found.\n");
+	fprintf(stderr, "Error : Unknown command.\n");
 	return CMD_NOT_FOUND;
     }
     Write_cmd(cmd_list[rank].cmd_code);
@@ -282,17 +283,19 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 
 	    case SIGNAL:
 		if ( isalpha( (int) *cmd_str ) ) {
-		    if ( Strncmp(cmd_str, "HUP", word_size) == 0 ) int_buf = SIGHUP;
-		    else if (Strncmp(cmd_str, "INT", word_size) == 0) int_buf = SIGINT;
-		    else if (Strncmp(cmd_str, "QUIT", word_size) == 0) int_buf = SIGQUIT;
-		    else if (Strncmp(cmd_str, "KILL", word_size) == 0) int_buf = SIGKILL;
-		    else if (Strncmp(cmd_str, "ALRM", word_size) == 0) int_buf = SIGALRM;
-		    else if (Strncmp(cmd_str, "TERM", word_size) == 0) int_buf = SIGTERM;
-		    else if (Strncmp(cmd_str, "USR1", word_size) == 0) int_buf = SIGUSR1;
-		    else if (Strncmp(cmd_str, "USR2", word_size) == 0) int_buf = SIGUSR2;
-		    else if (Strncmp(cmd_str, "CONT", word_size) == 0) int_buf = SIGCONT;
-		    else if (Strncmp(cmd_str, "STOP", word_size) == 0) int_buf = SIGSTOP;
-		    else if (Strncmp(cmd_str, "TSTP", word_size) == 0) int_buf = SIGTSTP;
+		    for (j = 0; j < word_size; j++)
+			*(cmd_str+j) = tolower ( *(cmd_str+j) ); 
+		    if ( Strncmp(cmd_str, "hup", word_size) == 0 ) int_buf = SIGHUP;
+		    else if (Strncmp(cmd_str, "int", word_size) == 0) int_buf = SIGINT;
+		    else if (Strncmp(cmd_str, "quit", word_size) == 0) int_buf = SIGQUIT;
+		    else if (Strncmp(cmd_str, "kill", word_size) == 0) int_buf = SIGKILL;
+		    else if (Strncmp(cmd_str, "alrm", word_size) == 0) int_buf = SIGALRM;
+		    else if (Strncmp(cmd_str, "term", word_size) == 0) int_buf = SIGTERM;
+		    else if (Strncmp(cmd_str, "usr1", word_size) == 0) int_buf = SIGUSR1;
+		    else if (Strncmp(cmd_str, "usr2", word_size) == 0) int_buf = SIGUSR2;
+		    else if (Strncmp(cmd_str, "cont", word_size) == 0) int_buf = SIGCONT;
+		    else if (Strncmp(cmd_str, "stop", word_size) == 0) int_buf = SIGSTOP;
+		    else if (Strncmp(cmd_str, "tstp", word_size) == 0) int_buf = SIGTSTP;
 		    else {
 			fprintf(stderr, "Error : unknow signal (try integer value)\n");
 			return INVALID_ARG;
@@ -337,6 +340,8 @@ authenticate_user(int fd)
     char *password = NULL;
     char buf[USER_NAME_LEN + 16];
     int len = 0;
+    fd_set read_set; /* needed to use select to check if some data is waiting */
+    struct timeval tv;
 
     snprintf(buf, sizeof(buf), "password for %s :", user_str);
     if ( (password = read_string(CONV_ECHO_OFF, buf)) == NULL )
@@ -348,7 +353,18 @@ authenticate_user(int fd)
     Overwrite(buf);
     Overwrite(password);
     free(password);
-    recv(fd, buf, sizeof(buf), 0);
+    
+    tv.tv_sec = MAX_WAIT_TIME;
+    tv.tv_usec = 0;
+    FD_ZERO(&read_set);
+    FD_SET(fd, &read_set);
+    if ( select(fd + 1, &read_set, NULL, NULL, &tv) <= 0 ) {
+	error_e("Couldn't get data from socket during %d seconds.", MAX_WAIT_TIME);
+	return ERR;
+    }
+    while ( recv(fd, buf, sizeof(buf), 0) < 0 && errno == EINTR )
+	if ( errno == EINTR && debug_opt )
+	    fprintf(stderr, "Got EINTR ...");
     if ( strncmp(buf, "1", sizeof("1")) != 0 )
 	return ERR;
 
@@ -375,13 +391,12 @@ connect_fcron(void)
     if ( connect(fd, (struct sockaddr *) &addr, sizeof(addr.sun_family) + len) < 0 )
 	die_e("Cannot connect() to fcron (check if fcron is running)");
 
-    /* */
-    //if ( fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK) == -1 )
-    //error_e("Could not set fd attribute O_NONBLOCK");
-    /* */
-
-    if ( authenticate_user(fd) == ERR )
+    if ( authenticate_user(fd) == ERR ) {
+    fprintf(stderr, "Invalid password or too many authentication failures"
+	    " (try to connect later).\n(In the later case, fcron rejects all"
+	    " new authentication during %d secs)\n", AUTH_WAIT);	
 	die("Unable to authenticate user");
+    }
 
     return fd;
 
@@ -397,6 +412,8 @@ talk_fcron(char *cmd_str, int fd)
     char buf[LINE_LEN];
     size_t read_len = 0;
     char existing_connection = (fd < 0) ? 0 : 1;
+    fd_set read_set; /* needed to use select to check if some data is waiting */
+    struct timeval tv;
 
     switch ( parse_cmd(cmd_str, &cmd, &cmd_len) ) {
     case OK:
@@ -432,6 +449,9 @@ talk_fcron(char *cmd_str, int fd)
 	    else
 		printf("\t%s\n", cmd_list[i].cmd_desc);
 	}
+	printf("\n");
+	printf("help\t\t\tDisplay this help message\n");
+	printf("quit\t\t\tQuit fcrondyn\n");
     }
 	return HELP_CMD;
     case QUIT_CMD:
@@ -455,13 +475,36 @@ talk_fcron(char *cmd_str, int fd)
     Flush(cmd);
     cmd_len = 0;
 
-    while ( (read_len = recv(fd, buf, sizeof(buf), 0)) > 0 && read_len < sizeof(buf) ) {
-	write(STDOUT_FILENO, buf, read_len);
-	if ( read_len > sizeof(END_STR) &&
-	     strncmp( &buf[read_len - sizeof(END_STR)], END_STR, sizeof(END_STR)) == 0 )
-	    break;
+    tv.tv_sec = MAX_WAIT_TIME;
+    tv.tv_usec = 0;
+    FD_ZERO(&read_set);
+    FD_SET(fd, &read_set);
+    if ( select(fd + 1, &read_set, NULL, NULL, &tv) <= 0 ) {
+	error_e("Couldn't get data from socket during %d seconds.", MAX_WAIT_TIME);
+	return ERR;
     }
-	
+
+    while ( (read_len = recv(fd, buf, sizeof(buf), 0)) >= 0 || errno == EINTR ) {
+	if ( errno == EINTR && debug_opt)
+	    fprintf(stderr, "got EINTR ...\n");
+	else if ( read_len > sizeof(buf) ) {
+	    /* weird ... no data yet ? */
+	    if ( debug_opt )
+		fprintf(stderr, "no data yet ?");
+	    tv.tv_sec = 0;
+	    tv.tv_usec = 25000;
+	}
+	else if ( read_len <= 0 && debug_opt )
+	    fprintf(stderr, "read_len = %d", read_len);
+	else {
+	    write(STDOUT_FILENO, buf, read_len);
+	    if ( read_len > sizeof(END_STR) &&
+		 strncmp(&buf[read_len-sizeof(END_STR)], END_STR, sizeof(END_STR)) == 0)
+		break;
+	}
+    }
+    if ( read_len < 0 )
+	error_e("error in recv()"); 
 
     if ( ! existing_connection )
 	close(fd);
