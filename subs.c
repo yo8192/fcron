@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.11 2001-06-24 13:23:40 thib Exp $ */
+ /* $Id: subs.c,v 1.12 2001-07-04 16:16:15 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -107,8 +107,7 @@ temp_file(char **name)
     i = 0;
     do {
 	i++;
-	free(name_local);
-	name_local = tempnam(NULL, NULL);
+	Set(name_local, tempnam(NULL, NULL));
 	if ( name_local == NULL )
 	    die("Can't find a unique temporary filename");
 	fd = open(name_local, O_RDWR|O_CREAT|O_EXCL|O_APPEND, S_IRUSR|S_IWUSR);
