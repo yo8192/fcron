@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.74 2004-11-13 19:43:15 thib Exp $ */
+ /* $Id: database.c,v 1.75 2005-02-26 15:13:00 thib Exp $ */
 
 #include "fcron.h"
 
@@ -32,6 +32,7 @@
 int is_leap_year(int year);
 int get_nb_mdays(int year, int mon);
 void set_wday(struct tm *date);
+time_t mktime_no_dst(struct tm *t);
 void goto_non_matching(cl_t *line, struct tm *tm, char option);
 #define END_OF_INTERVAL 1    /* goto_non_matching() : option */
 void run_serial_job(void);
@@ -68,6 +69,60 @@ test_jobs(void)
 	set_next_exe(j->j_line, STD, -1);
     }
 
+}
+
+
+time_t
+mktime_no_dst(struct tm *t)
+/* same as mktime(), but without daylight saving time (dst) change adjustment
+ * (ie. the returned time_t does not depend on the tm_isdst field) */
+/* Remark : you may think than instead of creating a new function,
+ *          it would be easier to set the tm_isdst field to -1.
+ *          Unfortunately, the behaviour of mktime() with 
+ *          tm_isdst set to -1 depends on the unix you run.
+ *          In other word, it wouldn't be portable. */
+{
+    struct tm t2;
+    time_t ti1;
+
+    t2 = *t;
+
+    ti1 = mktime(&t2);
+    /* */
+    debug("after  mktime() : %d:%d isdst:%d ti:%ld\n",
+	  t2.tm_hour, t2.tm_min, t2.tm_isdst, ti1);
+    /* */
+
+    /* check if there have been a dst change adjustment */
+    if ( t->tm_isdst != t2.tm_isdst ) {
+
+	time_t ti2;
+	struct tm t3;
+
+	/* recompute the time_t field with the other isdst value
+	 * it works well, unless in a special case, hence the test
+	 * below */
+	t3 = *t;
+	t3.tm_isdst = t2.tm_isdst;
+	ti2 = mktime(&t3);
+	/* */
+	debug("after dst fix 1 : %d:%d isdst:%d ti:%ld\n",
+	       t3.tm_hour, t3.tm_min, t3.tm_isdst, ti2);
+	/* */
+
+	/* if t1 is in the "gap" of a dst change (for instance,
+	 * if t1 is 2:30 while at 2:00, it is 3:00 due to the dst change,
+	 * ie. 2:30 is never reached), the ti2 may be incorrect :
+	 * we check that it is correct before using it : */
+	if ( t3.tm_hour == t->tm_hour || ti1 < ti2 ) {
+	    t2 = t3;
+	    ti1 = ti2;
+	}
+
+    }
+
+    *t = t2;
+    return ti1;
 }
 
 
@@ -353,14 +408,14 @@ add_lavg_job(cl_t *line, int info_fd)
 
 	ft = localtime( &begin_of_cur_int );
 
-	/* localtime() function seem to return every time the same pointer :
+	/* localtime() function seems to return every time the same pointer :
 	   it resets our previous changes, so we need to prevent it
 	   ( localtime() is used in the debug() function) */
 	memcpy(&ftime, ft, sizeof(struct tm));
 
 	goto_non_matching(line, &ftime, END_OF_INTERVAL);
 
-	end_of_cur_int = mktime(&ftime) + (line->cl_file->cf_tzdiff * 3600);
+	end_of_cur_int = mktime_no_dst(&ftime) + (line->cl_file->cf_tzdiff * 3600);
 
 	if ((line->cl_until > 0) && (line->cl_until + now < end_of_cur_int))
 	    lavg_array[lavg_num].l_until = line->cl_until + now;
@@ -956,13 +1011,7 @@ set_next_exe(cl_t *line, char option, int info_fd)
       set_cl_nextexe:
 	/* set cl_nextexe (handle the timezone differences) */
 
-	/* TODO : save the ftime.tm_isdst before mktime(), compare the saved value
-	 * to ftime.tm_isdst after mktime() : if it is different, then mktime
-	 * has added or removed one hour because of the daylight saving change :
-	 * then, check it has done what we want or not, and fix nextexe and ftime
-	 * if necessary */
-
-	nextexe = mktime(&ftime);
+	nextexe = mktime_no_dst(&ftime);
 
 	if ( is_random(line->cl_option) ) {
 	    /* run the job at a random time during its interval of execution */
@@ -976,7 +1025,7 @@ set_next_exe(cl_t *line, char option, int info_fd)
 
 	    memcpy(&intend, &ftime, sizeof(intend));
 	    goto_non_matching(line, &intend, END_OF_INTERVAL);
-	    intend_int = mktime(&intend);
+	    intend_int = mktime_no_dst(&intend);
 
 	    /* set a random time to add to the first allowed time of execution */
 	    nextexe += ( (i= intend_int - nextexe) > 0) ? 
@@ -1073,7 +1122,7 @@ set_next_exe_notrun(cl_t *line, char context)
     
     ftime.tm_sec = 0;
     goto_non_matching(line, &ftime, STD);
-    next_period = mktime(&ftime) + (line->cl_file->cf_tzdiff * 3600);
+    next_period = mktime_no_dst(&ftime) + (line->cl_file->cf_tzdiff * 3600);
 
     set_next_exe(line, set_next_exe_opt, -1);
     if ( line->cl_nextexe >= next_period ) {
