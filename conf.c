@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.32 2000-12-15 17:51:49 thib Exp $ */
+ /* $Id: conf.c,v 1.33 2000-12-23 20:17:17 thib Exp $ */
 
 #include "fcron.h"
 
@@ -407,9 +407,6 @@ read_file(const char *file_name, CF *cf)
 	return 1;
     }
     (file_stat.st_uid != 0) ? runas = file_stat.st_uid : 0;
-    /* */
-    debug("runas : %d", runas);
-    /* */
 
     debug("User %s Entry", file_name);
     bzero(buf, sizeof(buf));
@@ -464,9 +461,12 @@ read_file(const char *file_name, CF *cf)
 	    continue;
 	}
 
-	/* set runas field if necessary */
-	if (runas > 0)
+	/* set runas field if necessary (to improve security) */
+	if (runas > 0) {
+	    if (cl->cl_runas != runas)
+		warn("warning : runas is not owner's uid : overridden.");
 	    cl->cl_runas = runas;
+	}
 
 	if ( is_td(cl->cl_option) ) {
     
