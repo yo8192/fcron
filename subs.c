@@ -22,14 +22,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.16 2001-12-23 22:05:20 thib Exp $ */
+ /* $Id: subs.c,v 1.17 2002-02-25 18:46:14 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
 
 void init_conf(void);
 
-extern char *tmp_path;
 extern char debug_opt;
 
 /* fcron.conf parameters */
@@ -81,54 +80,6 @@ strdup2(const char *str)
 
     strcpy(ptr, str);
     return(ptr);
-}
-
-
-int
-temp_file(char **name)
-    /* Open a temporary file and return its file descriptor */
-{
-    int fd;
-#ifdef HAVE_MKSTEMP
-    char name_local[PATH_LEN] = "";
-    strcpy(name_local, tmp_path);
-    strcat(name_local, "fcr-XXXXXX");
-    if ( (fd = mkstemp(name_local)) == -1 )
-	die_e("Can't find a unique temporary filename");
-    /* we must set the file mode to 600 (some version of mkstemp may set it
-     * incorrectly) */
-    if ( fchmod(fd, S_IWUSR | S_IRUSR) != 0 )
-	die_e("Can't fchmod temp file");
-#else
-    const int max_retries = 50;
-    char *name_local = NULL;
-    int i;
-
-    i = 0;
-    do {
-	i++;
-	Set(name_local, tempnam(NULL, NULL));
-	if ( name_local == NULL )
-	    die("Can't find a unique temporary filename");
-	fd = open(name_local, O_RDWR|O_CREAT|O_EXCL|O_APPEND, S_IRUSR|S_IWUSR);
-	/* I'm not sure we actually need to be so persistent here */
-    } while (fd == -1 && errno == EEXIST && i < max_retries);
-    if (fd == -1)
-	die_e("Can't open temporary file");
-#endif
-    if ( name == NULL && unlink(name_local) != 0 )
-	die_e("Can't unlink temporary file %s", name_local);
-
-    fcntl(fd, F_SETFD, 1);   /* set close-on-exec flag */
-    
-    /* give the name of the temp file if necessary */
-    if (name != NULL)
-	*name = strdup2(name_local);
-#ifndef HAVE_MKSTEMP
-    free(name_local);
-#endif
-
-    return fd;
 }
 
 
@@ -250,72 +201,4 @@ read_conf(void)
 
     fclose(f);
 
-}
-
-
-int
-save_type(FILE *f, short int type)
-/* save a single type (with no data attached) in a binary fcrontab file */
-{
-    short int size = 0;
-
-    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
-    
-    return OK;
-
-  err:
-    return ERR;
-
-}
-
-int
-save_str(FILE *f, short int type, char *str)
-/* save a string of type "type" in a binary fcrontab file */
-{
-    short int size = 0;
-    size = strlen(str);
-
-    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
-    if ( write(fileno(f), str, size) < size ) goto err;
-
-    return OK;
-
-  err:
-    return ERR;
-    
-}
-
-int
-save_strn(FILE *f, short int type, char *str, short int size)
-/* save a "size"-length string of type "type" in a binary fcrontab file */
-{
-
-    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
-    if ( write(fileno(f), str, size) < size ) goto err;
-
-    return OK;
-
-  err:
-    return ERR;
-    
-}
-
-int
-save_lint(FILE *f, short int type, long int value)
-/* save an integer of type "type" in a binary fcrontab file */
-{
-    short int size = sizeof(value);
-
-    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
-    if ( write(fileno(f), &value, size) < size ) goto err;
-
-    return OK;
-
-  err:
-    return ERR;
-    
 }
