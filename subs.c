@@ -22,10 +22,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.3 2000-05-30 19:27:35 thib Exp $ */
+ /* $Id: subs.c,v 1.4 2000-06-18 13:14:16 thib Exp $ */
 
 #include "global.h"
 
+extern void die_e(char *fmt, ...);
 
 int
 remove_blanks(char *str)
@@ -61,8 +62,10 @@ strdup2(const char *str)
 {
     char *ptr = malloc(strlen(str) + 1);
 
-    if (ptr)
-        strcpy(ptr, str);
+    if ( ! ptr)
+	die_e("Could not calloc");
+
+    strcpy(ptr, str);
     return(ptr);
 }
 
