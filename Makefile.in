@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.62 2001-04-29 22:21:31 thib Exp $
+# $Id: Makefile.in,v 1.63 2001-04-30 03:02:03 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -37,20 +37,13 @@ GROUPNAME	= @GROUPNAME@
 DEBUG		= @DEBUG@
 ANSWERALL	= @ANSWERALL@
 
-# Optimize or debug ?
+# Options
 #	-DDEBUG		even more verbose
 #	-DCHECKJOBS     send a mail containing the exact shell command
 #			for each execution of each job.
-#OPTIM = @CFLAGS@
-#OPTIM=	-DDEBUG -g -DFOREGROUND -DMALLOC_CHECK_=2
-#OPTIM=	-DDEBUG -g -DCHECKJOBS -Wall -Wpointer-arith -Wstrict-prototypes
-#OPTIM=	-DDEBUG -Wall -Wpointer-arith -Wstrict-prototypes
-#OPTIM=	-O2 -Wall
-#OPTIM=	-O3 -mcpu=i686 -Wall
-
-
-# Options
 #	-DFOREGROUND=[0|1]    default run in foreground ?
+#OPTION=	-DCHECKJOBS
+#OPTION=	-O3 -mcpu=i686
 OPTION = 
 
 
@@ -180,6 +173,8 @@ tar: updatedoc configure vclean
 	@(cd ..; rm -f fcron-$(VERSION))
 
 	@(cd ..; mv -f fcron-$(VERSION).src.tar.gz old-fcron-pkg/)
+
+	@(cd ../old-fcron-pkg/; gpg -a -o fcron-$(VERSION).src.tar.gz.sign --detach-sign fcron-$(VERSION).src.tar.gz)
 
 
 
