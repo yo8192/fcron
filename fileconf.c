@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.13 2000-08-22 18:01:34 thib Exp $ */
+ /* $Id: fileconf.c,v 1.14 2000-08-28 17:59:26 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -265,7 +265,7 @@ read_env(char *ptr, CF *cf)
     /* append env variable list.
      * (remove blanks) */
 {
-    char name[ENV_LEN];
+    char name[LINE_LEN];
     env_t *env = NULL;
     int j=0;
     char *val = NULL;
@@ -330,8 +330,8 @@ read_env(char *ptr, CF *cf)
 
 	Alloc(env, env_t);	
 
-	env->e_name = strdup2(name);
-	env->e_val = val;
+	strcat(name, "=");
+	env->e_val = strdup2( strcat(name, val) );
 	env->e_next = cf->cf_env_base;
 	cf->cf_env_base = env;
     }
@@ -444,7 +444,7 @@ read_opt(char *ptr, CL *cl)
     
 #define Handle_err \
     { \
-        fprintf(stderr, "%s:%d: Argument for option '%s' is not valid: " \
+        fprintf(stderr, "%s:%d: Argument(s) for option '%s' not valid: " \
 		"skipping end of line.\n", file_name, line, opt_name); \
         need_correction = 1; \
         return NULL; \
@@ -493,11 +493,15 @@ read_opt(char *ptr, CL *cl)
 	else if( strcmp(opt_name, "reset")==0 ) {
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
-	    if ( i == 1 )
+	    if ( i == 1 ) {
 		bzero(cl, sizeof(cl));
+		default_line.cl_runas = uid;
+		default_line.cl_mailto = uid;
+	    }
 	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
+
 	else if(strcmp(opt_name, "f") == 0 || strcmp(opt_name, "first") == 0){
 	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_nextexe)))==NULL)
 		Handle_err;
@@ -511,6 +515,85 @@ read_opt(char *ptr, CL *cl)
 	    cl->cl_runfreq = i;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+
+	else if( strcmp(opt_name, "lavg") == 0 ) {
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+		Handle_err;
+	    cl->cl_lavg[0] = i;
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : 'lavg1' %d\n", i);
+	    if ( *ptr++ != ',' )
+		Handle_err;
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+		Handle_err;
+	    cl->cl_lavg[1] = i;
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : 'lavg5' %d\n", i);
+	    if ( *ptr++ != ',' )
+		Handle_err;
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+		Handle_err;
+	    cl->cl_lavg[2] = i;
+	    set_lavg(cl->cl_option);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : 'lavg15' %d\n", i);
+	}
+
+	else if( strcmp(opt_name, "lavg1") == 0 ) {
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+		Handle_err;
+	    cl->cl_lavg[0] = i;
+	    set_lavg(cl->cl_option);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : 'lavg1' %d\n", i);
+	}
+
+	else if( strcmp(opt_name, "lavg5") == 0 ) {
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+		Handle_err;
+	    cl->cl_lavg[1] = i;
+	    set_lavg(cl->cl_option);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : 'lavg5' %d\n", i);
+	}
+
+	else if( strcmp(opt_name, "lavg15") == 0 ) {
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+		Handle_err;
+	    cl->cl_lavg[2] = i;
+	    set_lavg(cl->cl_option);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : 'lavg15' %d\n", i);
+	}
+
+	else if( strcmp(opt_name, "lavgand") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		set_lor(cl->cl_option);
+	    else
+		set_land(cl->cl_option);	
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+
+	else if( strcmp(opt_name, "lavgor") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		set_land(cl->cl_option);
+	    else
+		set_lor(cl->cl_option);	
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+
+	else if(strcmp(opt_name, "u") == 0 || strcmp(opt_name, "until") == 0){
+	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_until)))==NULL)
+		Handle_err;
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %ld\n",opt_name,cl->cl_until);
 	}
 
 	else if(strcmp(opt_name, "m")==0 || strcmp(opt_name, "mail")==0){
@@ -1079,7 +1162,6 @@ delete_file(const char *user_name)
     cur_env = file->cf_env_base;
     while  ( (env = cur_env) != NULL ) {
 	cur_env = env->e_next;
-	free(env->e_name);
 	free(env->e_val);
 	free(env);
     }
@@ -1127,10 +1209,9 @@ save_file(char *path)
 	fprintf(f, "%d", 0);
 
 	/*   env variables, */
-	for (env = file->cf_env_base; env; env = env->e_next) {
-	    fprintf(f, "%s%c", env->e_name, '\0');
+	for (env = file->cf_env_base; env; env = env->e_next)
 	    fprintf(f, "%s%c", env->e_val, '\0');
-	}
+	
 	fprintf(f, "%c", '\0');
 
 	/*   then, lines. */
@@ -1140,10 +1221,10 @@ save_file(char *path)
 	    fprintf(f, "%s%c", line->cl_shell, '\0');
 	}
 
-//	/* finally, write the number of lines to permit to check if the file
-//	 * is complete (i.e. fcron may has been interrupted during
-//	 * save process */
-//	fprintf(f, "eof\n");
+	/* finally, write the number of lines to permit to check if the file
+	 * is complete (i.e. fcron may has been interrupted during
+	 * save process */
+/*  //	fprintf(f, "eof\n"); */
 	    
 	fclose(f);
 

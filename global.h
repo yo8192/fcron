@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.16 2000-08-22 18:01:37 thib Exp $ */
+ /* $Id: global.h,v 1.17 2000-08-28 17:59:40 thib Exp $ */
 
 
 /* 
@@ -57,9 +57,10 @@
 #include "option.h"
 
 
-#define FILEVERSION "010"  /* syntax's version of fcrontabs : 
+#define FILEVERSION "012"  /* syntax's version of fcrontabs : 
 			    * must have a length of 3 characters */
 
+/* you should not change this (nor need to do it) */
 #define ERR     -1           
 #define OK       0
 
@@ -72,7 +73,6 @@
 #define debug if(debug_opt) Debug
 
 typedef struct env_t {
-    char         *e_name;       /* env name                             */
     char         *e_val;        /* env value                            */
     struct env_t *e_next;
 } env_t ;
@@ -92,6 +92,8 @@ typedef struct CL {
     struct CF     *cl_file;       /* the file in which the line is        */
     unsigned short cl_option;     /* options for that line (see option.h) */
     char	  *cl_shell;      /* shell command			  */
+    char           cl_lavg[3];    /* load averages needed (1, 5, 15 mins) */
+    time_t         cl_until;      /* timeout of the wait for a lavg value */
     char           cl_nice;       /* nice value to control priority       */
     uid_t          cl_runas;      /* determine permissions of the job     */
     uid_t          cl_mailto;     /* mail output to cl_mailto             */
@@ -113,6 +115,10 @@ typedef struct job {
     struct job   *j_next;
 } job;
 
+typedef struct lavg {
+    struct CL  *l_line;  
+    time_t      l_since;   /* the time of the line admission in the queue */
+} lavg;
 
 #endif /* __GLOBALH__ */
 
