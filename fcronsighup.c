@@ -21,16 +21,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.5 2002-08-25 17:09:33 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.6 2003-09-12 20:49:12 thib Exp $ */
 
+#include "fcronsighup.h"
 #include "global.h"
-
-/* log.c */
-#include "log.h"
-#include "subs.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.5 2002-08-25 17:09:33 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.6 2003-09-12 20:49:12 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
