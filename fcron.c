@@ -21,13 +21,14 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.23 2000-06-28 16:27:49 thib Exp $ */
+ /* $Id: fcron.c,v 1.24 2000-08-28 17:58:19 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.23 2000-06-28 16:27:49 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.24 2000-08-28 17:58:19 thib Exp $";
 
 void main_loop(void);
+void check_signal(void);
 void info(void);
 void usage(void);
 void sighup_handler(int x);
@@ -54,11 +55,17 @@ char sig_chld = 0;            /* is 1 when we got a SIGCHLD */
 /* jobs database */
 struct CF *file_base;         /* point to the first file of the list */
 struct job *queue_base;       /* ordered list of normal jobs to be run */
+
 struct CL **serial_array;     /* ordered list of job to be run one by one */
-short int serial_array_size;  /* size of serial_base array */
+short int serial_array_size;  /* size of serial_array */
 short int serial_array_index; /* the index of the first job */
 short int serial_num;         /* number of job being queued */
 short int serial_running;     /* number of running serial jobs */
+
+struct lavg *lavg_array;      /* jobs waiting for a given system load value */
+short int lavg_array_size;    /* size of lavg_array */
+short int lavg_num;           /* number of job being queued */
+
 struct CL **exe_array;        /* jobs which are executed */
 short int exe_array_size;     /* size of exe_array */
 short int exe_num;            /* number of job being executed */
@@ -206,7 +213,7 @@ parseopt(int argc, char *argv[])
     /* constants and variables defined by command line */
 
     while(1) {
-#ifdef __linux
+#ifdef __linux__
 	c = getopt_long(argc, argv, "dfbhV", opt, NULL);
 #else
 	c = getopt(argc, argv, "dfbhV");
@@ -400,7 +407,7 @@ main(int argc, char **argv)
 
     /* initialize exe_array */
     exe_num = 0;
-    exe_array_size = EXE_ARRAY_INITIAL_SIZE;
+    exe_array_size = EXE_INITIAL_SIZE;
     if ( (exe_array = calloc(exe_array_size, sizeof(CL *))) == NULL )
 	die_e("could not calloc exe_array");
 
@@ -412,6 +419,13 @@ main(int argc, char **argv)
     if ( (serial_array = calloc(serial_array_size, sizeof(CL *))) == NULL )
 	die_e("could not calloc serial_array");
 
+    /* initialize lavg_array */
+    lavg_num = 0;
+    lavg_array_size = LAVG_INITIAL_SIZE;
+    if ( (lavg_array = calloc(lavg_array_size, sizeof(lavg))) == NULL )
+	die_e("could not calloc lavg_array");
+
+
 
     main_loop();
 
@@ -420,12 +434,36 @@ main(int argc, char **argv)
 }
 
 
-void main_loop()
+void
+check_signal()
+    /* check if a signal has been received and handle it */
+{
+
+    if (sig_chld > 0) {
+	wait_chld();
+	sig_chld = 0;
+    }
+    if (sig_conf > 0) {
+
+	if (sig_conf == 1)
+	    /* update configuration */
+	    synchronize_dir(".");
+	else
+	    /* reload all configuration */
+	    reload_all(".");
+
+	sig_conf = 0;
+    }
+
+}
+
+void
+main_loop()
   /* main loop - get the time to sleep until next job execution,
    *             sleep, and then test all jobs and execute if needed. */
 {
-    time_t save;               /* time remaining until next save */
-    struct timeval tv;         /* we use usec field to get more precision */
+    time_t save;           /* time remaining until next save */
+    struct timeval tv;     /* we use usec field to get more precision */
     time_t stime;          /* time to sleep until next job
 			    * execution */
 
@@ -452,26 +490,12 @@ void main_loop()
 
 	now = time(NULL);
 
-	if (sig_chld > 0) {
-	    wait_chld();
-	    sig_chld = 0;
-	}
-	if (sig_conf > 0) {
+	check_signal();
 
-	    if (sig_conf == 1)
-		/* update configuration */
-		synchronize_dir(".");
-	    else
-		/* reload all configuration */
-		reload_all(".");
-
-	    sig_conf = 0;
-	}
 	debug("\n");
-
 	test_jobs(now);
 
-	if ( serial_running == 0)
+	if ( serial_running <= 0)
 	    run_serial_job();
 
 	if ( save <= now ) {
@@ -480,7 +504,10 @@ void main_loop()
 	    save_file(NULL, NULL);
 	}
 
-	stime = time_to_sleep(save);
+	stime = check_lavg(save);
+	debug("sleep time : %ld", stime);
+
+	check_signal();
 
     }
 
