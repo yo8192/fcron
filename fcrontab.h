@@ -21,25 +21,19 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.h,v 1.11 2001-06-22 21:07:16 thib Exp $ */
+ /* $Id: fcrontab.h,v 1.12 2001-09-12 13:38:45 thib Exp $ */
 
 #ifndef __FCRONTAB_H__
 #define __FCRONTAB_H__
 
 #include "global.h"
 
-
 /* global variables */
 extern char debug_opt;
-extern CF *file_base;
+extern struct CF *file_base;
 extern char *user;
 extern uid_t uid;
 extern uid_t asuid;
 extern uid_t fcrontab_uid;
-
-/* prototype definition */
-
-#include "allow.h"
-#include "fileconf.h"
 
 #endif /* __FCRONTAB_H__ */
