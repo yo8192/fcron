@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.9 2000-05-30 19:27:33 thib Exp $
+# $Id: Makefile.in,v 1.10 2000-05-31 19:11:49 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -64,7 +64,7 @@ INSTALL= install
 # Should not be changed under this #
 ####################################
 
-VERSION= 0.8.1
+VERSION= 0.8.2
 CFLAGS= $(INCLUDE) $(OPTIM) $(OTHERFLAGS) $(OPTION) -DVERSION=\"$(VERSION)\" -DFCRONTABS=\"$(FCRONTABS)\" -DETC=\"$(ETC)\"
 OBJSD = fcron.o subs.o database.o job.o log.o conf.o
 OBJS= fcrontab.o fileconf.o subs.o log.o allow.c
