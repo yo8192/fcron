@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.10 2000-06-22 12:33:09 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.11 2000-06-25 20:02:32 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.10 2000-06-22 12:33:09 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.11 2000-06-25 20:02:32 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -204,8 +204,10 @@ sig_daemon(void)
 	/* daemon is not running any longer : we exit */
 	return ;
 
-    if ( kill(daemon_pid, SIGHUP) != 0)
+    if ( kill(daemon_pid, SIGHUP) != 0) {
+	remove(PIDFILE);
 	die_e("could not send SIGHUP to daemon (pid %d)", daemon_pid);
+    }
 
 }
 
