@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.33 2000-11-10 17:35:40 thib Exp $ */
+ /* $Id: fcron.c,v 1.34 2000-11-16 17:57:11 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.33 2000-11-10 17:35:40 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.34 2000-11-16 17:57:11 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -349,7 +349,7 @@ main(int argc, char **argv)
     else prog_name = strrchr(argv[0], '/') + 1;
 
     {
-	int daemon_uid;                 
+	uid_t daemon_uid;                 
 	if ( (daemon_uid = getuid()) != 0 )
 	    die("Fcron must be executed as root");
     }
