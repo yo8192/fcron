@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.17 2002-02-25 18:46:14 thib Exp $ */
+ /* $Id: subs.c,v 1.18 2002-03-02 17:29:03 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -35,6 +35,7 @@ extern char debug_opt;
 char *fcronconf = NULL;
 char *fcrontabs = NULL;
 char *pidfile = NULL;
+char *fifofile = NULL;
 char *fcronallow = NULL;
 char *fcrondeny = NULL;
 char *shell = NULL;
@@ -83,6 +84,22 @@ strdup2(const char *str)
 }
 
 
+int
+get_word(char **str)
+    /* make str point the next word and return word length */
+{
+    char *ptr;
+
+    Skip_blanks(*str);
+    ptr = *str;
+
+    while ( (isalnum( (int) *ptr) || *ptr == '_' || *ptr == '-') 
+	    && *ptr != '=' && ! isspace( (int) *ptr) )
+	ptr++;
+    
+    return (ptr - *str);
+}
+
 void
 init_conf(void)
 /* initialises config with compiled in constants */
@@ -92,6 +109,7 @@ init_conf(void)
 	fcronconf = strdup2(ETC "/" FCRON_CONF);
     fcrontabs = strdup2(FCRONTABS);
     pidfile = strdup2(PIDFILE);
+    fifofile = strdup2(FIFOFILE);
     fcronallow = strdup2(ETC "/" FCRON_ALLOW);
     fcrondeny = strdup2(ETC "/" FCRON_DENY);
     shell = strdup2(SHELL);
@@ -152,16 +170,12 @@ read_conf(void)
 
 	remove_blanks(ptr1); /* at the end of the line */
 
-	ptr2 = ptr1;
-
 	/* get the name of the var */
-	while ( (isalnum( (int) *ptr2) || *ptr2 == '_') 
-		&& *ptr2 != '=' && ! isspace( (int) *ptr2) )
-	    ptr2++;
-	
-	if ( (namesize = ptr2 - ptr1) == 0 )
+	if ( ( namesize = get_word(&ptr1) ) == 0 )
 	    /* name is zero-length */
 	    error("Zero-length var name at line %s : line ignored", buf);
+
+	ptr2 = ptr1 + namesize;
 
 	/* skip the blanks and the "=" and go to the value */
 	while ( isspace( (int) *ptr2 ) ) ptr2++;
@@ -169,19 +183,21 @@ read_conf(void)
 	while ( isspace( (int) *ptr2 ) ) ptr2++;
 
 	/* find which var the line refers to and update it */
-	if ( strncmp(ptr1, "fcrontabs", 9) == 0 )
+	if ( strncmp(ptr1, "fcrontabs", namesize) == 0 )
 	    fcrontabs = strdup2(ptr2);
-	else if ( strncmp(ptr1, "pidfile", 7) == 0 )
+	else if ( strncmp(ptr1, "pidfile", namesize) == 0 )
 	    pidfile = strdup2(ptr2);
-	else if ( strncmp(ptr1, "fcronallow", 10) == 0 )
+	else if ( strncmp(ptr1, "fifofile", namesize) == 0 )
+	    fifofile = strdup2(ptr2);
+	else if ( strncmp(ptr1, "fcronallow", namesize) == 0 )
 	    fcronallow = strdup2(ptr2);
-	else if ( strncmp(ptr1, "fcrondeny", 9) == 0 )
+	else if ( strncmp(ptr1, "fcrondeny", namesize) == 0 )
 	    fcrondeny = strdup2(ptr2);
-	else if ( strncmp(ptr1, "shell", 5) == 0 )
+	else if ( strncmp(ptr1, "shell", namesize) == 0 )
 	    shell = strdup2(ptr2);
-	else if ( strncmp(ptr1, "sendmail", 8) == 0 )
+	else if ( strncmp(ptr1, "sendmail", namesize) == 0 )
 	    sendmail = strdup2(ptr2);
-	else if ( strncmp(ptr1, "editor", 6) == 0 )
+	else if ( strncmp(ptr1, "editor", namesize) == 0 )
 	    editor = strdup2(ptr2);
 	else
 	    error("Unknown var name at line %s : line ignored", buf);
@@ -194,6 +210,7 @@ read_conf(void)
 /*  	debug("  fcrondeny=%s", fcrondeny); */
 /*  	debug("  fcrontabs=%s", fcrontabs); */
 /*  	debug("  pidfile=%s", pidfile); */
+  	debug("  fifofile=%s", fifofile);
 /*  	debug("  editor=%s", editor); */
 /*  	debug("  shell=%s", shell); */
 /*  	debug("  sendmail=%s", sendmail); */
