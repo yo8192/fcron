@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.73 2001-07-07 17:32:49 thib Exp $
+# $Id: Makefile.in,v 1.74 2001-07-07 17:44:45 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -141,10 +141,12 @@ install-restart: install
 uninstall:
 	rm -f $(DESTSBIN)/fcron
 	rm -f $(DESTBIN)/fcrontab
+	rm -f $(DESTBIN)/fcronsighup
 	rm -fR $(DESTDOC)/fcron-$(VERSION)
 	rm -f $(DESTMAN)/man1/fcrontab.1
 	rm -f $(DESTMAN)/man3/bitstring.3
 	rm -f $(DESTMAN)/man5/fcrontab.5
+	rm -f $(DESTMAN)/man5/fcron.conf.5
 	rm -f $(DESTMAN)/man8/fcron.8
 	$(SRCDIR)/script/boot-uninstall
 
