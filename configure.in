@@ -659,6 +659,39 @@ fi
 dnl ---------------------------------------------------------------------
 dnl Users and groups ...
 
+AC_MSG_CHECKING(run non-privileged)
+AC_ARG_WITH(run-non-privileged,
+[ --run-non-privileged=[yes|no]	Run fcron without root's rights (see FAQ !)],
+[ case "$withval" in
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    AC_MSG_RESULT(yes)
+    AC_MSG_WARN([
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+WARNING : 
+	This option allows a non privileged user to run fcron. When used,
+	fcron does not change its rights before running a job (i.e.,
+	if joe runs fcron, every job will run as joe).
+	It means that SHOULD NOT RUN FCRON AS A PRIVILEGED USER WHEN COMPILED
+	WITH THIS OPTION or you'll have a serious security hole.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+])
+    AC_DEFINE(RUN_NON_PRIVILEGED)
+    RUN_NON_PRIVILEGED=1
+    AC_SUBST(RUN_NON_PRIVILEGED)
+    ;;
+  *)
+    AC_MSG_ERROR(Invalid argument : please use 'yes' or 'no'.)
+    ;;
+  esac],
+  AC_MSG_RESULT(no)
+)
+
+
 AC_MSG_CHECKING(root's username)
 AC_ARG_WITH(rootname,
 [ --with-rootname=USERNAME	Root's username (default root) ],
@@ -667,9 +700,8 @@ AC_ARG_WITH(rootname,
     AC_MSG_ERROR(Need rootname.)
     ;;
   yes)
-    if LINE=`cat /etc/passwd | grep "^root:"`; then
+    if rootuid=`script/has_usrgrp.pl -user root -printuid`; then
 	rootname=root
-	rootuid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
         AC_MSG_RESULT($rootname uid: $rootuid)
     else
 	AC_MSG_ERROR([
@@ -677,19 +709,17 @@ Cannot determine root's username: try option --with-rootname=USERNAME])
     fi
     ;;
   *)
-    if LINE=`cat /etc/passwd | grep "^$withval:"`; then
+    if rootuid=`script/has_usrgrp.pl -user $withval -printuid`; then
 	rootname=$withval
-	rootuid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
         AC_MSG_RESULT($rootname uid: $rootuid)
     else
 	AC_MSG_ERROR([
-Invalid root's username : not in /etc/passwd])
+Invalid root's username : cannot find it using getpwnam()])
     fi
     ;;
     esac ],
-    if LINE=`cat /etc/passwd | grep "^root:"`; then
+    if rootuid=`script/has_usrgrp.pl -user root -printuid`; then
 	rootname=root
-	rootuid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
         AC_MSG_RESULT($rootname uid: $rootuid)
     else
 	AC_MSG_ERROR([
@@ -705,13 +735,11 @@ AC_ARG_WITH(rootgroup,
     AC_MSG_ERROR(Need rootgroup.)
     ;;
   yes)
-    if LINE=`cat /etc/group | grep "^root:"`; then
+    if rootgid=`script/has_usrgrp.pl -group root -printgid`; then
 	rootgroup=root
-	rootgid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
         AC_MSG_RESULT($rootgroup gid: $rootgid)
-    elif LINE=`cat /etc/group | grep "^wheel:"`; then
+    elif rootgid=`script/has_usrgrp.pl -group wheel -printgid`; then
 	rootgroup=wheel
-	rootgid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
         AC_MSG_RESULT($rootgroup gid: $rootgid)
     else
 	AC_MSG_ERROR([
@@ -719,23 +747,20 @@ Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME])
     fi
     ;;
   *)
-    if LINE=`cat /etc/group | grep "^$withval:"`; then
+    if rootgid=`script/has_usrgrp.pl -group $withval -printgid`; then
 	rootgroup=$withval
-	rootgid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
         AC_MSG_RESULT($rootgroup gid: $rootgid)
     else
 	AC_MSG_ERROR([
-Invalid root's groupname : not in /etc/group])
+Invalid root's groupname : cannot find it using getgrnam()])
     fi
     ;;
     esac ],
-    if LINE=`cat /etc/group | grep "^root:"`; then
+    if rootgid=`script/has_usrgrp.pl -group root -printgid`; then
 	rootgroup=root
-	rootgid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
         AC_MSG_RESULT($rootgroup gid: $rootgid)
-    elif LINE=`cat /etc/group | grep "^wheel:"`; then
+    elif rootgid=`script/has_usrgrp.pl -group wheel -printgid`; then
 	rootgroup=wheel
-	rootgid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
         AC_MSG_RESULT($rootgroup gid: $rootgid)
     else
 	AC_MSG_ERROR([
@@ -776,7 +801,7 @@ AC_ARG_WITH(username,
     if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
         username="$withval";
 	AC_MSG_RESULT($username)
-	if test "$withval" = "$rootname"; then
+	if test "$withval" = "$rootname" && test "$RUN_NON_PRIVILEGED" != "1"; then
             AC_MSG_WARN([
 
 Beware that running fcrontab setuid root is not very secure. You should use
