@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.51 2001-09-12 13:45:54 thib Exp $ */
+ /* $Id: conf.c,v 1.52 2001-12-23 22:04:51 thib Exp $ */
 
 #include "fcron.h"
 
@@ -442,9 +442,9 @@ read_file(const char *file_name, CF *cf)
     }
 
     if ( strncmp(file_name,"new.", 4) == 0 ) {
-	if ( file_stat.st_uid == 0 )
-	    /* file is owned by root : no test needed : set runas to 0 */
-	    runas = 0;
+	if ( file_stat.st_uid == ROOTUID )
+	    /* file is owned by root : no test needed : set runas to ROOTUID */
+	    runas = ROOTUID;
 	else {
 	    /* this is a standard user's new fcrontab : set the runas field to
 	     * the owner of the file */
@@ -457,10 +457,10 @@ read_file(const char *file_name, CF *cf)
 	}
     }
     else {
-	if ( file_stat.st_uid == 0 )
+	if ( file_stat.st_uid == ROOTUID )
 	    /* file is owned by root : either this file has already been parsed
 	     * at least once by fcron, either it is the root's fcrontab */
-	    runas = 0;
+	    runas = ROOTUID;
 	else {
 	    error("Non-new file %s owned by someone else than root",file_name);
 	    goto err;
@@ -492,7 +492,7 @@ read_file(const char *file_name, CF *cf)
 	error("Cannot read user's name : file ignored");
 	goto err;
     }
-    if ( runas != 0 ) {
+    if ( runas != ROOTUID ) {
 	/* we use file owner's name for more security (see above) */
 	/* free the value obtained by read_strn() (we need to read it anyway
 	 * to set the file ptr to the next thing to read) */
@@ -688,7 +688,7 @@ add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str, time_t t_save)
     }
 
     /* set runas field if necessary (to improve security) */
-    if (runas > 0) {
+    if (runas != ROOTUID) {
 	if (strcmp(cl->cl_runas, runas_str) != 0)
 	    warn("warning: runas(%s) is not owner (%s): overridden.",
 		 cl->cl_runas, runas_str);
@@ -1009,7 +1009,7 @@ save_file(CF *arg_file)
 
 	/* chown the file to root:root : this file should only be read and
 	 * modified by fcron (not fcrontab) */
-	if (fchown(fileno(f), 0, 0) != 0)
+	if (fchown(fileno(f), ROOTUID, ROOTGID) != 0)
 	    error_e("Could not fchown \"%s\"", file->cf_user);
 
 	/* save file : */

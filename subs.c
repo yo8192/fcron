@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.15 2001-08-17 19:50:08 thib Exp $ */
+ /* $Id: subs.c,v 1.16 2001-12-23 22:05:20 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -183,7 +183,7 @@ read_conf(void)
     }
 
     /* check if the file is secure : owned and writable only by root */
-    if ( fstat(fileno(f), &st) != 0 || st.st_uid != 0
+    if ( fstat(fileno(f), &st) != 0 || st.st_uid != ROOTUID
 	 || st.st_mode & S_IWGRP || st.st_mode & S_IWOTH ) {
 	error("Conf file (%s) must be owned by root and (no more than) 644 : "
 	      "ignored", fcronconf);

@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.37 2001-09-12 13:50:09 thib Exp $ */
+ /* $Id: config.h.in,v 1.38 2001-12-23 22:05:03 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -160,10 +160,12 @@
 /* Define if we should use sete[ug]id() funcs */
 #undef USE_SETE_ID
 
-/* username to run under */
-#undef USERNAME
+/* root uid and gid */
+#undef ROOTUID
+#undef ROOTGID
 
-/* groupname to run under */
+/* user and group name to run under */
+#undef USERNAME
 #undef GROUPNAME
 
 /* Define to empty if the keyword does not work.  */

@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.54 2001-12-23 12:20:46 thib Exp $ */
+ /* $Id: fileconf.c,v 1.55 2001-12-23 22:04:44 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -378,7 +378,7 @@ get_nice(char *ptr, int *nice)
 	return NULL;
 
     if ( negative == 1 ) {
-	if (getuid() != 0) {
+	if (getuid() != ROOTUID) {
 	    fprintf(stderr, "must be privileged to use a negative argument "
 		    "with nice: set to 0\n");
 	    need_correction = 1;
@@ -894,7 +894,7 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if(strcmp(opt_name, "runas") == 0) {
-	    if (getuid() != 0) {
+	    if (getuid() != ROOTUID) {
 		fprintf(stderr, "must be privileged to use option runas: "
 			"skipping option\n");
 		need_correction = 1;
@@ -1026,7 +1026,7 @@ check_username(char *ptr, CF *cf, CL *cl)
         ptr = ptr + indx;	/* move ptr to the next word */
 	Skip_blanks(ptr);
 
-	if (getuid() != 0) {
+	if (getuid() != ROOTUID) {
 	    fprintf(stderr, "must be privileged to run as another user : "
 		    "ignoring\n");
 	} else {

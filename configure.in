@@ -481,27 +481,30 @@ AC_ARG_WITH(rootname,
     AC_MSG_ERROR(Need rootname.)
     ;;
   yes)
-    if cat /etc/passwd | grep "^root:" > /dev/null; then
+    if LINE=`cat /etc/passwd | grep "^root:"`; then
 	rootname=root
-        AC_MSG_RESULT($rootname)
+	rootuid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
+        AC_MSG_RESULT($rootname uid: $rootuid)
     else
 	AC_MSG_ERROR([
 Cannot determine root's username: try option --with-rootname=USERNAME])
     fi
     ;;
   *)
-    if cat /etc/passwd | grep "^$withval:" > /dev/null ; then
+    if LINE=`cat /etc/passwd | grep "^$withval:"`; then
 	rootname=$withval
-        AC_MSG_RESULT($rootname)
+	rootuid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
+        AC_MSG_RESULT($rootname uid: $rootuid)
     else
 	AC_MSG_ERROR([
 Invalid root's username : not in /etc/passwd])
     fi
     ;;
     esac ],
-    if cat /etc/passwd | grep "^root:" > /dev/null ; then
+    if LINE=`cat /etc/passwd | grep "^root:"`; then
 	rootname=root
-        AC_MSG_RESULT($rootname)
+	rootuid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
+        AC_MSG_RESULT($rootname uid: $rootuid)
     else
 	AC_MSG_ERROR([
 Cannot determine root's username: try option --with-rootname=USERNAME])
@@ -516,33 +519,38 @@ AC_ARG_WITH(rootgroup,
     AC_MSG_ERROR(Need rootgroup.)
     ;;
   yes)
-    if cat /etc/group | grep "^root:" > /dev/null ; then
+    if LINE=`cat /etc/group | grep "^root:"`; then
 	rootgroup=root
-        AC_MSG_RESULT($rootgroup)
-    elif cat /etc/group | grep "^wheel:" > /dev/null ; then
+	rootgid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
+        AC_MSG_RESULT($rootgroup gid: $rootgid)
+    elif LINE=`cat /etc/group | grep "^wheel:"`; then
 	rootgroup=wheel
-        AC_MSG_RESULT($rootgroup)
+	rootgid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
+        AC_MSG_RESULT($rootgroup gid: $rootgid)
     else
 	AC_MSG_ERROR([
 Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME])
     fi
     ;;
   *)
-    if cat /etc/group | grep "^$withval:" > /dev/null ; then
+    if LINE=`cat /etc/group | grep "^$withval:"`; then
 	rootgroup=$withval
-        AC_MSG_RESULT($rootgroup)
+	rootgid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
+        AC_MSG_RESULT($rootgroup gid: $rootgid)
     else
 	AC_MSG_ERROR([
 Invalid root's groupname : not in /etc/group])
     fi
     ;;
     esac ],
-    if cat /etc/group | grep "^root:" > /dev/null ; then
+    if LINE=`cat /etc/group | grep "^root:"`; then
 	rootgroup=root
-        AC_MSG_RESULT($rootgroup)
-    elif cat /etc/group | grep "^wheel:" > /dev/null ; then
+	rootgid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
+        AC_MSG_RESULT($rootgroup gid: $rootgid)
+    elif LINE=`cat /etc/group | grep "^wheel:"`; then
 	rootgroup=wheel
-        AC_MSG_RESULT($rootgroup)
+	rootgid=`echo $LINE | awk 'BEGIN {FS= ":" } {print $3}'`
+        AC_MSG_RESULT($rootgroup gid: $rootgid)
     else
 	AC_MSG_ERROR([
 Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME])
@@ -552,9 +560,15 @@ Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME])
 ROOTNAME="$rootname"
 AC_SUBST(ROOTNAME)
 AC_DEFINE_UNQUOTED(ROOTNAME, "$rootname")
+ROOTUID=$rootuid
+AC_SUBST(ROOTUID)
+AC_DEFINE_UNQUOTED(ROOTUID, $rootuid)
 ROOTGROUP="$rootgroup"
 AC_SUBST(ROOTGROUP)
 AC_DEFINE_UNQUOTED(ROOTGROUP, "$rootgroup")
+ROOTGID=$rootgid
+AC_SUBST(ROOTGID)
+AC_DEFINE_UNQUOTED(ROOTGID, $rootgid)
 
 username="$rootname"
 groupname="$rootgroup"

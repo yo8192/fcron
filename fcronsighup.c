@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.2 2001-07-09 11:49:11 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.3 2001-12-23 22:03:08 thib Exp $ */
 
 #include "global.h"
 
@@ -30,7 +30,7 @@
 #include "subs.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.2 2001-07-09 11:49:11 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.3 2001-12-23 22:03:08 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
@@ -59,7 +59,7 @@ usage(void)
 {
     fprintf(stderr,
 	    "fcronsighup "VERSION_QUOTED" - make fcron update its fcrontabs\n"
-	    "Copyright 2000-2001 Thibault Godouet <fcron@free.fr>\n"
+	    "Copyright 2000-2002 Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	    "\n"
@@ -100,7 +100,7 @@ sig_daemon(void)
      * some bad users to block daemon by sending it SIGHUP all the time */
 {
     /* we don't need to make root wait */
-    if (uid != 0) {
+    if (uid != ROOTUID) {
 	time_t t = 0;
 	int sl = 0;
 	FILE *fp = NULL;

@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.52 2001-11-04 18:58:17 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.53 2001-12-23 22:04:10 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -45,7 +45,7 @@
 #include "allow.h"
 #include "fileconf.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.52 2001-11-04 18:58:17 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.53 2001-12-23 22:04:10 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -101,7 +101,7 @@ info(void)
 {
     fprintf(stderr,
 	    "fcrontab " VERSION_QUOTED " - user interface to daemon fcron\n"
-	    "Copyright 2000-2001 Thibault Godouet <fcron@free.fr>\n"
+	    "Copyright 2000-2002 Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	);
@@ -186,7 +186,7 @@ copy(char *orig, char *dest)
      * except for root. Root requires filesystem uid root for security
      * reasons */
 #ifdef USE_SETE_ID
-    if (asuid != 0 && seteuid(fcrontab_uid) != 0)
+    if (asuid != ROOTUID && seteuid(fcrontab_uid) != 0)
 	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
 #endif
     if ((to = fopen(dest, "w")) == NULL) {
@@ -194,13 +194,13 @@ copy(char *orig, char *dest)
 	return ERR;
     }
 #ifdef USE_SETE_ID
-    if (asuid != 0 && seteuid(uid) != 0)
+    if (asuid != ROOTUID && seteuid(uid) != 0)
 	die_e("seteuid(uid[%d])", uid);
 #endif
-    if (asuid == 0 ) {
+    if (asuid == ROOTUID ) {
 	if ( fchmod(fileno(to), S_IWUSR | S_IRUSR) != 0 )
 	    error_e("Could not fchmod %s to 600", dest);
-	if ( fchown(fileno(to), 0, fcrontab_gid) != 0 )
+	if ( fchown(fileno(to), ROOTUID, fcrontab_gid) != 0 )
 	    error_e("Could not fchown %s to root", dest);
     }
 
@@ -418,7 +418,7 @@ edit_file(char *buf)
 	switch ( pid = fork() ) {
 	case 0:
 	    /* child */
-	    if ( uid != 0 ) {
+	    if ( uid != ROOTUID ) {
 		if (setgid(asgid) < 0) {
 		    error_e("setgid(asgid)");
 		    goto exiterr;
@@ -469,7 +469,7 @@ edit_file(char *buf)
 		close(fd);
 		goto exiterr;
 	    }
-	    if ( fchown(fd, 0, 0) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ) {
+	    if ( fchown(fd, ROOTUID, ROOGID) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ) {
 		fprintf(stderr, "Can't chown or chmod %s.\n", tmp_str);
 		close(fd);
 		goto exiterr;
@@ -807,7 +807,7 @@ parseopt(int argc, char *argv[])
 	    usage(); break;
 
 	case 'u':
-	    if (getuid() != 0) {
+	    if (getuid() != ROOTUID) {
 		fprintf(stderr, "must be privileged to use -u\n");
 		xexit(EXIT_ERR);
 	    }
@@ -889,7 +889,7 @@ parseopt(int argc, char *argv[])
 	else
 	    usage();
 
-	if (getuid() != 0) {
+	if (getuid() != ROOTUID) {
 	    fprintf(stderr, "must be privileged to use -u\n");
 	    xexit(EXIT_ERR);
 	}
@@ -899,7 +899,7 @@ parseopt(int argc, char *argv[])
 	if ( list_opt + rm_opt + edit_opt + reinstall_opt == 0 )
 	    file_opt = optind;
 	else {
-	    if (getuid() != 0) {
+	    if (getuid() != ROOTUID) {
 		fprintf(stderr, "must be privileged to use [user|-u user]\n");
 		xexit(EXIT_ERR);
 	    }
@@ -1011,10 +1011,10 @@ main(int argc, char **argv)
 
 #else /* USE_SETE_ID */
 
-    if (setuid(0) != 0 ) 
-	die_e("Could not change uid to 0"); 
-    if (setgid(0) != 0)
-    	die_e("Could not change gid to 0");
+    if (setuid(ROOTUID) != 0 ) 
+	die_e("Could not change uid to ROOTUID"); 
+    if (setgid(ROOTGID) != 0)
+    	die_e("Could not change gid to ROOTGID");
     /* change directory */
     if (chdir(fcrontabs) != 0) {
 	error_e("Could not chdir to %s", fcrontabs);

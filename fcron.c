@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.56 2001-09-12 13:44:50 thib Exp $ */
+ /* $Id: fcron.c,v 1.57 2001-12-23 22:04:37 thib Exp $ */
 
 #include "fcron.h"
 
@@ -29,7 +29,7 @@
 #include "conf.h"
 #include "job.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.56 2001-09-12 13:44:50 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.57 2001-12-23 22:04:37 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -112,7 +112,7 @@ info(void)
 {
     fprintf(stderr,
 	    "fcron " VERSION_QUOTED " - periodic command scheduler\n"
-	    "Copyright 2000-2001 Thibault Godouet <fcron@free.fr>\n"
+	    "Copyright 2000-2002 Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	);
@@ -460,7 +460,7 @@ main(int argc, char **argv)
 
     {
 	uid_t daemon_uid;                 
-	if ( (daemon_uid = getuid()) != 0 )
+	if ( (daemon_uid = getuid()) != ROOTUID )
 	    die("Fcron must be executed as root");
     }
 
