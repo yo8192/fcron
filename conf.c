@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.25 2000-10-07 14:14:21 thib Exp $ */
+ /* $Id: conf.c,v 1.26 2000-10-08 10:10:17 thib Exp $ */
 
 #include "fcron.h"
 
@@ -387,7 +387,6 @@ read_file(const char *file_name, CF *cf)
     time_t t_save = 0;
     time_t slept = 0;
     char *user = NULL;
-    int i = 1;
     char zero[bitstr_size(60)];
 
     bzero(zero, sizeof(zero));
@@ -491,6 +490,10 @@ read_file(const char *file_name, CF *cf)
 	    else
 		insert_nextexe(cl);
 	} else {
+	    if ( cl->cl_timefreq <= 0 ) {
+		error("Invalid timefreq in '%s': set to 1 day", cl->cl_shell);
+		cl->cl_timefreq = 3600*24;
+	    }
 	    cl->cl_nextexe += slept;
 	    insert_nextexe(cl);
 	}	    
