@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.8 2000-06-21 09:48:36 thib Exp $ */
+ /* $Id: config.h.in,v 1.9 2000-06-21 13:43:50 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -110,9 +110,6 @@
 #define FIRST_SLEEP 20      /* fcron sleep at least this time after startup
 			     * before executing a job, to avoid to run jobs
 			     * during system boot */
-#define FIRST_SLEEP_SERIAL 60 /* fcron sleep at least this time after startup
-			       * before executing a serial job (job executed
-			       * by option bootrun are serialized) */ 
 #define SAVE_VARIATION 120  /* if a job is run at less than SAVE_VARIATION
 			     * from normal time to save, save is performed
 			     * after execution of the job.
