@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.50 2001-07-09 21:07:28 thib Exp $ */
+ /* $Id: fileconf.c,v 1.51 2001-08-20 10:57:50 thib Exp $ */
 
 #include "fcrontab.h"
 #include "fileconf.h"
@@ -999,6 +999,8 @@ check_username(char *ptr, CF *cf, CL *cl)
     struct passwd *userpwent;
 
     /* check to see if next word is a username */
+    /* we don't allow quotes, to be able to distinguish a user name from
+     * a command line (where quotes are allowed */
     while ( isalnum( (int) ptr[indx]) ) indx++;
     if (indx > USER_NAME_LEN) indx = USER_NAME_LEN;
     strncpy(username, ptr, indx);

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.31 2001-08-17 19:43:53 thib Exp $ */
+ /* $Id: global.h,v 1.32 2001-08-20 10:58:07 thib Exp $ */
 
 
 /* 
@@ -169,7 +169,7 @@ typedef struct CL {
     unsigned short cl_runfreq;    /* Run once every n matches                */
     unsigned char  cl_option[OPTION_SIZE]; /* line's option (see option.h)   */
     unsigned char  cl_lavg[LAVG_SIZE];/*load averages needed (1,5,15 mins)   */
-    unsigned char  cl_numexe;     /* num of entries in lavg/serial queue     */
+    unsigned char  cl_numexe;     /* entries in queues & running processes   */
     char           cl_nice;       /* nice value to control priority          */
     /* see bitstring(3) man page for more details */
     bitstr_t	   bit_decl(cl_mins, 60); /* 0-59		             */

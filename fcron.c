@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.54 2001-08-17 19:42:14 thib Exp $ */
+ /* $Id: fcron.c,v 1.55 2001-08-20 10:54:45 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.54 2001-08-17 19:42:14 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.55 2001-08-20 10:54:45 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -151,9 +151,9 @@ print_schedule(void)
 	for (cl = cf->cf_line_base; cl; cl = cl->cl_next) {
 	    ftime = localtime( &(cl->cl_nextexe) );
 	    explain("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d",
-		  cl->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
-		  (ftime->tm_year + 1900), ftime->tm_wday,
-		  ftime->tm_hour, ftime->tm_min); 
+		    cl->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
+		    (ftime->tm_year + 1900), ftime->tm_wday,
+		    ftime->tm_hour, ftime->tm_min); 
 	    
 	}
     }

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.h,v 1.2 2001-05-24 19:59:58 thib Exp $ */
+ /* $Id: save.h,v 1.3 2001-08-20 11:01:18 thib Exp $ */
 
 
 /* here is the format fcron(tab) uses to save the fcrontabs :
@@ -55,7 +55,7 @@
 /* line field types */
 #define S_ENDLINE_T    2000  /* we need to know where a new line begin */
 #define S_SHELL_T      2001  /* shell command of the line */
-#define S_NUMEXE_T     2002  /* number of entries in lavg/serial queue */
+#define S_NUMEXE_T     2002  /* num of entries in queues & running processes */
 #define S_LAVG_T       2003  /* load averages needed (1, 5, 15 mins) */
 #define S_UNTIL_T      2004  /* timeout of the wait for a lavg value */
 #define S_NICE_T       2005  /* nice value to control priority */
