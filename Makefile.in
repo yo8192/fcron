@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.49 2000-12-04 20:17:34 thib Exp $
+# $Id: Makefile.in,v 1.50 2000-12-10 20:28:44 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -117,7 +117,13 @@ install: all
 
 install-boot: install
 	if test "$(DEBUG)" = "1"; then \
-	script/sysVinit-install "$(INSTALL)" $(DESTSBIN) 0 $(FCRONTABS) ;\
+	  script/sysVinit-install "$(INSTALL)" $(DESTSBIN) 0 $(FCRONTABS) ;\
+	fi
+
+install-restart: install
+	if test "$(DEBUG)" = "1"; then \
+	  kill -TERM `pidof fcron` ; \
+	  /etc/rc.d/init.d/fcron start ;\
 	fi
 
 uninstall:
