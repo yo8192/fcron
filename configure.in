@@ -47,7 +47,7 @@ AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
 AC_FUNC_WAIT3
 AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
-AC_CHECK_FUNC(kstat_open, [kstat=1], [kstat=0])
+AC_CHECK_LIB(kstat, kstat_open, [kstat=1], [kstat=0])
 if test $getloadavg -eq 1; then
 dnl Nothing to do ...
   AC_FUNC_GETLOADAVG
@@ -56,6 +56,7 @@ dnl Nothing to do ...
 elif test $kstat -eq 1;  then
   AC_MSG_CHECKING(function to use for lavg* options)  
   LIBS="$LIBS -lkstat"
+  LIBOBJS="$LIBOBJS getloadavg.o"
   AC_DEFINE_UNQUOTED(HAVE_KSTAT, 1)
   AC_MSG_RESULT(kstat)
 else
