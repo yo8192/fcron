@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.17 2000-06-25 20:07:17 thib Exp $ */
+ /* $Id: job.c,v 1.18 2000-06-28 14:01:18 thib Exp $ */
 
 #include "fcron.h"
 
@@ -215,11 +215,11 @@ end_job(CL *line, int status, int mailfd, short mailpos)
     char *m;
 
 
-    if ( is_mail(line->cl_option) &&
-	 ( lseek(mailfd, 0, SEEK_END) - strlen (line->cl_shell) ) > mailpos ) {
-	    /* an output exit : we will mail it */
-	    mail_output = 1;
-    }
+    if (is_mailzerolength(line->cl_option) || (
+	(is_mail(line->cl_option) &&
+	 (lseek(mailfd, 0, SEEK_END) - strlen (line->cl_shell) ) > mailpos)) )
+	/* an output exit : we will mail it */
+	mail_output = 1;
     else
 	/* no output */
 	mail_output = 0;
@@ -234,7 +234,7 @@ end_job(CL *line, int status, int mailfd, short mailpos)
 		line->cl_shell, WEXITSTATUS(status), m);
     else if (WIFSIGNALED(status))
 	error("Job `%s' terminated due to signal %d%s",
-		 line->cl_shell, WTERMSIG(status), m);
+	      line->cl_shell, WTERMSIG(status), m);
     else /* is this possible? */
 	error("Job `%s' terminated abnormally %s", line->cl_shell, m);
 
