@@ -2,9 +2,9 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.18 2000-12-15 17:47:48 thib Exp $
+# $Id: boot-install,v 1.19 2001-01-04 15:50:15 thib Exp $
 
-# take 4 arguments : the name of the BSD-like install program
+# take 4 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory, the value of DEBUG
 #                    and the value of FCRONTABS
 
@@ -80,7 +80,7 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
       read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
       done
     if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-      $1 -c -m 755 -o root script/sysVinit-launcher $ROOTDIR/init.d/fcron
+      $1 -c -m 755 script/sysVinit-launcher $ROOTDIR/init.d/fcron
       if test $DEBUG -eq 1; then
 	cat $ROOTDIR/init.d/fcron | sed 's: -b: -b -d:' >$ROOTDIR/init.d/fcron2
 	mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
