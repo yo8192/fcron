@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.20 2002-11-17 13:14:40 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.21 2003-07-14 10:56:53 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -18,13 +18,21 @@ A copy of the license is included in gfdl.sgml.
 people from doing the same thing. You can send me some propositions as
 well.</para>
     <itemizedlist>
+	    <listitem>
+		<para>add psgml-docbook-dtd.cache, psgml-ecat.file to RCS & CVS</para>
+	    </listitem>
+	    <listitem>
+		<para>mail of wohler@newt.com</para>
+	    </listitem>
 	<listitem>
-	    <para>put save_one_file() in save.c (make a single function, instead of 3 different)</para>
+	    <para>crash when /var is full ???</para>
 	</listitem>
-	<listitem>
-	    <para>make announce email GPG signed and include the MD5 checksum
-of the source archive.</para>
-	</listitem>
+        <listitem>
+            <para>problem with daylight savings ? ("already running" ...) (cf. Nick's mails -- Warning : he has a new address))</para>
+        </listitem>
+	    <listitem>
+		<para>add a new FAQ entry : what should be done to completely replace vixie cron by fcron ? Are there some incompatibilities ?</para>
+	    </listitem>
 	<listitem>
 	    <para>bug fix : makewhatis does not work correctly with fcron 2.9.0
 	    and following</para>
@@ -35,11 +43,14 @@ of the source archive.</para>
 	</listitem>
 	<listitem>
 	    <para>PAM support (included in fcron, but needs more tests by people 
-using PAM - not implemented in fcrondyn)</para>
+using PAM - not implemented in fcrondyn : is it needed if fcrondyn anyway ?)</para>
 	</listitem>
 	<listitem>
 	    <para>implement more commands for fcrondyn, and make it more secure
 and reliable</para>
+	</listitem>
+	<listitem>
+	    <para>add a timezone option instead of the tzdiff (so it would look like !timezone(europe/paris)) (?)</para>
 	</listitem>
 	<listitem>
 	    <para>For environment settings, make a var substitution.</para>
@@ -52,7 +63,7 @@ not be run again (in case of an error, etc...).</para>
 	    <para>add a system of modules : at startup, fcron loads some modules
 (.so files). Then, when fcron should run the job, it calls a function of the
 module, and let it manage the job (threads ?). (do linux dlopen(), etc exist on
-other systems ?).</para>
+other systems ? - yes : thanks Harring ;) dlopen exists on all POSIX system - even windoze - abait it does not use the same insterface of function calls. But it can be easily implemented to port to another system.).</para>
 	</listitem>
 	<listitem>
 	    <para>(related to the system of modules ? create a kind of dependencies ?)
@@ -67,6 +78,13 @@ to run some jobs on a laptop only if it is on AC power.</para>
 restart it (SIGCONT) when the lavg has decreased.</para>
 	</listitem>
 	<listitem>
+	    <para>Add a timeout for task completion : if a task takes more than
+a specified timeout, then start another script with the initial task PID as argument. 
+That would allow a kill with different signals (-HUP, -TERM -STOP, .... or 
+any other action like sending a mail to sysadmin to alert him/her that a task is taking 
+too much time and that he has to have a look at it.) </para>
+	</listitem>
+	<listitem>
 	    <para>Add a directory similar to xinet.d or logrotate.d
  to add job entries (?).</para>
 	</listitem>
@@ -78,6 +96,16 @@ restart it (SIGCONT) when the lavg has decreased.</para>
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
-sgml-default-dtd-file: "fcron-doc.ced"
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:lower
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:4
+sgml-indent-data:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
 End:
 -->
