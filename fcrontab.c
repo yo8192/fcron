@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.16 2000-09-15 20:17:12 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.17 2000-11-10 17:34:02 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.16 2000-09-15 20:17:12 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.17 2000-11-10 17:34:02 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -65,7 +65,12 @@ char debug_opt = 0;       /* set to 1 if we are in debug mode */
 #endif
 
 char *user = NULL;
-uid_t uid = 0 ;
+uid_t uid = 0;
+uid_t asuid = 0;
+gid_t asgid = 0;
+uid_t fcrontab_uid = 0;
+gid_t fcrontab_gid = 0;
+char u_opt = 0;
 char  *cdir = FCRONTABS;
 
 char need_sig = 0;           /* do we need to signal fcron daemon */
@@ -245,9 +250,20 @@ copy(char *orig, char *dest)
     FILE *from = NULL, *to = NULL;
     char c;
 
-    if ( (from = fopen(orig, "r")) == NULL
-	 || (to = fopen(dest, "w")) == NULL) {
-	error_e("copy");
+    if (uid != 0 && setuid(uid) < 0)
+	die_e("setuid(uid)");
+
+    if ( (from = fopen(orig, "r")) == NULL) {
+	error_e("copy: orig");
+	return ;
+    }
+    if (uid != 0 && setuid(fcrontab_uid) < 0) {
+	fclose(from);
+	die_e("setuid(fcrontab_uid)");
+    }
+
+    if ((to = fopen(dest, "w")) == NULL) {
+	error_e("copy: dest");
 	return ;
     }
 
@@ -412,6 +428,10 @@ edit_file(char *buf)
 	
     sprintf(tmp, "/tmp/fcrontab.%d", getpid());
 
+    /* create a temp file with user's permissions */
+    if (uid != 0 && setuid(uid) != 0 ) 
+  	die_e("Could not change uid"); 
+
     if ( (file = open(tmp, O_CREAT|O_EXCL|O_WRONLY, 0600)) == -1 ) {
 	error_e("could not create file %s", tmp);
 	goto exiterr;
@@ -420,11 +440,13 @@ edit_file(char *buf)
 	error_e("could not fdopen");
 	goto exiterr;
     }
+    if (uid != 0 && setuid(fcrontab_uid) != 0 ) 
+  	die_e("Could not change uid"); 
 
     /* copy user's fcrontab (if any) to a temp file */
     if ( (f = fopen(buf, "r")) == NULL ) {
 	if ( errno != ENOENT ) {
-	    error_e("could not open file %s", buf);
+	    error_e("could not open file %s uid:%d euid:%d", buf, getuid(), geteuid());
 	    goto exiterr;
 	}
 	else
@@ -438,11 +460,18 @@ edit_file(char *buf)
 	fclose(f);
     }
 
-    if ( fchown(file, getuid(), getgid()) != 0 ) {
-	error_e("could not chown %s", tmp);
-	goto exiterr;
+    /* if root has given -u option, chown the file in order to be editable
+     * by the user given with -u option */
+    if (u_opt == 1) {
+	/* we need to have euid set to root */
+	if (uid == 0 && setreuid(-1, 0) != 0)
+	    die_e("Could not change euid to root");	
+	if ( fchown(file, asuid, asgid) != 0 )
+	    die_e("Could not chown %s", tmp);
+	if (uid == 0 && setreuid(0, fcrontab_uid) != 0)
+	    die_e("Could not change euid to root");	
     }
-    
+
     fclose(fi);
     close(file);
 
@@ -458,8 +487,16 @@ edit_file(char *buf)
 	switch ( pid = fork() ) {
 	case 0:
 	    /* child */
-	    if (setuid(getuid()) < 0) {
-		error_e("setuid(getuid())");
+	    if (uid == 0)
+		/* we need to become root to perform the gid and uid changes */
+		if (setreuid(0, 0) != 0)
+		    error_e("setreuid(0, 0)");
+  	    if (setregid(asgid, asgid) < 0) {
+  		error_e("setregid(gid, gid)");
+  		goto exiterr;
+  	    }
+	    if (setreuid(asuid, asuid) < 0) {
+		error_e("setreuid(uid, uid)");
 		goto exiterr;
 	    }
 	    execlp(editor, editor, tmp, NULL);
@@ -481,6 +518,18 @@ edit_file(char *buf)
 	    fprintf(stderr, "Editor exited abnormally:"
 		    " fcrontab is unchanged.\n");
 	    goto exiterr;
+	}
+
+	/* if root has given -u option, chown the file in order to be editable
+	 * by the user given with -u option */
+	if (u_opt == 1) {
+	    /* we need to have euid set to root */
+	    if (uid == 0 && setreuid(-1, 0) != 0)
+		die_e("Could not change euid to root");	
+	    if ( chown(tmp, fcrontab_uid, fcrontab_gid) != 0 )
+		die_e("Could not chown %s", tmp);
+	    if (uid == 0 && setreuid(0, fcrontab_uid) != 0)
+		die_e("Could not change euid to root");	
 	}
 
 	/* check if file has been modified */
@@ -551,9 +600,13 @@ install_stdin(void)
     char tmp[FNAME_LEN];
     register char c;
 	    	    
+    /* create a temp file with user's permissions */
+    if (uid != 0 && setuid(uid) < 0)
+	die_e("setuid(uid)");
+
     sprintf(tmp, "/tmp/fcrontab.%d", getpid());
     if( (tmp_file = fopen(tmp, "w")) == NULL )
-	fprintf(stderr, "Could not open '%s': %s\n", tmp,
+	fprintf(stderr, "Could not open2 '%s': %s\n", tmp,
 		strerror(errno));
 
     while ( (c = getc(stdin)) != EOF )
@@ -561,8 +614,8 @@ install_stdin(void)
 
     fclose(tmp_file);
 
-    if ( chown(tmp, getuid(), getgid()) != 0 ) {
-	error_e("could not chown %s", tmp);
+    if (uid != 0 && setuid(fcrontab_uid) < 0) {
+	error_e("setuid(fcrontab_uid)");
 	goto exiterr;
     }
 
@@ -586,6 +639,10 @@ reinstall(char *buf)
 
     explain("reinstalling %s's fcrontab", user);
 
+      /* create a temp file with user's permissions */
+/*      if (uid != 0 && setuid(uid) < 0) */
+/*  	die_e("setuid(uid)"); */
+
     if ( (i = open(buf, O_RDONLY)) < 0) {
 	if ( errno == ENOENT ) {
 	    fprintf(stderr, "Could not reinstall: user %s has no fcrontab\n",
@@ -597,6 +654,10 @@ reinstall(char *buf)
 
 	exit (EXIT_ERR);
     }
+/*      if (uid != 0 && setuid(fcrontab_uid) < 0) { */
+/*  	close(i); */
+/*  	die_e("setuid(fcrontab_uid)"); */
+/*      } */
 
     close(0); dup2(i, 0);
     close(i);
@@ -689,12 +750,16 @@ parseopt(int argc, char *argv[])
 	    fprintf(stderr, "Could not get user name.\n");
 	    xexit(EXIT_ERR);
 	}
+	asuid = getuid();
+	asgid = getgid();
     }
     else {
 	struct passwd *pass;
 	if ( ! (pass = getpwnam(user)) )
 	    die("user '%s' is not in passwd file. Aborting.", user);
-	uid = pass->pw_uid;
+	asuid = pass->pw_uid;
+	asgid = pass->pw_gid;
+	u_opt = 1;
     }
 
     if ( ! is_allowed(user) ) {
@@ -711,6 +776,7 @@ parseopt(int argc, char *argv[])
 int
 main(int argc, char **argv)
 {
+    struct passwd *pass;
 
     memset(buf, 0, sizeof(buf));
     memset(file, 0, sizeof(file));
@@ -721,12 +787,19 @@ main(int argc, char **argv)
     /* interpret command line options */
     parseopt(argc, argv);
 
-    if ( seteuid(0) != 0 )
-	die_e("Could not set uid to root");
-    if ( setegid(0) != 0 )
-	die_e("Could not set gid to root");
+    uid = getuid();
 
-    /* this program is seteuid root : we set default permission mode
+    if ( ! (pass = getpwnam(USERNAME)) )
+	die("user '%s' is not in passwd file. Aborting.", USERNAME);
+    fcrontab_uid = pass->pw_uid;
+    fcrontab_gid = pass->pw_gid;
+    if (uid != 0 && setuid(fcrontab_uid) != 0 ) 
+  	die_e("Could not change uid to " USERNAME); 
+/*      if (setgid(fcrontab_gid) != 0) */
+/*    	die_e("Could not change gid to " GROUPNAME);  */
+	
+
+    /* this program is seteuid : we set default permission mode
      * to  600 for security reasons */
     umask(066);
 

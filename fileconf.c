@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.22 2000-11-02 10:57:43 thib Exp $ */
+ /* $Id: fileconf.c,v 1.23 2000-11-10 17:35:00 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -47,6 +47,7 @@ char *file_name;
 int line;
 extern char *user;
 extern uid_t uid;
+extern uid_t fcrontab_uid;
 
 /* warning : all names must have the same length */
 const char *dows_ary[] = {
@@ -165,13 +166,23 @@ read_file(char *filename, char *user)
     /* open file */
 
     /* check if user is allowed to read file */
+    /* create a temp file with user's permissions */
+    if (uid != 0 && setuid(uid) < 0)
+	die_e("setuid(uid)");
+
     if ( access(file_name, R_OK) != 0 )
 	die_e("User %s can't read file '%s'", user, file_name);
     else if ( (file = fopen(file_name, "r")) == NULL ) {
-	fprintf(stderr, "Could not open '%s': %s\n", file_name,
+	fprintf(stderr, "Could not open3 '%s': %s\n", file_name,
 		strerror(errno));
 	return ERR;
     }
+    if (setuid(fcrontab_uid) < 0) {
+	fclose(file);
+	error_e("setuid(fcrontab_uid)");	
+	return ERR;
+    }
+
 
     Alloc(cf, CF);
     default_line.cl_file = cf;
@@ -1132,8 +1143,12 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	if (debug_opt)
 	    fprintf(stderr, " %d-%d/%d", start, stop, step);
 
-	for (i = start;  i <= stop;  i += step)
-	    bit_set(ary, i);
+	if (start < stop)
+	    for (i = start;  i <= stop;  i += step)
+		bit_set(ary, i);
+	else
+	    for (i = start;  i >= stop;  i -= step)
+		bit_set(ary, i);
 
 	/* finally, remove unwanted values */
 	while ( *ptr == '~' ) {
