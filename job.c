@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.3 2000-05-16 19:53:47 thib Exp $ */
+ /* $Id: job.c,v 1.4 2000-05-22 17:37:39 thib Exp $ */
 
 #include "fcron.h"
 
@@ -164,12 +164,13 @@ run_job(CF *file, CL *line)
 
 	////////
 	debug("run job - parent");
-	////////t
+	////////
 
 	line->cl_pid = pid;
 
 	////////////
-	debug("    cf_running: %d", file->cf_running);
+	debug("   cf_running: %d", file->cf_running);
+	///////////
 
 	file->cf_running += 1;
 
@@ -186,6 +187,10 @@ end_job(CF *file, CL *line, int status)
 
     char mail_output;
     char *m;
+
+//////
+    debug("   end_job");
+//////
 
     if ( lseek(line->cl_mailfd, 0, SEEK_END) > line->cl_mailpos ) {
 	if ( file->cf_mailto != NULL && file->cf_mailto[0] == '\0' )
@@ -232,6 +237,9 @@ launch_mailer(CF *file, CL *line)
 {
     char *mailto = NULL;
 
+////////
+    debug("   launch mailer");
+////////
     switch ( line->cl_mailpid = fork() ) {
     case 0:
 	/* child */
@@ -275,6 +283,10 @@ void
 end_mailer(CL *line, int status)
     /* take care of a finished mailer */
 {
+////////
+    debug("   end mailer");
+////////
+
     if (WIFEXITED(status) && WEXITSTATUS(status)!=0)
 	error("Tried to mail output of job `%s', "
 		 "but mailer process (" SENDMAIL ") exited with status %d",
