@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.47 2001-08-20 20:01:43 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.48 2001-09-12 13:38:05 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,10 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.47 2001-08-20 20:01:43 thib Exp $";
+#include "allow.h"
+#include "fileconf.h"
+
+char rcs_info[] = "$Id: fcrontab.c,v 1.48 2001-09-12 13:38:05 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -74,7 +77,7 @@ gid_t fcrontab_gid = 0;
 
 char need_sig = 0;           /* do we need to signal fcron daemon */
 
-char *orig_dir = NULL;
+char orig_dir[PATH_LEN];
 CF *file_base = NULL;
 char buf[FNAME_LEN];
 char file[FNAME_LEN];
@@ -84,6 +87,10 @@ char *prog_name = NULL;
 char foreground = 1;
 pid_t daemon_pid = 0;
 
+#ifdef HAVE_LIBPAM
+pam_handle_t *pamh = NULL;
+const struct pam_conv apamconv = { NULL };
+#endif
 
 void
 info(void)
@@ -152,6 +159,11 @@ xexit(int exit_val)
 	}
     }
 
+#ifdef HAVE_LIBPAM
+    pam_setcred(pamh, PAM_DELETE_CRED | PAM_SILENT);
+    pam_end(pamh, pam_close_session(pamh, PAM_SILENT));
+#endif
+
     exit(exit_val);
 
 }
@@ -162,7 +174,7 @@ copy(char *orig, char *dest)
     /* copy orig file to dest */
 {
     FILE *from = NULL, *to = NULL;
-    char c;
+    int c;
 
     if ( (from = fopen(orig, "r")) == NULL) {
 	error_e("copy: orig");
@@ -315,7 +327,7 @@ void
 list_file(char *file)
 {
     FILE *f = NULL;
-    char c;
+    int c;
 
     explain("listing %s's fcrontab", user);
 
@@ -351,7 +363,7 @@ edit_file(char *buf)
     char *tmp_str;
     FILE *f, *fi;
     int file = 0;
-    char c;
+    int c;
     char correction = 0;
     short return_val = EXIT_OK;
 
@@ -537,7 +549,7 @@ install_stdin(void)
     int tmp_fd = 0;
     FILE *tmp_file = NULL;
     char *tmp_str = NULL;
-    register char c;
+    register int c;
     short return_val = EXIT_OK;
 	    	    
     tmp_fd = temp_file(&tmp_str);
@@ -582,7 +594,7 @@ reinstall(char *buf)
 	    fprintf(stderr, "Could not open \"%s\": %s\n", buf,
 		    strerror(errno));
 
-	exit (EXIT_ERR);
+	xexit(EXIT_ERR);
     }
 
     close(0); dup2(i, 0);
@@ -597,7 +609,7 @@ parseopt(int argc, char *argv[])
   /* set options */
 {
 
-    char c;
+    int c;
     extern char *optarg;
     extern int optind, opterr, optopt;
     struct passwd *pass;
@@ -754,6 +766,15 @@ int
 main(int argc, char **argv)
 {
 
+#ifdef HAVE_LIBPAM
+    int    retcode = 0;
+    const char * const * env;
+    char *a_pam_user;
+#endif
+#ifdef USE_SETE_ID
+    struct passwd *pass;
+#endif
+
     memset(buf, 0, sizeof(buf));
     memset(file, 0, sizeof(file));
 
@@ -763,35 +784,59 @@ main(int argc, char **argv)
     uid = getuid();
 
     /* get current dir */
-    if ( (orig_dir = getcwd(NULL, 0)) == NULL )
-	error_e("getcwd");
+    if ( getcwd(orig_dir, sizeof(orig_dir)) == NULL )
+	die_e("getcwd");
 
     /* interpret command line options */
     parseopt(argc, argv);
 
 #ifdef USE_SETE_ID
-    {
-	struct passwd *pass;
-	if ( ! (pass = getpwnam(USERNAME)) )
-	    die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
-	fcrontab_uid = pass->pw_uid;
-	fcrontab_gid = pass->pw_gid;
+    if ( ! (pass = getpwnam(USERNAME)) )
+	die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
+    fcrontab_uid = pass->pw_uid;
+    fcrontab_gid = pass->pw_gid;
 
-	if (uid != fcrontab_uid)
-	    if (seteuid(fcrontab_uid) != 0) 
-		die_e("Couldn't change euid to fcrontab_uid[%d]",fcrontab_uid);
-	/* change directory */
-	if (chdir(fcrontabs) != 0) {
-	    error_e("Could not chdir to %s", fcrontabs);
-	    xexit (EXIT_ERR);
-	}
-	/* get user's permissions */
-	if (seteuid(uid) != 0) 
-	    die_e("Could not change euid to %d", uid); 
-	if (setegid(fcrontab_gid) != 0) 
-	    die_e("Could not change egid to " GROUPNAME "[%d]", fcrontab_gid); 
+#ifdef HAVE_LIBPAM
+    /* Open PAM session for the user and obtain any security
+       credentials we might need */
+
+    retcode = pam_start("fcron", pass->pw_name, &apamconv, &pamh);
+    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM");
+    retcode = pam_acct_mgmt(pamh, PAM_SILENT);
+    if (retcode != PAM_SUCCESS) 
+	die_pame(pamh, retcode, "Could not init PAM account management");
+    retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED | PAM_SILENT);
+    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not set PAM credentials");
+    retcode = pam_open_session(pamh, PAM_SILENT);
+    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not open PAM session");
+
+    env = (const char * const *) pam_getenvlist(pamh);
+    while (env && *env) {
+	if (putenv((char*) *env)) die_e("Could not copy PAM environment");
+	env++;
     }
-#else
+
+    /* Close the log here, because PAM calls openlog(3) and
+       our log messages could go to the wrong facility */
+    xcloselog();
+#endif /* USE_PAM */
+
+    if (uid != fcrontab_uid)
+	if (seteuid(fcrontab_uid) != 0) 
+	    die_e("Couldn't change euid to fcrontab_uid[%d]",fcrontab_uid);
+    /* change directory */
+    if (chdir(fcrontabs) != 0) {
+	error_e("Could not chdir to %s", fcrontabs);
+	xexit (EXIT_ERR);
+    }
+    /* get user's permissions */
+    if (seteuid(uid) != 0) 
+	die_e("Could not change euid to %d", uid); 
+    if (setegid(fcrontab_gid) != 0) 
+	die_e("Could not change egid to " GROUPNAME "[%d]", fcrontab_gid); 
+
+#else /* USE_SETE_ID */
+
     if (setuid(0) != 0 ) 
 	die_e("Could not change uid to 0"); 
     if (setgid(0) != 0)
@@ -801,7 +846,7 @@ main(int argc, char **argv)
 	error_e("Could not chdir to %s", fcrontabs);
 	xexit (EXIT_ERR);
     }
-#endif
+#endif /* USE_SETE_ID */
     
     /* this program is seteuid : we set default permission mode
      * to  640 for security reasons */
