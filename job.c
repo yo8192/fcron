@@ -22,17 +22,17 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.53 2002-09-07 13:07:48 thib Exp $ */
+ /* $Id: job.c,v 1.54 2002-10-06 16:49:02 thib Exp $ */
 
 #include "fcron.h"
 
 #include "job.h"
 
 void sig_dfl(void);
-void end_job(CL *line, int status, FILE *mailf, short mailpos);
-void end_mailer(CL *line, int status);
+void end_job(cl_t *line, int status, FILE *mailf, short mailpos);
+void end_mailer(cl_t *line, int status);
 #ifdef HAVE_LIBPAM
-void die_mail_pame(CL *cl, int pamerrno, struct passwd *pas, char *str);
+void die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str);
 #endif
 
 #ifndef HAVE_SETENV
@@ -43,7 +43,7 @@ char env_shell[PATH_LEN];
 
 #ifdef HAVE_LIBPAM
 void
-die_mail_pame(CL *cl, int pamerrno, struct passwd *pas, char *str)
+die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str)
 /* log an error in syslog, mail user if necessary, and die */
 {
     char buf[MAX_MSG];
@@ -83,7 +83,7 @@ die_mail_pame(CL *cl, int pamerrno, struct passwd *pas, char *str)
 #endif
 
 int
-change_user(struct CL *cl)
+change_user(struct cl_t *cl)
 {
     struct passwd *pas;
 #ifdef HAVE_LIBPAM
@@ -174,7 +174,7 @@ sig_dfl(void)
 
 
 FILE *
-create_mail(CL *line, char *subject) 
+create_mail(cl_t *line, char *subject) 
     /* create a temp file and write in it a mail header */
 {
     /* create temporary file for stdout and stderr of the job */
@@ -202,12 +202,12 @@ create_mail(CL *line, char *subject)
 }
 
 void 
-run_job(struct exe *exeent)
+run_job(struct exe_t *exeent)
     /* fork(), redirect outputs to a temp file, and execl() the task */ 
 {
 
     pid_t pid;
-    CL *line = exeent->e_line;
+    cl_t *line = exeent->e_line;
 
     /* prepare the job execution */
     switch ( pid = fork() ) {
@@ -368,14 +368,14 @@ run_job(struct exe *exeent)
     default:
 	/* parent */
 
-	exeent->e_pid = pid;
+	exeent->e_ctrl_pid = pid;
 	line->cl_file->cf_running += 1;
     }
 
 }
 
 void 
-end_job(CL *line, int status, FILE *mailf, short mailpos)
+end_job(cl_t *line, int status, FILE *mailf, short mailpos)
     /* if task have made some output, mail it to user */
 {
 
@@ -437,7 +437,7 @@ end_job(CL *line, int status, FILE *mailf, short mailpos)
 }
 
 void
-launch_mailer(CL *line, FILE *mailf)
+launch_mailer(cl_t *line, FILE *mailf)
     /* mail the output of a job to user */
 {
 #ifdef SENDMAIL
