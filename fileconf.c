@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.73 2004-04-29 19:29:36 thib Exp $ */
+ /* $Id: fileconf.c,v 1.74 2004-07-11 18:08:08 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -341,7 +341,10 @@ read_env(char *ptr, cf_t *cf)
 	Alloc(env, env_t);	
 
 	strncat(name, "=", sizeof(name) - strlen(name) - 1);
-	env->e_val = strdup2( strncat(name,val,sizeof(name)-strlen(name)-1) );
+	name[sizeof(name)-1]='\0';
+	strncat(name,val,sizeof(name)-strlen(name)-1);
+	name[sizeof(name)-1]='\0';
+	env->e_val = strdup2( name );
 	env->e_next = cf->cf_env_base;
 	cf->cf_env_base = env;
     }
