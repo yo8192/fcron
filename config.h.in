@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.10 2000-06-22 12:30:55 thib Exp $ */
+ /* $Id: config.h.in,v 1.11 2000-06-22 15:35:23 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -31,11 +31,6 @@
 
 /* ****************************************************************** */
 /* beginning of configurable stuff ********************************** */
-
-
-/* NOTE : if you change anything here, check if the doc should not
-          be updated
-*/
 
 
 /* *** options which can be set in Makefile *** */
@@ -74,6 +69,7 @@
 
 /* *** paths *** */
 
+/* fcron allow and deny file are located in directory ETC (see below) */
 #define FCRON_ALLOW      "fcron.allow"
 
 #define FCRON_DENY       "fcron.deny"
@@ -125,6 +121,10 @@
 
 
 /* Syslog facility and priorities messages will be logged to (see syslog(3)) */
+
+/* NOTE : if you change anything here, check if the doc should not
+          be updated
+*/
 #define SYSLOG_FACILITY LOG_CRON
 #define EXPLAIN_LEVEL LOG_NOTICE  /* informational messages */
 #define WARNING_LEVEL LOG_WARNING /* warning messages */
