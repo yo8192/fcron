@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.13 2003-12-25 23:00:07 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.14 2004-01-29 10:37:30 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>
@@ -541,10 +541,11 @@ system load average values.</para>
 		<varlistentry id="fcrontab.5.mailto">
 		    <term>mailto</term>
 		    <listitem>
-			<para><emphasis><type>user-name</type></emphasis>(<constant>name 
+			<para><emphasis><type>email-address</type></emphasis>(<constant>name 
 of file's owner</constant>)</para>
 			<para>Mail output (if needed) to
-"<replaceable>user-name</replaceable>". A &optmailto; declared and empty (string
+"<replaceable>email-address</replaceable>". It can be either a single user-name
+or a fully qualified email address. A &optmailto; declared and empty (string
 "") is equivalent to "<token>mail(false)</token>".</para>
 			<para>&seealso; options &optmail;, &optforcemail;,
 &optnolog;.</para>
