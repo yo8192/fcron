@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.70 2001-06-03 10:57:40 thib Exp $
+# $Id: Makefile.in,v 1.71 2001-06-22 21:09:15 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -65,7 +65,7 @@ HEADERSCONV = $(HEADERSALL) $(SRCDIR)/convert-fcrontab.h
 RCSNOLOG=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\)
 REXP_MANPAGES=.*[158]
 
-all: fcron fcrontab convert-fcrontab
+all: fcron fcrontab convert-fcrontab files/fcron.conf
 
 fcron: $(OBJSD) $(HEADERSD)
 	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJSD)
@@ -86,6 +86,7 @@ install: all
 
 	$(SRCDIR)/script/user-group $(USERNAME) $(GROUPNAME) $(ANSWERALL)
 
+# check if the directories we use exist, and if not, create them
 	if test ! -d $(DESTSBIN); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTSBIN) ; fi
 	if test ! -d $(DESTBIN); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTBIN) ; fi
 	if test ! -d $(ETC); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(ETC) ; fi
@@ -94,11 +95,13 @@ install: all
 	if test ! -d $(DESTMAN)/man5; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man5 ; fi
 	if test ! -d $(DESTMAN)/man8; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man8 ; fi
 	if test ! -d $(DESTDOC)/fcron-$(VERSION); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION) ; fi
+# create the spool dir (and change its mode if it already exists)
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 770 -d $(FCRONTABS)
 
 	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 110 -s fcron $(DESTSBIN)
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrontab $(DESTBIN)
 	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.allow $(SRCDIR)/files/fcron.deny $(ETC)
+	test -f $(ETC)/fcron.conf || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.conf $(ETC)
 	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcron.8 $(DESTMAN)/man8
 	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcrontab.1 $(DESTMAN)/man1
 	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcrontab.5 $(DESTMAN)/man5
@@ -138,15 +141,18 @@ uninstall:
 
 clean:
 	rm -f *.o
-	rm -f fcron fcrontab convert-fcrontab
+	rm -f fcron fcrontab convert-fcrontab files/fcron.conf
 
 vclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
 	rm -f config.log config.status config.h config.cache Makefile
 
 
+files/fcron.conf: files/fcron.conf.in config.h
+	script/gen-in.pl files/fcron.conf.in files/fcron.conf 
+
 %.html: %.in Makefile config.h
-	script/gen-manpage.pl $*.in $*
+	script/gen-in.pl $*.in $*
 	groff -Thtml -mandoc $* > ./tmp
 	sed "s:<body.*>:<body BGCOLOR="\#000000" TEXT="\#FFFFFF" \
 		LINK="\#0FA0FF" VLINK="\#B000B0" ALINK="\#FF0000"> \
