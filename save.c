@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.c,v 1.4 2002-11-01 18:17:44 thib Exp $ */
+ /* $Id: save.c,v 1.5 2002-11-17 13:13:55 thib Exp $ */
 
 #include "global.h"
 #include "save.h"
@@ -35,7 +35,8 @@ int save_str(int fd, short int type, char *str, char *write_buf, int *buf_used);
 int save_strn(int fd, short int type, char *str, short int size, char *write_buf,
 	      int *buf_used);
 int save_lint(int fd, short int type, long int value, char *write_buf, int *buf_used);
-extern int save_one_file(cf_t *file, char *filename);
+int save_one_file(cf_t *file, char *filename, uid_t own_uid, gid_t own_gid,
+		  time_t save_date);
 
 
 int
@@ -291,7 +292,41 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 
 
 int
-save_file_safe(cf_t *file, char *final_path, char *prog_name)
+save_one_file(cf_t *file, char *filename, uid_t own_uid, gid_t own_gid, time_t save_date)
+/* save a given file to disk */
+{
+    int fd;
+
+    /* open file */
+    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR|S_IWUSR);
+    if ( fd == -1 ) {
+	error_e("Could not open %s", filename);
+	return ERR;
+    }
+
+    if (fchown(fd, own_uid, own_gid) != 0) {
+	error_e("Could not fchown %s to uid:%d gid:%d", filename, own_uid, own_gid);
+	close(fd);
+	remove(filename);
+	return ERR;
+    }
+
+    /* save file : */
+    if ( write_file_to_disk(fd, file, save_date) == ERR ) {
+	close(fd);
+	remove(filename);
+	return ERR;
+    }
+
+    close(fd);
+
+    return OK;
+}
+
+
+int
+save_file_safe(cf_t *file, char *final_path, char *prog_name, uid_t own_uid,
+	       gid_t own_gid, time_t save_date)
 /* save a file to a temp path, and then rename it (safely) to avoid loss of data
  * if a system crash, hardware failure, etc happens. */
 {
@@ -305,15 +340,14 @@ save_file_safe(cf_t *file, char *final_path, char *prog_name)
 	sizeof(temp_path)-sizeof(tmp_str) : final_path_len;
     strcpy(&temp_path[temp_path_index], ".tmp");
 
-    /* save_one_file() is defined in conf.c for fcron, fileconf.c for fcrondyn */
-    if ( save_one_file(file, temp_path) == OK ) {
+    if ( save_one_file(file, temp_path, own_uid, own_gid, save_date) == OK ) {
 	if ( rename(temp_path, final_path) != 0 ) {
 	    error_e("Cannot rename %s to %s", temp_path, final_path);
 	    error("%s will try to save the name to its definitive filename "
 		  "directly.", prog_name);
 	    error("If there is an error, root may consider to replace %s (which is "
 		  "a valid copy) by %s manually.", final_path, temp_path);
-	    if ( save_one_file(file, final_path) == ERR )
+	    if ( save_one_file(file, final_path, own_uid, own_gid, save_date) == ERR )
 		return ERR;
 	}
     }

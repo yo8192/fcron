@@ -21,14 +21,15 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.h,v 1.8 2002-11-01 18:17:59 thib Exp $ */
+ /* $Id: save.h,v 1.9 2002-11-17 13:14:02 thib Exp $ */
 
 #ifndef __SAVE_H__
 #define __SAVE_H__
 
 /* functions defined by save.c */
 extern int write_file_to_disk(int fd, struct cf_t *file, time_t time_date);
-extern int save_file_safe(cf_t *file, char *final_path, char *fcron_suffix);
+extern int save_file_safe(cf_t *file, char *final_path, char *prog_name, uid_t own_uid,
+			  gid_t own_gid, time_t save_date);
 
 
 /* here is the format fcron(tab) uses to save the fcrontabs :
