@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.29 2004-01-29 10:37:01 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.30 2004-04-29 19:38:52 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -16,9 +16,31 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 2.9.4 to 2.9.5</title>
 	 <listitem>
+	    <para>Ported to HP-UX (thanks go to Scott Tinsley)</para>
+	 </listitem>
+	 <listitem>
+	    <para>Merged patch from Russell Coker for new SE Linux.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Merged debian/ dir for debian package.</para>
+	 </listitem>
+	 <listitem>
 	    <para>Mail reports : put the same username in the To: field than 
 	       the one we give as recipient to the MTA. mailto can now also
 	       be a fully qualified email address.</para>
+	 </listitem>
+	 <listitem>
+	    <para>changed a log message : a job which has ended without error
+	    is reported has "completed" (which is more appropriated than "terminated").
+	    </para>
+	 </listitem>
+	 <listitem>
+	    <para>Fixed a bug which happened on Daylight Time Save change
+	       on some systems. It would make fcron run into a nasty infinite loop.
+	       Added a sanity check in set_nextexe() to avoid such things.</para>
+	 </listitem>
+	 <listitem>
+	    <para></para>
 	 </listitem>
       </itemizedlist>
 

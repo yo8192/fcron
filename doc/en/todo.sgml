@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.24 2004-01-29 10:36:51 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.25 2004-04-29 19:38:19 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -21,6 +21,9 @@ A copy of the license is included in gfdl.sgml.
       <sect2>
 	 <title>High priority</title>
 	 <itemizedlist>
+	    <listitem>
+	       <para>port to HP-UX : mails from Scott Tinsley : everything merged ?</para>
+	    </listitem>
 	    <listitem>
 	       <para>mails from B. Wohler : improve the doc + change (?)  the
 		  name of fcrondyn -> fcronc ?? </para>
@@ -74,8 +77,8 @@ A copy of the license is included in gfdl.sgml.
 		  should not be run again (in case of an error, etc...).</para>
 	    </listitem>
 	    <listitem>
-	       <para>Use directory notifications (?) (portable ?) (cf.
-		  dnotify)</para>
+	       <para>Use directory notifications (FAM), and support a fcrontab 
+	       and a cron.d as Vixie cron does.</para>
 	    </listitem>
 	    <listitem>
 	       <para>PAM support (included in fcron, but needs more tests by
@@ -118,10 +121,6 @@ A copy of the license is included in gfdl.sgml.
 		  like sending a mail to sysadmin to alert him/her that a task
 		  is taking too much time and that he has to have a look at it.)
 	       </para>
-	    </listitem>
-	    <listitem>
-	       <para>Add a directory similar to xinet.d or logrotate.d to add
-		  job entries (?).</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
