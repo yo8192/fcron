@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.7 2000-06-15 20:17:52 thib Exp $ */
+ /* $Id: global.h,v 1.8 2000-06-18 13:13:06 thib Exp $ */
 
 
 /* 
@@ -63,13 +63,9 @@
 
 
 /* macros */
-#define arysize(ary)	(sizeof(ary)/sizeof((ary)[0]))
-
 #define Alloc(ptr, type) \
-        if( (ptr = calloc(1, sizeof(type))) == NULL ) { \
-            fprintf(stderr, "Could not calloc."); \
-            exit(EXIT_ERR); \
-        }
+        if( (ptr = calloc(1, sizeof(type))) == NULL ) \
+            die_e("Could not calloc.");
 
 #define debug if(debug_opt) Debug
 
@@ -93,15 +89,15 @@ typedef struct CF {
 typedef struct CL {
     struct CL    *cl_next;
     struct CF    *cl_file;      /* the file in which the line is        */
-    char         option;        /* options for that line (see option.h) */
+    char         cl_option;     /* options for that line (see option.h) */
     char	 *cl_shell;	/* shell command			*/
     pid_t	 cl_pid;	/* running pid, 0, or armed (-1)        */
-    time_t       cl_nextexe;     /* time and date of the next execution */
-    short int    cl_remain;      /* remaining until next execution      */
-    time_t       cl_timefreq;    /* Run every n seconds                 */
-    short int    cl_runfreq;     /* Run once every n matches            */
+    time_t       cl_nextexe;    /* time and date of the next execution */
+    short int    cl_remain;     /* remaining until next execution      */
+    time_t       cl_timefreq;   /* Run every n seconds                 */
+    short int    cl_runfreq;    /* Run once every n matches            */
     /* see bitstring(3) man page for more details */
-    bitstr_t	 bit_decl(cl_mins, 60);  /* 0-59			*/
+    bitstr_t	 bit_decl(cl_mins, 60); /* 0-59			*/
     bitstr_t	 bit_decl(cl_hrs, 24);	/* 0-23				*/
     bitstr_t	 bit_decl(cl_days, 32);	/* 1-31				*/
     bitstr_t	 bit_decl(cl_mons, 12);	/* 0-11                 	*/
