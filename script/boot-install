@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.32 2001-04-29 22:23:44 thib Exp $
+# $Id: boot-install,v 1.33 2001-05-05 19:09:27 thib Exp $
 
 # take 6 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -388,7 +388,7 @@ else # test $NEED_UPDATE -eq 0
       if test "$FILE" != "$FCRONTABS/*"; then
         BASENAME=`basename $FILE` ; \
         FCRONTAB=`echo "$BASENAME" | \
-        sed "s|.*orig|| ; s|new.*|| ; s|fcrontab.sig|| ; s|rm.*||"` ; \
+        sed "s|.*orig|| ; s|fcrontab.sig|| ; s|rm.*||"` ; \
         ( test ! -z "$FCRONTAB" && $SRCDIR/convert-fcrontab $FCRONTAB ) \
             || echo -n ""; \
       fi
