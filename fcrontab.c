@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.56 2002-03-02 17:25:32 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.57 2002-07-19 19:33:14 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -47,7 +47,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.56 2002-03-02 17:25:32 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.57 2002-07-19 19:33:14 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -144,7 +144,9 @@ xexit(int exit_val)
     /* launch signal if needed and exit */
 {
     pid_t pid = 0;
+
     if ( need_sig == 1 ) {
+	
 	/* fork and exec fcronsighup */
 	switch ( pid = fork() ) {
 	case 0:
@@ -190,8 +192,14 @@ copy(char *orig, char *dest)
      * except for root. Root requires filesystem uid root for security
      * reasons */
 #ifdef USE_SETE_ID
-    if (asuid != ROOTUID && seteuid(fcrontab_uid) != 0)
-	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
+    if (asuid == ROOTUID) {
+	if (seteuid(ROOTUID) != 0)
+	    error_e("seteuid(ROOTUID)");
+    } 
+    else {
+    	if (seteuid(fcrontab_uid) != 0)
+	    error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
+    }
 #endif
     if ((to = fopen(dest, "w")) == NULL) {
 	error_e("copy: dest");
@@ -475,7 +483,7 @@ edit_file(char *buf)
 		close(fd);
 		goto exiterr;
 	    }
-	    if ( fchown(fd, ROOTUID, ROOGID) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ) {
+	    if ( fchown(fd, ROOTUID, ROOTGID) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ) {
 		fprintf(stderr, "Can't chown or chmod %s.\n", tmp_str);
 		close(fd);
 		goto exiterr;
@@ -788,7 +796,14 @@ parseopt(int argc, char *argv[])
 	    break;
 	    
 	case 'c':
-	    Set(fcronconf, optarg);
+	    if ( optarg[0] == '/' ) {
+		Set(fcronconf, optarg);
+	    }
+	    else {
+		char buf[PATH_LEN];
+		snprintf(buf, sizeof(buf), "%s/%s", orig_dir, optarg);
+		Set(fcronconf, buf);
+	    }
 	    break;
 
 	case ':':
@@ -965,9 +980,11 @@ main(int argc, char **argv)
 
 	    if ( *argv[file_opt] != '/' )
 		/* this is just the file name, not the path : complete it */
-		snprintf(file,sizeof(file),"%s/%s",orig_dir,argv[file_opt]);
-	    else
+		snprintf(file, sizeof(file), "%s/%s", orig_dir, argv[file_opt]);
+	    else {
 		strncpy(file, argv[file_opt], sizeof(file) - 1);
+		file[sizeof(file)-1] = '\0';
+	    }
 
 	    if (make_file(file) == OK)
 		xexit(EXIT_OK);
