@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.6 2000-06-11 13:17:29 thib Exp $ */
+ /* $Id: conf.c,v 1.7 2000-06-15 20:10:11 thib Exp $ */
 
 #include "fcron.h"
 
@@ -458,23 +458,15 @@ read_file(const char *file_name, CF *cf)
 
 	/* check if the task has not been stopped during execution */
 	if (cl->cl_pid > 0) {
-	    if (cl->cl_mailpid > 0) {
-		/* job has terminated normally, but mail has not
-		 * been sent */
-		warn("output of job '%s' has not been mailed "
-		     "due to daemon's stop", cl->cl_shell);
-		cl->cl_pid = cl->cl_mailfd = cl->cl_mailpid = 0;
-	    } else {
-		/* job has been stopped during execution :
-		 * launch it again */
-		warn("job '%s' has not terminated : will be executed"
-		     " again now.", cl->cl_shell);
-		/* we don't set cl_nextexe to 0 because this value is 
-		 * reserved to the entries based on frequency */
-		cl->cl_nextexe = 1;
-		insert_nextexe(cl);
-		cl->cl_pid = cl->cl_mailfd = cl->cl_mailpid = 0;
-	    }
+	    /* job has been stopped during execution :
+	     * launch it again */
+	    warn("job '%s' has not terminated : will be executed"
+		 " again now.", cl->cl_shell);
+	    /* we don't set cl_nextexe to 0 because this value is 
+	     * reserved to the entries based on frequency */
+	    cl->cl_nextexe = 1;
+	    insert_nextexe(cl);
+	    cl->cl_pid = 0;
 	}
 	    
 

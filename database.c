@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.8 2000-06-11 13:18:35 thib Exp $ */
+ /* $Id: database.c,v 1.9 2000-06-15 20:12:38 thib Exp $ */
 
 #include "fcron.h"
 
@@ -72,17 +72,14 @@ wait_chld(void)
     int status;
 
     ////////
-    debug("wait_chld");
+//    debug("wait_chld");
     ///////
 
     while ( (pid = wait3(&status, WNOHANG, NULL)) > 0 ) {
 	for (j = exe_base; j != NULL ; j = j->j_next) {
 	    if (pid < 0 || pid == j->j_line->cl_pid) {
-		end_job(j->j_line, status);
-		goto nextloop;
-	    }
-	    else if ( pid == j->j_line->cl_mailpid ) {
-		end_mailer(j->j_line, status);
+		j->j_line->cl_pid = 0;
+		j->j_line->cl_file->cf_running -= 1;
 
 		/* remove file from exe list */
 		if (jprev != NULL)
@@ -115,11 +112,9 @@ wait_all(int *counter)
     while ( (*counter > 0) && (pid = wait3(&status, 0, NULL)) > 0 ) {
 	for (j = exe_base; j != NULL ; j = j->j_next) {
 	    if (pid < 0 || pid == j->j_line->cl_pid) {
-		end_job(j->j_line, status);
-		goto nextloop;
-	    }
-	    else if ( pid == j->j_line->cl_mailpid ) {
-		end_mailer(j->j_line, status);
+
+		j->j_line->cl_pid = 0;
+		j->j_line->cl_file->cf_running -= 1;
 
 		/* remove file from exe list */
 		if (jprev != NULL)

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.6 2000-06-11 13:18:58 thib Exp $ */
+ /* $Id: fcron.h,v 1.7 2000-06-15 20:16:38 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -94,8 +94,6 @@ extern void save_file(CF *file_name, char *path);
 
 /* job.c */
 extern void run_job(CL *line);
-extern void end_job(CL *line, int status);
-extern void end_mailer(CL *line, int status);
 /* end of job.c */
 
 

@@ -22,14 +22,17 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.7 2000-06-11 13:19:17 thib Exp $ */
+ /* $Id: job.c,v 1.8 2000-06-15 20:18:15 thib Exp $ */
 
 #include "fcron.h"
 
 int temp_file(void);
 void xwrite(int fd, char *string);
-void launch_mailer(CL *line);
+void launch_mailer(CL *line, int mailfd);
 int change_user(const char *user, short dochdir);
+void sig_dfl(void);
+void end_job(CL *line, int status, int mailfd, short mailpos);
+void end_mailer(CL *line, int status);
 
 
 int
@@ -70,6 +73,15 @@ change_user(const char *user, short dochdir)
 }
 
 
+void
+sig_dfl(void)
+    /* set signals handling to its default */
+{
+	signal(SIGTERM, SIG_DFL);
+	signal(SIGCHLD, SIG_DFL);
+	signal(SIGHUP, SIG_DFL);
+	signal(SIGUSR1, SIG_DFL);
+}
 
 void 
 run_job(CL *line)
@@ -77,24 +89,7 @@ run_job(CL *line)
 {
 
     pid_t pid = 0;
-    char *shell = NULL;
-    char *home = NULL;
-    env_t *env = NULL;
     struct job *j = NULL;
-
-    /* create temporary file for stdout and stderr of the job */
-    line->cl_mailfd = temp_file();
-
-    /* write mail header */
-    xwrite(line->cl_mailfd,"To: ");
-    xwrite(line->cl_mailfd, line->cl_file->cf_user);
-    xwrite(line->cl_mailfd, "\nSubject: Output of fcron job: '");
-    xwrite(line->cl_mailfd, line->cl_shell);
-    xwrite(line->cl_mailfd,"'\n\n");
-    if ( ! line->cl_file->cf_mailpos ) 
-	line->cl_file->cf_mailpos = ( lseek(line->cl_mailfd, 0, SEEK_END)
-	    - strlen(line->cl_shell) );
-
 
     /* append job to the list of executed job */
     Alloc(j, job);
@@ -102,14 +97,27 @@ run_job(CL *line)
     j->j_next = exe_base;
     exe_base = j;
 
+    /* prepare the job execution */
     switch ( pid = fork() ) {
+    case -1:
+	error_e("Fork error : could not exec '%s'", line->cl_shell);
+	break;
 
     case 0:
 	/* child */
+    {
+	char *shell = NULL;
+	char *home = NULL;
+	env_t *env = NULL;
+	int mailfd = 0;
+	short int mailpos = 0;	/* 'empty mail file' size */
+	int status = 0;
 
 	foreground = 0;
 	if (change_user(line->cl_file->cf_user, 1) < 0)
 	    return ;
+
+	sig_dfl();
 
 	/* stdin is already /dev/null, setup stdout and stderr */
 	if ( close(1) != 0 )
@@ -120,14 +128,26 @@ run_job(CL *line)
 	if ( line->cl_file->cf_mailto != NULL &&
 	     strcmp(line->cl_file->cf_mailto, "") == 0 ) {
 
-	    if ( close(line->cl_mailfd) != 0 )
-		die_e("Can't close file descriptor %d", line->cl_mailfd);
-	    if ( (line->cl_mailfd = open("/dev/null", O_RDWR)) < 0 )
+	    if ( close(mailfd) != 0 )
+		die_e("Can't close file descriptor %d", mailfd);
+	    if ( (mailfd = open("/dev/null", O_RDWR)) < 0 )
 		die_e("open: /dev/null:");
 
 	}
+	else {
+	    /* create temporary file for stdout and stderr of the job */
+	    mailfd = temp_file();
 
-	if (dup2(line->cl_mailfd, 1) != 1 || dup2(line->cl_mailfd, 2) != 2)
+	    /* write mail header */
+	    xwrite(mailfd,"To: ");
+	    xwrite(mailfd, line->cl_file->cf_user);
+	    xwrite(mailfd, "\nSubject: Output of fcron job: '");
+	    xwrite(mailfd, line->cl_shell);
+	    xwrite(mailfd,"'\n\n");
+	    mailpos = ( lseek(mailfd, 0, SEEK_END) - strlen(line->cl_shell) );
+	}
+
+	if (dup2(mailfd, 1) != 1 || dup2(mailfd, 2) != 2)
 	    die_e("dup2() error");    /* dup2 also clears close-on-exec flag */
 
 	foreground = 1; 
@@ -155,35 +175,50 @@ run_job(CL *line)
 	    shell = SHELL;
 	}
 
+
+	/* now, run the job */
+	switch ( fork() ) {
+	case -1:
+	    error_e("Fork error : could not exec '%s'", line->cl_shell);
+	    break;
+
+	case 0:
+	    /* child */
+
 #ifdef CHECKJOBS
-	/* this will force to mail a message containing at least the exact
-	 * and complete command executed for each execution of all jobs */
-	debug("Execing '%s -c %s'", shell, line->cl_shell);
+	    /* this will force to mail a message containing at least the exact
+	     * and complete command executed for each execution of all jobs */
+	    debug("Execing '%s -c %s'", shell, line->cl_shell);
 #endif /* CHECKJOBS */
 
-	execl(shell, shell, "-c", line->cl_shell, NULL);
+	    execl(shell, shell, "-c", line->cl_shell, NULL);
 
-	/* execl returns only on error */
-	die_e("execl() '%s -c %s' error", shell, line->cl_shell);
+	    /* execl returns only on error */
+	    die_e("execl() '%s -c %s' error", shell, line->cl_shell);
 
-	/* execution never gets here */
+	    /* execution never gets here */
 
-    case -1:
-	error_e("Fork error : could not exec '%s'", line->cl_shell);
-	break;
+	default:
+	    /* parent */
+	    /* we use a while because an possible interruption by a signal */
+	    while ( (pid = wait3(&status, 0, NULL)) > 0) {
+		end_job(line, status, mailfd, mailpos);
+
+		/* execution never gets here */
+
+	    }
+	    
+	}
+    }
 
     default:
 	/* parent */
 
 	////////
-	debug("run job - parent");
+//	debug("run job - parent");
 	////////
 
 	line->cl_pid = pid;
-
-	////////////
-	debug("   cf_running: %d", line->cl_file->cf_running);
-	///////////
 
 	line->cl_file->cf_running += 1;
 
@@ -194,7 +229,7 @@ run_job(CL *line)
 }
 
 void 
-end_job(CL *line, int status)
+end_job(CL *line, int status, int mailfd, short mailpos)
     /* if task have made some output, mail it to user */
 {
 
@@ -205,8 +240,7 @@ end_job(CL *line, int status)
     debug("   end_job");
 //////
 
-    if ( ( lseek(line->cl_mailfd, 0, SEEK_END) - strlen (line->cl_shell) )
-	 > line->cl_file->cf_mailpos ) {
+    if ( ( lseek(mailfd, 0, SEEK_END) - strlen (line->cl_shell) ) > mailpos ){
 	if ( line->cl_file->cf_mailto != NULL &&
 	     line->cl_file->cf_mailto[0] == '\0' )
 	    /* there is a mail output, but it will not be mail */
@@ -231,23 +265,18 @@ end_job(CL *line, int status)
     else /* is this possible? */
 	error("Job `%s' terminated abnormally %s", line->cl_shell, m);
 
-    if (mail_output == 1) launch_mailer(line);
+    if (mail_output == 1) launch_mailer(line, mailfd);
 
     /* if MAILTO is "", temp file is already closed */
-    if ( mail_output != 2 && close(line->cl_mailfd) != 0 )
-	die_e("Can't close file descriptor %d", line->cl_mailfd);
+    if ( mail_output != 2 && close(mailfd) != 0 )
+	die_e("Can't close file descriptor %d", mailfd);
 
-    line->cl_pid = 0;
-
-    ////////////
-    debug("    cf_running: %d", line->cl_file->cf_running);
-
-    line->cl_file->cf_running -= 1;
+    exit(0);
 
 }
 
 void
-launch_mailer(CL *line)
+launch_mailer(CL *line, int mailfd)
     /* mail the output of a job to user */
 {
     char *mailto = NULL;
@@ -255,69 +284,27 @@ launch_mailer(CL *line)
 ////////
     debug("   launch mailer");
 ////////
-    switch ( line->cl_mailpid = fork() ) {
-    case 0:
-	/* child */
 
-	foreground = 0;
+    foreground = 0;
 
-	/* set stdin to the job's output */
-	if ( close(0) != 0 )
-	    die_e("Can't close file descriptor %d",0);
-	    
+    /* set stdin to the job's output */
+    if ( close(0) != 0 )
+	die_e("Can't close file descriptor %d",0);	    
 
-	if (dup2(line->cl_mailfd,0)!=0) die_e("Can't dup2()");
-	if (lseek(0,0,SEEK_SET)!=0) die_e("Can't lseek()");
+    if (dup2(mailfd,0)!=0) die_e("Can't dup2()");
+    if (lseek(0,0,SEEK_SET)!=0) die_e("Can't lseek()");
 
-	xcloselog();
+    xcloselog();
 
-	/* determine which will be the mail receiver */
-	if ( (mailto = line->cl_file->cf_mailto) == NULL )
-	    mailto = line->cl_file->cf_user;
+    /* determine which will be the mail receiver */
+    if ( (mailto = line->cl_file->cf_mailto) == NULL )
+	mailto = line->cl_file->cf_user;
 
-	/* change permissions */
-	if (change_user(line->cl_file->cf_user, 1) < 0)
-	    return ;
+    /* run sendmail with mail file as standard input */
+    execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, mailto, NULL);
+    die_e("Can't exec " SENDMAIL);
 
-	/* run sendmail with mail file as standard input */
-	execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, mailto, NULL);
-	die_e("Can't exec " SENDMAIL);
-	break;
-
-    case -1:
-	error_e("Could not exec '%s'", line->cl_shell);
-	break;
-
-    default:
-	/* parent */
-
-    }
 }
-
-void
-end_mailer(CL *line, int status)
-    /* take care of a finished mailer */
-{
-////////
-    debug("   end mailer");
-////////
-
-    if (WIFEXITED(status) && WEXITSTATUS(status)!=0)
-	error("Tried to mail output of job `%s', "
-		 "but mailer process (" SENDMAIL ") exited with status %d",
-		 line->cl_shell, WEXITSTATUS(status) );
-    else if (!WIFEXITED(status) && WIFSIGNALED(status))
-	error("Tried to mail output of job `%s', "
-		 "but mailer process (" SENDMAIL ") got signal %d",
-		 line->cl_shell, WTERMSIG(status) );
-    else if (!WIFEXITED(status) && !WIFSIGNALED(status))
-	error("Tried to mail output of job `%s', "
-		 "but mailer process (" SENDMAIL ") terminated abnormally"
-		 , line->cl_shell);
-
-    line->cl_mailpid = 0;
-}
-
 
 int
 temp_file(void)

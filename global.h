@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.6 2000-06-11 13:19:01 thib Exp $ */
+ /* $Id: global.h,v 1.7 2000-06-15 20:17:52 thib Exp $ */
 
 
 /* 
@@ -57,7 +57,7 @@
 #include "option.h"
 
 
-#define FILEVERSION "003"  /* syntax's version of fcrontabs : 
+#define FILEVERSION "004"  /* syntax's version of fcrontabs : 
 			    * must have a length of 3 characters */
 
 
@@ -73,7 +73,6 @@
 
 #define debug if(debug_opt) Debug
 
-
 typedef struct env_t {
     char         *e_name;       /* env name                             */
     char         *e_val;        /* env value                            */
@@ -85,7 +84,6 @@ typedef struct CF {
     struct CL    *cf_line_base;
     char	 *cf_user;	/* user-name			        */
     char         *cf_mailto;    /* mail output's to mail_user           */
-    short int	 cf_mailpos;	/* 'empty mail file' size		*/
     struct env_t *cf_env_base;  /* list of all env variables to set     */
     int		 cf_running;	/* number of jobs running               */
 } CF;
@@ -98,8 +96,6 @@ typedef struct CL {
     char         option;        /* options for that line (see option.h) */
     char	 *cl_shell;	/* shell command			*/
     pid_t	 cl_pid;	/* running pid, 0, or armed (-1)        */
-    pid_t	 cl_mailpid;	/* mailer pid or 0                  	*/
-    int		 cl_mailfd;	/* running pid is for mail		*/
     time_t       cl_nextexe;     /* time and date of the next execution */
     short int    cl_remain;      /* remaining until next execution      */
     time_t       cl_timefreq;    /* Run every n seconds                 */

@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.11 2000-06-11 13:18:55 thib Exp $ */
+ /* $Id: fcron.c,v 1.12 2000-06-15 20:12:57 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.11 2000-06-11 13:18:55 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.12 2000-06-15 20:12:57 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -314,8 +314,8 @@ main(int argc, char **argv)
 
     /* parse options */
 
-    if (strrchr(argv[0],'/')==NULL) prog_name = argv[0];
-    else prog_name = strrchr(argv[0],'/')+1;
+    if ( strrchr(argv[0], '/') == NULL) prog_name = argv[0];
+    else prog_name = strrchr(argv[0], '/') + 1;
 
     daemon_uid = getuid();
 
@@ -432,7 +432,6 @@ void main_loop()
   /* main loop - get the time to sleep until next job execution,
    *             sleep, and then test all jobs and execute if needed. */
 {
-    extern time_t begin_sleep; /* time at the beginning of sleeping */
     time_t save;               /* time remaining until next save */
     struct timeval tv;         /* we use usec field to get more precision */
     time_t stime = 0;          /* time to sleep until next job
@@ -440,7 +439,7 @@ void main_loop()
 
     debug("Entering main loop");
 
-    now = begin_sleep = time(NULL);
+    now = time(NULL);
 
     synchronize_dir(".");
 
@@ -450,20 +449,14 @@ void main_loop()
     stime = time_to_sleep(save);
 
     for (;;) {
-
+	
 	sleep(stime - 1);
 	gettimeofday(&tv, NULL);
 	usleep( 1000000 - tv.tv_usec );
 
-	now = time(NULL);
-
 	if (sig_chld > 0) {
-
-	    /* sleep has been stopped too early :
-	     * sleep the remaining time */
 	    wait_chld();
 	    sig_chld = 0;
-
 	}
 	else if (sig_conf > 0) {
 
@@ -477,9 +470,9 @@ void main_loop()
 	    sig_conf = 0;
 	}
 	else {
-
 	    debug("\n");
-	    debug("slept: %lds", now - begin_sleep);
+
+	    now = time(NULL);
 
 	    test_jobs(now);
 
@@ -492,13 +485,6 @@ void main_loop()
 	}
 
 	stime = time_to_sleep(save);
-
-	begin_sleep = now;
-
-	if ( sig_chld == 1 ) {
-	    wait_chld();
-	    sig_chld = 0;
-	}
 
     }
 
