@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.71 2004-04-29 19:29:50 thib Exp $ */
+ /* $Id: database.c,v 1.72 2004-07-11 18:09:31 thib Exp $ */
 
 #include "fcron.h"
 
@@ -1268,12 +1268,14 @@ time_to_sleep(time_t lim)
     time_t tts = lim;
     time_t ti = time(NULL);
 
+    /* note : jobs in queue_base are sorted */
     if ( queue_base != NULL ) {
 	if ( queue_base->j_line->cl_nextexe < lim )
 	    tts = queue_base->j_line->cl_nextexe;
     }
 	    
-    if ( (tts = tts - ti) < 0)
+    tts = tts - ti;
+    if ( tts < 0)
 	tts = 0;
 
 /*      debug("Time to sleep: %lds", tts); */

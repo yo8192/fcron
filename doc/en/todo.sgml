@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.26 2004-04-29 20:51:25 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.27 2004-07-11 18:12:11 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -30,15 +30,6 @@ A copy of the license is included in gfdl.sgml.
 		  name of fcrondyn -> fcronc ?? </para>
 	    </listitem>
 	    <listitem>
-	       <para>problem with daylight savings ? ("already running" ...)
-		  (cf. Nick's mails -- Warning : he has a new address))</para>
-	    </listitem>
-	    <listitem>
-	       <para>add a new FAQ entry : what should be done to completely
-		  replace vixie cron by fcron ? Are there some incompatibilities
-		  ?</para>
-	    </listitem>
-	    <listitem>
 	       <para>add an option to prevent fcron from running a job if the
 		  system is running on battery (anacron does it ?)</para>
 	    </listitem>
@@ -50,17 +41,15 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>code cleaning : create a .c/.h file for data structures
 		  (file/line lists, serial queue, lavg list, exe list),
-		  and work with them only through functions/macros.</para>
+		  and work with them only through functions/macros.
+	       + secure equivalent to str[n]{cat|copy|...}</para>
 	       <para>Note : thoroughly check for bugs which can be introduced
 		  during the code cleaning (make sure that after the
 		  modification, the code executed is still the same as before
 		  !).</para>
 	    </listitem>
 	    <listitem>
-	       <para>Mem footprint reduction : for fcron processes which are aimed
-	       at running sendmail, free() some memory (file/line lists, queues, ...)
-	       (but does it worth it ? takes too much exe time for few memory ?)</para>
-	       <para>Also use an/some union(s) in CL struct.</para>
+	       <para>Mem footprint reduction : use an/some union(s) in CL struct.</para>
 	    </listitem>
 	    <listitem>
 	       <para>implement more commands for fcrondyn, and make it more
@@ -121,6 +110,7 @@ A copy of the license is included in gfdl.sgml.
 		  different signals (-HUP, -TERM -STOP, .... or any other action
 		  like sending a mail to sysadmin to alert him/her that a task
 		  is taking too much time and that he has to have a look at it.)
+		  (add an option to specify the cmd, and combine w/ option until)
 	       </para>
 	    </listitem>
 	 </itemizedlist>

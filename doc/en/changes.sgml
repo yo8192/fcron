@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.30 2004-04-29 19:38:52 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.31 2004-07-11 18:12:15 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -40,7 +40,11 @@ A copy of the license is included in gfdl.sgml.
 	       Added a sanity check in set_nextexe() to avoid such things.</para>
 	 </listitem>
 	 <listitem>
-	    <para></para>
+	    <para>Fixed a small bug : scripts were supposing perl was in /usr/bin.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Fixed a bug which caused the pid of a child process
+	       to be incorrectly read</para>
 	 </listitem>
       </itemizedlist>
 
