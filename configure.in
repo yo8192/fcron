@@ -644,9 +644,11 @@ AC_ARG_WITH(run-non-privileged,
 [ --run-non-privileged=[yes|no]	Run fcron without root's rights (see FAQ !)],
 [ case "$withval" in
   no)
+    run_non_privileged=0
     AC_MSG_RESULT(no)
     ;;
   yes)
+    run_non_privileged=1
     AC_MSG_RESULT(yes)
     AC_MSG_WARN([
 
@@ -670,6 +672,7 @@ WARNING :
     AC_MSG_ERROR(Invalid argument : please use 'yes' or 'no'.)
     ;;
   esac],
+  run_non_privileged=0
   AC_MSG_RESULT(no)
 )
 
@@ -1067,3 +1070,70 @@ AC_SUBST(BINDIREX)
 AC_SUBST(SBINDIREX)
 
 AC_OUTPUT(Makefile doc/Makefile doc/stylesheets/fcron-doc.dsl)
+
+
+dnl ---------------------------------------------------------------------
+dnl Info for user
+dnl ---------------------------------------------------------------------
+
+echo
+echo "Sum up :"
+echo "------"
+echo
+echo -n "run in debug mode by default :      "
+if test "$debug" -eq "1"; then
+	echo "yes"
+else
+	echo "no"
+fi
+
+echo -n "PAM :                               "
+if test "$usepam" -eq 1; then
+	echo "yes"
+else
+	echo "no"
+fi
+
+echo -n "SELinux :                           "
+if test "$useselinux" -eq 1; then
+	echo "yes"
+else
+	echo "no"
+fi
+
+echo -n "Run without root's rights :         "
+if test "$run_non_privileged" -eq 1; then
+	echo "yes"
+else
+	echo "no"
+fi
+
+echo "fcron's user (resp. group) name :   $username (resp. $groupname)"
+
+echo -n "systab :                            "
+if test "$use_sysfcrontab" -eq 1; then
+	echo "yes"
+else
+	echo "no"
+fi
+
+echo "spooldir :                          $sp"
+
+echo -n "Load average support :              "
+if test "$getloadavg" -eq 1 -o ! -z "$proc"; then
+	echo "yes"
+else
+	echo "no"
+fi
+
+echo -n "compile fcrondyn :                  "
+if test "$fcrondyn" -eq 1; then
+	echo "yes"
+else
+	echo "no"
+fi
+
+echo
+echo "You can now run 'make' to compile"
+echo "and then (as root) 'make install' to install fcron."
+echo
