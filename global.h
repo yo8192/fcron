@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.35 2002-02-25 18:42:21 thib Exp $ */
+ /* $Id: global.h,v 1.36 2002-03-02 17:27:44 thib Exp $ */
 
 
 /* 
@@ -132,9 +132,21 @@
           free(var); \
           var = strdup2(value);
 
+#define Flush(var) \
+          free(var); \
+          var = NULL;
+
 #define Skip_blanks(ptr) \
-        while((*ptr == ' ') || (*ptr == '\t')) \
-	    ptr++;
+        while((*(ptr) == ' ') || (*(ptr) == '\t')) \
+	    (ptr)++;
+
+#define Overwrite(x) \
+        do {                     \
+          register char *__xx__; \
+          if ((__xx__=(x)))      \
+            while (*__xx__)      \
+              *__xx__++ = '\0';  \
+        } while (0)
 
 
 #define debug if(debug_opt) Debug
@@ -166,6 +178,7 @@ typedef struct CL {
     char	  *cl_shell;      /* shell command			     */
     char          *cl_runas;      /* determine permissions of the job        */
     char          *cl_mailto;     /* mail output to cl_mailto                */
+    long int       cl_id;         /* line's unique id number                 */
     time_t         cl_until;      /* timeout of the wait for a lavg value    */
     time_t         cl_first;      /* initial delay preserved for volatile entries */
     time_t         cl_nextexe;    /* time and date of the next execution     */
