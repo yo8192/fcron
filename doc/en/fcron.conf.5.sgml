@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron.conf.5.sgml,v 1.7 2004-01-29 10:36:35 thib Exp $ -->
+<!-- $Id: fcron.conf.5.sgml,v 1.8 2004-11-13 19:44:31 thib Exp $ -->
 
 <refentry id="fcron.conf.5">
     <refmeta>
@@ -59,7 +59,7 @@ to work properly).</para>
 		</varlistentry>
 		<varlistentry>
 		    <term><varname>fifofile</varname>=<replaceable>file-path</replaceable> 
-(<filename>&fcron.pid;</filename>)</term>
+(<filename>&fcron.fifo;</filename>)</term>
 		    <listitem>
 			<para>Location of &fcron; fifo file (needed by
 &fcrondyn; to communicate with fcron).</para>
