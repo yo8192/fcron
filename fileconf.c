@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.53 2001-10-29 13:22:10 thib Exp $ */
+ /* $Id: fileconf.c,v 1.54 2001-12-23 12:20:46 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -102,10 +102,11 @@ get_line(char *str, size_t size, FILE *file)
 {
     size_t size_max = size - 1 ;
     register int i=0;
+    int c;
 
     while (i < size_max ) {
 
-	switch ( *(str + i) = getc(file) ) {
+	switch ( c = getc(file) ) {
 
 	case '\n':
 	    /* check if the \n char is preceded by a "\" char : 
@@ -117,18 +118,19 @@ get_line(char *str, size_t size, FILE *file)
 		continue;
 	    }
 	    else {
-		*(str + i) = '\0';
+		*(str + i) = (char) '\0';
 		return OK;
 	    }
 	    break;
 		
 	case EOF:
-	    *(str + i) = '\0';
+	    *(str + i) = (char) '\0';
 	    /* we couldn't return EOF ( equal to ERR by default ) 
 	     * nor ERR, which is used for another error */
 	    return 999;
 
 	default:
+	    *(str + i) = (char) c;
 	    i++;
 
 	}
@@ -136,7 +138,7 @@ get_line(char *str, size_t size, FILE *file)
     }
 
     /* line is too long : goto next line and return ERR */
-    while ((*str = getc(file)) != '\n' && ( *str != (char) EOF ) )
+    while ( ((c = getc(file)) != EOF ) && (c != (int) '\n') )
 	;
     line++;
     need_correction = 1;
