@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.23 2001-01-30 17:40:51 thib Exp $
+# $Id: boot-install,v 1.24 2001-02-02 16:54:38 thib Exp $
 
 # take 5 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -179,7 +179,7 @@ if PID=`pidof fcron`; then
 else
   KILL="killall -TERM fcron"
   KILLSTR=$KILL
-  COMMENT="WARNING : this command may not have the desired effect on non-Linux systems.\n"
+  COMMENT="WARNING : this command may not have the desired effect on non-Linux systems."
   PID="test -z on PID is not need in this case"
 fi
 if test -z "$PID"; then
@@ -196,7 +196,7 @@ else
     while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
     do
       echo "Would you like to do it with a '"$KILLSTR"'"
-      echo -n $COMMENT
+      echo $COMMENT
       echo "followed by a '"$CMD"' ?"
       read -p "Please answer with 'y' or 'n' (default: 'y'): " RESTART NOTHING
     done
