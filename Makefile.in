@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.91 2002-09-28 15:07:37 thib Exp $
+# $Id: Makefile.in,v 1.93 2002-10-06 17:09:02 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -37,6 +37,7 @@ ROOTNAME	= @ROOTNAME@
 ROOTGROUP	= @ROOTGROUP@
 USERNAME 	= @USERNAME@
 GROUPNAME	= @GROUPNAME@
+SYSFCRONTAB	= @SYSFCRONTAB@
 DEBUG		= @DEBUG@
 BOOTINSTALL	= @BOOTINSTALL@
 ANSWERALL	= @ANSWERALL@
@@ -71,7 +72,7 @@ HEADERSALL = config.h $(SRCDIR)/global.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCD
 
 # this is a regular expression :
 # do not ci automaticaly generated files and doc (done by doc's Makefile)
-RCSNOCI=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|doc.*\)
+RCSNOCI=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|config.log\|config.status\|config.h\|config.cache\|Makefile\|doc.*\|CVS.*\)
 
 RUN_NON_PRIVILEGED = @RUN_NON_PRIVILEGED@
 ifeq ($(RUN_NON_PRIVILEGED), 1)
@@ -133,8 +134,8 @@ endif
 	@(cd doc && make install)
 
 # in order to get correct rights when upgrading :
-	find $(FCRONTABS) -type f \( -name "*.orig" -a ! -name "root.orig" \) -exec chown $(USERNAME):$(GROUPNAME) {} \; -exec chmod 640 {} \;
-	find $(FCRONTABS) -type f -name "root.orig" -exec chown $(ROOTNAME):$(GROUPNAME) {} \; -exec chmod 600 {} \;
+	find $(FCRONTABS) -type f \( -name "*.orig" -a ! -name "$(ROOTNAME).orig" -a ! -name "$(SYSFCRONTAB).orig" \) -exec chown $(USERNAME):$(GROUPNAME) {} \; -exec chmod 640 {} \;
+	find $(FCRONTABS) -type f \( -name "$(ROOTNAME).orig" -o -name "$(SYSFCRONTAB).orig" \) -exec chown $(ROOTNAME):$(GROUPNAME) {} \; -exec chmod 600 {} \;
 	find $(FCRONTABS) -type f ! -name "*.orig" -exec chown $(ROOTNAME):$(ROOTGROUP) {} \; -exec chmod 600 {} \;
 	if test -f $(ETC)/fcron.deny; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.deny ; fi
 	if test -f $(ETC)/fcron.allow; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.allow ; fi
@@ -164,11 +165,13 @@ clean:
 	rm -f *.o core
 	rm -f fcron fcrontab fcrondyn fcronsighup convert-fcrontab files/fcron.conf
 
-vclean: clean
+ciclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
-	rm -f config.log config.status config.h config.cache Makefile
 	rm -fR autom4te-*
 	@(cd doc && make clean)
+
+vclean: ciclean
+	rm -f config.log config.status config.h config.cache Makefile
 
 
 files/fcron.conf: files/fcron.conf.in config.h
@@ -190,14 +193,15 @@ configure: configure.in
 		echo "---------------------------------------------" && \
 		exit 999)
 
-tar: configure updatedoc vclean
+ci: ciclean
+	@(find ./ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
+          -exec ci -l {} \;)
+# ci the doc files
+	@(cd doc && make ci)
+
+tar: configure updatedoc vclean ci
 
 	echo $(VERSION) > ./VERSION
-
-	@(find ./ -type f ! -regex '.*RCS.*' ! -regex '.*CVS.*' ! -regex "$(RCSNOCI)" \
-             -exec ci -l {} \;)
-# ci the doc files
-	@(cd doc && make tar)
 
 	@(find ./ -type f ! -regex '.*RCS.*' | \
              sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
