@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.48 2001-09-12 13:38:05 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.49 2001-10-29 13:21:29 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -45,7 +45,7 @@
 #include "allow.h"
 #include "fileconf.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.48 2001-09-12 13:38:05 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.49 2001-10-29 13:21:29 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -645,9 +645,7 @@ parseopt(int argc, char *argv[])
 		xexit(EXIT_ERR);
 	    }
 	    list_opt = 1;
-	    rm_opt = 0;
-	    edit_opt = 0;
-	    reinstall_opt = 0;
+	    rm_opt = edit_opt = reinstall_opt = 0;
 	    break;
 
 	case 'r':
@@ -656,10 +654,8 @@ parseopt(int argc, char *argv[])
 			"may be used simultaneously.\n");
 		xexit(EXIT_ERR);
 	    }
-	    list_opt = 0;
 	    rm_opt = 1;
-	    edit_opt = 0;
-	    reinstall_opt = 0;
+	    list_opt = edit_opt = reinstall_opt = 0;
 	    break;
 
 	case 'e':
@@ -668,10 +664,8 @@ parseopt(int argc, char *argv[])
 			"may be used simultaneously.\n");
 		xexit(EXIT_ERR);
 	    }
-	    list_opt = 0;
-	    rm_opt = 0;
 	    edit_opt = 1;
-	    reinstall_opt = 0;
+	    list_opt = rm_opt = reinstall_opt = 0;
 	    break;
 
 	case 'z':
@@ -680,10 +674,8 @@ parseopt(int argc, char *argv[])
 			"may be used simultaneously.\n");
 		xexit(EXIT_ERR);
 	    }
-	    list_opt = 0;
-	    rm_opt = 0;
-	    edit_opt = 0;
-	    reinstall_opt = 1;
+	    reinstall_opt = ignore_prev = 1;
+	    list_opt = rm_opt = edit_opt = 0;
 	    break;
 
 	case 'n':
@@ -800,11 +792,12 @@ main(int argc, char **argv)
     /* Open PAM session for the user and obtain any security
        credentials we might need */
 
-    retcode = pam_start("fcron", pass->pw_name, &apamconv, &pamh);
+    debug("username: %s", pass->pw_name);
+    retcode = pam_start("fcrontab", pass->pw_name, &apamconv, &pamh);
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM");
     retcode = pam_acct_mgmt(pamh, PAM_SILENT);
-    if (retcode != PAM_SUCCESS) 
-	die_pame(pamh, retcode, "Could not init PAM account management");
+    if (retcode != PAM_SUCCESS)
+	die_pame(pamh, retcode, "Could not init PAM account management (%d)", retcode);
     retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED | PAM_SILENT);
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not set PAM credentials");
     retcode = pam_open_session(pamh, PAM_SILENT);
