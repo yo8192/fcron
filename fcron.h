@@ -21,12 +21,16 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.26 2002-02-25 18:41:47 thib Exp $ */
+ /* $Id: fcron.h,v 1.27 2002-03-02 17:27:34 thib Exp $ */
 
 #ifndef __FCRON_H__
 #define __FCRON_H__
 
 #include "global.h"
+
+#ifdef HAVE_CRYPT_H
+#include <crypt.h>
+#endif
 
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
@@ -41,6 +45,10 @@
 #endif
 
 #include <grp.h>
+
+#ifdef HAVE_SHADOW_H
+#include <shadow.h>
+#endif
 
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
@@ -67,6 +75,7 @@ extern char *prog_name;
 extern char sig_hup;
 extern struct CF *file_base;
 extern struct job *queue_base;
+extern unsigned long int next_id;
 extern struct CL **serial_array;
 extern short int serial_array_size;
 extern short int serial_array_index;

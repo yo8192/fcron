@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron.conf.5.sgml,v 1.2 2002-01-04 19:11:47 thib Exp $ -->
+<!-- $Id: fcron.conf.5.sgml,v 1.3 2002-03-02 17:31:16 thib Exp $ -->
 
 <refentry id="fcron.conf.5">
     <refmeta>
@@ -25,7 +25,7 @@ A copy of the license is included in gfdl.sgml.
     <refsect1>
 	<title>Description</title>
 	<abstract>
-	    <para>This page describes the syntax used for the configuration file of <link linkend="fcrontab.1">&fcrontab;</link>(1). and <link linkend="fcron.8">&fcron;</link>(8).</para>
+	    <para>This page describes the syntax used for the configuration file of <link linkend="fcrontab.1">&fcrontab;</link>(1), <link linkend="fcrondyn.1">&fcrondyn;</link>(1) and <link linkend="fcron.8">&fcron;</link>(8).</para>
 	</abstract>
 	<para>Blank lines, line beginning by a pound-sign (#) (which are considered comments), leading blanks and tabs are ignored. Each line in a &fcron.conf file is of the form
  <blockquote>
@@ -46,6 +46,12 @@ where the blanks around equal-sign (=) are ignored and optional. Trailing blanks
 		    <term><varname>pidfile</varname>=<replaceable>file-path</replaceable> (<filename>&fcron.pid;</filename>)</term>
 		    <listitem>
 			<para>Location of &fcron; pid file (needed by &fcrontab; to work properly).</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry>
+		    <term><varname>fifofile</varname>=<replaceable>file-path</replaceable> (<filename>&fcron.pid;</filename>)</term>
+		    <listitem>
+			<para>Location of &fcron; fifo file (needed by &fcrondyn; to communicate with fcron).</para>
 		    </listitem>
 		</varlistentry>
 		<varlistentry>
@@ -80,7 +86,7 @@ where the blanks around equal-sign (=) are ignored and optional. Trailing blanks
 		</varlistentry>
 	    </variablelist>
 File-paths and directories are complete and absolute (i.e. beginning by a "/").</para>
-	<para>To run several instances of &fcron; simultaneously on the same system, you must use a different configuration file for each instance. Each instance must have a different <varname>fcrontabs</varname> and <varname>pidfile</varname>. Then, use <link linkend="fcron.8">fcron</link>(8)'s command line option <parameter>-c</parameter> to select which config file (so which instance) you refer to.</para>
+	<para>To run several instances of &fcron; simultaneously on the same system, you must use a different configuration file for each instance. Each instance must have a different <varname>fcrontabs</varname>, <varname>pidfile</varname> and <varname>fifofile</varname>. Then, use <link linkend="fcron.8">fcron</link>(8)'s command line option <parameter>-c</parameter> to select which config file (so which instance) you refer to.</para>
     </refsect1>
 
     <refsect1>
@@ -89,19 +95,19 @@ File-paths and directories are complete and absolute (i.e. beginning by a "/").<
 	    <varlistentry>
 		<term><filename>&etc;/&fcron.conf.location;</filename></term>
 		<listitem>
-		    <para>Configuration file for &fcron; and &fcrontab; : contains paths (spool dir, pid file) and default programs to use (editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf(5)</link> for more details.</para>
+		    <para>Configuration file for &fcron;, &fcrontab and &fcrondyn; : contains paths (spool dir, pid file) and default programs to use (editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf(5)</link> for more details.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><filename>&etc;/&fcron.allow;</filename></term>
 		<listitem>
-		    <para>Users allowed to use &fcrontab; (one name per line, special name "all" acts for everyone)</para>
+		    <para>Users allowed to use &fcrontab; and &fcrondyn; (one name per line, special name "all" acts for everyone)</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><filename>&etc;/&fcron.deny;</filename></term>
 		<listitem>
-		    <para>Users who are not allowed to use &fcrontab; (same format as allow file)</para>
+		    <para>Users who are not allowed to use &fcrontab; and &fcrondyn; (same format as allow file)</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -119,6 +125,7 @@ File-paths and directories are complete and absolute (i.e. beginning by a "/").<
 	    <member><link linkend="fcron.8">&fcron;(8)</link></member>
 	    <member><link linkend="fcrontab.1">&fcrontab;(1)</link></member>
 	    <member><link linkend="fcrontab.5">&fcrontab;(5)</link></member>
+	    <member><link linkend="fcrondyn.1">&fcrondyn;(1)</link></member>
 	    <member>The HTML version of the documentation, if you are not reading it right now, which is far better than these man pages :)).</member>
 	</simplelist>
     </refsect1>

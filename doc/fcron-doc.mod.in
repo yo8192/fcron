@@ -17,6 +17,7 @@
 <!ENTITY fcron.conf.location "@@FCRON_CONF@">
 <!ENTITY fcron.deny "@@FCRON_DENY@">
 <!ENTITY fcron.pid "@@PIDFILE@">
+<!ENTITY fcron.pid "@@FIFOFILE@">
 <!ENTITY fcrontabsdir "@@FCRONTABS@">
 <!ENTITY firstsleep "@@FIRST_SLEEP@">
 <!ENTITY lavgoncedef "@@LAVG_ONCE@">
@@ -34,6 +35,8 @@
 <!ENTITY Fcron "<application>Fcron</application>">
 <!ENTITY fcrontab "<application>fcrontab</application>">
 <!ENTITY Fcrontab "<application>Fcrontab</application>">
+<!ENTITY fcrondyn "<application>fcrondyn</application>">
+<!ENTITY Fcrondyn "<application>Fcrondyn</application>">
 <!ENTITY fcrontabf "<systemitem>fcrontab</systemitem>">
 <!ENTITY fcron.conf "<systemitem>fcron.conf</systemitem>">
 
@@ -47,6 +50,7 @@
 <!ENTITY fcron.conf.5 SYSTEM "fcron.conf.5.sgml">
 <!ENTITY fcrontab.1 SYSTEM "fcrontab.1.sgml">
 <!ENTITY fcrontab.5 SYSTEM "fcrontab.5.sgml">
+<!ENTITY fcrondyn.1 SYSTEM "fcrondyn.1.sgml">
 <!ENTITY faq SYSTEM "faq.sgml">
 <!ENTITY fdl SYSTEM "fdl.sgml">
 <!ENTITY gpl SYSTEM "gpl.sgml">

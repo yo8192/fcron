@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.7 2002-02-25 18:47:19 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.8 2002-03-02 17:33:20 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
@@ -16,7 +16,10 @@ A copy of the license is included in gfdl.sgml.
     <itemizedlist>
 	<title>From version 2.1.0 to 2.1.1</title>
 	<listitem>
-	    <para>Added some new options to fcron : -y, -o, -l ; and some fcrontab options : stdout and volatile. All these permit to make fcron run in foreground, execute all the pending jobs (mainly %-jobs), and returns. May be used, for instance, in a ppp-up script with a dialup connection to update a software regularly.</para>
+	    <para>Added some new options to fcron : -y, -o, -l ; and some fcrontab options : stdout and volatile. All these permit to make fcron run in foreground, execute all the pending jobs (mainly %-jobs), and return. May be used, for instance, in a ppp-up script with a dialup connection to update a software regularly.</para>
+	</listitem>
+	<listitem>
+	    <para>Added fcrondyn : this software allows users to dialog dyn-amically with a running fcron daemon. Currently, it can list jobs of the user running it (or all jobs for root). In the near future, it should be able to run a job, change its next time and date of execution, renice a running job, send a signal to a running job, etc.</para>
 	</listitem>
 	<listitem>
 	    <para>All the documentation has been ported to SGML DocBook.</para>

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.53 2002-02-25 18:42:41 thib Exp $ */
+ /* $Id: conf.c,v 1.54 2002-03-02 17:28:07 thib Exp $ */
 
 #include "fcron.h"
 
@@ -796,6 +796,8 @@ add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str, time_t t_save)
     } 
 
     /* add the current line to the list, and allocate a new line */
+    if ( (cl->cl_id = next_id++) >= ULONG_MAX - 1)
+	next_id = 0;
     cl->cl_next = cf->cf_line_base;
     cf->cf_line_base = cl;
     return 0;

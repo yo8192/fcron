@@ -41,8 +41,8 @@ AC_CHECK_HEADERS(errno.h sys/fcntl.h getopt.h limits.h)
 AC_CHECK_HEADERS(stdarg.h)
 AC_CHECK_HEADERS(sys/termios.h)
 AC_CHECK_HEADERS(strings.h)
-AC_CHECK_HEADERS(sys/types.h sys/socket.h)
-AC_CHECK_HEADERS(security/pam_appl.h)
+AC_CHECK_HEADERS(sys/types.h sys/socket.h sys/un.h)
+AC_CHECK_HEADERS(security/pam_appl.h crypt.h shadow.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -83,6 +83,29 @@ AC_CHECK_FUNCS(mkstemp)
 AC_CHECK_FUNCS(flock lockf)
 AC_CHECK_FUNCS(seteuid, [seteuid=1], [seteuid=0])
 AC_CHECK_FUNCS(setegid, [setegid=1], [setegid=0])
+
+AC_CHECK_FUNCS(getspnam, [getspnam=1], [getspnam=0])
+if test "$getspnam" -eq "0"; then
+  AC_CHECK_LIB(getspnam, shadow, [getspnam=1], [getspnam=0])
+  if test "$getspnam" -eq "1"; then
+    LIBS="$LIBS -lshadow"
+  fi
+fi
+if test "$getspnam" -eq "1"; then
+  AC_DEFINE_UNQUOTED(HAVE_LIBSHADOW, 1)
+fi
+
+AC_CHECK_FUNCS(crypt, [crypt=1], [crypt=0])
+if test "$crypt" -eq "0"; then
+  AC_CHECK_LIB(crypt, crypt, [crypt=1], [crypt=0])
+  if test "$crypt" -eq "1"; then
+    LIBS="$LIBS -lcrypt"
+  fi
+fi
+if test "$crypt" -eq "1"; then
+  AC_DEFINE_UNQUOTED(HAVE_CRYPT, 1)
+fi
+
 
 
 dnl ---------------------------------------------------------------------
@@ -283,6 +306,47 @@ Directory $withval does not exist])
       AC_MSG_RESULT(/usr/run)
     else
       AC_DEFINE_UNQUOTED(PIDFILE, "$ETC/fcron.pid")
+      AC_MSG_RESULT($ETC)
+    fi
+)
+
+AC_MSG_CHECKING(location of fifo files)
+AC_ARG_WITH(fifodir,
+[  --with-fifodir=PATH	Directory containing fifo files.],
+[ case "$withval" in
+  no)
+    AC_MSG_ERROR(Need FIFODIR.)
+    ;;
+  yes)
+    if test -d /var/run ; then
+      AC_DEFINE(FIFOFILE, "/var/run/fcron.fifo")
+      AC_MSG_RESULT(/var/run)
+    elif test -d /usr/run ; then
+      AC_DEFINE(FIFOFILE, "/usr/run/fcron.fifo")
+      AC_MSG_RESULT(/usr/run)
+    else
+      AC_DEFINE_UNQUOTED(FIFOFILE, "$ETC/fcron.fifo")
+      AC_MSG_RESULT($ETC)
+    fi
+    ;;
+  *)
+    if test -d "$withval"; then
+      AC_DEFINE_UNQUOTED(FIFOFILE, "$withval/fcron.fifo")
+      AC_MSG_RESULT($withval)
+    else
+      AC_MSG_ERROR([
+Directory $withval does not exist])
+    fi
+    ;;
+  esac ],
+    if test -d /var/run ; then
+      AC_DEFINE(FIFOFILE, "/var/run/fcron.fifo")
+      AC_MSG_RESULT(/var/run)
+    elif test -d /usr/run ; then
+      AC_DEFINE(FIFOFILE, "/usr/run/fcron.fifo")
+      AC_MSG_RESULT(/usr/run)
+    else
+      AC_DEFINE_UNQUOTED(FIFOFILE, "$ETC/fcron.fifo")
       AC_MSG_RESULT($ETC)
     fi
 )
@@ -537,17 +601,27 @@ AC_ARG_WITH(fcrondyn,
     AC_MSG_RESULT(no)
     ;;
   yes)
-    AC_MSG_RESULT(yes)
+    if test "$crypt" -eq 1; then
+      AC_MSG_RESULT(yes)
+    else
+      AC_MSG_ERROR(Need a crypt() function.)
+    fi
     ;;
   *)
     AC_MSG_ERROR(Must be set to either "yes" or "no".)
     ;;
   esac ],
-  AC_MSG_RESULT(yes)
+  if test "$crypt" -eq 1; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
 )
 FCRONDYN="$fcrondyn"
-AC_DEFINE_UNQUOTED(FCRONDYN, "$fcrondyn")
-AC_SUBST(FCRONDYN)
+if test "$fcrondyn" = 1; then
+  AC_DEFINE_UNQUOTED(FCRONDYN, "$fcrondyn")
+  AC_SUBST(FCRONDYN)
+fi
 
 
 dnl ---------------------------------------------------------------------

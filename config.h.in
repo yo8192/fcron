@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.39 2002-02-25 18:44:26 thib Exp $ */
+ /* $Id: config.h.in,v 1.40 2002-03-02 17:28:48 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -100,8 +100,15 @@
 #define FNAME_LEN 512        /* max length of a file name */
 #define USER_NAME_LEN 128    /* max length of a user name */
 #define PATH_LEN 256         /* max length of a file path */
+#define SOCKET_MSG_LEN 20    /* max length of a socket msg (fcrondyn) */
 
 #define MAX_MSG 150           /* max length of a log message */
+
+
+/* *** socket *** */
+#define MAX_CONNECTION 25    /* max simultaneous connection allowed */
+#define MAX_USER_CON 3       /* max number of connection for a normal user */
+#define MAX_IDLE_TIME 300    /* time (in sec) a socket stay idle before being closed */
 
 
 /* *** system dependent *** */
@@ -150,6 +157,8 @@
 #undef SHELL
 /* where is located pid file ? */
 #undef PIDFILE
+/* where is located fifo file ? */
+#undef FIFOFILE
 
 /* 1 if we want to compile and install fcrondyn */
 #undef FCRONDYN
@@ -162,9 +171,11 @@
 /* Define if we should use sete[ug]id() funcs */
 #undef USE_SETE_ID
 
-/* root uid and gid */
+/* root uid, gid, name and group */
 #undef ROOTUID
 #undef ROOTGID
+#undef ROOTNAME
+#undef ROOTGROUP
 
 /* user and group name to run under */
 #undef USERNAME
@@ -203,6 +214,9 @@
 
 /* Define on System V Release 4.  */
 #undef SVR4
+
+/* Define if you have the crypt function.  */
+#undef HAVE_CRYPT
 
 /* Define if you have the flock function.  */
 #undef HAVE_FLOCK
@@ -267,6 +281,9 @@
 /* Define if your <sys/time.h> declares struct tm.  */
 #undef TM_IN_SYS_TIME
 
+/* Define if you have the <crypt.h> header file.  */
+#undef HAVE_CRYPT_H
+
 /* Define if you have the <dirent.h> header file.  */
 #undef HAVE_DIRENT_H
 
@@ -287,6 +304,9 @@
 
 /* Define if you have the <ndir.h> header file.  */
 #undef HAVE_NDIR_H
+
+/* Define if you have <shadow.h>.  */
+#undef HAVE_SHADOW_H
 
 /* Define if you have <nlist.h>.  */
 #undef NLIST_STRUCT
@@ -327,6 +347,9 @@
 /* Define if you have the <sys/types.h> header file.  */
 #undef HAVE_SYS_TYPES_H
 
+/* Define if you have the <sys/un.h> header file.  */
+#undef HAVE_SYS_UN_H
+
 /* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
 #undef HAVE_SYS_WAIT_H
 
@@ -341,3 +364,6 @@
 
 /* Define if you have the pam library (-lpam).  */
 #undef HAVE_LIBPAM
+
+/* Define if you have the shadow library (-lshadow or included in c library).  */
+#undef HAVE_LIBSHADOW
