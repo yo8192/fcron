@@ -22,12 +22,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.31 2001-01-30 15:54:01 thib Exp $ */
+ /* $Id: job.c,v 1.32 2001-01-30 17:42:27 thib Exp $ */
 
 #include "fcron.h"
 
 int temp_file(void);
-void launch_mailer(CL *line, int mailfd);
 void sig_dfl(void);
 void end_job(CL *line, int status, int mailfd, short mailpos);
 void end_mailer(CL *line, int status);
