@@ -1,0 +1,23 @@
+#!/bin/sh
+
+cd man
+for i in *
+do
+  echo $i
+  sed -e "s:\"fcron version .* - .*\":\"fcron version $1 - `date +%D`\":" < $i > tmp
+  mv -f tmp $i
+  chown $USER $i
+  rm -f tmp
+  groff -Thtml -mandoc $i > ../doc/$i.html  
+done
+
+cd ../doc
+for i in *
+do
+  echo $i
+  sed -e "s:<-- fcron version .* - .* -->:<-- fcron version $1 - `date +%D` -->:" < $i > tmp
+  mv -f tmp $i
+  chown $USER $i
+  rm -f tmp
+done
+

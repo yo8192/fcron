@@ -1,0 +1,15 @@
+#!/bin/sh
+# Uninstall fcron under SysV system.
+#
+
+PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
+
+rm -f /etc/rc.d/init.d/fcron-debug
+rm -f /etc/rc.d/init.d/fcron
+
+rm -f /etc/rc.d/rc3.d/S40fcron
+rm -f /etc/rc.d/rc4.d/S40fcron
+rm -f /etc/rc.d/rc5.d/S40fcron
+
+rm -f /etc/rc.d/rc0.d/K60fcron
+rm -f /etc/rc.d/rc6.d/K60fcron

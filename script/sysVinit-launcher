@@ -1,0 +1,63 @@
+#!/bin/sh
+#
+# description : fcron is a scheduler especially useful for people
+#               who are not running their system all the time.
+# processname: fcron
+# config: /var/spool/fcron/*
+
+FUNCTION=0
+
+# Source function library.
+if test -f /etc/rc.d/init.d/functions; then
+    . /etc/rc.d/init.d/functions
+    FUNCTION=1
+fi
+
+RETVAL=0
+
+
+#  See how we were called.
+case "$1" in
+  start)
+	echo -n "Starting fcron: "
+	if test $FUNCTION -eq 1; then
+	    daemon fcron
+	else
+	    fcron -b
+	fi
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/fcron
+	;;
+  stop)
+	echo -n "Shutting down fcron"
+	if test $FUNCTION -eq 1; then
+	    killproc fcron
+	else
+	    killall -TERM fcron
+	fi
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/fcron
+	;;
+  status)
+	if test $FUNCTION -eq 1; then
+	    status fcron
+	fi
+	RETVAL=$?
+	;;
+  restart)
+	$0 stop
+	$0 start
+	RETVAL=$?
+	;;
+  reload)
+	killall -HUP fcron
+	RETVAL=$?
+	;;        
+  *)
+	echo "Usage: fcron {start|stop|status|restart}"
+	exit 1
+esac
+
+exit $RETVAL

@@ -1,0 +1,41 @@
+#!/bin/sh
+# Install fcron under SysV system.
+#
+
+# take two arguments : first is the compilation line arguments, in order
+#    to determine if fcron should be installed with debugs options,
+#    and the second is the name of the BSD-like install program
+
+PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
+
+startdir=$pwd
+
+if test $# -ne 2; then
+    echo "Too few arguments"
+    exit 1
+fi
+
+if test -f /etc/rc.d/rc.M; then
+    # Slackware
+    echo "fcron -b" >> /etc/rc.d/rc.local
+else
+
+    if echo $1 > grep "-DDEBUG"; then
+      $2 -m 755 -o root sysVinit-launcher-debug /etc/rc.d/init.d/fcron
+    else
+      $2 -m 755 -o root sysVinit-launcher /etc/rc.d/init.d/fcron
+    fi
+    
+    cd /etc/rc.d/rc3.d/
+    ln -f -s ../init.d/fcron S40fcron
+    cd /etc/rc.d/rc4.d/
+    ln -f -s ../init.d/fcron S40fcron
+    cd /etc/rc.d/rc5.d/
+    ln -f -s ../init.d/fcron S40fcron
+    
+    cd /etc/rc.d/rc0.d/
+    ln -f -s ../init.d/fcron  K60fcron
+    cd /etc/rc.d/rc6.d/
+    ln -f -s ../init.d/fcron  K60fcron
+    cd $startdir
+fi

@@ -1,0 +1,131 @@
+############################
+# fcron's Makefile  ########
+############################
+
+# ********************************************************* #
+# *** Begin of configurable stuffs ************************ #
+
+
+# Where should we install it ?
+DESTSBIN= /usr/sbin/
+DESTBIN= /usr/bin/
+DESTMAN= /usr/man/
+FCRONTABS=/var/spool/fcron/
+ETC=/etc/
+
+
+# Optimize or debug ?
+#	-DDEBUG		even more verbose
+#	-DCHECKJOBS     send a mail containing the exact shell command
+#			for each execution of each job.
+#OPTIM=		-DDEBUG -g -DFOREGROUND
+OPTIM=		-DDEBUG -DCHECKJOBS -Wall -Wpointer-arith -Wstrict-prototypes
+#OPTIM=		-O2 -Wall
+#OPTIM=		-O3 -mcpu=i686 -Wall
+
+
+# Options
+#	-DFOREGROUND [0|1]    default run in foreground ?
+#	-DFCRONTABS path       default path of users' config file
+#
+OPTION = 
+
+
+# Want other flags ?
+#OTHERFLAGS=
+
+
+# Want a nonstandard CC ?
+CC= gcc
+
+
+# Any include ?
+INCLUDE=	-I.
+
+
+# The name of the BSD like install program
+#INSTALL = installbsd
+INSTALL= install
+
+
+# *** End of configurable stuffs ************************** #
+# ********************************************************* #
+
+####################################
+# Should not be changed under this #
+####################################
+
+VERSION= 0.8.0
+CFLAGS= $(INCLUDE) $(OPTIM) $(OTHERFLAGS) $(OPTION) -DVERSION=\"$(VERSION)\" -DFCRONTABS=\"$(FCRONTABS)\" -DETC=\"$(ETC)\"
+OBJSD = fcron.o subs.o database.o job.o log.o conf.o
+OBJS= fcrontab.o fileconf.o subs.o log.o allow.c
+HEADERSD = fcron.h config.h global.h
+HEADERS = fcrontab.h config.h global.h
+
+all: fcron fcrontab
+
+fcron: $(OBJSD)
+	$(CC) $(CFLAGS) -o $@ $(OBJSD)
+
+fcrontab: $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS)
+
+fcrontab.o: fcrontab.c $(HEADERS)
+	$(CC) $(CFLAGS) -c fcrontab.c 
+
+fileconf.o:  fileconf.c $(HEADERS)
+	$(CC) $(CFLAGS) -c fileconf.c 
+
+allow.o:  allow.c $(HEADERS)
+	$(CC) $(CFLAGS) -c allow.c 
+
+%.o: %.c $(HEADERSD)
+	$(CC) $(CFLAGS) -c $<
+
+install: all
+	$(INSTALL) -m 111 -o root -s fcron $(DESTSBIN)/
+	$(INSTALL) -m 4111 -o root -s fcrontab $(DESTBIN)/
+	$(INSTALL) -m 700 -o root files/fcron.allow $(ETC)/
+	$(INSTALL) -m 700 -o root files/fcron.deny $(ETC)/
+	$(INSTALL) -m 644 -o root man/fcron.8 $(DESTMAN)/man8/
+	$(INSTALL) -m 644 -o root man/fcrontab.1 $(DESTMAN)/man1/
+	$(INSTALL) -m 644 -o root man/fcrontab.5 $(DESTMAN)/man5/
+	$(INSTALL) -m 644 -o root man/bitstring.3 $(DESTMAN)/man3/
+	./sysVinit-install "$(CFLAGS)" $(INSTALL)
+	mkdir -p /usr/doc/fcron-$(VERSION)
+	$(INSTALL) -m 644 -o root doc/* /usr/doc/fcron-$(VERSION)/
+	mkdir -p $(FCRONTABS)
+	chmod 700 $(FCRONTABS)
+
+uninstall:
+	rm -f $(DESTSBIN)/fcron
+	./sysVinit-uninstall
+
+clean:
+	rm -f *.o
+	rm -f fcron fcrontab
+
+vclean: clean
+	find ./ -name "*~" -exec rm -f {} \;
+	rm -f fcron*tar.gz
+
+doc-changes: doc/ man/
+	touch doc-changes
+
+doc: doc-changes
+	./gen-doc $(VERSION)
+	touch doc-changes
+
+tar: vclean doc
+
+	@(find ./ -type f | sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
+	@(cd ..; ln -s fcron fcron-$(VERSION))
+	(cd ..; tar -czvf fcron-$(VERSION).src.tar.gz `cat fcron/MANIFEST`)
+	@(cd ..; rm -f fcron-$(VERSION))
+
+	@(cd ..; cp -f fcron-$(VERSION).src.tar.gz old-fcron-pkg/)
+	@(cd ..; mv -f fcron-$(VERSION).src.tar.gz fcron/)
+
+
+
+
