@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.2 2000-05-15 18:28:34 thib Exp $ */
+ /* $Id: config.h.in,v 1.3 2000-05-22 17:46:43 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -39,6 +39,7 @@
 
 
 /* *** options which can be set in Makefile *** */
+/* (they are overridden by Makefile's value ) */
 
 #ifndef VERSION
 #define VERSION	"1.0.0"   /* default version if not defined in Makefile */
@@ -46,6 +47,10 @@
 
 #ifndef FCRONTABS        /* directory where is stored users' fcrontabs */
 #define FCRONTABS	"/var/spool/fcron/"
+#endif
+
+#ifndef ETC             /* directory where are stored fcrontab.allow/deny */
+#define ETC             "/etc/"
 #endif
 
 #ifndef DEBUG
