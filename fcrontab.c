@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.7 2000-06-15 20:39:28 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.8 2000-06-21 13:46:14 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.7 2000-06-15 20:39:28 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.8 2000-06-21 13:46:14 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -54,6 +54,7 @@ pid_t read_pid(void);
 char rm_opt = 0;
 char list_opt = 0;
 char edit_opt = 0;
+char reinstall_opt = 0;
 char ignore_prev = 0;
 int file_opt = 0;
 char debug_opt = DEBUG;
@@ -81,8 +82,7 @@ info(void)
     fprintf(stderr,
 	    "fcrontab " VERSION " - user interface to daemon fcron\n"
 	    "Copyright 2000 Thibault Godouet <fcron@free.fr>\n"
-	    "This program is free software distributed\n"
-	    "WITHOUT ANY WARRANTY.\n"
+	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	);
 
@@ -97,12 +97,13 @@ usage(void)
 {
     fprintf(stderr, 
 	    "fcrontab [-u user] [-n] file\n"
-	    "fcrontab [-u user] { -l | -r | -e [-n] }\n"
+	    "fcrontab [-u user] { -l | -r | -e | -z } [-n]\n"
 	    "fcrontab -h\n"
 	    "  -u user    specify user name.\n"
 	    "  -l         list user's current fcrontab.\n"
 	    "  -r         remove user's current fcrontab.\n"
 	    "  -e         edit user's current fcrontab.\n"
+	    "  -z         reinstall user's fcrontab from source.\n"
 	    "  -n         ignore previous version of file.\n"
 	    "  -d         set up debug mode.\n"
 	    "  -h         display this help message.\n"
@@ -509,6 +510,58 @@ edit_file(char *buf)
 }
 
 
+void
+install_stdin(void)
+    /* install what we get through stdin */
+{
+    FILE *tmp_file = NULL;
+    char tmp[FNAME_LEN];
+    register char c;
+	    	    
+    sprintf(tmp, "/tmp/fcrontab.%d", getpid());
+    if( (tmp_file = fopen(tmp, "w")) == NULL )
+	fprintf(stderr, "Could not open '%s': %s\n", tmp,
+		strerror(errno));
+
+    while ( (c = getc(stdin)) != EOF )
+	putc(c, tmp_file);
+
+    fclose(tmp_file);
+
+    if ( chown(tmp, getuid(), getgid()) != 0 )
+	die_e("could not chown %s", tmp);
+
+    if ( make_file(tmp) == ERR ) {
+	remove(tmp);
+	xexit ( EXIT_ERR );
+    }
+    else {
+	remove(tmp);
+	xexit ( EXIT_OK );
+    }
+
+}
+
+void
+reinstall(char *buf)
+{
+    int i = 0;
+
+    explain("reinstalling %s's fcrontab", user);
+
+    if ( (i = open(buf, O_RDONLY)) < 0) {
+	if ( errno == ENOENT )
+	    fprintf(stderr,"Could not reinstall user %s has no fcrontab", buf);
+	else
+	    fprintf(stderr, "Could not open '%s': %s\n", buf,
+		    strerror(errno));
+    }
+    close(0); dup2(i, 0);
+    close(i);
+
+    install_stdin();
+
+}
 
 void
 parseopt(int argc, char *argv[])
@@ -522,7 +575,7 @@ parseopt(int argc, char *argv[])
     /* constants and variables defined by command line */
 
     while(1) {
-	c = getopt(argc, argv, "u:lrednhV");
+	c = getopt(argc, argv, "u:lrezdnhV");
 	if (c == -1) break;
 	switch (c) {
 
@@ -547,18 +600,28 @@ parseopt(int argc, char *argv[])
 	    list_opt = 1;
 	    rm_opt = 0;
 	    edit_opt = 0;
+	    reinstall_opt = 0;
 	    break;
 
 	case 'r':
 	    list_opt = 0;
 	    rm_opt = 1;
 	    edit_opt = 0;
+	    reinstall_opt = 0;
 	    break;
 
 	case 'e':
 	    list_opt = 0;
 	    rm_opt = 0;
 	    edit_opt = 1;
+	    reinstall_opt = 0;
+	    break;
+
+	case 'z':
+	    list_opt = 0;
+	    rm_opt = 0;
+	    edit_opt = 0;
+	    reinstall_opt = 1;
 	    break;
 
 	case 'n':
@@ -634,39 +697,11 @@ main(int argc, char **argv)
     snprintf(buf, sizeof(buf), "%s.orig", user);
 
     /* determine what action should be taken */
-    if ( file_opt && ! list_opt && ! rm_opt && ! edit_opt ) {
+    if ( file_opt && ! list_opt && ! rm_opt && ! edit_opt && ! reinstall_opt) {
 
-	if ( strcmp(argv[file_opt], "-") == 0 ) {
+	if ( strcmp(argv[file_opt], "-") == 0 )
 
-	    /* install what we get through stdin */
-
-	    FILE *tmp_file = NULL;
-	    char tmp[FNAME_LEN];
-	    register char c;
-	    	    
-	    sprintf(tmp, "/tmp/fcrontab.%d", getpid());
-	    if( (tmp_file = fopen(tmp, "w")) == NULL )
-		fprintf(stderr, "Could not open '%s': %s\n", tmp,
-			strerror(errno));
-
-	    while ( (c = getc(stdin)) != EOF )
-		putc(c, tmp_file);
-
-	    fclose(tmp_file);
-
-	    if ( chown(tmp, getuid(), getgid()) != 0 )
-		die_e("could not chown %s", tmp);
-
-	    if ( make_file(tmp) == ERR ) {
-		remove(tmp);
-		xexit ( EXIT_ERR );
-	    }
-	    else {
-		remove(tmp);
-		xexit ( EXIT_OK );
-	    }
-
-	}
+	    install_stdin();
 
 	else {
 
@@ -683,7 +718,7 @@ main(int argc, char **argv)
 
 	}
 
-    } else if ( list_opt + rm_opt + edit_opt != 1 )
+    } else if ( list_opt + rm_opt + edit_opt + reinstall_opt != 1 )
 	usage();
 
 
@@ -715,6 +750,17 @@ main(int argc, char **argv)
 	xexit(EXIT_OK);
 
     }
+
+    /* reinstall user's entries */
+    if ( reinstall_opt == 1 ) {
+
+	reinstall(buf);
+
+	xexit(EXIT_OK);
+
+    }
+
+
 
     /* never reach */
     return EXIT_OK;
