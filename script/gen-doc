@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: gen-doc,v 1.3 2000-05-15 19:51:01 thib Exp $
+# $Id: gen-doc,v 1.4 2000-05-16 19:51:41 thib Exp $
 
 if test $UID -eq 0; then
   su $USER
@@ -10,7 +10,7 @@ PREVIOUS=`cat ./VERSION`
 
 
 if test $PREVIOUS != $1; then
-    cd man
+    cd doc
     for i in *
     do
     if test $i != RCS; then
@@ -19,34 +19,7 @@ if test $PREVIOUS != $1; then
 	mv -f tmp $i
 	rm -f tmp
     fi
-    done
-    
-
-    cd ../doc
-    for i in *
-    do
-    if test $i != RCS; then
-	echo $i
-	sed -e "s:fcron version .* :fcron version $1 :" < $i > tmp
-	mv -f tmp $i
-	rm -f tmp
-    fi
-    done
-
-  cd ..
-
+    done    
 fi
 
-
-cd man
-for i in *
-do
-    if test $i != RCS; then
-	echo $i
-	groff -Thtml -mandoc $i > ./tmp
-	sed "s:<body>:<body BGCOLOR="\#000000" TEXT="\#FFFFFF">\
-	    <h1>$i</h1><br>:I" < ./tmp > ../doc/$i.html
-	rm -f ./tmp
-    fi
-done
 
