@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.28 2000-09-13 15:45:14 thib Exp $ */
+ /* $Id: fcron.c,v 1.29 2000-09-15 20:17:07 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.28 2000-09-13 15:45:14 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.29 2000-09-15 20:17:07 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -90,7 +90,7 @@ info(void)
      * version, license */
 {
     fprintf(stderr,
-	    "fcron " VERSION " - periodic command scheduler\n"
+	    "fcron " VERSION_QUOTED " - periodic command scheduler\n"
 	    "Copyright 2000 Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
@@ -105,7 +105,7 @@ void
 usage()
   /*  print a help message about command line options and exit */
 {
-    fprintf(stderr, "\nfcron " VERSION "\n\n"
+    fprintf(stderr, "\nfcron " VERSION_QUOTED "\n\n"
 	    "fcron [-d] [-f] [-b]\n"
 	    "fcron -h\n"
 	    "  -d     --debug          Set Debug mode.\n"
@@ -388,7 +388,7 @@ main(int argc, char **argv)
 	    break;
 	default:
 	    /* parent */
-	    printf("\n%s[%d] " VERSION " : started.\n\n",
+	    printf("\n%s[%d] " VERSION_QUOTED " : started.\n\n",
 		   prog_name, pid);
 
 	    exit(0);
@@ -413,7 +413,7 @@ main(int argc, char **argv)
      * is running, otherwise update value of pid in lock file */
     get_lock();
     
-    explain("%s[%d] " VERSION " started", prog_name, daemon_pid);
+    explain("%s[%d] " VERSION_QUOTED " started", prog_name, daemon_pid);
 
     signal(SIGTERM, sigterm_handler);
     signal(SIGHUP, sighup_handler);

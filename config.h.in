@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.18 2000-09-13 15:39:08 thib Exp $ */
+ /* $Id: config.h.in,v 1.19 2000-09-15 20:18:13 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -121,7 +121,7 @@
 /* ****************************************************************** */
 /* *** options which are set by configure script ******************** */
 
-#undef VERSION
+#undef VERSION_QUOTED
 
 /* *** paths *** */
 #undef ETC
