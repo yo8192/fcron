@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrondyn.1.sgml,v 1.7 2002-10-28 17:59:42 thib Exp $ -->
+<!-- $Id: fcrondyn.1.sgml,v 1.8 2002-11-01 18:18:11 thib Exp $ -->
 
 <refentry id="fcrondyn.1">
     <refmeta>
@@ -223,7 +223,7 @@ job. <emphasis><type>jobid</type></emphasis> is the one given by
 <emphasis><type>sig</type></emphasis>
 <emphasis><type>jobid</type></emphasis></term>
 		<listitem>
-		    <para></para>
+		    <para>Send a signal to a running job.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -231,7 +231,7 @@ job. <emphasis><type>jobid</type></emphasis> is the one given by
 <emphasis><type>niceval</type></emphasis>
 <emphasis><type>jobid</type></emphasis></term>
 		<listitem>
-		    <para></para>
+		    <para>Change the priority of a running job.</para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
