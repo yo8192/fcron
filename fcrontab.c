@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.57 2002-07-19 19:33:14 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.58 2002-08-22 21:32:12 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -47,7 +47,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.57 2002-07-19 19:33:14 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.58 2002-08-22 21:32:12 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -81,8 +81,8 @@ char need_sig = 0;           /* do we need to signal fcron daemon */
 
 char orig_dir[PATH_LEN];
 CF *file_base = NULL;
-char buf[FNAME_LEN];
-char file[FNAME_LEN];
+char buf[PATH_LEN];
+char file[PATH_LEN];
 
 /* needed by log part : */
 char *prog_name = NULL;
@@ -370,7 +370,7 @@ edit_file(char *buf)
        if necessary */
 {
     char *cureditor = NULL;
-    char editorcmd[FNAME_LEN];
+    char editorcmd[PATH_LEN];
     pid_t pid;
     int status;
     struct stat st;
