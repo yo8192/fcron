@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.17 2001-04-21 08:56:28 thib Exp $ */
+ /* $Id: option.h,v 1.18 2001-05-07 01:08:12 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -367,8 +367,8 @@
 
 
 /*
-  bit 20 : set to 1 : remove %-job from lavg queue if interval is exceeded
-           set to 0 : let the job in the %-queue if interval is exceeded
+  bit 20 : set to 1 : let the job in the %-queue if interval is exceeded
+           set to 0 : remove %-job from lavg queue if interval is exceeded
 */
 #define	is_strict(opt) \
 	( ! _bit_test(opt, 20))
