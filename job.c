@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.25 2000-11-10 17:37:29 thib Exp $ */
+ /* $Id: job.c,v 1.26 2000-12-04 20:18:27 thib Exp $ */
 
 #include "fcron.h"
 
@@ -148,6 +148,18 @@ run_job(struct exe *exeent)
 	    /* write mail header */
 	    xwrite(mailfd,"To: ");
 	    xwrite(mailfd, line->cl_file->cf_user);
+#ifdef HAVE_GETHOSTNAME
+	    {
+		char hostname[USER_NAME_LEN];
+		memset(hostname, 0, sizeof(hostname));
+		if (gethostname(hostname, sizeof(hostname)) != 0)
+		    error_e("Could not get hostname");
+		else {
+		    xwrite(mailfd, "@");
+		    xwrite(mailfd, hostname);
+		}
+	    }
+#endif /* HAVE_GETHOSTNAME */
 	    xwrite(mailfd, "\nSubject: Output of fcron job: '");
 	    xwrite(mailfd, line->cl_shell);
 	    xwrite(mailfd,"'\n\n");
