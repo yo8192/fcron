@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.58 2002-09-07 13:11:45 thib Exp $ */
+ /* $Id: conf.c,v 1.59 2002-10-05 14:26:34 thib Exp $ */
 
 #include "fcron.h"
 
@@ -404,18 +404,18 @@ read_type(int fd, short int *type, short int *size)
 
 /* macros for read_file() */
 /* read "size" bytes from file "ff", put them in "to", and check for errors */
-#define Read(to, size, err_str) \
+#define Read(TO, SIZE, ERR_STR) \
         { \
-          if ( read(fileno(ff), &(to), size) < size ) { \
-            error_e(err_str); \
+          if ( read(fileno(ff), &(TO), SIZE) < SIZE ) { \
+            error_e(ERR_STR); \
 	    goto err; \
 	  } \
         }
 
-#define Read_strn(to, size, err_str) \
+#define Read_strn(TO, SIZE, ERR_STR) \
         { \
-          if ( read_strn(fileno(ff), &(to), size) != OK ) { \
-            error_e(err_str); \
+          if ( read_strn(fileno(ff), &(TO), SIZE) != OK ) { \
+            error_e(ERR_STR); \
 	    goto err; \
 	  } \
         }
@@ -973,41 +973,41 @@ delete_file(const char *user_name)
 
 
 /* save_file() error management */
-#define Save_type(fd, type) \
+#define Save_type(FD, TYPE) \
         { \
-          if ( save_type(fd, type) != OK ) { \
+          if ( save_type(FD, TYPE) != OK ) { \
             error_e("Could not write type : file has not been saved."); \
-            close(fd); \
+            close(FD); \
             remove(file->cf_user); \
             goto next_file; \
 	  } \
         }
 
-#define Save_str(fd, type, str) \
+#define Save_str(FD, TYPE, STR) \
         { \
-          if ( save_str(fd, type, str) != OK ) { \
+          if ( save_str(FD, TYPE, STR) != OK ) { \
             error_e("Could not write str : file has not been saved."); \
-            close(fd); \
+            close(FD); \
             remove(file->cf_user); \
             goto next_file; \
 	  } \
         }
 
-#define Save_strn(fd, type, str, size) \
+#define Save_strn(FD, TYPE, STR, SIZE) \
         { \
-          if ( save_strn(fd, type, str, size) != OK ) { \
+          if ( save_strn(FD, TYPE, STR, SIZE) != OK ) { \
             error_e("Could not write strn : file has not been saved."); \
-            close(fd); \
+            close(FD); \
             remove(file->cf_user); \
             goto next_file; \
 	  } \
         }
 
-#define Save_lint(fd, type, value) \
+#define Save_lint(FD, TYPE, VALUE) \
         { \
-          if ( save_lint(fd, type, value) != OK ) { \
+          if ( save_lint(FD, TYPE, VALUE) != OK ) { \
             error_e("Could not write lint : file has not been saved."); \
-            close(fd); \
+            close(FD); \
             remove(file->cf_user); \
             goto next_file; \
 	  } \
@@ -1035,7 +1035,7 @@ save_file(CF *arg_file)
 	debug("Saving %s...", file->cf_user);
 
 	/* open file */
-	fd = open(file->cf_user, O_CREAT | O_TRUNC | O_SYNC);
+	fd = open(file->cf_user, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC);
 	if ( fd == -1 ) {
 	    error_e("Could not open %s", file->cf_user);
 	    goto next_file;
