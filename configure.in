@@ -157,7 +157,7 @@ Cannot determine path to vi: try option --with-editor=PATH])
   fi ]
 )
 
-AC_MSG_CHECKING(etcdir)
+AC_MSG_CHECKING(location of etc directory)
 AC_ARG_WITH(etcdir,
 [  --with-etcdir=PATH      Directory containing permission files (default /etc).],
 [ case "$withval" in
