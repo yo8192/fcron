@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.13 2000-06-21 09:48:54 thib Exp $ */
+ /* $Id: database.c,v 1.14 2000-06-21 13:44:27 thib Exp $ */
 
 #include "fcron.h"
 
@@ -71,9 +71,11 @@ add_serial_job(CL *line)
 {
     short int i;
 
+    debug("inserting in serial queue %s", line->cl_shell);
+
     if ( line->cl_pid != -1 ) {
+
 	line->cl_pid = -1;
-	serial_num++;
 
 	if ( serial_num > serial_array_size ) {
 	    CL **ptr = NULL;
@@ -94,6 +96,8 @@ add_serial_job(CL *line)
 	    i -= serial_array_size;
 	serial_array[i] = line;
 
+	serial_num++;
+
     }
 
     else {
@@ -112,8 +116,11 @@ void
 run_serial_job(void)
     /* run the next serialized job */
 {
+    
+    debug("running next serial job");
+    
     if ( serial_num != 0 ) {
-	run_job(serial_array[serial_array_index]);
+	run_queue_job(serial_array[serial_array_index]);
 
 	serial_running++;
 	serial_array_index++;
@@ -169,9 +176,16 @@ wait_chld(void)
 		exe_array[i]->cl_pid = 0;
 		exe_array[i]->cl_file->cf_running -= 1;
 
-		if(is_serial(exe_array[i]->cl_option) && --serial_running == 0)
-		    run_serial_job();
-		    
+		if(is_serial(exe_array[i]->cl_option)) {
+		    if (--serial_running == 0)
+			run_serial_job();
+		}
+		else if (is_serial_once(exe_array[i]->cl_option))
+		    if ( --serial_running == 0 ) {
+			clear_serial_once(exe_array[i]->cl_option);
+			run_serial_job();
+		    }
+		
 		if (i < --exe_num) {
 		    exe_array[i] = exe_array[exe_num];
 		    exe_array[exe_num] = NULL;
