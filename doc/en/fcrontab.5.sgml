@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.1 2002-01-03 14:29:25 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.2 2002-01-04 19:12:01 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>
@@ -548,6 +548,7 @@ the last release of Mozilla !"</programlisting>
 	    <member><link linkend="fcron.8">&fcron;(8)</link></member>
 	    <member><link linkend="fcrontab.1">&fcrontab;(1)</link></member>
 	    <member><link linkend="fcrontab.5">&fcron.conf;(5)</link></member>
+	    <member>The HTML version of the documentation, if you are not reading it right now, which is far better than these man pages :)).</member>
 	</simplelist>
     </refsect1>
 

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron.8.sgml,v 1.1 2002-01-03 14:28:03 thib Exp $ -->
+<!-- $Id: fcron.8.sgml,v 1.2 2002-01-04 19:11:55 thib Exp $ -->
 
 <refentry id="fcron.8">
     <refmeta>
@@ -233,6 +233,7 @@ other processes).</para>
 	    <member><link linkend="fcron.conf.5">&fcron.conf;(5)</link></member>
 	    <member><link linkend="fcrontab.1">&fcrontab;(1)</link></member>
 	    <member><link linkend="fcrontab.5">&fcrontab;(5)</link></member>
+	    <member>The HTML version of the documentation, if you are not reading it right now, which is far better than these man pages :)).</member>
 	</simplelist>
     </refsect1>
 
