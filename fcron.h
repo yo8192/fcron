@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.15 2001-01-12 21:43:33 thib Exp $ */
+ /* $Id: fcron.h,v 1.16 2001-01-27 15:39:19 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -105,12 +105,13 @@ extern char *strdup2(const char *);
 /* end of subs.c */
 
 /* database.c */
-extern void test_jobs(time_t t2);
+extern void test_jobs(void);
 extern void wait_chld(void);
 extern void wait_all(int *counter);
 extern time_t time_to_sleep(time_t lim);
 extern time_t check_lavg(time_t lim);
-extern void set_next_exe(CL *line, char is_new_line);
+extern void set_next_exe(CL *line, char option);
+extern void set_next_exe_notrun(CL *line, char context);
 extern void insert_nextexe(CL *line);
 extern void add_serial_job(CL *line);
 extern void add_lavg_job(CL *line);
@@ -126,6 +127,8 @@ extern void save_file(CF *file_name);
 
 /* job.c */
 extern void run_job(struct exe *exeent);
+extern int create_mail(CL *line, char *subject);
+extern void xwrite(int fd, char *string);
 /* end of job.c */
 
 
