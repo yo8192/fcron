@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.9 2003-12-25 22:58:04 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.10 2004-04-29 19:37:23 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
@@ -250,6 +250,25 @@ and set appropriately the paths :</para>
 <link linkend="install">install file</link>.</para>
 	    </answer>
 	</qandaentry>
+
+	 <qandaentry>
+	    <question>
+	       <para>Has fcron some incompatibilities with Vixie cron ?</para>
+	    </question>
+	    <answer>
+	       <para>As far as I know, fcron supports completely the syntax of
+		  Vixie cron's crontab. So you should not have any problem with that
+		  (otherwise, please contact me at &email;).</para>
+	       <para>The main problem is about the management of the system (f)crontab.
+		  Vixie cron monitors the changes on /etc/crontab every minute,
+		  and automatically takes into account the changes if any.
+		  Fcron do not do that. Fcron do not support the /etc/cron.d/ dir too,
+		  as it is just an extension of the /etc/crontab file.
+		  But be reassured : /etc/cron.{daily,weekly,monthly} are supported
+		  by fcron (in fact, those dirs are not managed by fcron directly,
+		  but by run-parts, which is independent from fcron).</para>
+	    </answer>
+	 </qandaentry>
     </qandaset>
 </sect1>
 
