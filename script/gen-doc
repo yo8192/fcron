@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: gen-doc,v 1.5 2000-05-16 20:03:13 thib Exp $
+# $Id: gen-doc,v 1.6 2000-05-30 19:23:22 thib Exp $
 
 PREVIOUS=`cat ./VERSION`
 
@@ -11,7 +11,7 @@ if test $PREVIOUS != $1; then
     do
     if test $i != RCS; then
 	echo $i
-	sed -e "s:fcron version .* :fcron version $1 :" < $i > tmp
+	sed -e "s:fcron version [0-9.]*:fcron version $1:" < $i > tmp
 	mv -f tmp $i
 	chown $USER $i
 	rm -f tmp
