@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.24 2003-09-12 20:56:04 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.25 2003-09-12 21:35:40 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -42,7 +42,7 @@ A copy of the license is included in gfdl.sgml.
 	    (could->couldn't)</para>
 	 </listitem>
 	 <listitem>
-	    <para>added a fcronsighup.h and a convert-fcrontab.h (required to compile with the generic rule to make .o files on some systems).</para>
+	    <para>fixed compile on SunOS 5.9 .</para>
 	 </listitem>
 	 <listitem>
 	    <para>added some $srcdir to be able (again ;) ) to run configure from another directory.</para>

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.9 2003-09-12 20:53:34 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.10 2003-09-12 21:34:55 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -34,9 +34,8 @@
 #include "fcrondyn.h"
 #include "allow.h"
 #include "read_string.h"
-#include "getloadavg.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.9 2003-09-12 20:53:34 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.10 2003-09-12 21:34:55 thib Exp $";
 
 void info(void);
 void usage(void);
