@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.11 2003-07-14 10:58:43 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.12 2003-09-12 20:56:45 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>
@@ -265,7 +265,7 @@ below).</para>
 	    <para>The third type of &fcrontabf;'s entries begin by a "%",
 followed by a keyword from one of 3 different lists, and optional options.</para>
 		<refsect3>
-		    <title>"*ly" keywords</title>
+		    <title>*ly keywords</title>
 		    <para>Those keywords are :</para>
 		    <para><simplelist type="inline">
 			    <member><parameter>hourly </parameter></member>
@@ -282,6 +282,7 @@ to run a command once between Monday and Sunday each week.</para>
 fields (as defined in "<link linkend="fcrontab.5.tadent">Entries based on time
 and date</link>" (see above)) to specify when the command should be run during
 each time interval :</para>
+		    <para>
 	    <table>
 		<title>Needed time fields for each keyword</title>
 		<tgroup cols="2">
@@ -311,10 +312,11 @@ each time interval :</para>
 		    </tbody>
 		</tgroup>
 	    </table>
+</para>
 		</refsect3>
 
 		<refsect3>
-		    <title>"mid*ly" keywords</title>
+		    <title>mid*ly keywords</title>
 		    <para>They are similar to the "*ly" ones :</para>
 		    <para><simplelist type="inline">
 			    <member><parameter>midhourly </parameter></member>
@@ -345,7 +347,7 @@ below).</para>
 
 
 		<refsect3>
-		    <title>"*s" keywords</title>
+		    <title>*s keywords</title>
 		    <para>They are :</para>
 		    <para><simplelist type="inline">
 			    <member><parameter>mins </parameter></member>
@@ -391,8 +393,8 @@ a whole line immediately after an exclamation mark (!), while it is done after a
 "&", a "%" or a "@" depending on the type of scheduling in the second case. Note
 that an option declaration in a schedule overrides the global declaration of
 that same option.</para>
-	    <para>Options are separated by comas (,) and their arguments, if
-any, are placed in parentheses ("(" and ")") and separated by comas. No spaces
+	    <para>Options are separated by commas (,) and their arguments, if
+any, are placed in parentheses ("(" and ")") and separated by commas. No spaces
 are allowed. A declaration of options is of the form</para>
 	    <blockquote>
 		<para><replaceable>option</replaceable>[(<replaceable>arg1</replaceable>[,<replaceable>arg2</replaceable>][...])][,<replaceable>option</replaceable>[(<replaceable>arg1</replaceable>[...])]][...]</para>
@@ -400,7 +402,7 @@ are allowed. A declaration of options is of the form</para>
 	    <para>where option is either the name of an option or its
 abbreviation. The options are (default value in parentheses) :</para>
 	    <variablelist>
-		<title>Valid options in a &fcrontabf; (alphabetically)</title>
+		<title>Valid options in a &fcrontabf;</title>
 
 		<varlistentry id="fcrontab.5.bootrun">
 		    <term>bootrun</term>
@@ -715,7 +717,7 @@ linkend="uptent">lines based on elapsed system up time</link>, fcron's option
 		</varlistentry>
 	    </variablelist>
 
-	    <para>A <type>boolean</type> argument can be inexistent, in which
+	    <para>A <type>boolean</type> argument can be non-existent, in which
 case parentheses are not used and it means <constant>true</constant>; the string
 "true", "yes" or 1 to mean <constant>true</constant>; and the string "false",
 "no" or 0 to mean <constant>false</constant>. See above for explanations about
