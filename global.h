@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.34 2001-12-23 22:04:49 thib Exp $ */
+ /* $Id: global.h,v 1.35 2002-02-25 18:42:21 thib Exp $ */
 
 
 /* 
@@ -113,7 +113,7 @@
 #include "save.h"
 /* log part */
 #include "log.h"
-/* functions used by both fcrontab and fcron */
+/* functions used by fcrontab, fcrondyn, and fcron */
 #include "subs.h"
 
 /* you should not change this (nor need to do it) */
@@ -154,7 +154,7 @@ typedef struct CF {
 } CF;
 
 
-#define OPTION_SIZE 3
+#define OPTION_SIZE 4
 #define LAVG_SIZE 3
 /* warning : do not change the order of the members of this structure
  *   because some tests made are dependent to that order */
@@ -167,6 +167,7 @@ typedef struct CL {
     char          *cl_runas;      /* determine permissions of the job        */
     char          *cl_mailto;     /* mail output to cl_mailto                */
     time_t         cl_until;      /* timeout of the wait for a lavg value    */
+    time_t         cl_first;      /* initial delay preserved for volatile entries */
     time_t         cl_nextexe;    /* time and date of the next execution     */
     long int       cl_timefreq;   /* Run every n seconds                     */
     unsigned short cl_remain;     /* remaining until next execution          */
