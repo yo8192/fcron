@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.35 2000-12-14 18:09:43 thib Exp $ */
+ /* $Id: fcron.c,v 1.36 2000-12-30 12:55:06 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.35 2000-12-14 18:09:43 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.36 2000-12-30 12:55:06 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -263,7 +263,7 @@ parseopt(int argc, char *argv[])
 
     if (optind < argc) {
 	for (i = optind; i<=argc; i++)
-	    error("Unknown argument '%s'", argv[i]);
+	    error("Unknown argument \"%s\"", argv[i]);
 	usage();
     }
 
@@ -423,7 +423,7 @@ main(int argc, char **argv)
 	struct passwd *pass;
 
 	if ( ! (pass = getpwnam(USERNAME)) )
-	    die("user '%s' is not in passwd file. Aborting.", USERNAME);
+	    die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
 	if (setregid(pass->pw_gid, 0) != 0 )
 	    die_e("Could not set gid to " GROUPNAME);
 	if (setreuid(pass->pw_uid, 0) != 0 )

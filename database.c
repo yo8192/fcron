@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.41 2000-12-10 20:29:25 thib Exp $ */
+ /* $Id: database.c,v 1.42 2000-12-30 12:55:38 thib Exp $ */
 
 #include "fcron.h"
 
@@ -76,7 +76,7 @@ run_normal_job(CL *line)
 	run_queue_job(line);
     }
     else {
-	warn("    process already running: %s '%s'", 
+	warn("    process already running: %s %s", 
 	     line->cl_file->cf_user,
 	     line->cl_shell
 	    );
@@ -593,7 +593,7 @@ goto_non_matching(CL *line, struct tm *ftime)
 	}
 	if (debug_opt)
 	    set_wday(ftime);
-	debug("   '%s' first non matching %d/%d/%d wday:%d %02d:%02d",
+	debug("   %s first non matching %d/%d/%d wday:%d %02d:%02d",
 	      line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
 	      (ftime->tm_year + 1900), ftime->tm_wday,
 	      ftime->tm_hour, ftime->tm_min);
@@ -672,7 +672,7 @@ goto_non_matching(CL *line, struct tm *ftime)
 	    }
 	}
 	  
-	debug("   '%s' first non matching %d/%d/%d wday:%d %02d:%02d",
+	debug("   %s first non matching %d/%d/%d wday:%d %02d:%02d",
 	      line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
 	      (ftime->tm_year + 1900), ftime->tm_wday,
 	      ftime->tm_hour, ftime->tm_min);
@@ -843,7 +843,7 @@ set_next_exe(CL *line, char is_new_line)
 	line->cl_nextexe = mktime(&ftime);
 
 	if ( ! is_new_line )
-	    debug("   cmd: '%s' next exec %d/%d/%d wday:%d %02d:%02d",
+	    debug("   cmd: %s next exec %d/%d/%d wday:%d %02d:%02d",
 		  line->cl_shell, (ftime.tm_mon + 1), ftime.tm_mday,
 		  (ftime.tm_year + 1900), ftime.tm_wday,
 		  ftime.tm_hour, ftime.tm_min);
@@ -852,7 +852,7 @@ set_next_exe(CL *line, char is_new_line)
     else {
 	/* this is a job based on system up time */
 	line->cl_nextexe = now + line->cl_timefreq;
-	debug("   cmd: '%s' next exec in %lds", line->cl_shell,
+	debug("   cmd: %s next exec in %lds", line->cl_shell,
 	      line->cl_timefreq);
     }
     
@@ -887,7 +887,7 @@ check_lavg(time_t lim)
     /* first, check if some lines must be executed because of until */
     while ( i < lavg_num )
 	if ( lavg_array[i].l_line->cl_until && lavg_array[i].l_until < now ) {
-	    debug("until '%s' %d", lavg_array[i].l_line->cl_shell,
+	    debug("until %s %d", lavg_array[i].l_line->cl_shell,
 		  lavg_array[i].l_until);
 	    run_lavg_job(i);
 	} else
@@ -926,7 +926,7 @@ check_lavg(time_t lim)
 		     || l_avg[2] < lavg_array[i].l_line->cl_lavg[2] )
 		 )
 	    ) {
-	    debug("lavg '%s' %s %.0f:%d %.0f:%d %.0f:%d",
+	    debug("lavg %s %s %.0f:%d %.0f:%d %.0f:%d",
 		  lavg_array[i].l_line->cl_shell,
 		  (is_lor(lavg_array[i].l_line->cl_option)) ? "or" : "and",
 		  l_avg[0], lavg_array[i].l_line->cl_lavg[0],

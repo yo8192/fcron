@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.26 2000-12-23 20:12:05 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.27 2000-12-30 12:54:19 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.26 2000-12-23 20:12:05 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.27 2000-12-30 12:54:19 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -371,7 +371,7 @@ int
 make_file(char *file)
 {
 
-    explain("installing file '%s' for user %s", file, user);
+    explain("installing file %s for user %s", file, user);
 
     /* read file and create a list in memory */
     switch ( read_file(file, user) ) {
@@ -411,7 +411,7 @@ list_file(char *file)
 	    return ;
 	}
 	else
-	    die_e("User %s could not read file '%s'", user, file);
+	    die_e("User %s could not read file \"%s\"", user, file);
     }
     else {
 
@@ -490,7 +490,7 @@ edit_file(char *buf)
 	if ( stat(tmp, &st) == 0 )
 	    mtime = st.st_mtime;
 	else {
-	    error_e("could not stat '%s'", buf);
+	    error_e("could not stat \"%s\"", buf);
 	    goto exiterr;
 	}
 
@@ -521,7 +521,7 @@ edit_file(char *buf)
 	    }
 #endif
 	    execlp(editor, editor, tmp, NULL);
-	    error_e("Error while running '%s'", editor);
+	    error_e("Error while running \"%s\"", editor);
 	    goto exiterr;
 
 	case -1:
@@ -616,7 +616,7 @@ install_stdin(void)
 	    	    
     sprintf(tmp, "/tmp/fcrontab.%d", getpid());
     if( (tmp_file = fopen(tmp, "w")) == NULL )
-	die_e("Could not open '%s'", tmp);
+	die_e("Could not open \"%s\"", tmp);
 
     while ( (c = getc(stdin)) != EOF )
 	putc(c, tmp_file);
@@ -651,7 +651,7 @@ reinstall(char *buf)
 		    buf);
 	}
 	else
-	    fprintf(stderr, "Could not open '%s': %s\n", buf,
+	    fprintf(stderr, "Could not open \"%s\": %s\n", buf,
 		    strerror(errno));
 
 	exit (EXIT_ERR);
@@ -765,7 +765,7 @@ parseopt(int argc, char *argv[])
     if ( user == NULL ) {
 	/* get user's name using getpwuid() */
 	if ( ! (pass = getpwuid(uid)) )
-	    die("user '%s' is not in passwd file. Aborting.", USERNAME);
+	    die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
 	/* we need to strdup2 the value given by getpwuid() because we free
 	 * file->cf_user in delete_file */
 	user = strdup2(pass->pw_name);
@@ -774,13 +774,13 @@ parseopt(int argc, char *argv[])
     }
     else {
 	if ( ! (pass = getpwnam(user)) )
-	    die("user '%s' is not in passwd file. Aborting.", user);
+	    die("user \"%s\" is not in passwd file. Aborting.", user);
 	asuid = pass->pw_uid;
 	asgid = pass->pw_gid;
     }
 
     if ( ! is_allowed(user) ) {
-	die("User '%s' is not allowed to use %s. Aborting.",
+	die("User \"%s\" is not allowed to use %s. Aborting.",
 	    user, prog_name);	    
     }
 
@@ -808,7 +808,7 @@ main(int argc, char **argv)
     {
 	struct passwd *pass;
 	if ( ! (pass = getpwnam(USERNAME)) )
-	    die("user '%s' is not in passwd file. Aborting.", USERNAME);
+	    die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
 	fcrontab_uid = pass->pw_uid;
 	fcrontab_gid = pass->pw_gid;
 

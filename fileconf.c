@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.31 2000-12-23 20:16:10 thib Exp $ */
+ /* $Id: fileconf.c,v 1.32 2000-12-30 12:54:55 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -169,9 +169,9 @@ read_file(char *filename, char *user)
     /* check if user is allowed to read file */
     /* create a temp file with user's permissions */
     if ( access(file_name, R_OK) != 0 )
-	die_e("User %s can't read file '%s'", user, file_name);
+	die_e("User %s can't read file \"%s\"", user, file_name);
     else if ( (file = fopen(file_name, "r")) == NULL ) {
-	fprintf(stderr, "Could not open '%s': %s\n", file_name,
+	fprintf(stderr, "Could not open \"%s\": %s\n", file_name,
 		strerror(errno));
 	return ERR;
     }
@@ -229,7 +229,7 @@ read_file(char *filename, char *user)
 	case '!':
 	    ptr = read_opt(ptr, &default_line);
 	    if ( ptr != NULL && *ptr != '\0' ) {
-		fprintf(stderr, "%s:%d: Syntax error: string '%s' ignored\n",
+		fprintf(stderr, "%s:%d: Syntax error: string \"%s\" ignored\n",
 			file_name, line, ptr);
 		need_correction = 1;
 	    }
@@ -327,7 +327,7 @@ read_env(char *ptr, CF *cf)
 	else {
 	    struct passwd *pass = NULL;
 	    if ( (pass = getpwnam(val)) == 0 ) {
-		fprintf(stderr, "%s:%d:MAILTO: '%s' is not in passwd :"
+		fprintf(stderr, "%s:%d:MAILTO: \"%s\" is not in passwd :"
 			" ignored\n", file_name, line, val);	
 		need_correction = 1;
 	    } else {
@@ -372,7 +372,7 @@ get_runas(char *ptr, uid_t *uid)
 	name[i++] = *ptr++;
     
     if ((pas = getpwnam(name)) == NULL) {
-        fprintf(stderr, "runas: '%s' is not in passwd file : ignored", name);
+        fprintf(stderr, "runas: \"%s\" is not in passwd file : ignored", name);
 	need_correction = 1;
 	return NULL;
     }
@@ -457,7 +457,7 @@ read_opt(char *ptr, CL *cl)
     
 #define Handle_err \
     { \
-        fprintf(stderr, "%s:%d: Argument(s) for option '%s' not valid: " \
+        fprintf(stderr, "%s:%d: Argument(s) for option \"%s\" not valid: " \
 		"skipping end of line.\n", file_name, line, opt_name); \
         need_correction = 1; \
         return NULL; \
@@ -489,7 +489,7 @@ read_opt(char *ptr, CL *cl)
 	    else
 		set_serial(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if (strcmp(opt_name, "serialonce") == 0 ) {
@@ -500,7 +500,7 @@ read_opt(char *ptr, CL *cl)
 	    else
 		clear_serial_sev(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if (strcmp(opt_name, "lavgonce") == 0 ) {
@@ -511,7 +511,7 @@ read_opt(char *ptr, CL *cl)
 	    else
 		clear_lavg_sev(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if (strcmp(opt_name, "exesev") == 0 ) {
@@ -522,7 +522,7 @@ read_opt(char *ptr, CL *cl)
 	    else
 		set_exe_sev(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if(strcmp(opt_name, "b")==0 || strcmp(opt_name, "bootrun")==0){
@@ -533,7 +533,7 @@ read_opt(char *ptr, CL *cl)
 	    else
 		set_bootrun(cl->cl_option);	
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if( strcmp(opt_name, "reset")==0 ) {
@@ -545,14 +545,14 @@ read_opt(char *ptr, CL *cl)
 		cl->cl_mailto = uid;
 	    }
 	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 
 	else if(strcmp(opt_name, "f") == 0 || strcmp(opt_name, "first") == 0){
 	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_nextexe)))==NULL)
 		Handle_err;
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %ld\n",opt_name,cl->cl_nextexe);
+		fprintf(stderr, "  Opt : \"%s\" %ld\n",opt_name,cl->cl_nextexe);
 	}
 
 	else if(strcmp(opt_name, "r")==0 || strcmp(opt_name, "runfreq")==0) {
@@ -564,7 +564,7 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;	
 	    cl->cl_runfreq = i;
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	/* options to run once per interval :
@@ -572,25 +572,25 @@ read_opt(char *ptr, CL *cl)
 	else if (strcmp(opt_name, "mins") == 0) {
 	    /* nothing to do */
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 	else if (strcmp(opt_name, "hours") == 0) {
 	    set_freq_mins(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 	else if (strcmp(opt_name, "days") == 0) {
 	    set_freq_mins(cl->cl_option);
 	    set_freq_hrs(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 	else if (strcmp(opt_name, "mons") == 0) {
 	    set_freq_mins(cl->cl_option);
 	    set_freq_hrs(cl->cl_option);
 	    set_freq_days(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 	else if (strcmp(opt_name, "dow") == 0) {
 	    set_freq_mins(cl->cl_option);
@@ -598,7 +598,7 @@ read_opt(char *ptr, CL *cl)
 	    set_freq_days(cl->cl_option);
 	    set_freq_mons(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 
 	/* run once an element of the selected field 
@@ -607,25 +607,25 @@ read_opt(char *ptr, CL *cl)
 	    set_freq_hrs(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 	else if (strcmp(opt_name, "daily") == 0) {
 	    set_freq_days(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 	else if (strcmp(opt_name, "monthly") == 0) {
 	    set_freq_mons(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 	else if (strcmp(opt_name, "weekly") == 0) {
 	    set_freq_dow(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 
 	/* run once an element of the selected field 
@@ -636,7 +636,7 @@ read_opt(char *ptr, CL *cl)
 	    set_freq_periodically(cl->cl_option);
 	    set_freq_mid(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 	else if (strcmp(opt_name, "middaily") == 0 
 		 || strcmp(opt_name, "nightly") == 0) {
@@ -644,21 +644,21 @@ read_opt(char *ptr, CL *cl)
 	    set_freq_periodically(cl->cl_option);
 	    set_freq_mid(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 	else if (strcmp(opt_name, "midmonthly") == 0) {
 	    set_freq_mons(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
 	    set_freq_mid(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 	else if (strcmp(opt_name, "midweekly") == 0) {
 	    set_freq_dow(cl->cl_option);
 	    set_freq_periodically(cl->cl_option);
 	    set_freq_mid(cl->cl_option);
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 
 	else if ( strcmp(opt_name, "lavg") == 0 ) {
@@ -735,7 +735,7 @@ read_opt(char *ptr, CL *cl)
 	    else
 		set_land(cl->cl_option);	
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if( strcmp(opt_name, "lavgor") == 0 ) {
@@ -746,14 +746,14 @@ read_opt(char *ptr, CL *cl)
 	    else
 		set_lor(cl->cl_option);	
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if(strcmp(opt_name, "u") == 0 || strcmp(opt_name, "until") == 0){
 	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_until)))==NULL)
 		Handle_err;
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %ld\n",opt_name,cl->cl_until);
+		fprintf(stderr, "  Opt : \"%s\" %ld\n",opt_name,cl->cl_until);
 	}
 
 	else if(strcmp(opt_name, "m")==0 || strcmp(opt_name, "mail")==0){
@@ -764,7 +764,7 @@ read_opt(char *ptr, CL *cl)
 	    else
 		set_mail(cl->cl_option);	
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if( strcmp(opt_name, "forcemail") == 0 ) {
@@ -775,7 +775,7 @@ read_opt(char *ptr, CL *cl)
 	    else
 		set_mailzerolength(cl->cl_option);	
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if( strcmp(opt_name, "mailto") == 0) {
@@ -793,7 +793,7 @@ read_opt(char *ptr, CL *cl)
 		clear_mail(cl->cl_option);
 	    else {
 		if ( (pass = getpwnam(buf)) == NULL ) {
-		    fprintf(stderr, "%s:%d:mailto: '%s' is not in passwd :"
+		    fprintf(stderr, "%s:%d:mailto: \"%s\" is not in passwd :"
 			    " ignored\n", file_name, line, buf);	
 		    need_correction = 1;
 		} else {
@@ -802,7 +802,7 @@ read_opt(char *ptr, CL *cl)
 		}
 	    }
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' '%s'\n", opt_name, buf);
+		fprintf(stderr, "  Opt : \"%s\" \"%s\"\n", opt_name, buf);
 	}
 
 	else if( strcmp(opt_name, "dayand") == 0 ) {
@@ -813,7 +813,7 @@ read_opt(char *ptr, CL *cl)
 	    else
 		set_dayand(cl->cl_option);	
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if( strcmp(opt_name, "dayor") == 0 ) {
@@ -824,7 +824,7 @@ read_opt(char *ptr, CL *cl)
 	    else
 		set_dayor(cl->cl_option);	
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if(strcmp(opt_name, "n") == 0 || strcmp(opt_name, "nice") == 0) {
@@ -832,7 +832,7 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 	    cl->cl_nice = (char)i;
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if(strcmp(opt_name, "runas") == 0) {
@@ -852,12 +852,12 @@ read_opt(char *ptr, CL *cl)
 		cl->cl_runas = uid;
 		set_runas(cl->cl_option);
 		if (debug_opt)
-		    fprintf(stderr, "  Opt : '%s' %d\n", opt_name, uid);
+		    fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, uid);
 	    }
 	}
 
 	else {
-	    fprintf(stderr, "%s:%d: Option '%s' unknown: "
+	    fprintf(stderr, "%s:%d: Option \"%s\" unknown: "
 		    "skipping option.\n", file_name, line, opt_name);  
 	    need_correction = 1;
 	}
@@ -1001,7 +1001,7 @@ read_freq(char *ptr, CF *cf)
     cf->cf_line_base = cl;
 
     if ( debug_opt )
-	fprintf(stderr, "  Cmd '%s', timefreq %ld, first %ld\n",
+	fprintf(stderr, "  Cmd \"%s\", timefreq %ld, first %ld\n",
 		cl->cl_shell, cl->cl_timefreq, cl->cl_nextexe);
     
     return;
@@ -1095,7 +1095,7 @@ read_arys(char *ptr, CF *cf)
     cf->cf_line_base = cl;
 
     if ( debug_opt )
-	fprintf(stderr, "  Cmd '%s'\n", cl->cl_shell);
+	fprintf(stderr, "  Cmd \"%s\"\n", cl->cl_shell);
     return;
 
   exiterr:
@@ -1221,7 +1221,7 @@ read_period(char *ptr, CF *cf)
     cf->cf_line_base = cl;
 
     if ( debug_opt )
-	fprintf(stderr, "  Cmd '%s'\n", cl->cl_shell);
+	fprintf(stderr, "  Cmd \"%s\"\n", cl->cl_shell);
     return;
 
   exiterr:

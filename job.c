@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.26 2000-12-04 20:18:27 thib Exp $ */
+ /* $Id: job.c,v 1.27 2000-12-30 12:55:25 thib Exp $ */
 
 #include "fcron.h"
 
@@ -120,7 +120,7 @@ run_job(struct exe *exeent)
     /* prepare the job execution */
     switch ( pid = fork() ) {
     case -1:
-	error_e("Fork error : could not exec '%s'", line->cl_shell);
+	error_e("Fork error : could not exec \"%s\"", line->cl_shell);
 	break;
 
     case 0:
@@ -189,19 +189,19 @@ run_job(struct exe *exeent)
 
 	if ( (home = getenv("HOME")) != NULL )
 	    if (chdir(home) != 0) {
-		error_e("Could not chdir to HOME dir '%s'", home);
+		error_e("Could not chdir to HOME dir \"%s\"", home);
 		if (chdir("/") < 0)
-		    die_e("Could not chdir to HOME dir '/'");
+		    die_e("Could not chdir to HOME dir /");
 	    }
 
 	if ( (shell = getenv("SHELL")) == NULL )
 	    shell = SHELL;
 	else if ( access(shell, X_OK) != 0 ) {
 	    if (errno == ENOENT)
-		error("shell '%s' : no file or directory. SHELL set to " SHELL,
-		      shell);
+		error("shell \"%s\" : no file or directory. SHELL set to "
+		      SHELL, shell);
 	    else
-		error_e("shell '%s' not valid : SHELL set to " SHELL, shell);
+		error_e("shell \"%s\" not valid : SHELL set to " SHELL, shell);
 	    shell = SHELL;
 	}
 
@@ -209,7 +209,7 @@ run_job(struct exe *exeent)
 	/* now, run the job */
 	switch ( fork() ) {
 	case -1:
-	    error_e("Fork error : could not exec '%s'", line->cl_shell);
+	    error_e("Fork error : could not exec \"%s\"", line->cl_shell);
 	    break;
 
 	case 0:
@@ -218,14 +218,14 @@ run_job(struct exe *exeent)
 #ifdef CHECKJOBS
 	    /* this will force to mail a message containing at least the exact
 	     * and complete command executed for each execution of all jobs */
-	    debug("Execing '%s -c %s'", shell, line->cl_shell);
+	    debug("Execing \"%s -c %s\"", shell, line->cl_shell);
 #endif /* CHECKJOBS */
 
 	    execl(shell, shell, "-c", line->cl_shell, NULL);
 	    /* execl returns only on error */
-	    error_e("Can't find '%s'. Trying a execlp(\"sh\", ...)", shell);
+	    error_e("Can't find \"%s\". Trying a execlp(\"sh\", ...)", shell);
 	    execlp("sh", "sh",  "-c", line->cl_shell, NULL);
-	    die_e("execl() '%s -c %s' error", shell, line->cl_shell);
+	    die_e("execl() \"%s -c %s\" error", shell, line->cl_shell);
 
 	    /* execution never gets here */
 
@@ -315,7 +315,7 @@ launch_mailer(CL *line, int mailfd)
     
     /* run sendmail with mail file as standard input */
     execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, pass->pw_name, NULL);
-    error_e("Can't find '"SENDMAIL"'. Trying a execlp(\"sendmail\")");
+    error_e("Can't find \""SENDMAIL"\". Trying a execlp(\"sendmail\")");
     execlp("sendmail", "sendmail", SENDMAIL_ARGS, pass->pw_name, NULL);
     die_e("Can't exec " SENDMAIL);
 
