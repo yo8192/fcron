@@ -21,10 +21,10 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.20 2001-04-29 22:15:38 thib Exp $ */
+ /* $Id: fcron.h,v 1.21 2001-05-15 00:45:16 thib Exp $ */
 
-#ifndef __FCRONH__
-#define __FCRONH__
+#ifndef __FCRON_H__
+#define __FCRON_H__
 
 #include "global.h"
 
@@ -91,5 +91,5 @@ extern void xexit(int exit_value);
 #include "conf.h"
 #include "job.h"
 
-#endif /* __FCRONH */
+#endif /* __FCRON_H */
 

@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.43 2001-04-29 22:15:28 thib Exp $ */
+ /* $Id: fcron.c,v 1.44 2001-05-15 00:45:09 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.43 2001-04-29 22:15:28 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.44 2001-05-15 00:45:09 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -52,7 +52,6 @@ char foreground = 1; /* set to 1 when we are on foreground, else 0 */
 char foreground = 0; /* set to 1 when we are on foreground, else 0 */
 #endif
 
-char  *cdir = FCRONTABS;      /* the dir where are stored users' fcrontabs */
 time_t save_time = SAVE;
 
 /* process identity */
@@ -371,7 +370,7 @@ main(int argc, char **argv)
 
     /* change directory */
 
-    if (chdir(cdir) != 0)
+    if (chdir(FCRONTABS) != 0)
 	die_e("Could not change dir to " FCRONTABS);
     
 

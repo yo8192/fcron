@@ -21,10 +21,10 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.h,v 1.7 2001-04-29 22:14:29 thib Exp $ */
+ /* $Id: fcrontab.h,v 1.8 2001-05-15 00:44:51 thib Exp $ */
 
-#ifndef __FCRONTABH__
-#define __FCRONTABH__
+#ifndef __FCRONTAB_H__
+#define __FCRONTAB_H__
 
 #include "global.h"
 
@@ -40,13 +40,9 @@ extern CF *file_base;
 
 /* prototype definition */
 
-/* fileconf.c */
-extern int read_file(char *filename, char *user);
-extern void delete_file(const char *user_name);
-extern int save_file(char *path);
-
 #include "log.h"
 #include "subs.h"
 #include "allow.h"
+#include "fileconf.h"
 
-#endif /* __FCRONTABH__ */
+#endif /* __FCRONTAB_H__ */

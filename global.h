@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.24 2001-04-21 08:47:26 thib Exp $ */
+ /* $Id: global.h,v 1.25 2001-05-15 00:45:55 thib Exp $ */
 
 
 /* 
@@ -29,8 +29,8 @@
    Compilation's options are in config.h
 */
 
-#ifndef __GLOBALH__
-#define __GLOBALH__
+#ifndef __GLOBAL_H__
+#define __GLOBAL_H__
 
 /* config.h must be included before every other includes 
  * (contains the compilation options) */
@@ -104,6 +104,8 @@
 #define ERR     -1           
 #define OK       0
 
+/* options for local functions */
+#define STD 0
 
 /* macros */
 #define Alloc(ptr, type) \
@@ -170,5 +172,5 @@ typedef struct exe {
     pid_t       e_pid;
 } exe;
 
-#endif /* __GLOBALH__ */
+#endif /* __GLOBAL_H__ */
 
