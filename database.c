@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.38 2000-11-13 15:48:23 thib Exp $ */
+ /* $Id: database.c,v 1.39 2000-12-04 20:19:12 thib Exp $ */
 
 #include "fcron.h"
 
@@ -227,8 +227,8 @@ add_serial_job(CL *line)
     short int i;
 
     /* check if the line is already in the serial queue */
-    if ( (is_serial_once(line->cl_option) && line->cl_numexe > 0) ||
-	 line->cl_numexe >= UCHAR_MAX ) {
+    if ( (is_serial_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX) ||
+	 line->cl_numexe > 0) {
 	debug("already in serial queue %s", line->cl_shell);
 	return;
     }
@@ -281,53 +281,48 @@ add_lavg_job(CL *line)
     /* add the next queued job in lavg queue */
 {
 
-#if LAVG_ONCE
     /* check if the line is already in the lavg queue */
-    if ( line->cl_numexe <= 0) {
-#else
-    if ( line->cl_numexe < UCHAR_MAX ) {
-#endif /* LAVG_ONCE */
-
-/*  	// */
-	debug("inserting in lavg queue %s", line->cl_shell);
-/*  	// */
-
-	/* append job to the list of lavg job */
-	if ( lavg_num >= lavg_array_size ) {
-	    if ( lavg_num >= LAVG_QUEUE_MAX ) {
-		/* run the next lavg job (the oldest one) */
-		register int i;
-		int j = 0;
-		
-		for (i = 1; i < lavg_num; i++)
-		    if ( lavg_array[i].l_until < lavg_array[j].l_until )
-			j = i;
-		run_lavg_job(j);
-	    }
-	    else {
-		struct lavg *ptr = NULL;
-		short int old_size = lavg_array_size;
-		
-		debug("Resizing lavg_array");
-		lavg_array_size = (lavg_array_size + LAVG_GROW_SIZE);
-		
-		if ( (ptr = calloc(lavg_array_size, sizeof(lavg))) == NULL )
-		    die_e("could not calloc lavg_array");
-		
-		memcpy(ptr, lavg_array, (sizeof(lavg) * old_size));
-		free(lavg_array);
-		lavg_array = ptr;
-	    }
-	}
-
-	lavg_array[lavg_num].l_line = line;
-	line->cl_numexe += 1;
-	lavg_array[lavg_num++].l_until = 
-	    (line->cl_until > 0) ? now + line->cl_until : 0;
-
-    }
-    else
+    if ( (is_lavg_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX)
+	 || line->cl_numexe > 0 ) {
 	debug("already in lavg queue %s", line->cl_shell);
+	return;
+    }
+/*  	// */
+    debug("inserting in lavg queue %s", line->cl_shell);
+/*  	// */
+	
+    /* append job to the list of lavg job */
+    if ( lavg_num >= lavg_array_size ) {
+	if ( lavg_num >= LAVG_QUEUE_MAX ) {
+	    /* run the next lavg job (the oldest one) */
+	    register int i;
+	    int j = 0;
+		
+	    for (i = 1; i < lavg_num; i++)
+		if ( lavg_array[i].l_until < lavg_array[j].l_until )
+		    j = i;
+	    run_lavg_job(j);
+	}
+	else {
+	    struct lavg *ptr = NULL;
+	    short int old_size = lavg_array_size;
+		
+	    debug("Resizing lavg_array");
+	    lavg_array_size = (lavg_array_size + LAVG_GROW_SIZE);
+		
+	    if ( (ptr = calloc(lavg_array_size, sizeof(lavg))) == NULL )
+		die_e("could not calloc lavg_array");
+		
+	    memcpy(ptr, lavg_array, (sizeof(lavg) * old_size));
+	    free(lavg_array);
+	    lavg_array = ptr;
+	}
+    }
+
+    lavg_array[lavg_num].l_line = line;
+    line->cl_numexe += 1;
+    lavg_array[lavg_num++].l_until = 
+	(line->cl_until > 0) ? now + line->cl_until : 0;
 
 }
 
@@ -510,37 +505,54 @@ goto_non_matching(CL *line, struct tm *ftime)
     /* search the first the nearest time and date that does
      * not match the line */
 {
-    register int i;
     /* to prevent from invinite loop with unvalid lines : */
     short int year_limit = MAXYEAR_SCHEDULE_TIME;
+    /* we have to ignore the fields containing single numbers */
+    char ignore_mins = (is_ign_mins(line->cl_option)) ? 1:0;
+    char ignore_hrs = (is_ign_hrs(line->cl_option)) ? 1:0;
+    char ignore_days = (is_ign_days(line->cl_option)) ? 1:0;
+    char ignore_mons = (is_ign_mons(line->cl_option)) ? 1:0;
+    char ignore_dow = (is_ign_dow(line->cl_option)) ? 1:0;
     
+    /* */
+    debug("   ignore: %d %d %d %d %d", ignore_mins, ignore_hrs, ignore_days, ignore_mons, ignore_dow);
+    /* */
 
     /* check if we are in an interval of execution */    
-    while ( ( bit_test(line->cl_mins, ftime->tm_min) &&
-	      bit_test(line->cl_hrs, ftime->tm_hour) &&
-	      (
-		  (is_dayand(line->cl_option) &&
-		   bit_test(line->cl_days, ftime->tm_mday) &&
-		   bit_test(line->cl_dow, ftime->tm_wday))
-		  ||
-		  (is_dayor(line->cl_option) && (
-		      bit_test(line->cl_days, ftime->tm_mday) ||
-		      bit_test(line->cl_dow, ftime->tm_wday)))
-		  ) &&
-	      bit_test(line->cl_mons, ftime->tm_mon)
-	) ) {
+    while ( (ignore_mins == 1 || bit_test(line->cl_mins, ftime->tm_min)) &&
+	    (ignore_hrs == 1 || bit_test(line->cl_hrs, ftime->tm_hour)) &&
+	    (
+		(is_dayand(line->cl_option) &&
+		 (ignore_days==1 || bit_test(line->cl_days, ftime->tm_mday)) &&
+		 (ignore_dow==1 || bit_test(line->cl_dow, ftime->tm_wday)))
+		||
+		(is_dayor(line->cl_option) &&
+		 (ignore_days == 1 || bit_test(line->cl_days, ftime->tm_mday)||
+		  ignore_dow == 1 || bit_test(line->cl_dow, ftime->tm_wday)))
+		) &&
+	    (ignore_mons == 1 || bit_test(line->cl_mons, ftime->tm_mon))
+	) {
 
-	for(i=ftime->tm_min; bit_test(line->cl_mins, i) && (i<60); i++);
-	ftime->tm_min = i;
-	if (i == 60) {
+	if (ignore_mins) ftime->tm_min = 60; 
+	else {
+	    do ftime->tm_min++ ;
+	    while(bit_test(line->cl_mins,ftime->tm_min) && (ftime->tm_min<60));
+	}
+	if (ftime->tm_min >= 60) {
 	    ftime->tm_min = 0;
-	    if (++ftime->tm_hour == 24) {
+	    if (ignore_hrs && ignore_mins) ftime->tm_hour = 24;
+	    else ftime->tm_hour++;
+	    if (ftime->tm_hour >= 24) {
 		ftime->tm_hour = 0;
-		set_wday(ftime);
-		if(++ftime->tm_mday == 
-		   get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
+		if (ignore_days && ignore_hrs && ignore_mins)ftime->tm_mday=32;
+		else ftime->tm_mday++;
+		if (ftime->tm_mday >= 
+		    get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
 		    ftime->tm_mday = 0;
-		    if(++ftime->tm_mon == 12) {
+		    if(ignore_mons && ignore_days && ignore_hrs && ignore_mins)
+			ftime->tm_mon = 12;
+		    else ftime->tm_mon++;
+		    if (ftime->tm_mon >= 12) {
 			ftime->tm_mon = 0;
 			ftime->tm_year++;
 			if (--year_limit <= 0) {
@@ -553,6 +565,7 @@ goto_non_matching(CL *line, struct tm *ftime)
 			}
 		    }
 		}
+		set_wday(ftime);
 	    }
 	}
     }
