@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.54 2001-06-01 11:34:58 thib Exp $ */
+ /* $Id: database.c,v 1.55 2001-08-17 19:47:46 thib Exp $ */
 
 #include "fcron.h"
 #include "database.h"
@@ -233,7 +233,7 @@ add_serial_job(CL *line)
 
     /* check if the line is already in the serial queue */
     if ( (is_serial_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX) ||
-	 (! is_serial_sev(line->cl_option) &&line->cl_numexe > 0) ) {
+	 (! is_serial_sev(line->cl_option) && line->cl_numexe > 0) ) {
 	debug("already in serial queue %s", line->cl_shell);
 	return;
     }
@@ -244,6 +244,8 @@ add_serial_job(CL *line)
 	if ( serial_num >= SERIAL_QUEUE_MAX )
 	    /* run next job in the queue before adding the new one */
 	    run_serial_job();
+/*  	    warn("Could not add %s to serial queue : queue is full (%d jobs)", */
+/*  		 line->cl_shell, SERIAL_QUEUE_MAX); */
 	else {
 	    CL **ptr = NULL;
 	    short int old_size = serial_array_size;
@@ -569,12 +571,16 @@ goto_non_matching(CL *line, struct tm *ftime, char option)
 			} else
 			    ftime->tm_mday += to_add;
 		    } else {
-			ftime->tm_mday = 1;
 			if (is_freq_mons(line->cl_option)) {
 			    if (ftime->tm_mday >= 15)
 				ftime->tm_mon++;
 			    ftime->tm_mday = 15;
 			}
+			else
+			    /* weird : we have the bit freq_mid set, but
+			     * none of freq_{mins|hour|days|dow|mons} is set :
+			     * we does nothing */
+			    ;
 		    }
 		}
 	    }
