@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.13 2000-06-21 09:50:09 thib Exp $ */
+ /* $Id: job.c,v 1.12 2000-06-21 09:49:01 thib Exp $ */
 
 #include "fcron.h"
 
@@ -81,6 +81,23 @@ run_job(CL *line)
 {
 
     pid_t pid;
+
+    /* append job to the list of executed job */
+    if ( exe_num >= exe_array_size ) {
+	CL **ptr = NULL;
+	short int old_size = exe_array_size;
+
+	debug("Resizing exe_array");
+	exe_array_size = (exe_array_size + EXE_ARRAY_GROW_SIZE);
+	
+	if ( (ptr = calloc(exe_array_size, sizeof(CL *))) == NULL )
+	    die_e("could not calloc exe_array");
+
+	memcpy(ptr, exe_array, (sizeof(CL *) * old_size));
+	free(exe_array);
+	exe_array = ptr;
+    }
+    exe_array[exe_num++] = line;
 
     /* prepare the job execution */
     switch ( pid = fork() ) {
