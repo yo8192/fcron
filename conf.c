@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.34 2000-12-30 12:55:17 thib Exp $ */
+ /* $Id: conf.c,v 1.35 2001-01-04 15:53:58 thib Exp $ */
 
 #include "fcron.h"
 
@@ -511,7 +511,7 @@ read_file(const char *file_name, CF *cf)
 	    else {
 		/* job has been stopped during execution :
 		 * launch it again */
-		warn("job %s has not terminated : executed again now.",
+		warn("job %s did not finish : running it again.",
 		     cl->cl_shell);
 		set_serial_once(cl->cl_option);
 		add_serial_job(cl);
@@ -535,14 +535,16 @@ read_file(const char *file_name, CF *cf)
     }
     /* check for an error */
     if ( ferror(ff) != 0 )
-	error("file %s is truncated : you should reinstall it", file_name);
+	error("file %s is truncated : you should reinstall it with fcrontab",
+	      file_name);
 
     /* free last calloc : unused */
     free(cl);
     
 /* // if (fgets(buf, sizeof(buf), ff) == NULL || */
 /* // 	strncmp(buf, "eof\n", sizeof("eof\n")) != 0) */
-/* // 	error("file %s is truncated : you should reinstall it",file_name); */
+/* // 	error("file %s is truncated : you should reinstall it with fcrontab",
+   file_name); */
 
     fclose(ff);
 
