@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: readme.sgml,v 1.6 2004-11-13 19:47:06 thib Exp $ -->
+<!-- $Id: readme.sgml,v 1.7 2005-02-26 15:18:12 thib Exp $ -->
 
 <sect1 id="readme">
     <title>About fcron</title>
@@ -77,32 +77,34 @@ in the <link linkend="gpl">gpl</link> file).</para>
 <productname>POSIX</productname> system, but it has been developed on
 <productname>Mandrake</productname> Linux (so it should work without any
 problems on <productname>Redhat</productname>).</para>
-		<para>Fcron 2.1.0 has been reported to work correctly on :
+		<para>Fcron has been reported to work correctly on :
 		</para>
 		<itemizedlist>
-		    <listitem><para><productname>Mandrake 8.0</productname>
-			</para></listitem>
-		    <listitem><para><productname>Debian 2.2</productname>
-			</para></listitem>
-		    <listitem><para><productname>LFS-2.3+</productname></para>
-			<para>(take a look at <ulink
-url="http://archive.linuxfromscratch.org/lfs-hints/fcrond-hint.txt">the LFS
-guide</ulink> for the installation informations)
-			</para></listitem>
-		    <listitem><para><productname>FreeBSD 4.2</productname>
-			</para></listitem>
-		    <listitem><para><productname>OpenBSD 2.8</productname>
-			</para></listitem>
-		    <listitem><para><productname>Solaris 8</productname>
-			</para></listitem>
-		    <listitem><para><productname>AIX 4.3.3</productname>
-			</para></listitem>
-		</itemizedlist>
-	       <para>and fcron 2.9.5 has been reported to work also on:</para>
-	       <itemizedlist>
-		  <listitem>
-		     <para>Darwin/MacOS-X</para>
+		  <listitem><para><productname>Linux Mandrake</productname>
+		     </para></listitem>
+		  <listitem><para><productname>Linux Debian 3.0</productname>
+		     </para></listitem>
+		  <listitem><para><productname>LFS</productname></para>
+		     <para>(take a look at the <ulink
+			   url="http://www.linuxfromscratch.org/blfs/">Beyond
+			   LFS book</ulink> to find the installation
+			informations).</para>
 		  </listitem>
+		  <listitem><para><productname>FreeBSD 4.2</productname>
+		     </para></listitem>
+		  <listitem><para><productname>OpenBSD 2.8</productname>
+		     </para></listitem>
+		  <listitem><para><productname>NetBSD 2.0</productname>
+		     </para></listitem>
+		  <listitem>
+		     <para><productname>Darwin/MacOS-X</productname></para>
+		  </listitem>
+		  <listitem><para><productname>Solaris 8</productname>
+		     </para></listitem>
+		  <listitem><para><productname>AIX 4.3.3</productname>
+		     </para></listitem>
+		  <listitem><para><productname>HP-UX 11.11</productname>
+		     </para></listitem>
 	       </itemizedlist>
 		<para>but fcron should work on other OS as well. Yet,
 		  if you have troubles
