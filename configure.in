@@ -749,7 +749,7 @@ AC_ARG_WITH(rootname,
     AC_MSG_ERROR(Need rootname.)
     ;;
   yes)
-    if rootuid=`script/has_usrgrp.pl -user root -printuid`; then
+    if rootuid=`$srcdir/script/has_usrgrp.pl -user root -printuid`; then
 	rootname=root
         AC_MSG_RESULT($rootname uid: $rootuid)
     else
@@ -758,7 +758,7 @@ Cannot determine root's username: try option --with-rootname=USERNAME])
     fi
     ;;
   *)
-    if rootuid=`script/has_usrgrp.pl -user $withval -printuid`; then
+    if rootuid=`$srcdir/script/has_usrgrp.pl -user $withval -printuid`; then
 	rootname=$withval
         AC_MSG_RESULT($rootname uid: $rootuid)
     else
@@ -767,7 +767,7 @@ Invalid root's username : cannot find it using getpwnam()])
     fi
     ;;
     esac ],
-    if rootuid=`script/has_usrgrp.pl -user root -printuid`; then
+    if rootuid=`$srcdir/script/has_usrgrp.pl -user root -printuid`; then
 	rootname=root
         AC_MSG_RESULT($rootname uid: $rootuid)
     else
@@ -784,10 +784,10 @@ AC_ARG_WITH(rootgroup,
     AC_MSG_ERROR(Need rootgroup.)
     ;;
   yes)
-    if rootgid=`script/has_usrgrp.pl -group root -printgid`; then
+    if rootgid=`$srcdir/script/has_usrgrp.pl -group root -printgid`; then
 	rootgroup=root
         AC_MSG_RESULT($rootgroup gid: $rootgid)
-    elif rootgid=`script/has_usrgrp.pl -group wheel -printgid`; then
+    elif rootgid=`$srcdir/script/has_usrgrp.pl -group wheel -printgid`; then
 	rootgroup=wheel
         AC_MSG_RESULT($rootgroup gid: $rootgid)
     else
@@ -796,7 +796,7 @@ Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME])
     fi
     ;;
   *)
-    if rootgid=`script/has_usrgrp.pl -group $withval -printgid`; then
+    if rootgid=`$srcdir/script/has_usrgrp.pl -group $withval -printgid`; then
 	rootgroup=$withval
         AC_MSG_RESULT($rootgroup gid: $rootgid)
     else
@@ -805,10 +805,10 @@ Invalid root's groupname : cannot find it using getgrnam()])
     fi
     ;;
     esac ],
-    if rootgid=`script/has_usrgrp.pl -group root -printgid`; then
+    if rootgid=`$srcdir/script/has_usrgrp.pl -group root -printgid`; then
 	rootgroup=root
         AC_MSG_RESULT($rootgroup gid: $rootgid)
-    elif rootgid=`script/has_usrgrp.pl -group wheel -printgid`; then
+    elif rootgid=`$srcdir/script/has_usrgrp.pl -group wheel -printgid`; then
 	rootgroup=wheel
         AC_MSG_RESULT($rootgroup gid: $rootgid)
     else
