@@ -1,8 +1,8 @@
-dnl Process this file with autoconf to produce a configure script.
+nl Process this file with autoconf to produce a configure script.
 
 AC_INIT(allow.c)
 if test \( "$prefix" = "NONE" \) -o \( -z "$prefix" \); then
-  prefix="/usr/"
+  prefix="/usr"
 fi
 AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
@@ -339,15 +339,15 @@ AC_ARG_WITH(docdir,
     AC_MSG_ERROR(Need DOCDIR.)
     ;;
   yes)
-    if test -d "$prefix/doc" ; then
-        docdir="$prefix/doc"
-        AC_MSG_RESULT($prefix/doc)
-    elif  test -d "$prefix/share/doc" ; then
-       docdir="$prefix/share/doc"
-       AC_MSG_RESULT($prefix/share/doc)
-    elif  test -d "$prefix/local/share/doc" ; then
-       docdir="$prefix/local/share/doc"
-       AC_MSG_RESULT($prefix/local/share/doc)
+    if  test -d "${prefix}/share/doc" ; then
+       docdir="${prefix}/share/doc"
+       AC_MSG_RESULT(${prefix}/share/doc)
+    elif test -d "${prefix}/doc" ; then
+        docdir="${prefix}/doc"
+        AC_MSG_RESULT(${prefix}/doc)
+    elif  test -d "${prefix}/local/share/doc" ; then
+       docdir="${prefix}/local/share/doc"
+       AC_MSG_RESULT(${prefix}/local/share/doc)
     else
        AC_MSG_ERROR(Cannot determine value for doc directory: try option --with-docdir=PATH)
     fi
@@ -357,15 +357,15 @@ AC_ARG_WITH(docdir,
     AC_MSG_RESULT($withval)
     ;;
   esac ],
-  if test -d "$prefix/doc" ; then
-      docdir="$prefix/doc"
-      AC_MSG_RESULT($prefix/doc)
-  elif  test -d "$prefix/share/doc" ; then
-     docdir="$prefix/share/doc"
-     AC_MSG_RESULT($prefix/share/doc)
-  elif  test -d "$prefix/local/share/doc" ; then
-     docdir="$prefix/local/share/doc"
-     AC_MSG_RESULT($prefix/local/share/doc)
+  if  test -d "${prefix}/share/doc" ; then
+     docdir="${prefix}/share/doc"
+     AC_MSG_RESULT(${prefix}/share/doc)
+  elif test -d "${prefix}/doc" ; then
+      docdir="${prefix}/doc"
+      AC_MSG_RESULT(${prefix}/doc)
+  elif  test -d "${prefix}/local/share/doc" ; then
+     docdir="${prefix}/local/share/doc"
+     AC_MSG_RESULT(${prefix}/local/share/doc)
   else
      AC_MSG_ERROR(Cannot determine value for doc directory: try option --with-docdir=PATH)
   fi
@@ -373,6 +373,15 @@ AC_ARG_WITH(docdir,
 DOCDIR="$docdir"
 AC_DEFINE_UNQUOTED(DOCDIR, "$docdir")
 AC_SUBST(DOCDIR)
+
+dnl Check if --mandir option has been used
+if test "$mandir" = "\${prefix}/man"; then
+  if test -d ${prefix}/share/man; then
+    mandir=${prefix}/share/man
+  fi
+  AC_SUBST(mandir)
+  AC_DEFINE_UNQUOTED(mandir, "$mandir")
+fi
 
 AC_MSG_CHECKING(automatic answer to make install's questions)
 AC_ARG_WITH(answer-all,
