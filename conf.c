@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.8 2000-06-16 11:51:11 thib Exp $ */
+ /* $Id: conf.c,v 1.9 2000-06-18 15:27:06 thib Exp $ */
 
 #include "fcron.h"
 
@@ -451,6 +451,8 @@ read_file(const char *file_name, CF *cf)
 	    /* set the time and date of the next execution  */
 	    if ( cl->cl_nextexe <= now )
 		set_next_exe(cl, 1);
+	    else
+		insert_nextexe(cl);
 	} else {
 	    cl->cl_nextexe += slept;
 	    insert_nextexe(cl);
@@ -507,7 +509,7 @@ delete_file(const char *user_name)
     env_t *env = NULL;
     env_t *cur_env = NULL;
     struct job *j = NULL;
-    struct job *prev_j = NULL;
+    struct job *prev_j;
 
     file = file_base;
     while ( file != NULL) {
@@ -519,10 +521,13 @@ delete_file(const char *user_name)
 		cur_line = line->cl_next;
 
 		/* remove line from the lists */
+		prev_j = NULL;
 		for ( j = queue_base; j != NULL; j = j->j_next )
 		    if ( j->j_line == line ) {
-			if (prev_j != NULL) prev_j->j_next = j->j_next;
-			else 		queue_base = j->j_next;
+			if (prev_j != NULL) 
+			    prev_j->j_next = j->j_next;
+			else
+			    queue_base = j->j_next;
 			free(j);
 			break;
 		    }
@@ -615,7 +620,7 @@ save_file(CF *file, char *path)
 
 	/* put the time & date of saving : this is use for calcutating 
 	 * the system down time */
-	fprintf(f, "%ld", time(NULL));
+	fprintf(f, "%ld", now);
 
 	/*   mailto, */
 	if ( cf->cf_mailto != NULL ) {
