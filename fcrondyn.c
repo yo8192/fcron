@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.6 2002-08-30 20:04:28 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.7 2002-10-05 14:25:16 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.6 2002-08-30 20:04:28 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.7 2002-10-05 14:25:16 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -153,12 +153,12 @@ xexit(int exit_val)
 
 
 /* used in parse_cmd : */
-#define Write_cmd(data) \
-	  memcpy(buf + *cmd_len, (long int *) &data, sizeof(long int)); \
+#define Write_cmd(DATA) \
+	  memcpy(buf + *cmd_len, (long int *) &DATA, sizeof(long int)); \
 	  *cmd_len += 1;
 
-#define Strncmp(str1, str2, str1_size) \
-          strncmp(str1, str2, (str1_size < strlen(str2)) ? strlen(str2) : str1_size)
+#define Strncmp(STR1, STR2, STR1_SIZE) \
+          strncmp(STR1, STR2, (STR1_SIZE < strlen(STR2)) ? strlen(STR2) : STR1_SIZE)
 
 int
 parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)

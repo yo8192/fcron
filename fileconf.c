@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.63 2002-09-15 18:09:42 thib Exp $ */
+ /* $Id: fileconf.c,v 1.64 2002-10-05 14:26:05 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -1160,11 +1160,11 @@ read_freq(char *ptr, CF *cf)
 
 
 
-#define R_field(ptr, ary, max, aryconst, descrp) \
-  if((ptr = read_field(ptr, ary, max, aryconst)) == NULL) { \
+#define R_field(PTR, ARY, MAX, ARYCONST, DESCRP) \
+  if((PTR = read_field(PTR, ARY, MAX, ARYCONST)) == NULL) { \
       if (debug_opt) \
           fprintf(stderr, "\n"); \
-      fprintf(stderr, "%s:%d: Error while reading " descrp " field: " \
+      fprintf(stderr, "%s:%d: Error while reading " DESCRP " field: " \
              "skipping line.\n", file_name, line); \
       free(cl); \
       return; \
@@ -1648,41 +1648,41 @@ delete_file(const char *user_name)
 
 
 /* save_file() error management */
-#define Save_type(fd, type) \
+#define Save_type(FD, TYPE) \
         { \
-          if ( save_type(fd, type) != OK ) { \
+          if ( save_type(FD, TYPE) != OK ) { \
             error_e("Could not write type : file has not been installed."); \
-            close(fd); \
+            close(FD); \
             remove(path); \
             return ERR; \
 	  } \
         }
 
-#define Save_str(fd, type, str) \
+#define Save_str(FD, TYPE, STR) \
         { \
-          if ( save_str(fd, type, str) != OK ) { \
+          if ( save_str(FD, TYPE, STR) != OK ) { \
             error_e("Could not write str : file has not been installed."); \
-            close(fd); \
+            close(FD); \
             remove(path); \
             return ERR; \
 	  } \
         }
 
-#define Save_strn(fd, type, str, size) \
+#define Save_strn(FD, TYPE, STR, SIZE) \
         { \
-          if ( save_strn(fd, type, str, size) != OK ) { \
+          if ( save_strn(FD, TYPE, STR, SIZE) != OK ) { \
             error_e("Could not write strn : file has not been installed."); \
-            close(fd); \
+            close(FD); \
             remove(path); \
             return ERR; \
 	  } \
         }
 
-#define Save_lint(fd, type, value) \
+#define Save_lint(FD, TYPE, VALUE) \
         { \
-          if ( save_lint(fd, type, value) != OK ) { \
+          if ( save_lint(FD, TYPE, VALUE) != OK ) { \
             error_e("Could not write lint : file has not been installed."); \
-            close(fd); \
+            close(FD); \
             remove(path); \
             return ERR; \
 	  } \

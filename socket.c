@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.7 2002-08-30 20:06:04 thib Exp $ */
+ /* $Id: socket.c,v 1.8 2002-10-05 14:27:50 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -192,14 +192,14 @@ auth_client(struct fcrondyn_cl *client)
 }
 
 
-#define Test_add_field(field_nb, field_str) \
-    if ( (bit_test(details, field_nb)) ) { \
-        strncat(fields, field_str, sizeof(fields)-1 - len); \
-        len += (sizeof(field_str)-1); \
+#define Test_add_field(FIELD_NB, FIELD_STR) \
+    if ( (bit_test(details, FIELD_NB)) ) { \
+        strncat(fields, FIELD_STR, sizeof(fields)-1 - len); \
+        len += (sizeof(FIELD_STR)-1); \
     }
-#define Add_field(field_str) \
-    strncat(fields, field_str, sizeof(fields) - len); \
-    len += (sizeof(field_str)-1);
+#define Add_field(FIELD_STR) \
+    strncat(fields, FIELD_STR, sizeof(fields) - len); \
+    len += (sizeof(FIELD_STR)-1);
 
 void
 print_fields(int fd, unsigned char *details)
@@ -302,10 +302,10 @@ print_line(int fd, struct CL *line,  unsigned char *details, pid_t pid, int inde
 }
 
 
-#define Test_line(line, pid, index, until) \
+#define Test_line(LINE, PID, INDEX, UNTIL) \
             { \
-                if (all || strcmp(user, line->cl_file->cf_user) == 0 ) { \
-		    print_line(fd, line, fields, pid, index, until); \
+                if (all || strcmp(user, LINE->cl_file->cf_user) == 0 ) { \
+		    print_line(fd, LINE, fields, PID, INDEX, UNTIL); \
 		    found = 1; \
                 } \
             }
