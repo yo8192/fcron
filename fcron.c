@@ -21,20 +21,22 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.53 2001-07-09 11:49:24 thib Exp $ */
+ /* $Id: fcron.c,v 1.54 2001-08-17 19:42:14 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.53 2001-07-09 11:49:24 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.54 2001-08-17 19:42:14 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
 void info(void);
 void usage(void);
+void print_schedule(void);
 RETSIGTYPE sighup_handler(int x);
 RETSIGTYPE sigterm_handler(int x);
 RETSIGTYPE sigchild_handler(int x);
 RETSIGTYPE sigusr1_handler(int x);
+RETSIGTYPE sigusr2_handler(int x);
 int parseopt(int argc, char *argv[]);
 void get_lock(void);
 void create_spooldir(char *dir);
@@ -67,6 +69,7 @@ char *prog_name = NULL;
 /* have we got a signal ? */
 char sig_conf = 0;            /* is 1 when we got a SIGHUP, 2 for a SIGUSR1 */ 
 char sig_chld = 0;            /* is 1 when we got a SIGCHLD */  
+char sig_debug = 0;           /* is 1 when we got a SIGUSR2 */  
 
 /* jobs database */
 struct CF *file_base;         /* point to the first file of the list */
@@ -112,7 +115,7 @@ info(void)
 
 
 void
-usage()
+usage(void)
   /*  print a help message about command line options and exit */
 {
     fprintf(stderr, "\nfcron " VERSION_QUOTED "\n\n"
@@ -131,6 +134,30 @@ usage()
 	);
     
     exit(EXIT_ERR);
+}
+
+
+void
+print_schedule(void)
+    /* print the current schedule on syslog */
+{
+    CF *cf;
+    CL *cl;
+    struct tm *ftime;
+
+    explain("Printing schedule ...");
+    for (cf = file_base; cf; cf = cf->cf_next) {
+	explain(" File %s", cf->cf_user);
+	for (cl = cf->cf_line_base; cl; cl = cl->cl_next) {
+	    ftime = localtime( &(cl->cl_nextexe) );
+	    explain("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d",
+		  cl->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
+		  (ftime->tm_year + 1900), ftime->tm_wday,
+		  ftime->tm_hour, ftime->tm_min); 
+	    
+	}
+    }
+    explain("... end of printing schedule.");
 }
 
 
@@ -217,7 +244,7 @@ parseopt(int argc, char *argv[])
     char c;
     int i;
 
-#ifdef HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_LONG
     static struct option opt[] =
     {
 	{"debug", 0, NULL, 'd'},
@@ -231,7 +258,7 @@ parseopt(int argc, char *argv[])
 	{"newspooldir", 1, NULL, 'n'},
 	{0,0,0,0}
     };
-#endif /* HAVE_GETOPT_H */
+#endif /* HAVE_GETOPT_LONG */
 
     extern char *optarg;
     extern int optind, opterr, optopt;
@@ -239,11 +266,11 @@ parseopt(int argc, char *argv[])
     /* constants and variables defined by command line */
 
     while(1) {
-#ifdef HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_LONG
 	c = getopt_long(argc, argv, "dfbhVs:m:c:n:", opt, NULL);
 #else
 	c = getopt(argc, argv, "dfbhVs:m:c:n:");
-#endif /* HAVE_GETOPT_H */
+#endif /* HAVE_GETOPT_LONG */
 	if (c == EOF) break;
 	switch (c) {
 
@@ -400,6 +427,16 @@ sigusr1_handler(int x)
 }
 
 
+RETSIGTYPE
+sigusr2_handler(int x)
+  /* print schedule and switch on/off debug mode */
+{
+    signal(SIGUSR2, sigusr2_handler);
+    siginterrupt(SIGUSR2, 0);
+    sig_debug = 1;
+}
+
+
 int
 main(int argc, char **argv)
 {
@@ -497,7 +534,8 @@ main(int argc, char **argv)
     siginterrupt(SIGCHLD, 0);
     signal(SIGUSR1, sigusr1_handler);
     siginterrupt(SIGUSR1, 0);
-
+    signal(SIGUSR2, sigusr2_handler);
+    siginterrupt(SIGUSR2, 0);
 
     /* initialize exe_array */
     exe_num = 0;
@@ -548,6 +586,12 @@ check_signal()
 	    reload_all(".");
 
 	sig_conf = 0;
+    }
+    if (sig_debug > 0) {
+	print_schedule();
+	debug_opt = (debug_opt > 0)? 0 : 1;
+	explain("debug_opt = %d", debug_opt);
+	sig_debug = 0;
     }
 
 }
