@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.49 2001-06-22 21:08:03 thib Exp $ */
+ /* $Id: fcron.c,v 1.50 2001-07-04 17:29:48 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.49 2001-06-22 21:08:03 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.50 2001-07-04 17:29:48 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -37,6 +37,8 @@ RETSIGTYPE sigchild_handler(int x);
 RETSIGTYPE sigusr1_handler(int x);
 int parseopt(int argc, char *argv[]);
 void get_lock(void);
+void create_spooldir(char *dir);
+
 
 
 /* command line options */
@@ -119,13 +121,16 @@ usage()
     fprintf(stderr, "\nfcron " VERSION_QUOTED "\n\n"
 	    "fcron [-d] [-f] [-b]\n"
 	    "fcron -h\n"
+	    "  -s t   --savetime t     Save fcrontabs on disk every t sec.\n"
+	    "  -m n   --maxserial n    Set to n the max number of running "
+	    "serial jobs.\n"
+	    "  -c f   --configfile f   Make fcron use config file f.\n"
+	    "  -n d   --newspooldir d  Create d as a new spool directory.\n"
 	    "  -d     --debug          Set Debug mode.\n"
 	    "  -f     --foreground     Stay in foreground.\n"
 	    "  -b     --background     Go to background.\n"
 	    "  -h     --help           Show this help message.\n"
-	    "  -s t   --savetime t     Save fcrontabs on disk every t sec.\n"
-	    "  -m n   --maxserial n    Set to n the max number of running "
-	    "serial jobs\n"
+	    "  -V     --version        Display version & infos about fcron.\n"
 	);
     
     exit(EXIT_ERR);
@@ -239,6 +244,7 @@ parseopt(int argc, char *argv[])
 	{"savetime", 1, NULL, 's'},
 	{"maxserial", 1, NULL, 'm'},
 	{"configfile", 1, NULL, 'c'},
+	{"newspooldir", 1, NULL, 'n'},
 	{0,0,0,0}
     };
 #endif /* HAVE_GETOPT_H */
@@ -250,9 +256,9 @@ parseopt(int argc, char *argv[])
 
     while(1) {
 #ifdef HAVE_GETOPT_H
-	c = getopt_long(argc, argv, "dfbhVs:m:c:", opt, NULL);
+	c = getopt_long(argc, argv, "dfbhVs:m:c:n:", opt, NULL);
 #else
-	c = getopt(argc, argv, "dfbhVs:m:c:");
+	c = getopt(argc, argv, "dfbhVs:m:c:n:");
 #endif /* HAVE_GETOPT_H */
 	if (c == EOF) break;
 	switch (c) {
@@ -288,6 +294,10 @@ parseopt(int argc, char *argv[])
 	    Set(fcronconf, optarg);
 	    break;
 
+	case 'n':
+	    create_spooldir(optarg);
+	    break;
+
 	case ':':
 	    error("(parseopt) Missing parameter");
 	    usage();
@@ -307,6 +317,38 @@ parseopt(int argc, char *argv[])
     }
 
     return OK;
+
+}
+
+void 
+create_spooldir(char *dir)
+    /* create a new spool dir for fcron : set correctly its mode and owner */
+{
+    int dir_fd = -1;
+    struct passwd *pass;
+    struct group *grp;
+
+    if ( mkdir(dir, 0) != 0 && errno != EEXIST )
+	die_e("Cannot create dir %s", dir);
+
+    if ( (dir_fd = open(dir, 0)) < 0 )
+	die_e("Cannot open dir %s", dir);
+
+    if ( (pass = getpwnam(USERNAME)) == NULL )
+	die_e("Cannot getpwnam(%s)", USERNAME);
+
+    if ( (grp = getgrnam(GROUPNAME)) == NULL )
+	die_e("Cannot getgrnam(%s)", GROUPNAME);
+
+    if ( fchown(dir_fd, pass->pw_uid, grp->gr_gid) != 0 )
+	die_e("Cannot fchown dir %s to %s:%s", dir, USERNAME, GROUPNAME);
+
+    if ( fchmod(dir_fd, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP) != 0)
+	die_e("Cannot change dir %s's mode to 770", dir);
+
+    close(dir_fd);
+
+    exit(EXIT_OK);
 
 }
 
