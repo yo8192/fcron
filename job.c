@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.51 2002-08-10 20:37:06 thib Exp $ */
+ /* $Id: job.c,v 1.52 2002-08-29 17:30:54 thib Exp $ */
 
 #include "fcron.h"
 
@@ -294,12 +294,6 @@ run_job(struct exe *exeent)
 		    error_e("could not set nice value");
 	    }
 
-	    /* */
-//	fprintf(stderr, "test_child stderr from fcron\n");
-//	fprintf(stdout, "test_child stdout from fcron\n");
-//	printf("test_child from fcron\n");
-	    /* */
-
 	    xcloselog();
 
 	    /* set env variables */
@@ -364,18 +358,10 @@ run_job(struct exe *exeent)
 	    }
 
 	    /* we use a while because of a possible interruption by a signal */
-	    while ( (pid = wait3(&status, 0, NULL)) > 0) {
-		/* */
-//		fprintf(stdout, "test_parent stdout from fcron\n");
-//		fprintf(stderr, "test_parent stderr from fcron\n");
-//		printf("test_parent from fcron\n");
-		/* */
+	    while ( (pid = wait3(&status, 0, NULL)) > 0)
 		end_job(line, status, mailf, mailpos);
 
 		/* execution never gets here */
-
-	    }
-	    
 	}
     }
 
