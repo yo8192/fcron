@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.61 2002-09-15 18:07:47 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.62 2002-10-06 16:52:28 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -47,7 +47,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.61 2002-09-15 18:07:47 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.62 2002-10-06 16:52:28 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -81,7 +81,7 @@ gid_t fcrontab_gid = 0;
 char need_sig = 0;           /* do we need to signal fcron daemon */
 
 char orig_dir[PATH_LEN];
-CF *file_base = NULL;
+cf_t *file_base = NULL;
 char buf[PATH_LEN];
 char file[PATH_LEN];
 
@@ -182,12 +182,13 @@ int
 copy(char *orig, char *dest)
     /* copy orig file to dest */
 {
-    FILE *from = NULL;
+    int from;
     int to_fd;
-    int c;
+    int nb;
+    char *copy_buf[LINE_LEN];
 
-    if ( (from = fopen(orig, "r")) == NULL) {
-	error_e("copy: orig");
+    if ( (from = open(orig, O_RDONLY)) == -1) {
+	error_e("copy: open(orig)");
 	return ERR;
     }
     /* create it as fcrontab_uid (to avoid problem if user's uid changed)
@@ -203,7 +204,7 @@ copy(char *orig, char *dest)
 	    error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
     }
 #endif
-    to_fd = open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC);
+    to_fd = open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR|S_IWUSR|S_IRGRP);
     if (to_fd == -1) {
 	error_e("copy: dest");
 	return ERR;
@@ -219,15 +220,15 @@ copy(char *orig, char *dest)
 	    error_e("Could not fchown %s to root", dest);
     }
 
-    while ( (c = getc(from)) != EOF )
-	if ( write(to_fd, &c, 1) != 1 ) {
+    while ( (nb = read(from, copy_buf, sizeof(copy_buf))) != -1 && nb != 0 )
+	if ( write(to_fd, copy_buf, nb) != nb ) {
 	    error("Error while copying file. Aborting.\n");
-	    fclose(from);
+	    close(from);
 	    close(to_fd);
 	    return ERR;
 	}
 
-    fclose(from);
+    close(from);
     close(to_fd);
     
     return OK;
@@ -266,17 +267,22 @@ remove_fcrontab(char rm_orig)
     /* finally create a file in order to tell the daemon
      * a file was removed, and launch a signal to daemon */
     snprintf(buf, sizeof(buf), "rm.%s", user);
-    fd = open(buf, O_CREAT | O_TRUNC);
-    if ( fd == -1 )
-	error_e("Can't create file %s", buf);
-    close(fd);
-    
-    need_sig = 1;
+    fd = open(buf, O_CREAT | O_TRUNC | O_EXCL, S_IRUSR | S_IWUSR);
 
 #ifdef USE_SETE_ID
     if (seteuid(uid) != 0)
 	die_e("seteuid(uid[%d])", uid);
 #endif
+
+    if ( fd == -1 ) {
+	if ( errno != EEXIST )
+	    error_e("Can't create file %s", buf);
+    }
+    else if ( asuid == ROOTUID && fchown(fd, ROOTUID, fcrontab_gid) != 0 )
+	error_e("Could not fchown %s to root", buf);
+    close(fd);
+    
+    need_sig = 1;
 
     return return_val;
 
@@ -877,7 +883,7 @@ parseopt(int argc, char *argv[])
     }
     else {
 #ifdef SYSFCRONTAB
-	if ( strcmp(user, SYSFCRONTAB) == 0 ) {
+  	if ( strcmp(user, SYSFCRONTAB) == 0 ) {
 	    is_sysfcrontab = 1;
 	    asuid = ROOTUID;
 	    asgid = ROOTGID;
@@ -1003,7 +1009,7 @@ main(int argc, char **argv)
     /* this program is seteuid : we set default permission mode
      * to 640 for a normal user, 600 for root, for security reasons */
     if ( asuid == ROOTUID )
-	umask(066);
+	umask(066);  /* octal : '0' + number in octal notation */
     else
 	umask(026);
 
@@ -1037,40 +1043,28 @@ main(int argc, char **argv)
 
     /* remove user's entries */
     if ( rm_opt == 1 ) {
-
 	if ( remove_fcrontab(1) == ENOENT )
 	    fprintf(stderr, "no fcrontab for %s\n", user);
-
 	xexit (EXIT_OK);
     }
 
-
     /* list user's entries */
     if ( list_opt == 1 ) {
-
 	list_file(buf);
-
 	xexit(EXIT_OK);
-
     }
 
 
     /* edit user's entries */
     if ( edit_opt == 1 ) {
-
 	edit_file(buf);
-
 	xexit(EXIT_OK);
-
     }
 
     /* reinstall user's entries */
     if ( reinstall_opt == 1 ) {
-
 	reinstall(buf);
-
 	xexit(EXIT_OK);
-
     }
 
     /* never reached */
