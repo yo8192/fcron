@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 # call getpwnam() or getgrnam() to check if user or group (given as arg) exists
 #   on the system (getpwnam() and getgrnam() use nsswitch.conf, so it works

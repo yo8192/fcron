@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 # - read define assignations in config.h
 # - read variable assignations in Makefile
