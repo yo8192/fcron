@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.69 2003-12-25 22:43:18 thib Exp $ */
+ /* $Id: fcron.c,v 1.70 2004-04-29 19:28:38 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.69 2003-12-25 22:43:18 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.70 2004-04-29 19:28:38 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -221,6 +221,8 @@ xexit(int exit_value)
 
     remove(pidfile);
     
+    free_conf();
+
     explain("Exiting with code %d", exit_value);
     exit (exit_value);
 
@@ -662,9 +664,11 @@ main_loop()
    *             sleep, and then test all jobs and execute if needed. */
 {
     time_t save;           /* time remaining until next save */
-    struct timeval tv;     /* we use usec field to get more precision */
     time_t stime;          /* time to sleep until next job
 			    * execution */
+#ifdef HAVE_GETTIMEOFDAY
+    struct timeval tv;     /* we use usec field to get more precision */
+#endif
 #ifdef FCRONDYN
     int retcode = 0;
 #endif
