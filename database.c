@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.51 2001-05-15 00:46:54 thib Exp $ */
+ /* $Id: database.c,v 1.52 2001-05-24 19:59:47 thib Exp $ */
 
 #include "fcron.h"
 #include "database.h"
@@ -332,9 +332,12 @@ add_lavg_job(CL *line)
     if ( is_strict(line->cl_option) && line->cl_runfreq == 1) {
 	struct tm *ft;
 	struct tm ftime;
-	time_t end_of_cur_int = 0;
+	time_t begin_of_cur_int, end_of_cur_int = 0;
 
-	ft = localtime(&line->cl_nextexe);
+	/* handle timezone differences */
+	begin_of_cur_int = line->cl_nextexe - (line->cl_file->cf_tzdiff*3600);
+
+	ft = localtime( &begin_of_cur_int );
 
 	/* localtime() function seem to return every time the same pointer :
 	   it resets our previous changes, so we need to prevent it
@@ -343,7 +346,7 @@ add_lavg_job(CL *line)
 
 	goto_non_matching(line, &ftime, END_OF_INTERVAL);
 
-	end_of_cur_int = mktime(&ftime);
+	end_of_cur_int = mktime(&ftime) + (line->cl_file->cf_tzdiff * 3600);
 
 	if ((line->cl_until > 0) && (line->cl_until + now < end_of_cur_int))
 	    lavg_array[lavg_num].l_until = line->cl_until + now;
@@ -628,10 +631,10 @@ goto_non_matching(CL *line, struct tm *ftime, char option)
 	if (option != END_OF_INTERVAL) {
 	    if (debug_opt)
 		set_wday(ftime);
-	    debug("   %s beginning of next period %d/%d/%d wday:%d %02d:%02d",
-		  line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
-		  (ftime->tm_year + 1900), ftime->tm_wday,
-		  ftime->tm_hour, ftime->tm_min);
+	    debug("   %s beginning of next period %d/%d/%d wday:%d %02d:%02d "
+		  "(tzdiff=%d)", line->cl_shell, (ftime->tm_mon + 1),
+		  ftime->tm_mday, (ftime->tm_year + 1900), ftime->tm_wday,
+		  ftime->tm_hour, ftime->tm_min, line->cl_file->cf_tzdiff);
 
 	    return;
 	}
@@ -752,11 +755,11 @@ goto_non_matching(CL *line, struct tm *ftime, char option)
 	    }
 	}
 	
-	debug("   %s %s %d/%d/%d wday:%d %02d:%02d", line->cl_shell,
+	debug("   %s %s %d/%d/%d wday:%d %02d:%02d (tzdiff=%d)",line->cl_shell,
 	      (option == STD) ? "first non matching" : "end of interval",
-	      (ftime->tm_mon + 1), ftime->tm_mday,
-	      (ftime->tm_year + 1900), ftime->tm_wday,
-	      ftime->tm_hour, ftime->tm_min);
+	      (ftime->tm_mon + 1), ftime->tm_mday, (ftime->tm_year + 1900),
+	      ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
+	      line->cl_file->cf_tzdiff);
 	return;
     }
 }
@@ -776,8 +779,10 @@ set_next_exe(CL *line, char option)
 	register char has_changed = 0;
 	/* to prevent from invinite loop with unvalid lines : */
 	short int year_limit = MAXYEAR_SCHEDULE_TIME;
+	/* timezone difference */
+	time_t now_tz = now - (line->cl_file->cf_tzdiff * 3600);
 
-	ft = localtime(&now);
+	ft = localtime(&now_tz);
 
 	/* localtime() function seem to return every time the same pointer :
 	   it resets our previous changes, so we need to prevent it
@@ -920,14 +925,15 @@ set_next_exe(CL *line, char option)
 	}
 	ftime.tm_min = i;
    
-      set_cl_nextexe:    
-	line->cl_nextexe = mktime(&ftime);
+      set_cl_nextexe:
+	/* set cl_nextexe (handle the timezone differences) */
+	line->cl_nextexe = mktime(&ftime) + (line->cl_file->cf_tzdiff * 3600);
 
 	if ( option != NO_GOTO )
-	    debug("   cmd: %s next exec %d/%d/%d wday:%d %02d:%02d",
-		  line->cl_shell, (ftime.tm_mon + 1), ftime.tm_mday,
-		  (ftime.tm_year + 1900), ftime.tm_wday,
-		  ftime.tm_hour, ftime.tm_min);
+	    debug("   cmd: %s next exec %d/%d/%d wday:%d %02d:%02d "
+		  "(tzdiff=%d)", line->cl_shell, (ftime.tm_mon + 1),
+		  ftime.tm_mday, (ftime.tm_year + 1900), ftime.tm_wday,
+		  ftime.tm_hour, ftime.tm_min, line->cl_file->cf_tzdiff);
 	
     }
     else {
@@ -947,7 +953,7 @@ set_next_exe_notrun(CL *line, char context)
     /* set the time of the next execution and send a mail to tell user his job
      * has not run if necessary */
 {
-    time_t next_period = 0;
+    time_t previous_period = 0, next_period = 0;
     struct tm *ft = NULL;
     struct tm ftime, last_nextexe;
     char set_next_exe_opt = 0;
@@ -957,14 +963,16 @@ set_next_exe_notrun(CL *line, char context)
 /*  // */
 
     if (context == SYSDOWN) {
-	ft = localtime(&line->cl_nextexe);
+	/* handle timezone differences */
+	previous_period = line->cl_nextexe - (line->cl_file->cf_tzdiff * 3600);
 	set_next_exe_opt = NO_GOTO;
     }
     else {
-	ft = localtime(&now);
+	previous_period = now - (line->cl_file->cf_tzdiff * 3600);
 	set_next_exe_opt = NO_GOTO_LOG;
     }
-    
+    ft = localtime(&previous_period);
+
     /* localtime() function seem to return every time the same pointer :
        it resets our previous changes, so we need to prevent it
        ( localtime() is used in the debug() function) */
@@ -974,7 +982,7 @@ set_next_exe_notrun(CL *line, char context)
     
     ftime.tm_sec = 0;
     goto_non_matching(line, &ftime, STD);
-    next_period = mktime(&ftime);
+    next_period = mktime(&ftime) + (line->cl_file->cf_tzdiff * 3600);
 
     set_next_exe(line, set_next_exe_opt);
     if ( line->cl_nextexe >= next_period ) {
@@ -1106,7 +1114,8 @@ check_lavg(time_t lim)
 			    lavg_array[i].l_line->cl_shell);
 
 		/* set time of the next execution and send a mail if needed */
-		if ( is_notice_notrun(lavg_array[i].l_line->cl_option) )
+		if ( is_td(lavg_array[i].l_line->cl_option) &&
+		     is_notice_notrun(lavg_array[i].l_line->cl_option) )
   		    set_next_exe_notrun(lavg_array[i].l_line, LAVG);
 		else
 		    set_next_exe(lavg_array[i].l_line, NO_GOTO_LOG);

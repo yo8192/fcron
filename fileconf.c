@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.45 2001-05-17 00:53:29 thib Exp $ */
+ /* $Id: fileconf.c,v 1.46 2001-05-24 19:57:10 thib Exp $ */
 
 #include "fcrontab.h"
 #include "fileconf.h"
@@ -465,7 +465,30 @@ read_opt(char *ptr, CL *cl)
 	    ptr++;
 	}
 
-	if ( strcmp(opt_name, "s") == 0 || strcmp(opt_name, "serial") == 0 ) {
+	/* global options for a file */
+	if ( strcmp(opt_name, "tzdiff") == 0 ) {
+	    char negative = 0;
+
+	    if ( ! in_brackets )
+		Handle_err;
+	    if ( *ptr == '-' ) {
+		negative = 1;
+		ptr++;
+	    }
+	    if ( (ptr = get_num(ptr, &i, 24, 0, NULL)) == NULL )
+		Handle_err;
+	    if ( negative )
+		cl->cl_file->cf_tzdiff = (- i);
+	    else
+		cl->cl_file->cf_tzdiff = i;
+
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" (-)%d\n", opt_name, i);
+	}
+	
+
+	/* options related to a line (or a set of lines) */
+	else if(strcmp(opt_name, "s") == 0 || strcmp(opt_name, "serial") == 0){
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
 	    if (i == 0 )
@@ -796,7 +819,7 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 
 	    i = 0;
-	    while ( isalnum(*ptr) )
+	    while ( isalnum(*ptr) && i + 1 < sizeof(buf) )
 		buf[i++] = *ptr++;
 	    if ( strcmp(buf, "\0") == 0 )
 		clear_mail(cl->cl_option);
@@ -853,7 +876,7 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 	    cl->cl_nice = (char)i;
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+		fprintf(stderr, "  Opt : \"%s\" (-)%d\n", opt_name, i);
 	}
 
 	else if(strcmp(opt_name, "runas") == 0) {
@@ -1617,6 +1640,10 @@ save_file(char *path)
 	 * the system down time. As it is a new file, we set it to 0 */
 	/* S_USER_T *must* be the 3rd field of a binary fcrontab */
 	Save_lint(f, S_TIMEDATE_T, 0);
+
+	/* Save the time diff between local (real) and system hour (if any) */
+	if ( file->cf_tzdiff != 0 )
+	    Save_lint(f, S_TZDIFF_T, file->cf_tzdiff);
 
 	/*   env variables, */
 	for (env = file->cf_env_base; env; env = env->e_next)

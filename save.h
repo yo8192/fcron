@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.h,v 1.1 2001-04-21 08:52:16 thib Exp $ */
+ /* $Id: save.h,v 1.2 2001-05-24 19:59:58 thib Exp $ */
 
 
 /* here is the format fcron(tab) uses to save the fcrontabs :
@@ -47,6 +47,7 @@
 #define S_HEADER_T     1     /* file version */
 #define S_USER_T       2     /* name of the fcrontab's owner */
 #define S_TIMEDATE_T   3     /* time and date of saving */
+#define S_TZDIFF_T     4     /* time diff between the local and system hour */
 
 /* env var */
 #define S_ENVVAR_T     1000  /* an environment variable */

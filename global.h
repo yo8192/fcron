@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.26 2001-05-17 00:57:26 thib Exp $ */
+ /* $Id: global.h,v 1.27 2001-05-24 19:59:12 thib Exp $ */
 
 
 /* 
@@ -126,9 +126,10 @@ typedef struct env_t {
 typedef struct CF {
     struct CF    *cf_next;
     struct CL    *cf_line_base;
-    char	 *cf_user;	/* user-name			        */
-    struct env_t *cf_env_base;  /* list of all env variables to set     */
-    int		 cf_running;	/* number of jobs running               */
+    char	 *cf_user;	/* user-name			             */
+    struct env_t *cf_env_base;  /* list of all env variables to set          */
+    int		  cf_running;	/* number of jobs running                    */
+    signed char	  cf_tzdiff;    /* time diff between system and local hour   */
 } CF;
 
 
@@ -140,25 +141,25 @@ typedef struct CF {
  *   in the save/load binary fcrontab functions */
 typedef struct CL {
     struct CL     *cl_next;
-    struct CF     *cl_file;       /* the file in which the line is        */
-    unsigned char  cl_option[OPTION_SIZE]; /* line's option (see option.h)*/
-    char	  *cl_shell;      /* shell command			  */
-    unsigned char  cl_numexe;     /* num of entries in lavg/serial queue  */
-    unsigned char  cl_lavg[LAVG_SIZE];/*load averages needed (1,5,15 mins)*/
-    time_t         cl_until;      /* timeout of the wait for a lavg value */
-    char           cl_nice;       /* nice value to control priority       */
-    char          *cl_runas;      /* determine permissions of the job     */
-    char          *cl_mailto;     /* mail output to cl_mailto             */
-    time_t         cl_nextexe;    /* time and date of the next execution  */
-    unsigned short cl_remain;     /* remaining until next execution       */
-    time_t         cl_timefreq;   /* Run every n seconds                  */
-    unsigned short cl_runfreq;    /* Run once every n matches             */
+    struct CF     *cl_file;       /* the file in which the line is           */
+    unsigned char  cl_option[OPTION_SIZE]; /* line's option (see option.h)   */
+    char	  *cl_shell;      /* shell command			     */
+    unsigned char  cl_numexe;     /* num of entries in lavg/serial queue     */
+    unsigned char  cl_lavg[LAVG_SIZE];/*load averages needed (1,5,15 mins)   */
+    time_t         cl_until;      /* timeout of the wait for a lavg value    */
+    char           cl_nice;       /* nice value to control priority          */
+    char          *cl_runas;      /* determine permissions of the job        */
+    char          *cl_mailto;     /* mail output to cl_mailto                */
+    time_t         cl_nextexe;    /* time and date of the next execution     */
+    unsigned short cl_remain;     /* remaining until next execution          */
+    long int       cl_timefreq;   /* Run every n seconds                     */
+    unsigned short cl_runfreq;    /* Run once every n matches                */
     /* see bitstring(3) man page for more details */
-    bitstr_t	   bit_decl(cl_mins, 60); /* 0-59		          */
-    bitstr_t	   bit_decl(cl_hrs, 24);  /* 0-23			  */
-    bitstr_t	   bit_decl(cl_days, 32); /* 1-31			  */
-    bitstr_t	   bit_decl(cl_mons, 12); /* 0-11                	  */
-    bitstr_t	   bit_decl(cl_dow, 8);	  /* 0-7, 0 and 7 are both Sunday */
+    bitstr_t	   bit_decl(cl_mins, 60); /* 0-59		             */
+    bitstr_t	   bit_decl(cl_hrs, 24);  /* 0-23			     */
+    bitstr_t	   bit_decl(cl_days, 32); /* 1-31			     */
+    bitstr_t	   bit_decl(cl_mons, 12); /* 0-11                	     */
+    bitstr_t	   bit_decl(cl_dow, 8);	  /* 0-7, 0 and 7 are both Sunday    */
 } CL;
 
 typedef struct job {

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.43 2001-05-15 00:46:00 thib Exp $ */
+ /* $Id: conf.c,v 1.44 2001-05-24 19:59:35 thib Exp $ */
 
 #include "fcron.h"
 #include "conf.h"
@@ -265,7 +265,16 @@ synchronize_file(char *file_name)
 			
 			if ( new_l->cl_runfreq == old_l->cl_runfreq ) 
 			    new_l->cl_remain = old_l->cl_remain;
-			new_l->cl_nextexe = old_l->cl_nextexe;
+			/* check if there is a change about the tz diff */
+			if ( (new_l->cl_file->cf_tzdiff != 
+			      old_l->cl_file->cf_tzdiff) &&
+			     (old_l->cl_nextexe - old_l->cl_file->cf_tzdiff
+			      + new_l->cl_file->cf_tzdiff > now) )
+			    new_l->cl_nextexe = old_l->cl_nextexe
+				- old_l->cl_file->cf_tzdiff
+				+ new_l->cl_file->cf_tzdiff;
+			else
+			    new_l->cl_nextexe = old_l->cl_nextexe;
 			insert_nextexe(new_l);
 
 			if (debug_opt) {
@@ -500,6 +509,15 @@ read_file(const char *file_name, CF *cf)
 		error_e("Error while reading env var");
 		goto err;
 	    }
+	    break;
+
+	case S_TZDIFF_T:
+	    /* time diff between local (real) and system hour */
+	    if ( read(fileno(ff), &bufi, size) < size ) {
+		error_e("Error while reading tzdiff field");
+		goto err;
+	    }
+	    cf->cf_tzdiff = (signed char) bufi;
 	    break;
 
 	case S_SHELL_T:
@@ -1041,6 +1059,10 @@ save_file(CF *arg_file)
 	 * the system down time. As it is a new file, we set it to 0 */
 	/* S_USER_T *must* be the 3rd field of a binary fcrontab */
 	Save_lint(f, S_TIMEDATE_T, now);
+
+	/* Save the time diff between local (real) and system hour (if any) */
+	if ( file->cf_tzdiff != 0 )
+	    Save_lint(f, S_TZDIFF_T, file->cf_tzdiff);
 
 	/*   env variables, */
 	for (env = file->cf_env_base; env; env = env->e_next)
