@@ -441,6 +441,9 @@ AC_ARG_WITH(rootgroup,
     if cat /etc/group | grep "^root:" > /dev/null ; then
 	rootgroup=root
         AC_MSG_RESULT($rootgroup)
+    elif cat /etc/group | grep "^wheel:" > /dev/null ; then
+	rootgroup=wheel
+        AC_MSG_RESULT($rootgroup)
     else
 	AC_MSG_ERROR(Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME)
     fi
@@ -456,6 +459,9 @@ AC_ARG_WITH(rootgroup,
     esac ],
     if cat /etc/group | grep "^root:" > /dev/null ; then
 	rootgroup=root
+        AC_MSG_RESULT($rootgroup)
+    elif cat /etc/group | grep "^wheel:" > /dev/null ; then
+	rootgroup=wheel
         AC_MSG_RESULT($rootgroup)
     else
 	AC_MSG_ERROR(Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME)
