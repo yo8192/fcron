@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.33 2000-10-05 15:22:19 thib Exp $ */
+ /* $Id: database.c,v 1.34 2000-10-07 14:15:13 thib Exp $ */
 
 #include "fcron.h"
 
@@ -407,9 +407,10 @@ wait_all(int *counter)
 	i = 0;
 	while ( i < exe_num ) {
 	    if (pid == exe_array[i].e_pid) {
-		if ( exe_array[i].e_line == NULL )
+		if ( exe_array[i].e_line == NULL ) {
 		    /* the corresponding file has been removed from memory */
 		    debug("job finished: pid %d", pid);
+		}
 		else {
 		    
 		    debug("job finished: %s", exe_array[i].e_line->cl_shell);
@@ -601,7 +602,7 @@ set_next_exe(CL *line, char is_new_line)
 	ftime.tm_sec = 0;
 	if ( line->cl_runfreq == 1 && ! is_new_line )
 	    goto_non_matching(line, &ftime);
-    
+
       setMonth:
 	for (i = ftime.tm_mon; (bit_test(line->cl_mons, i)==0) && (i<12); i++);
 	if (i >= 12) {
