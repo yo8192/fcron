@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.56 2002-01-27 16:33:10 thib Exp $ */
+ /* $Id: fileconf.c,v 1.57 2002-02-24 16:50:56 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -568,109 +568,19 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if(strcmp(opt_name, "r")==0 || strcmp(opt_name, "runfreq")==0) {
-	    if( !in_brackets || (ptr=get_num(ptr,&i,USHRT_MAX,0,NULL)) == NULL)
+	    if ( cl->cl_runfreq == 1 ) {
+		fprintf(stderr, "cannot change runfreq value in a %%-line");
 		Handle_err;
-	    if (i <= 1)
+	    }
+	    if ( !in_brackets || (ptr=get_num(ptr,&i,USHRT_MAX,0,NULL)) == NULL)
+		Handle_err;
+	    if (i <= 1) {
 		fprintf(stderr, "runfreq must be 2 or more.\n");
-	    if (i <= 1)
-		Handle_err;	
+		Handle_err;
+	    }
 	    cl->cl_runfreq = i;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
-	}
-
-	/* options to run once per interval :
-	 * ignore every fields below the limit */
-	else if (strcmp(opt_name, "mins") == 0) {
-	    /* nothing to do */
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-	else if (strcmp(opt_name, "hours") == 0) {
-	    set_freq_mins(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-	else if (strcmp(opt_name, "days") == 0) {
-	    set_freq_mins(cl->cl_option);
-	    set_freq_hrs(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-	else if (strcmp(opt_name, "mons") == 0) {
-	    set_freq_mins(cl->cl_option);
-	    set_freq_hrs(cl->cl_option);
-	    set_freq_days(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-	else if (strcmp(opt_name, "dow") == 0) {
-	    set_freq_mins(cl->cl_option);
-	    set_freq_hrs(cl->cl_option);
-	    set_freq_days(cl->cl_option);
-	    set_freq_mons(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-
-	/* run once an element of the selected field 
-	 * (once an hour, once a day, etc) */
-	else if (strcmp(opt_name, "hourly") == 0) {
-	    set_freq_hrs(cl->cl_option);
-	    set_freq_periodically(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-	else if (strcmp(opt_name, "daily") == 0) {
-	    set_freq_days(cl->cl_option);
-	    set_freq_periodically(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-	else if (strcmp(opt_name, "monthly") == 0) {
-	    set_freq_mons(cl->cl_option);
-	    set_freq_periodically(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-	else if (strcmp(opt_name, "weekly") == 0) {
-	    set_freq_dow(cl->cl_option);
-	    set_freq_periodically(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-
-	/* run once an element of the selected field 
-	 * from middle to middle of that field 
-	 * (ie once from 12h to 12h the following day) */
-	else if (strcmp(opt_name, "midhourly") == 0) {
-	    set_freq_hrs(cl->cl_option);
-	    set_freq_periodically(cl->cl_option);
-	    set_freq_mid(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-	else if (strcmp(opt_name, "middaily") == 0 
-		 || strcmp(opt_name, "nightly") == 0) {
-	    set_freq_days(cl->cl_option);
-	    set_freq_periodically(cl->cl_option);
-	    set_freq_mid(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-	else if (strcmp(opt_name, "midmonthly") == 0) {
-	    set_freq_mons(cl->cl_option);
-	    set_freq_periodically(cl->cl_option);
-	    set_freq_mid(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
-	}
-	else if (strcmp(opt_name, "midweekly") == 0) {
-	    set_freq_dow(cl->cl_option);
-	    set_freq_periodically(cl->cl_option);
-	    set_freq_mid(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
 	}
 
 	else if ( strcmp(opt_name, "strict") == 0 ) {
@@ -939,6 +849,105 @@ read_opt(char *ptr, CL *cl)
 		set_random(cl->cl_option);	
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+	}
+
+	/* handle %-line : we check if we are really in a %-line (which we do not do
+	 * for other options), because writing "&hourly" in a fcrontab results in an
+	 * error (hourly ignored) hard to find, and, in any case, annoying. */
+	else if ( cl->cl_runfreq == 1 ) {
+	    /* options to run once per interval :
+	     * ignore every fields below the limit */
+	    if (strcmp(opt_name, "mins") == 0) {
+		/* nothing to do */
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+	    else if (strcmp(opt_name, "hours") == 0) {
+		set_freq_mins(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+	    else if (strcmp(opt_name, "days") == 0) {
+		set_freq_mins(cl->cl_option);
+		set_freq_hrs(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+	    else if (strcmp(opt_name, "mons") == 0) {
+		set_freq_mins(cl->cl_option);
+		set_freq_hrs(cl->cl_option);
+		set_freq_days(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+	    else if (strcmp(opt_name, "dow") == 0) {
+		set_freq_mins(cl->cl_option);
+		set_freq_hrs(cl->cl_option);
+		set_freq_days(cl->cl_option);
+		set_freq_mons(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+
+	    /* run once an element of the selected field 
+	     * (once an hour, once a day, etc) */
+	    else if (strcmp(opt_name, "hourly") == 0) {
+		set_freq_hrs(cl->cl_option);
+		set_freq_periodically(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+	    else if (strcmp(opt_name, "daily") == 0) {
+		set_freq_days(cl->cl_option);
+		set_freq_periodically(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+	    else if (strcmp(opt_name, "monthly") == 0) {
+		set_freq_mons(cl->cl_option);
+		set_freq_periodically(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+	    else if (strcmp(opt_name, "weekly") == 0) {
+		set_freq_dow(cl->cl_option);
+		set_freq_periodically(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+
+	    /* run once an element of the selected field 
+	     * from middle to middle of that field 
+	     * (ie once from 12h to 12h the following day) */
+	    else if (strcmp(opt_name, "midhourly") == 0) {
+		set_freq_hrs(cl->cl_option);
+		set_freq_periodically(cl->cl_option);
+		set_freq_mid(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+	    else if (strcmp(opt_name, "middaily") == 0 
+		     || strcmp(opt_name, "nightly") == 0) {
+		set_freq_days(cl->cl_option);
+		set_freq_periodically(cl->cl_option);
+		set_freq_mid(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+	    else if (strcmp(opt_name, "midmonthly") == 0) {
+		set_freq_mons(cl->cl_option);
+		set_freq_periodically(cl->cl_option);
+		set_freq_mid(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
+	    else if (strcmp(opt_name, "midweekly") == 0) {
+		set_freq_dow(cl->cl_option);
+		set_freq_periodically(cl->cl_option);
+		set_freq_mid(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	    }
 	}
 
 	else {
@@ -1255,14 +1264,15 @@ read_period(char *ptr, CF *cf)
     /* skip the % */
     ptr++;
 
+    /* a runfreq set to 1 means : this is a periodical line 
+     * (runfreq cannot be changed by read_opt() if already set to 1) */
+    cl->cl_remain = cl->cl_runfreq = 1;
+
     /* set cl_remain if not specified */
     if ( (ptr = read_opt(ptr, cl)) == NULL ) {
 	goto exiterr;
     }
     Skip_blanks(ptr);
-
-    /* a runfreq set to 1 means : this is a periodical line */
-    cl->cl_remain = cl->cl_runfreq = 1;
 
     /* we set this here, because it may be unset by read_opt (reset option) */
     set_td(cl->cl_option);
