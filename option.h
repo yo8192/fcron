@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.20 2002-01-27 16:33:31 thib Exp $ */
+ /* $Id: option.h,v 1.21 2002-02-25 18:46:37 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -85,6 +85,8 @@
   21     Should user be mailed if a %-job has not run during a period ?
   22     Should fcron log everything about this job or just errors ?
   23     Should this job be run asap, or randomly in its allowed interval of execution ?
+  24     Should first value be applied at each fcron startup, or before line first exe ?
+  25     if fcron is running in foreground, print jobs output to stderr/stdout or mail ?
 
 */
 
@@ -413,6 +415,32 @@
 	(_bit_set(opt, 23))
 #define clear_random(opt) \
 	(_bit_clear(opt, 23))
+
+
+/*
+  bit 24 : set to 1 : "volatile" system up time, i.e. restart counting each time fcron
+                      is started
+           set to 0 : continue counting uptime where last fcron instance left of
+*/
+#define	is_volatile(opt) \
+	(_bit_test(opt, 24))
+#define	set_volatile(opt) \
+	(_bit_set(opt, 24))
+#define clear_volatile(opt) \
+	(_bit_clear(opt, 24))
+
+/*
+  bit 25 : set to 1 : if fcron is running in the forground, then also let jobs print
+                      to stderr/stdout instead of mailing or discarding it
+           set to 0 : if fcron is not running in the foreground or this bit is not
+	              set, then treat it as specified with the other options
+*/
+#define	is_stdout(opt) \
+	(_bit_test(opt, 25))
+#define	set_stdout(opt) \
+	(_bit_set(opt, 25))
+#define clear_stdout(opt) \
+	(_bit_clear(opt, 25))
 
 
 #endif /* __OPTIONH__ */
