@@ -2,7 +2,7 @@
 # Uninstall fcron under SysV system.
 #
 
-# $Id: boot-uninstall,v 1.6 2001-03-02 17:48:34 thib Exp $
+# $Id: boot-uninstall,v 1.7 2001-04-21 08:52:53 thib Exp $
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
@@ -18,13 +18,11 @@ else
   if test $ROOTDIR != ""; then
     rm -f $ROOTDIR/init.d/fcron
 
-    rm -f $ROOTDIR/rc2.d/S40fcron
-    rm -f $ROOTDIR/rc3.d/S40fcron
-    rm -f $ROOTDIR/rc4.d/S40fcron
-    rm -f $ROOTDIR/rc5.d/S40fcron
+    for i in 0 1 2 3 4 5 6
+    do
+    rm -f $ROOTDIR/rc$i.d/???fcron
+    done
 
-    rm -f $ROOTDIR/rc0.d/K60fcron
-    rm -f $ROOTDIR/rc6.d/K60fcron
   else
     echo
     echo "You should delete fcron from your boot script manually"
