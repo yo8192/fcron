@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.27 2000-10-26 14:29:59 thib Exp $ */
+ /* $Id: conf.c,v 1.28 2000-11-02 19:13:13 thib Exp $ */
 
 #include "fcron.h"
 
@@ -446,28 +446,6 @@ read_file(const char *file_name, CF *cf)
 	cl->cl_shell = read_str(ff, buf, sizeof(buf));
 
 	if ( is_td(cl->cl_option) ) {
-
-	    /* to prevent from invinite loop with unvalid lines */
-	    if ( memcmp(cl->cl_mins, zero, bitstr_size(60)) == 0 ) {
-		error("No min set in '%s': setting all", cl->cl_shell);
-		bit_nset(cl->cl_mins, 0, 59);
-	    }
-	    if ( memcmp(cl->cl_hrs, zero, bitstr_size(24)) == 0 ) {
-		error("No hour set in '%s': setting all", cl->cl_shell);
-		bit_nset(cl->cl_hrs, 0, 23);
-	    }
-	    if ( memcmp(cl->cl_days, zero, bitstr_size(32)) == 0 ) {
-		error("No month day set in '%s': setting all", cl->cl_shell);
-		bit_nset(cl->cl_days, 0, 31);
-	    }
-	    if ( memcmp(cl->cl_mons, zero, bitstr_size(12)) == 0 ) {
-		error("No month set in '%s': setting all", cl->cl_shell);
-		bit_nset(cl->cl_mons, 0, 11);
-	    }
-	    if ( memcmp(cl->cl_dow, zero, bitstr_size(8)) == 0 ) {
-		error("No week day set in '%s': setting all", cl->cl_shell);
-		bit_nset(cl->cl_dow, 0, 7);
-	    }
     
 	    /* set the time and date of the next execution  */
 	    if ( cl->cl_nextexe <= now ) {
