@@ -43,6 +43,7 @@ AC_CHECK_HEADERS(sys/termios.h)
 AC_CHECK_HEADERS(strings.h)
 AC_CHECK_HEADERS(sys/types.h sys/socket.h sys/un.h)
 AC_CHECK_HEADERS(security/pam_appl.h crypt.h shadow.h)
+AC_CHECK_HEADERS(sys/resource.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -85,6 +86,7 @@ AC_CHECK_FUNCS(flock lockf)
 AC_CHECK_FUNCS(setlinebuf)
 AC_CHECK_FUNCS(seteuid, [seteuid=1], [seteuid=0])
 AC_CHECK_FUNCS(setegid, [setegid=1], [setegid=0])
+AC_CHECK_FUNCS(setpriority)
 
 AC_CHECK_FUNCS(getspnam, [getspnam=1], [getspnam=0])
 if test "$getspnam" -eq "0"; then
