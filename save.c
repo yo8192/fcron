@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.c,v 1.8 2004-01-29 10:34:55 thib Exp $ */
+ /* $Id: save.c,v 1.9 2005-02-26 15:15:10 thib Exp $ */
 
 #include "global.h"
 #include "save.h"
@@ -349,7 +349,7 @@ save_file_safe(cf_t *file, char *final_path, char *prog_name, uid_t own_uid,
     strncpy(temp_path, final_path, sizeof(temp_path)-sizeof(tmp_str));
     temp_path_index = ( final_path_len > sizeof(temp_path)-sizeof(tmp_str) ) ?
 	sizeof(temp_path)-sizeof(tmp_str) : final_path_len;
-    strcpy(&temp_path[temp_path_index], ".tmp");
+    strcpy(&temp_path[temp_path_index], tmp_str);
 
     if ( save_one_file(file, temp_path, own_uid, own_gid, save_date) == OK ) {
 	if ( rename(temp_path, final_path) != 0 ) {
