@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.13 2000-10-05 15:01:23 thib Exp $ */
+ /* $Id: fcron.h,v 1.14 2000-11-16 17:58:50 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -59,7 +59,6 @@ extern time_t now;
 extern char debug_opt;
 extern char foreground;
 extern char *cdir;
-extern int daemon_uid;
 extern pid_t daemon_pid;
 extern char *prog_name;
 extern char sig_hup;
