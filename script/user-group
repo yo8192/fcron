@@ -4,7 +4,7 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.10 2001-07-10 10:54:23 thib Exp $
+# $Id: user-group,v 1.11 2001-07-10 14:50:18 thib Exp $
 
 # take 4 arguments : 	username
 # 			groupname
@@ -58,7 +58,7 @@ else
     do
       echo "Would you like to add $GROUPNAME in /etc/passwd with the following command ?"
       echo "    $CMD"
-      echo "If you use NYS, ldap, or similar, you should add the group manually (say no here)"
+      echo "If you use NYS, ldap, etc, you should add the group manually (say no here)"
       echo -n "Please answer with 'y' or 'n' (default: 'y'): "
       read INSTALL NOTHING
     done
