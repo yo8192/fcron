@@ -14,10 +14,9 @@ pidfile		=	@@PIDFILE@
 fcronallow	=	@@ETC@/@@FCRON_ALLOW@
 fcrondeny	=	@@ETC@/@@FCRON_DENY@
 
-# Location of the default editor for "fcrontab -e"
-editor		=	@@EDITOR@
-
 # Location of the programs used by fcron
 shell		=	@@SHELL@
 sendmail	=	@@SENDMAIL@
 
+# Location of the default editor for "fcrontab -e"
+editor		=	@@EDITOR@
