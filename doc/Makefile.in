@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.6 2002-01-04 19:11:52 thib Exp $
+# $Id: Makefile.in,v 1.7 2002-01-27 16:36:46 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -62,7 +62,7 @@ mandoc:
                   <!ENTITY % decl SYSTEM "fcron-doc.mod"> \
                   %decl;]>' > _tmp_ ; \
           echo "&$$i;" >> _tmp_ ; \
-          $(DB2MAN_BEFORE) _tmp_ $(DB2MAN_AFTER) 2>&1 > /dev/null ; \
+          $(DB2MAN_BEFORE) _tmp_ $(DB2MAN_AFTER) > /dev/null 2>&1 ; \
 	  rm -f _tmp_ ; \
 	  mv `basename $$i .sgml` man/ ; \
           done)
@@ -89,31 +89,35 @@ HTML/index.html: $(SGMLFILES) fcron-doc.mod.in stylesheets/fcron-doc.dsl.in
 	make mandoc txtdoc
 
 install: clean
-	if test ! -d $(DESTMAN)/man1; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man1 ; fi
-	if test ! -d $(DESTMAN)/man3; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man3 ; fi
-	if test ! -d $(DESTMAN)/man5; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man5 ; fi
-	if test ! -d $(DESTMAN)/man8; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man8 ; fi
-	if test ! -d $(DESTDOC)/fcron-$(VERSION); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION) ; fi
-	if test ! -d $(DESTDOC)/fcron-$(VERSION)/txt; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 \
-	                                                  -d $(DESTDOC)/fcron-$(VERSION)/txt/ ; fi
-	if test ! -d $(DESTDOC)/fcron-$(VERSION)/HTML; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 \
-	                                                  -d $(DESTDOC)/fcron-$(VERSION)/HTML/ ; fi
+	@(echo "Creating man directories (if needed) ...")
+	@(if test ! -d $(DESTMAN)/man1; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man1 ; fi)
+	@(if test ! -d $(DESTMAN)/man3; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man3 ; fi)
+	@(if test ! -d $(DESTMAN)/man5; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man5 ; fi)
+	@(if test ! -d $(DESTMAN)/man8; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man8 ; fi)
+	@(if test ! -d $(DESTDOC)/fcron-$(VERSION); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION) ; fi)
+	@(if test ! -d $(DESTDOC)/fcron-$(VERSION)/txt; then $(INSTALL) -g $(ROOTGROUP) \
+	    -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION)/txt/ ; fi)
+	@(if test ! -d $(DESTDOC)/fcron-$(VERSION)/HTML; then $(INSTALL) -g $(ROOTGROUP)\
+	    -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION)/HTML/ ; fi)
 
 # We need to 'cd ..' because SRCDIR may be set to '.', and we are in a sub directory
-	cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcron.8 $(DESTMAN)/man8
-	cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcrontab.1 $(DESTMAN)/man1
-	cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcrontab.5 $(DESTMAN)/man5
-	cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcron.conf.5 $(DESTMAN)/man5
-	cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/bitstring.3 $(DESTMAN)/man3
-	cd .. ; for i in $(SRCDIR)/doc/txt/*; do \
+	@(echo "Installing man pages in $(DESTMAN)/man{1,3,5,8} ...")
+	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcron.8 $(DESTMAN)/man8)
+	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcrontab.1 $(DESTMAN)/man1)
+	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcrontab.5 $(DESTMAN)/man5)
+	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcron.conf.5 $(DESTMAN)/man5)
+	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/bitstring.3 $(DESTMAN)/man3)
+	@(echo "Installing txt files in $(DESTDOC)/fcron-$(VERSION)/txt/ ...")
+	@(cd .. ; for i in $(SRCDIR)/doc/txt/*; do \
 	          echo "$$i" ; \
 	          $(INSTALL) -m 644 -o $(ROOTNAME) $$i \
 	                     $(DESTDOC)/fcron-$(VERSION)/txt/ ;\
-	          done
-	cd .. ; for i in $(SRCDIR)/doc/HTML/*; do \
+	          done)
+	@(echo "Installing html files $(DESTDOC)/fcron-$(VERSION)/HTML/ ...")
+	@(cd .. ; for i in $(SRCDIR)/doc/HTML/*; do \
 	          $(INSTALL) -m 644 -o $(ROOTNAME) $$i \
 	                     $(DESTDOC)/fcron-$(VERSION)/HTML/ ;\
-	          done
+	          done)
 
 uninstall:
 	rm -fR $(DESTDOC)/fcron-$(VERSION)
@@ -132,7 +136,7 @@ htmltar: HTML/index.html clean
 
 
 clean:
-	(for i in man txt stylesheets . ; do \
+	@(for i in man txt stylesheets . ; do \
 	  cd $$i ; \
 	  echo "Cleaning : `pwd`"; \
           rm -f *~ *.html *.htm *.texi *.info *.refs manpage.links manpage.refs \
@@ -151,4 +155,3 @@ tar: doc tarclean
 # during the ci-ing
 	@(cd ..; find ./doc/ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
              -exec ci -l {} \;)
-
