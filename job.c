@@ -22,28 +22,26 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.30 2001-01-27 15:43:06 thib Exp $ */
+ /* $Id: job.c,v 1.31 2001-01-30 15:54:01 thib Exp $ */
 
 #include "fcron.h"
 
 int temp_file(void);
 void launch_mailer(CL *line, int mailfd);
-int change_user(uid_t uid);
 void sig_dfl(void);
 void end_job(CL *line, int status, int mailfd, short mailpos);
 void end_mailer(CL *line, int status);
 
 
 int
-change_user(uid_t uid)
+change_user(char *user_name)
 {
     struct passwd *pas;
 
-
     /* Obtain password entry and change privileges */
 
-    if ((pas = getpwuid(uid)) == NULL) 
-        die("failed to get passwd fields for user's uid %d", uid);
+    if ((pas = getpwnam(user_name)) == NULL) 
+        die("failed to get passwd fields for user \"%s\"", user_name);
     
 #ifdef HAVE_SETENV
     setenv("USER", pas->pw_name, 1);
@@ -57,7 +55,7 @@ change_user(uid_t uid)
 	strcat( strcpy(buf, "HOME"), "=");
 	putenv( strncat(buf, pas->pw_dir, sizeof(buf)-5) );
 	strcat( strcpy(buf, "SHELL"), "=");
-	putenv( strncat(buf, pas->pw_name, sizeof(buf)-6) );
+	putenv( strncat(buf, pas->pw_shell, sizeof(buf)-6) );
     }
 #endif /* HAVE_SETENV */
 
@@ -309,8 +307,6 @@ void
 launch_mailer(CL *line, int mailfd)
     /* mail the output of a job to user */
 {
-    struct passwd *pass;
-
     foreground = 0;
 
     /* set stdin to the job's output */
@@ -319,16 +315,10 @@ launch_mailer(CL *line, int mailfd)
 
     xcloselog();
 
-    /* determine which will be the mail receiver */
-    if ( (pass = getpwuid(line->cl_mailto)) == NULL )
-	die("uid unknown: %d : no mail will be sent");
-
     /* run sendmail with mail file as standard input */
-    execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, pass->pw_name, NULL);
-    debug("launch_mailer4");
+    execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, line->cl_mailto, NULL);
     error_e("Can't find \""SENDMAIL"\". Trying a execlp(\"sendmail\")");
-    execlp("sendmail", "sendmail", SENDMAIL_ARGS, pass->pw_name, NULL);
-    debug("launch_mailer5");
+    execlp("sendmail", "sendmail", SENDMAIL_ARGS, line->cl_mailto, NULL);
     die_e("Can't exec " SENDMAIL);
 
 }
