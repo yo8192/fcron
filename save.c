@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.c,v 1.6 2003-07-14 10:53:34 thib Exp $ */
+ /* $Id: save.c,v 1.7 2003-12-25 22:52:03 thib Exp $ */
 
 #include "global.h"
 #include "save.h"

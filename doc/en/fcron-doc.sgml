@@ -7,7 +7,7 @@
 
 <!-- 
 Fcron documentation
-Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -15,7 +15,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron-doc.sgml,v 1.6 2003-07-14 10:54:54 thib Exp $ -->
+<!-- $Id: fcron-doc.sgml,v 1.7 2003-12-25 22:57:35 thib Exp $ -->
 
 <book lang="en" id="fcron-doc">
     <bookinfo id="bookinfo">

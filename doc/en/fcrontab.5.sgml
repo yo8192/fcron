@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.12 2003-09-12 20:56:45 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.13 2003-12-25 23:00:07 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>

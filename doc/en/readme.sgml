@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: readme.sgml,v 1.4 2003-07-14 10:59:20 thib Exp $ -->
+<!-- $Id: readme.sgml,v 1.5 2003-12-25 23:00:11 thib Exp $ -->
 
 <sect1 id="readme">
     <title>About fcron</title>
