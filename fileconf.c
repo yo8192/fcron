@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.62 2002-09-07 13:11:25 thib Exp $ */
+ /* $Id: fileconf.c,v 1.63 2002-09-15 18:09:42 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -1704,7 +1704,7 @@ save_file(char *path)
     for (file = file_base; file; file = file->cf_next) {
 
 	/* open file */
-	fd = open(path, O_CREAT | O_TRUNC | O_SYNC);
+	fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC);
 	if ( fd == -1 ) {
 	    error_e("Could not open %s : file has not be installed.", path);
 	    return ERR;
