@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.23 2003-12-25 22:59:21 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.24 2004-01-29 10:36:51 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -37,10 +37,6 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>add an option to prevent fcron from running a job if the
 		  system is running on battery (anacron does it ?)</para>
-	    </listitem>
-	    <listitem>
-	       <para>create a mailing list for help/user support : send a mail
-	       on fcronannounce + news on web site to advertise it.</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>

@@ -8,10 +8,19 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.28 2003-12-29 20:07:29 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.29 2004-01-29 10:37:01 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
+
+      <itemizedlist>
+	 <title>From version 2.9.4 to 2.9.5</title>
+	 <listitem>
+	    <para>Mail reports : put the same username in the To: field than 
+	       the one we give as recipient to the MTA. mailto can now also
+	       be a fully qualified email address.</para>
+	 </listitem>
+      </itemizedlist>
 
       <itemizedlist>
 	 <title>From version 2.9.3 to 2.9.4</title>

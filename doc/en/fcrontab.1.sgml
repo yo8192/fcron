@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.1.sgml,v 1.9 2003-12-25 23:00:03 thib Exp $ -->
+<!-- $Id: fcrontab.1.sgml,v 1.10 2004-01-29 10:37:21 thib Exp $ -->
 
    <refentry id="fcrontab.1">
       <refmeta>
@@ -132,7 +132,7 @@ A copy of the license is included in gfdl.sgml.
 		  <para>Reinstall user's &fcrontabf; from its source code. All
 		     informations &fcron; may have kept in the binary
 		     &fcrontabf; (such as the last execution time and date) will
-		     be forgotten.</para>
+		     be forgotten (ie. lost).</para>
 	       </listitem>
 	    </varlistentry>
 	    <varlistentry>

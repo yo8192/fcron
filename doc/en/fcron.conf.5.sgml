@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron.conf.5.sgml,v 1.6 2003-12-25 22:57:58 thib Exp $ -->
+<!-- $Id: fcron.conf.5.sgml,v 1.7 2004-01-29 10:36:35 thib Exp $ -->
 
 <refentry id="fcron.conf.5">
     <refmeta>
@@ -46,7 +46,7 @@ optional. Trailing blanks are also ignored.
 		    <term><varname>fcrontabs</varname>=<replaceable>directory</replaceable> 
 (<filename>&fcrontabsdir;</filename>)</term>
 		    <listitem>
-			<para>&Fcron; spool directory</para>
+			<para>&Fcron; spool directory.</para>
 		    </listitem>
 		</varlistentry>
 		<varlistentry>
