@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.27 2000-12-30 12:55:25 thib Exp $ */
+ /* $Id: job.c,v 1.28 2000-12-30 13:00:46 thib Exp $ */
 
 #include "fcron.h"
 
@@ -247,7 +247,7 @@ run_job(struct exe *exeent)
 
 	exeent->e_pid = pid;
 	line->cl_file->cf_running += 1;
-	explain("Job `%s' started (pid %d)", line->cl_shell, pid);
+	explain("Job %s started (pid %d)", line->cl_shell, pid);
 
     }
 
@@ -274,16 +274,16 @@ end_job(CL *line, int status, int mailfd, short mailpos)
     m= (mail_output == 1) ? " (mailing output)" : "";
     if (WIFEXITED(status) && WEXITSTATUS(status)==0) {
 	foreground = 0;
-	debug("Job `%s' terminated%s", line->cl_shell, m);
+	debug("Job %s terminated%s", line->cl_shell, m);
     }
     else if (WIFEXITED(status))
-	explain("Job `%s' terminated (exit status: %d)%s",
+	explain("Job %s terminated (exit status: %d)%s",
 		line->cl_shell, WEXITSTATUS(status), m);
     else if (WIFSIGNALED(status))
-	error("Job `%s' terminated due to signal %d%s",
+	error("Job %s terminated due to signal %d%s",
 	      line->cl_shell, WTERMSIG(status), m);
     else /* is this possible? */
-	error("Job `%s' terminated abnormally %s", line->cl_shell, m);
+	error("Job %s terminated abnormally %s", line->cl_shell, m);
 
     if (mail_output == 1) launch_mailer(line, mailfd);
 
