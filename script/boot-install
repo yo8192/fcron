@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.17 2000-12-08 12:50:24 thib Exp $
+# $Id: boot-install,v 1.18 2000-12-15 17:47:48 thib Exp $
 
 # take 4 arguments : the name of the BSD-like install program
 #                    the DESTSBIN directory, the value of DEBUG
@@ -185,6 +185,10 @@ if test "$RESTARTED" = "1"; then
 else
     echo "After having restarted fcron, you should reinstall the fcrontabs."
 fi
+echo "As a matter of fact, you must know that fcrontabs installed by an old"
+echo "version of fcrontab may not work with this version if you don't" 
+echo "reinstall them."
+
 if test "$RESTARTED" -eq 1; then
     REINSTALL="nothing"
     # reinstall the fcrontabs
