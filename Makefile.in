@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.93 2002-10-06 17:09:02 thib Exp $
+# $Id: Makefile.in,v 1.94 2002-10-06 17:15:58 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -202,6 +202,8 @@ ci: ciclean
 tar: configure updatedoc vclean ci
 
 	echo $(VERSION) > ./VERSION
+
+	@(cd doc && make tarclean)
 
 	@(find ./ -type f ! -regex '.*RCS.*' | \
              sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
