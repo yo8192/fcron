@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.97 2003-07-14 12:05:32 thib Exp $
+# $Id: Makefile.in,v 1.98 2003-07-14 12:10:48 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -194,6 +194,7 @@ configure: configure.in
 		exit 999)
 
 ci: ciclean
+# the symbolic links verX_X_X has been created since version 2.9.4
 	@(find ./ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
           -exec ci -l -Nver`echo $(VERSION) | tr '.' '_'` {} \;)
 # ci the doc files
