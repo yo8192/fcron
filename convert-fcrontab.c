@@ -22,12 +22,12 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.c,v 1.5 2001-06-22 21:09:58 thib Exp $ */
+ /* $Id: convert-fcrontab.c,v 1.6 2001-07-07 17:33:19 thib Exp $ */
 
 
 #include "convert-fcrontab.h"
 
-char rcs_info[] = "$Id: convert-fcrontab.c,v 1.5 2001-06-22 21:09:58 thib Exp $";
+char rcs_info[] = "$Id: convert-fcrontab.c,v 1.6 2001-07-07 17:33:19 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -52,7 +52,7 @@ info(void)
      * version, license */
 {
     fprintf(stderr,
-	    "convert-fcrontab "VERSION_QUOTED " - periodic command scheduler\n"
+	    "convert-fcrontab "VERSION_QUOTED "\n"
 	    "Copyright 2000-2001 Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
