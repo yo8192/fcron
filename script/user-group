@@ -1,0 +1,53 @@
+#!/bin/sh
+# Check if the user and group given in arguments
+#  exit in /etc/passwd and /etc/group, and create
+#  them if necessary.
+#
+
+# $Id: user-group,v 1.1 2000-11-18 14:51:47 thib Exp $
+
+# take 2 arguments : 	username
+# 			groupname
+
+PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
+
+if test $# -ne 2; then
+    echo "Too few/many arguments"
+    exit 1
+fi
+
+USERNAME=$1
+GROUPNAME=$2
+INSTALL="nothing"
+INSTALLED=0
+
+echo -n "Checking if $USERNAME is in /etc/passwd ... "
+if grep "^$USERNAME:" /etc/passwd > /dev/null; then
+    echo "yes."
+    INSTALLED=1
+else
+    echo "no."
+    if useradd -D 2> /dev/null; then
+	CMD="useradd -c 'fcron' fcron"
+    elif adduser -D 2> /dev/null; then
+	CMD="adduser -c 'fcron' fcron"
+    fi
+    while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
+	do
+	    echo "Would you like to add $USERNAME in /etc/passwd with the following command ?"
+	echo "    $CMD"
+	read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+	done
+    if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
+	if $CMD; then
+	    INSTALLED=1
+	fi
+    fi    
+fi
+
+
+if test $INSTALLED -eq 0; then
+    echo "User $USERNAME does not exist : please create it or choose another username"
+    echo "with configure script."
+    exit 1
+fi
