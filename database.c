@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.70 2003-12-25 22:50:27 thib Exp $ */
+ /* $Id: database.c,v 1.71 2004-04-29 19:29:50 thib Exp $ */
 
 #include "fcron.h"
 
@@ -809,7 +809,8 @@ set_next_exe(cl_t *line, char option)
 	   ( localtime() is used in the debug() function) */
 	memcpy(&ftime, ft, sizeof(struct tm));
 
-	ftime.tm_isdst = -1;
+	/* creates a bug on DST change on some systems ?? */
+	/* ftime.tm_isdst = -1; */
 
 	/* to prevent multiple execution of &-jobs in the same minute
  	 * (but not if the user has explicitely asked to run jobs immediately) */
@@ -984,6 +985,24 @@ set_next_exe(cl_t *line, char option)
 		  ftime.tm_mday, (ftime.tm_year + 1900), ftime.tm_wday,
 		  ftime.tm_hour, ftime.tm_min, line->cl_file->cf_tzdiff);
 	}
+
+	/* 
+	 * sanity check : 
+	 * if the nextexe is set to the past because of a bug,
+	 * the line will be executed again immediately, and it is most likely
+	 * to be set again in the past next time.
+	 * It would create a nasty infinite loop, a kind of "while(1) fork();"
+	 *
+	 * We add a test here to limit the consequences that would have
+	 * an unknown bug in this function.
+	 */
+	if ( line->cl_nextexe <= now ) {
+	    error("BUG ??? Fcron thinks the next exe time of %s is %ld, "
+		  "hence before now (%ld). To avoid infinite loop, nextexe"
+		  " will be set at now+5s.");
+	    line->cl_nextexe = now + 5;
+	}
+
 	
     }
     else {
@@ -1139,6 +1158,8 @@ check_lavg(time_t lim)
 #ifdef NOLOADAVG
     while ( lavg_num > 0 )
 	run_lavg_job(0);
+
+    tts = time_to_sleep(lim);
     return tts;
 #else
 
