@@ -1,4 +1,3 @@
-
 /*
  * FCRON - periodic command scheduler 
  *
@@ -22,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.65 2002-08-29 17:34:03 thib Exp $ */
+ /* $Id: database.c,v 1.66 2002-10-06 17:10:11 thib Exp $ */
 
 #include "fcron.h"
 
@@ -32,19 +31,19 @@
 int is_leap_year(int year);
 int get_nb_mdays(int year, int mon);
 void set_wday(struct tm *date);
-void goto_non_matching(CL *line, struct tm *tm, char option);
+void goto_non_matching(cl_t *line, struct tm *tm, char option);
 #define END_OF_INTERVAL 1    /* goto_non_matching() : option */
-void run_normal_job(CL *line);
+void run_normal_job(cl_t *line);
 void run_serial_job(void);
 void run_lavg_job(int i);
-void run_queue_job(CL *line);
+void run_queue_job(cl_t *line);
 void resize_exe_array(void);
 
 void
 test_jobs(void)
   /* determine which jobs need to be run, and run them. */
 {
-    struct job *j;
+    struct job_t *j;
 
 /*      // */
     debug("Looking for jobs to execute ...");
@@ -73,7 +72,7 @@ test_jobs(void)
 
 
 void
-run_normal_job(CL *line)
+run_normal_job(cl_t *line)
 {
 
     if (line->cl_numexe <= 0 || 
@@ -136,23 +135,23 @@ void
 resize_exe_array(void)
     /* make exe_array bigger */
 {
-    struct exe *ptr = NULL;
+    struct exe_t *ptr = NULL;
     short int old_size = exe_array_size;
 
     debug("Resizing exe_array");
     exe_array_size = (exe_array_size + EXE_GROW_SIZE);
 	
-    if ( (ptr = calloc(exe_array_size, sizeof(struct exe))) == NULL )
+    if ( (ptr = calloc(exe_array_size, sizeof(struct exe_t))) == NULL )
 	die_e("could not calloc exe_array");
 
-    memcpy(ptr, exe_array, (sizeof(struct exe) * old_size));
+    memcpy(ptr, exe_array, (sizeof(struct exe_t) * old_size));
     free(exe_array);
     exe_array = ptr;
 }
 
 
 void
-run_queue_job(CL *line)
+run_queue_job(cl_t *line)
     /* run a job */
 {
 
@@ -173,15 +172,15 @@ run_queue_job(CL *line)
 
 
 void
-insert_nextexe(CL *line)
+insert_nextexe(cl_t *line)
     /* insert a job the queue list */
 {
-    struct job *newjob;
+    struct job_t *newjob;
 
     if (queue_base != NULL) {
-	struct job *j;
-	struct job *jprev = NULL;
-	struct job *old_entry = NULL;
+	struct job_t *j;
+	struct job_t *jprev = NULL;
+	struct job_t *old_entry = NULL;
 
 	/* find the job in the list */
 	for (j = queue_base; j != NULL ; j = j->j_next)
@@ -211,7 +210,7 @@ insert_nextexe(CL *line)
 
 	if (old_entry == NULL) {
 	    /* this job wasn't in the queue : we append it */
-	    Alloc(newjob, job);
+	    Alloc(newjob, job_t);
 	    newjob->j_line = line;
 	}
 	else
@@ -228,7 +227,7 @@ insert_nextexe(CL *line)
     }
     else {
 	/* no job in queue */
-	Alloc(newjob, job);
+	Alloc(newjob, job_t);
 	newjob->j_line = line;	    
 	queue_base = newjob;
     }
@@ -236,7 +235,7 @@ insert_nextexe(CL *line)
 }
 
 void
-add_serial_job(CL *line)
+add_serial_job(cl_t *line)
     /* add the next queued job in serial queue */
 {
     short int i;
@@ -261,20 +260,20 @@ add_serial_job(CL *line)
 	    return;
 	}
 	else {
-	    CL **ptr = NULL;
+	    cl_t **ptr = NULL;
 	    short int old_size = serial_array_size;
 
 	    debug("Resizing serial_array");
 	    serial_array_size = (serial_array_size + SERIAL_GROW_SIZE);
 	
-	    if ( (ptr = calloc(serial_array_size, sizeof(CL *))) == NULL )
+	    if ( (ptr = calloc(serial_array_size, sizeof(cl_t *))) == NULL )
 		die_e("could not calloc serial_array");
 
 	    /* copy lines in order to have the first line at the index 0 */
 	    memcpy(ptr + serial_array_index, serial_array,
-		   (sizeof(CL*) * (old_size - serial_array_index)) );
+		   (sizeof(cl_t*) * (old_size - serial_array_index)) );
 	    memcpy(ptr, serial_array + (old_size - serial_array_index),
-		   (sizeof(CL*) * serial_array_index));
+		   (sizeof(cl_t*) * serial_array_index));
 	    serial_array_index = 0;
 	    free(serial_array);
 	    serial_array = ptr;
@@ -298,7 +297,7 @@ add_serial_job(CL *line)
 
 
 void
-add_lavg_job(CL *line)
+add_lavg_job(cl_t *line)
     /* add the next queued job in lavg queue */
     /* WARNING : must be run before a set_next_exe() to get the strict option
      * working correctly */
@@ -326,16 +325,16 @@ add_lavg_job(CL *line)
 	    return;
 	}
 	else {
-	    struct lavg *ptr = NULL;
+	    struct lavg_t *ptr = NULL;
 	    short int old_size = lavg_array_size;
 		
 	    debug("Resizing lavg_array");
 	    lavg_array_size = (lavg_array_size + LAVG_GROW_SIZE);
 		
-	    if ( (ptr = calloc(lavg_array_size, sizeof(lavg))) == NULL )
+	    if ( (ptr = calloc(lavg_array_size, sizeof(lavg_t))) == NULL )
 		die_e("could not calloc lavg_array");
 		
-	    memcpy(ptr, lavg_array, (sizeof(lavg) * old_size));
+	    memcpy(ptr, lavg_array, (sizeof(lavg_t) * old_size));
 	    free(lavg_array);
 	    lavg_array = ptr;
 	}
@@ -384,7 +383,7 @@ wait_chld(void)
 {
     short int i = 0;
     int pid;
-    CL *line = NULL;
+    cl_t *line = NULL;
 
 
 /*      // */
@@ -394,7 +393,7 @@ wait_chld(void)
     while ( (pid = wait3(NULL, WNOHANG, NULL)) > 0 ) {
 	i = 0;
 	while ( i < exe_num ) {
-	    if (pid == exe_array[i].e_pid) {
+	    if (pid == exe_array[i].e_ctrl_pid) {
 		if ( exe_array[i].e_line == NULL ) {
 		    /* the corresponding file has been removed from memory */
 		    debug("job finished: pid %d", pid);
@@ -448,7 +447,7 @@ wait_all(int *counter)
     while ( (*counter > 0) && (pid = wait3(NULL, 0, NULL)) > 0 ) {
 	i = 0;
 	while ( i < exe_num ) {
-	    if (pid == exe_array[i].e_pid) {
+	    if (pid == exe_array[i].e_ctrl_pid) {
 		if ( exe_array[i].e_line == NULL ) {
 		    /* the corresponding file has been removed from memory */
 		    debug("job finished: pid %d", pid);
@@ -546,7 +545,7 @@ set_wday(struct tm *date)
 
 
 void
-goto_non_matching(CL *line, struct tm *ftime, char option)
+goto_non_matching(cl_t *line, struct tm *ftime, char option)
     /* search the first the nearest time and date that does
      * not match the line */
 {
@@ -785,8 +784,8 @@ goto_non_matching(CL *line, struct tm *ftime, char option)
 
 
 void 
-set_next_exe(CL *line, char option)
-  /* set the cl_nextexe of a given CL and insert it in the queue */
+set_next_exe(cl_t *line, char option)
+  /* set the cl_nextexe of a given cl_t and insert it in the queue */
 {
 
     if ( is_td(line->cl_option) ) {
@@ -999,7 +998,7 @@ set_next_exe(CL *line, char option)
 
 
 void
-set_next_exe_notrun(CL *line, char context)
+set_next_exe_notrun(cl_t *line, char context)
     /* set the time of the next execution and send a mail to tell user his job
      * has not run if necessary */
 {
@@ -1043,7 +1042,7 @@ set_next_exe_notrun(CL *line, char context)
 }
 
 void
-mail_notrun(CL *line, char context, struct tm *since)
+mail_notrun(cl_t *line, char context, struct tm *since)
     /* send a mail to tell user a job has not run (and why) */
 {
     int pid = 0;
@@ -1070,7 +1069,7 @@ mail_notrun(CL *line, char context, struct tm *since)
 	    resize_exe_array();
 	/* set line to NULL as this is not a line ... */
 	exe_array[exe_num].e_line = NULL;
-	exe_array[exe_num].e_pid = pid;
+	exe_array[exe_num].e_ctrl_pid = pid;
 	exe_num++;
 	return;
     }

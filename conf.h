@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.h,v 1.4 2001-12-23 22:04:54 thib Exp $ */
+ /* $Id: conf.h,v 1.5 2002-10-06 17:08:56 thib Exp $ */
 
 #ifndef __CONF_H__
 #define __CONF_H__
@@ -30,6 +30,6 @@
 extern void reload_all(const char *dir_name);
 extern void synchronize_dir(const char *dir_name);
 extern void delete_file(const char *user_name);
-extern void save_file(struct CF *file_name);
+extern void save_file(struct cf_t *file_name);
 
 #endif /* __CONF_H__ */

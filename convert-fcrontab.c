@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.c,v 1.12 2002-10-05 14:27:22 thib Exp $ */
+ /* $Id: convert-fcrontab.c,v 1.13 2002-10-06 17:10:37 thib Exp $ */
 
 #include "global.h"
 
@@ -30,13 +30,13 @@
 #include "log.h"
 #include "subs.h"
 
-char rcs_info[] = "$Id: convert-fcrontab.c,v 1.12 2002-10-05 14:27:22 thib Exp $";
+char rcs_info[] = "$Id: convert-fcrontab.c,v 1.13 2002-10-06 17:10:37 thib Exp $";
 
 void info(void);
 void usage(void);
 void convert_file(char *file_name);
 char *read_str(FILE *f, char *buf, int max);
-void delete_file(CF *file);
+void delete_file(cf_t *file);
 
 char  *cdir = FCRONTABS;      /* the dir where are stored users' fcrontabs */
 
@@ -100,12 +100,12 @@ read_str(FILE *f, char *buf, int max)
 
 
 void
-delete_file(CF *file)
+delete_file(cf_t *file)
     /* free a file if user_name is not null 
      *   otherwise free all files */
 {
-    CL *line = NULL;
-    CL *cur_line = NULL;
+    cl_t *line = NULL;
+    cl_t *cur_line = NULL;
     env_t *env = NULL;
     env_t *cur_env = NULL;
 
@@ -180,8 +180,8 @@ convert_file(char *file_name)
 /* this functions is a mix of read_file() from version 1.0.3 and save_file(),
  * so you can read more comments there */
 {
-    CF *file = NULL;
-    CL *line = NULL;
+    cf_t *file = NULL;
+    cl_t *line = NULL;
     env_t *env = NULL;
     FILE *f = NULL;
     int fd;
@@ -191,7 +191,7 @@ convert_file(char *file_name)
 
     explain("Converting %s's fcrontab ...", file_name);
 
-    Alloc(file, CF);
+    Alloc(file, cf_t);
     /* open file */
     if ( (f = fopen(file_name, "r")) == NULL )
 	die_e("Could not read %s", file_name);
@@ -231,8 +231,8 @@ convert_file(char *file_name)
     free(env);
 
     /* read lines */
-    Alloc(line, CL);
-    while ( fread(line, sizeof(CL), 1, f) == 1 ) {
+    Alloc(line, cl_t);
+    while ( fread(line, sizeof(cl_t), 1, f) == 1 ) {
 
 	if ((line->cl_shell = read_str(f, buf, sizeof(buf))) == NULL) {
 	    error("Line is not valid (empty shell command) : ignored");
@@ -249,7 +249,7 @@ convert_file(char *file_name)
 
 	line->cl_next = file->cf_line_base;
 	file->cf_line_base = line;
-	Alloc(line, CL);
+	Alloc(line, cl_t);
 
     }
 
