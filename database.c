@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.55 2001-08-17 19:47:46 thib Exp $ */
+ /* $Id: database.c,v 1.56 2001-08-20 11:00:01 thib Exp $ */
 
 #include "fcron.h"
 #include "database.h"
@@ -231,7 +231,8 @@ add_serial_job(CL *line)
 {
     short int i;
 
-    /* check if the line is already in the serial queue */
+    /* check if the line is already in the serial queue 
+     * (we consider serial jobs currently running as in the queue) */
     if ( (is_serial_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX) ||
 	 (! is_serial_sev(line->cl_option) && line->cl_numexe > 0) ) {
 	debug("already in serial queue %s", line->cl_shell);
@@ -241,11 +242,12 @@ add_serial_job(CL *line)
     debug("inserting in serial queue %s", line->cl_shell);
 
     if ( serial_num >= serial_array_size ) {
-	if ( serial_num >= SERIAL_QUEUE_MAX )
-	    /* run next job in the queue before adding the new one */
-	    run_serial_job();
-/*  	    warn("Could not add %s to serial queue : queue is full (%d jobs)", */
-/*  		 line->cl_shell, SERIAL_QUEUE_MAX); */
+	if ( serial_num >= SERIAL_QUEUE_MAX ) {
+  	    error("Could not add %s to serial queue: queue is full (%d jobs). "
+		  "Consider using option serialonce, and/or fcron's option -m",
+  		 line->cl_shell, SERIAL_QUEUE_MAX);
+	    return;
+	}
 	else {
 	    CL **ptr = NULL;
 	    short int old_size = serial_array_size;
@@ -290,7 +292,8 @@ add_lavg_job(CL *line)
      * working correctly */
 {
 
-    /* check if the line is already in the lavg queue */
+    /* check if the line is already in the lavg queue
+     * (we consider serial jobs currently running as in the queue) */
     if ( (is_lavg_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX) ||
 	 (! is_lavg_sev(line->cl_option) &&  line->cl_numexe > 0 ) ) {
 	debug("already in lavg queue %s", line->cl_shell);
@@ -303,14 +306,10 @@ add_lavg_job(CL *line)
     /* append job to the list of lavg job */
     if ( lavg_num >= lavg_array_size ) {
 	if ( lavg_num >= LAVG_QUEUE_MAX ) {
-	    /* run the next lavg job (the oldest one) */
-	    register int i;
-	    int j = 0;
-		
-	    for (i = 1; i < lavg_num; i++)
-		if ( lavg_array[i].l_until < lavg_array[j].l_until )
-		    j = i;
-	    run_lavg_job(j);
+  	    error("Could not add %s to lavg queue: queue is full (%d jobs). "
+		  "Consider using options lavgonce, until and strict.",
+  		 line->cl_shell, LAVG_QUEUE_MAX);
+	    return;
 	}
 	else {
 	    struct lavg *ptr = NULL;
