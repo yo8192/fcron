@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.2 2000-05-15 18:28:36 thib Exp $ */
+ /* $Id: database.c,v 1.3 2000-05-22 17:34:35 thib Exp $ */
 
 #include "fcron.h"
 
@@ -120,18 +120,23 @@ wait_chld(void)
 
 	for (file = file_base; file; file = file->cf_next) {
 
-	    if (file->cf_running) {
+	    for (line = file->cf_line_base; line && file->cf_running;
+		 line = line->cl_next) {
 
-		for (line = file->cf_line_base; line; line = line->cl_next) {
-
-		    if (pid < 0 || pid == line->cl_pid)
-			end_job(file, line, status);
-		    else if ( pid == line->cl_mailpid )
-			end_mailer(line, status);
-
+		if (pid < 0 || pid == line->cl_pid) {
+		    end_job(file, line, status);
+		    goto nextloop;
 		}
+		else if ( pid == line->cl_mailpid ) {
+		    end_mailer(line, status);
+		    goto nextloop;
+		}
+
 	    }
+
 	}
+
+      nextloop:
     }
 
 }
