@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.42 2001-04-21 08:46:20 thib Exp $ */
+ /* $Id: fcron.c,v 1.43 2001-04-29 22:15:28 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.42 2001-04-21 08:46:20 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.43 2001-04-29 22:15:28 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -234,7 +234,7 @@ parseopt(int argc, char *argv[])
 #else
 	c = getopt(argc, argv, "dfbhVs:");
 #endif /* HAVE_GETOPT_H */
-	if (c == -1) break;
+	if (c == EOF) break;
 	switch (c) {
 
 	case 'V':
