@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.36 2001-03-02 17:50:34 thib Exp $ */
+ /* $Id: job.c,v 1.37 2001-04-21 08:39:22 thib Exp $ */
 
 #include "fcron.h"
 
@@ -36,6 +36,9 @@ int
 change_user(char *user_name)
 {
     struct passwd *pas;
+
+    /* First, restore umask to default */
+    umask (saved_umask);
 
     /* Obtain password entry and change privileges */
 
@@ -338,25 +341,21 @@ temp_file(void)
 	die_e("Can't find a unique temporary filename");
 #else
     const int max_retries = 50;
-    char *name;
+    char *name = NULL;
     int i;
 
     i = 0;
-    name = NULL;
     do {
 	i++;
-	free(name);
 	name = tempnam(NULL, NULL);
 	if (name == NULL) die("Can't find a unique temporary filename");
 	fd = open(name, O_RDWR|O_CREAT|O_EXCL|O_APPEND,S_IRUSR|S_IWUSR);
+	free(name);
 	/* I'm not sure we actually need to be so persistent here */
     } while (fd == -1 && errno == EEXIST && i < max_retries);
     if (fd == -1) die_e("Can't open temporary file");
 #endif
     if (unlink(name)) die_e("Can't unlink temporary file");
-#ifndef HAVE_MKSTEMP
-    free(name);
-#endif
     fcntl(fd, F_SETFD,1);   /* set close-on-exec flag */
     return fd;
 }
