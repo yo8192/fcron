@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.34 2001-04-29 22:14:20 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.35 2001-05-15 00:44:21 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.34 2001-04-29 22:14:20 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.35 2001-05-15 00:44:21 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -70,7 +70,6 @@ uid_t asuid = 0;
 gid_t asgid = 0;
 uid_t fcrontab_uid = 0;
 gid_t fcrontab_gid = 0;
-char  *cdir = FCRONTABS;
 
 char need_sig = 0;           /* do we need to signal fcron daemon */
 
@@ -204,7 +203,7 @@ sig_daemon(void)
 	switch ( fork() ) {
 	case -1:
 	    remove(FCRONTABS "/fcrontab.sig");
-	    die_e("could not fork : daemon as not been signaled");
+	    die_e("could not fork : daemon has not been signaled");
 	    break;
 	case 0:
 	    /* child */
@@ -443,7 +442,7 @@ edit_file(char *buf)
     int status;
     struct stat st;
     time_t mtime = 0;
-    char tmp[FNAME_LEN];
+    char *tmp_str;
     FILE *f, *fi;
     int file = 0;
     char c;
@@ -456,19 +455,14 @@ edit_file(char *buf)
 	if( (editor = getenv("EDITOR")) == NULL || strcmp(editor, "\0") == 0 )
 	    editor = EDITOR;
 	
-    sprintf(tmp, "/tmp/fcrontab.%d", getpid());
-
-    if ( (file = open(tmp, O_CREAT|O_EXCL|O_WRONLY, 0600)) == -1 ) {
-	error_e("could not create file %s", tmp);
-	goto exiterr;
-    }
+    file = temp_file(&tmp_str);
     if ( (fi = fdopen(file, "w")) == NULL ) {
 	error_e("could not fdopen");
 	goto exiterr;
     }
 #if ! (defined(HAVE_SETREGID) && defined(HAVE_SETREUID))
     if (fchown(file, asuid, asgid) != 0) {
-	error_e("Could not fchown %s to asuid and asgid", tmp);
+	error_e("Could not fchown %s to asuid and asgid", tmp_str);
 	goto exiterr;
     }
 #endif
@@ -494,7 +488,7 @@ edit_file(char *buf)
 
     do {
 
-	if ( stat(tmp, &st) == 0 )
+	if ( stat(tmp_str, &st) == 0 )
 	    mtime = st.st_mtime;
 	else {
 	    error_e("could not stat \"%s\"", buf);
@@ -525,7 +519,7 @@ edit_file(char *buf)
 		goto exiterr;
 	    }
 #endif
-	    execlp(editor, editor, tmp, NULL);
+	    execlp(editor, editor, tmp_str, NULL);
 	    error_e("Error while running \"%s\"", editor);
 	    goto exiterr;
 
@@ -558,15 +552,15 @@ edit_file(char *buf)
 	/* make sure that the tmp file is not a link */
 	{
 	    int fd = 0;
-	    if ( (fd = open(tmp, O_RDONLY)) <= 0 ||
+	    if ( (fd = open(tmp_str, O_RDONLY)) <= 0 ||
 		 fstat(fd, &st) != 0 || ! S_ISREG(st.st_mode) ||
 		 st.st_uid != asuid || st.st_nlink > 1) {
-		fprintf(stderr, "%s is not a valid regular file.\n", tmp);
+		fprintf(stderr, "%s is not a valid regular file.\n", tmp_str);
 		close(fd);
 		goto exiterr;
 	    }
 	    if ( fchown(fd, 0, 0) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ) {
-		fprintf(stderr, "Can't chown or chmod %s.\n", tmp);
+		fprintf(stderr, "Can't chown or chmod %s.\n", tmp_str);
 		close(fd);
 		goto exiterr;
 	    }
@@ -575,8 +569,8 @@ edit_file(char *buf)
 #endif
 	
 	/* check if file has been modified */
-	if ( stat(tmp, &st) != 0 ) {
-	    error_e("could not stat %s", tmp);
+	if ( stat(tmp_str, &st) != 0 ) {
+	    error_e("could not stat %s", tmp_str);
 	    goto exiterr;
 	}    
 
@@ -584,7 +578,7 @@ edit_file(char *buf)
 
 	    correction = 0;
 
-	    switch ( read_file(tmp, user) ) {
+	    switch ( read_file(tmp_str, user) ) {
 	    case ERR:
 		goto exiterr;
 	    case 2:
@@ -616,7 +610,7 @@ edit_file(char *buf)
 
     } while ( correction == 1);
 
-    if ( write_file(tmp) != OK )
+    if ( write_file(tmp_str) != OK )
 	return_val = EXIT_ERR;
     
     /* free memory used to store the list */
@@ -626,13 +620,15 @@ edit_file(char *buf)
     need_sig = 1;
     
   end:
-    if ( remove(tmp) != 0 )
-	error_e("could not remove %s", tmp);
+    if ( remove(tmp_str) != 0 )
+	error_e("could not remove %s", tmp_str);
+    free(tmp_str);
     xexit (return_val);
 
   exiterr:
-    if ( remove(tmp) != 0 )
-	error_e("could not remove %s", tmp);
+    if ( remove(tmp_str) != 0 )
+	error_e("could not remove %s", tmp_str);
+    free(tmp_str);
     xexit (EXIT_ERR);
 
 }
@@ -642,22 +638,24 @@ int
 install_stdin(void)
     /* install what we get through stdin */
 {
+    int tmp_fd = 0;
     FILE *tmp_file = NULL;
-    char tmp[FNAME_LEN];
+    char *tmp_str = NULL;
     register char c;
     short return_val = EXIT_OK;
 	    	    
-    sprintf(tmp, "/tmp/fcrontab.%d", getpid());
-    if( (tmp_file = fopen(tmp, "w")) == NULL )
-	die_e("Could not open \"%s\"", tmp);
+    tmp_fd = temp_file(&tmp_str);
+    
+    if( (tmp_file = fdopen(tmp_fd, "w")) == NULL )
+	die_e("Could not fdopen file %s", tmp_str);
 
     while ( (c = getc(stdin)) != EOF )
 	putc(c, tmp_file);
 
     fclose(tmp_file);
+    close(tmp_fd);
 
-
-    if ( make_file(tmp) == ERR )
+    if ( make_file(tmp_str) == ERR )
 	goto exiterr;
     else
 	goto exit;
@@ -665,8 +663,9 @@ install_stdin(void)
   exiterr:
 	return_val = EXIT_ERR;    
   exit:
-    if ( remove(tmp) != 0 )
-	error_e("Could not remove %s", tmp);
+    if ( remove(tmp_str) != 0 )
+	error_e("Could not remove %s", tmp_str);
+    free(tmp_str);
     return return_val;
 
 }
@@ -853,7 +852,7 @@ main(int argc, char **argv)
 	    if (seteuid(fcrontab_uid) != 0) 
 		die_e("Could not change uid to fcrontab_uid[%d]",fcrontab_uid);
 	/* change directory */
-	if (chdir(cdir) != 0) {
+	if (chdir(FCRONTABS) != 0) {
 	    error_e("Could not chdir to " FCRONTABS );
 	    xexit (EXIT_ERR);
 	}
@@ -869,7 +868,7 @@ main(int argc, char **argv)
     if (setgid(0) != 0)
     	die_e("Could not change gid to 0");
     /* change directory */
-    if (chdir(cdir) != 0) {
+    if (chdir(FCRONTABS) != 0) {
 	error_e("Could not chdir to " FCRONTABS );
 	xexit (EXIT_ERR);
     }
