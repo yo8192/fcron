@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.29 2001-01-12 21:41:24 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.30 2001-02-10 12:53:29 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.29 2001-01-12 21:41:24 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.30 2001-02-10 12:53:29 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -809,6 +809,10 @@ main(int argc, char **argv)
 
     uid = getuid();
 
+    /* get current dir */
+    if ( (orig_dir = getcwd(NULL, 0)) == NULL )
+	error_e("getcwd");
+
     /* interpret command line options */
     parseopt(argc, argv);
 
@@ -850,10 +854,6 @@ main(int argc, char **argv)
     /* this program is seteuid : we set default permission mode
      * to  600 for security reasons */
     umask(026);
-
-    /* get current dir */
-    if ( (orig_dir = getcwd(NULL, 0)) == NULL )
-	error_e("getcwd");
 
     snprintf(buf, sizeof(buf), "%s.orig", user);
 
