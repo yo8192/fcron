@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.53 2001-12-23 22:04:10 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.54 2002-02-02 14:51:36 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -45,7 +45,7 @@
 #include "allow.h"
 #include "fileconf.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.53 2001-12-23 22:04:10 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.54 2002-02-02 14:51:36 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -358,6 +358,7 @@ edit_file(char *buf)
        if necessary */
 {
     char *cureditor = NULL;
+    char editorcmd[FNAME_LEN];
     pid_t pid;
     int status;
     struct stat st;
@@ -429,7 +430,8 @@ edit_file(char *buf)
 		}
 	    }
 
-	    execlp(cureditor, cureditor, tmp_str, NULL);
+	    snprintf(editorcmd, sizeof(editorcmd), "%s %s", cureditor, tmp_str);
+	    execlp(shell, shell, "-c", editorcmd, tmp_str, NULL);
 	    error_e("Error while running \"%s\"", cureditor);
 	    goto exiterr;
 
