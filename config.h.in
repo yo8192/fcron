@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.23 2000-11-10 17:38:21 thib Exp $ */
+ /* $Id: config.h.in,v 1.24 2000-12-04 20:18:58 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -209,6 +209,9 @@
 
 /* Define if you have the getcwd function.  */
 #undef HAVE_GETCWD
+
+/* Define if you have the gethostname function.  */
+#undef HAVE_GETHOSTNAME
 
 /* Define if you have the gettimeofday function.  */
 #undef HAVE_GETTIMEOFDAY
