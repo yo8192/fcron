@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.27 2000-12-30 12:54:19 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.28 2001-01-04 15:51:40 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.27 2000-12-30 12:54:19 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.28 2001-01-04 15:51:40 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -190,7 +190,7 @@ sig_daemon(void)
     
 	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
 	    debug("fcrontab is already waiting for signalling the daemon :"
-		  " exit");
+		  " exiting.");
 	    return;
 	}
 
@@ -263,10 +263,16 @@ copy(char *orig, char *dest)
 	error_e("copy: orig");
 	return ERR;
     }
-    /* create it as fcrontab_uid (to avoid problem if user's uid changed) */
+    /* create it as fcrontab_uid (to avoid problem if user's uid changed)
+     * except for root. Root requires filesystem uid root for security
+     * reasons */
 #if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(fcrontab_uid) != 0)
-	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
+    if (asuid == 0) {
+	if (seteuid(0) != 0) error_e("seteuid(0)");
+    } else {
+    	if (seteuid(fcrontab_uid) != 0)
+	   error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
+    }
 #endif
     if ((to = fopen(dest, "w")) == NULL) {
 	error_e("copy: dest");
@@ -701,7 +707,7 @@ parseopt(int argc, char *argv[])
 	case 'l':
 	    if (rm_opt || edit_opt || reinstall_opt) {
 		fprintf(stderr, "Only one of the options -l, -r, -e and -z"
-			"can be used simultaneously.\n");
+			"may be used simultaneously.\n");
 		xexit(EXIT_ERR);
 	    }
 	    list_opt = 1;
@@ -713,7 +719,7 @@ parseopt(int argc, char *argv[])
 	case 'r':
 	    if (list_opt || edit_opt || reinstall_opt) {
 		fprintf(stderr, "Only one of the options -l, -r, -e and -z"
-			"can be used simultaneously.\n");
+			"may be used simultaneously.\n");
 		xexit(EXIT_ERR);
 	    }
 	    list_opt = 0;
@@ -725,7 +731,7 @@ parseopt(int argc, char *argv[])
 	case 'e':
 	    if (list_opt || rm_opt || reinstall_opt) {
 		fprintf(stderr, "Only one of the options -l, -r, -e and -z"
-			"can be used simultaneously.\n");
+			"may be used simultaneously.\n");
 		xexit(EXIT_ERR);
 	    }
 	    list_opt = 0;
@@ -737,7 +743,7 @@ parseopt(int argc, char *argv[])
 	case 'z':
 	    if (list_opt || rm_opt || edit_opt) {
 		fprintf(stderr, "Only one of the options -l, -r, -e and -z"
-			"can be used simultaneously.\n");
+			"may be used simultaneously.\n");
 		xexit(EXIT_ERR);
 	    }
 	    list_opt = 0;
