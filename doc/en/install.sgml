@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: install.sgml,v 1.4 2002-07-19 19:43:14 thib Exp $ -->
+<!-- $Id: install.sgml,v 1.5 2002-08-11 20:28:06 thib Exp $ -->
 
 <sect1 id="install">
     <title>How to install fcron</title>
@@ -103,9 +103,9 @@ designed for <application>GNU make</application>. Some other version of
 	</listitem>
 
 	<listitem>
-	    <para>check the file <filename>config.h</filename>, and change it if
-necessary (the configurable part is on the top of the file and clearly
-delimited).</para>
+	    <para><emphasis>(optional)</emphasis> check the file
+<filename>config.h</filename>, and change it if necessary (the configurable part
+is on the top of the file and clearly delimited).</para>
 	</listitem>
 
 	<listitem>
@@ -116,8 +116,7 @@ delimited).</para>
 	<listitem>
 	    <para>then install binaries as root :</para>
 	    <screen><prompt>bash$ </prompt><command>su root</command></screen>
-	    <screen><prompt>bash# </prompt><command>make
-install</command></screen>
+	    <screen><prompt>bash# </prompt><command>make install</command></screen>
 	</listitem>
     </itemizedlist>
     <para>You can now run <command>fcron</command> and
