@@ -22,11 +22,12 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.57 2001-09-12 13:48:07 thib Exp $ */
+ /* $Id: database.c,v 1.58 2001-11-04 18:59:50 thib Exp $ */
 
 #include "fcron.h"
 
 #include "database.h"
+#include "job.h"
 
 int is_leap_year(int year);
 int get_nb_mdays(int year, int mon);
