@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.56 2001-02-01 20:51:03 thib Exp $
+# $Id: Makefile.in,v 1.57 2001-02-10 12:55:43 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -57,7 +57,7 @@ OPTION =
 ####################################
 
 VERSION= @VERSION@
-CFLAGS= $(INCLUDE) $(OPTIM) $(OPTION) $(DEFS)
+CFLAGS= $(OPTIM) $(OPTION) $(DEFS)
 OBJSD = fcron.o subs.o database.o job.o log.o conf.o $(LIBOBJS)
 OBJS= fcrontab.o fileconf.o subs.o log.o allow.o
 HEADERSD = fcron.h config.h global.h option.h getloadavg.h
