@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.20 2000-08-30 09:07:49 thib Exp $ */
+ /* $Id: database.c,v 1.21 2000-09-03 14:32:19 thib Exp $ */
 
 #include "fcron.h"
 
@@ -778,7 +778,7 @@ check_lavg(time_t lim)
 	    ) {
 	    debug("lavg '%s' %s %d:%d %d:%d %d:%d",
 		  lavg_array[i].l_line->cl_shell,
-		  (is_land(lavg_array[i].l_line->cl_option)) ? "and" : "or",
+		  (is_lor(lavg_array[i].l_line->cl_option)) ? "or" : "and",
 		  l_avg[0], lavg_array[i].l_line->cl_lavg[0],
 		  l_avg[1], lavg_array[i].l_line->cl_lavg[1],
 		  l_avg[2], lavg_array[i].l_line->cl_lavg[2]);
