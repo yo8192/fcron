@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.c,v 1.14 2002-10-28 17:56:09 thib Exp $ */
+ /* $Id: convert-fcrontab.c,v 1.15 2002-11-01 18:17:39 thib Exp $ */
 
 #include "global.h"
 
@@ -30,7 +30,7 @@
 #include "log.h"
 #include "subs.h"
 
-char rcs_info[] = "$Id: convert-fcrontab.c,v 1.14 2002-10-28 17:56:09 thib Exp $";
+char rcs_info[] = "$Id: convert-fcrontab.c,v 1.15 2002-11-01 18:17:39 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -46,6 +46,8 @@ char foreground = 1;
 pid_t daemon_pid = 0;
 char debug_opt = 0;
 char dosyslog = 1;
+time_t t_save = 0;
+struct stat file_stat;
 
 void
 info(void)
@@ -135,6 +137,41 @@ delete_file(cf_t *file)
 }
 
 
+/* this function is called in save.c */
+int
+save_one_file(cf_t *file, char *path)
+/* save a given file to disk */
+{
+    int fd;
+
+    fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC);
+    if ( fd == -1 ) {
+	error_e("Could not open %s", path);
+	return ERR;
+    }
+
+    if ( fchown(fd, file_stat.st_uid, file_stat.st_gid) != 0 ) {
+	error_e("Could not fchown %s", path);
+	return ERR;
+    }
+    
+    if ( fchmod(fd, file_stat.st_mode) != 0 ) {
+	error_e("Could not fchmod %s", path);
+	return ERR;
+    }
+    
+    if ( write_file_to_disk(fd, file, t_save) == ERR ) {
+	close(fd);
+	remove(path);
+	return ERR;
+    }
+
+    close(fd);
+
+    return OK;
+
+}
+
 void
 convert_file(char *file_name)
 /* this functions is a mix of read_file() from version 1.0.3 and save_file(),
@@ -144,10 +181,7 @@ convert_file(char *file_name)
     cl_t *line = NULL;
     env_t *env = NULL;
     FILE *f = NULL;
-    int fd;
-    struct stat file_stat;
     char buf[LINE_LEN];
-    time_t t_save = 0;
 
     explain("Converting %s's fcrontab ...", file_name);
 
@@ -220,27 +254,12 @@ convert_file(char *file_name)
     /* open a temp file in write mode and truncate it */
     strcpy(buf, "tmp_");
     strncat(buf, file_name, sizeof(buf) - sizeof("tmp_") - 1);
-    fd = open(buf, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC);
-    if ( fd == -1 )
-	die_e("Could not open %s", buf);
-
-    if ( fchown(fd, file_stat.st_uid, file_stat.st_gid) != 0 )
-	die_e("Could not fchown %s", buf);
     
-    if ( fchmod(fd, file_stat.st_mode) != 0 )
-	die_e("Could not fchmod %s", buf);
-    
-    if ( write_file_to_disk(fd, file, t_save) == ERR ) {
-	close(fd);
-	remove(buf);
-	exit(EXIT_ERR);
-    }
-
-    close(fd);
-
     /* everything's ok : we can override the src file safely */
     if ( rename(buf, file_name) != 0 )
 	error_e("Could not rename %s to %s", buf, file_name);
+
+    save_file_safe(file, file_name, "convert-fcrontab");
 
     delete_file(file);
 }

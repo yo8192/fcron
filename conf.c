@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.61 2002-10-28 17:54:19 thib Exp $ */
+ /* $Id: conf.c,v 1.62 2002-11-01 18:13:49 thib Exp $ */
 
 #include "fcron.h"
 
@@ -35,6 +35,7 @@ int add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str,
 int read_strn(int fd, char **str, short int size);
 int read_type(int fd, short int *type, short int *size);
 void synchronize_file(char *file_name);
+int save_one_file(cf_t *file, char *filename);
 
 
 /* this is used to create a list of files to remove, to add */
@@ -971,13 +972,49 @@ delete_file(const char *user_name)
 
 }
 
+/* this function is called in save.c */
+int
+save_one_file(cf_t *file, char *filename)
+/* save a given file to disk */
+{
+    int fd;
+
+    /* open file */
+    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR|S_IWUSR);
+    if ( fd == -1 ) {
+	error_e("Could not open %s", file->cf_user);
+	return ERR;
+    }
+    else {
+
+	/* chown the file to root:root : this file should only be read and
+	 * modified by fcron (not fcrontab) */
+	if (fchown(fd, ROOTUID, ROOTGID) != 0) {
+	    error_e("Could not fchown \"%s\"", file->cf_user);
+	    close(fd);
+	    return ERR;
+	}
+	else {
+	    /* save file : */
+	    if ( write_file_to_disk(fd, file, now) == ERR ) {
+		close(fd);
+		remove(file->cf_user);
+		return ERR;
+	    }
+	    else
+		close(fd);
+	}
+    }
+
+    return OK;
+}
+
 void
 save_file(cf_t *arg_file)
-    /* Store the informations relatives to the executions
-     * of tasks at a defined frequency of system's running time */
+/* Store the informations relatives to the executions
+ * of tasks at a defined frequency of system's running time */
 {
     cf_t *file = NULL;
-    int fd;
     cf_t *start_file = NULL;
 
     if (arg_file != NULL)
@@ -990,29 +1027,8 @@ save_file(cf_t *arg_file)
 
 	debug("Saving %s...", file->cf_user);
 
-	/* open file */
-	fd = open(file->cf_user, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR|S_IWUSR);
-	if ( fd == -1 ) {
-	    error_e("Could not open %s", file->cf_user);
-	}
-	else {
-
-	    /* chown the file to root:root : this file should only be read and
-	     * modified by fcron (not fcrontab) */
-	    if (fchown(fd, ROOTUID, ROOTGID) != 0) {
-		error_e("Could not fchown \"%s\"", file->cf_user);
-		close(fd);
-	    }
-	    else {
-		/* save file : */
-		if ( write_file_to_disk(fd, file, now) == ERR ) {
-		    close(fd);
-		    remove(file->cf_user);
-		}
-		else
-		    close(fd);
-	    }
-	}
+	/* save the file safely : save it to a temporary name, then rename() it */
+	save_file_safe(file, file->cf_user, "fcron");
 
 	if (arg_file != NULL)
 	    /* we have to save only a single file */

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.c,v 1.3 2002-10-28 17:56:29 thib Exp $ */
+ /* $Id: save.c,v 1.4 2002-11-01 18:17:44 thib Exp $ */
 
 #include "global.h"
 #include "save.h"
@@ -35,6 +35,8 @@ int save_str(int fd, short int type, char *str, char *write_buf, int *buf_used);
 int save_strn(int fd, short int type, char *str, short int size, char *write_buf,
 	      int *buf_used);
 int save_lint(int fd, short int type, long int value, char *write_buf, int *buf_used);
+extern int save_one_file(cf_t *file, char *filename);
+
 
 int
 save_type(int fd, short int type, char *write_buf, int *buf_used)
@@ -143,7 +145,7 @@ write_buf_to_disk(int fd, char *write_buf, int *buf_used)
     }
 
     /* */
-    debug("write_buf_to_disk() : written %d/%d, %d retry(ies)", written, to_write, 
+    debug("write_buf_to_disk() : written %d/%d, %d (re)try(ies)", written, to_write, 
 	  num_retries);
     /* */
 
@@ -285,4 +287,42 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 	return ERR;
 
     return OK;
+}
+
+
+int
+save_file_safe(cf_t *file, char *final_path, char *prog_name)
+/* save a file to a temp path, and then rename it (safely) to avoid loss of data
+ * if a system crash, hardware failure, etc happens. */
+{
+    char temp_path[PATH_LEN+4];
+    int final_path_len, temp_path_index;
+    char *tmp_str = ".tmp";
+
+    final_path_len = strlen(final_path);
+    strncpy(temp_path, final_path, sizeof(temp_path)-sizeof(tmp_str));
+    temp_path_index = ( final_path_len > sizeof(temp_path)-sizeof(tmp_str) ) ?
+	sizeof(temp_path)-sizeof(tmp_str) : final_path_len;
+    strcpy(&temp_path[temp_path_index], ".tmp");
+
+    /* save_one_file() is defined in conf.c for fcron, fileconf.c for fcrondyn */
+    if ( save_one_file(file, temp_path) == OK ) {
+	if ( rename(temp_path, final_path) != 0 ) {
+	    error_e("Cannot rename %s to %s", temp_path, final_path);
+	    error("%s will try to save the name to its definitive filename "
+		  "directly.", prog_name);
+	    error("If there is an error, root may consider to replace %s (which is "
+		  "a valid copy) by %s manually.", final_path, temp_path);
+	    if ( save_one_file(file, final_path) == ERR )
+		return ERR;
+	}
+    }
+    else {
+	error("Since %s has not been able to save %s's file, it will keep "
+	      "the previous version (if any) of %s.", prog_name, final_path);
+	return ERR;
+    }
+
+    return OK;
+
 }
