@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.22 2001-01-12 21:43:35 thib Exp $ */
+ /* $Id: global.h,v 1.23 2001-01-30 15:52:16 thib Exp $ */
 
 
 /* 
@@ -96,7 +96,7 @@
 #include "option.h"
 
 
-#define FILEVERSION "016"  /* syntax's version of fcrontabs : 
+#define FILEVERSION "017"  /* syntax's version of fcrontabs : 
 			    * must have a length of 3 characters */
 
 /* you should not change this (nor need to do it) */
@@ -135,8 +135,8 @@ typedef struct CL {
     unsigned char  cl_lavg[3];    /* load averages needed (1, 5, 15 mins) */
     time_t         cl_until;      /* timeout of the wait for a lavg value */
     char           cl_nice;       /* nice value to control priority       */
-    uid_t          cl_runas;      /* determine permissions of the job     */
-    uid_t          cl_mailto;     /* mail output to cl_mailto             */
+    char          *cl_runas;      /* determine permissions of the job     */
+    char          *cl_mailto;     /* mail output to cl_mailto             */
     time_t         cl_nextexe;    /* time and date of the next execution  */
     unsigned short cl_remain;     /* remaining until next execution       */
     time_t         cl_timefreq;   /* Run every n seconds                  */
