@@ -41,7 +41,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_WAIT3
 AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
 AC_FUNC_GETLOADAVG
-AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror)
+AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv)
 
 dnl Checks for programs.
 
