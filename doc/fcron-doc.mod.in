@@ -2,7 +2,7 @@
 
 <!ENTITY date "@@Date@">
 <!ENTITY version "@@VERSION@">
-<!ENTITY copyrightdate "2000-2003">
+<!ENTITY copyrightdate "2000-2004">
 <!ENTITY emailadr "fcron@free.fr">
 <!ENTITY selinuxadr "russell@coker.com.au">
 <!ENTITY email "<email>&emailadr;</email>">
