@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.7 2000-08-22 21:20:11 thib Exp $ */
+ /* $Id: option.h,v 1.8 2000-08-28 18:00:34 thib Exp $ */
 
 /* read and set options of a line */
 
@@ -90,16 +90,16 @@
 
 
 /*
-  bit 2 : set to 1 : perform a logic AND between load averages
-          set to 0 : perform a logic OR between load averages
+  bit 2 : set to 1 : perform a logic OR between load averages
+          set to 0 : perform a logic AND between load averages
 */
-#define	is_land(opt) \
-	(_bit_test(opt, 2))
 #define	is_lor(opt) \
+	(_bit_test(opt, 2))
+#define	is_land(opt) \
 	( ! _bit_test(opt, 2))
-#define	set_land(opt) \
-	(_bit_set(opt, 1))
 #define	set_lor(opt) \
+	(_bit_set(opt, 1))
+#define	set_land(opt) \
 	(_bit_clear(opt, 2))
 
 /*
