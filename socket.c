@@ -21,13 +21,15 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.11 2002-11-17 13:14:06 thib Exp $ */
+ /* $Id: socket.c,v 1.12 2003-09-12 21:35:26 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
 
 #include "fcron.h"
 #include "socket.h"
+#include "getloadavg.h"
+
 
 void remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client);
 void exe_cmd(struct fcrondyn_cl *client);
