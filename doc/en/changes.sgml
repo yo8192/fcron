@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.18 2002-09-07 13:13:48 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.19 2002-10-05 14:28:58 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
@@ -16,14 +16,14 @@ A copy of the license is included in gfdl.sgml.
     <itemizedlist>
 	<title>From version 2.9.1 to 2.9.2</title>
 	<listitem>
+	    <para>Added a system fcrontab. Root can access it with fcrontab by using
+"-u systab".</para>
+	</listitem>
+	<listitem>
 	    <para>fcrondyn's ls_lavgq, ls_serialq and ls_exeq are now functional.</para>
 	</listitem>
 	<listitem>
 	    <para>mailto can now be set to a non-real user (for ex., an alias).</para>
-	</listitem>
-	<listitem>
-	    <para>Added a system fcrontab. Root can access it with fcrontab by using
-"-u systab".</para>
 	</listitem>
 	<listitem>
 	    <para>fcron now calls shutdown() when a connection from fcrondyn is closed.
@@ -31,14 +31,18 @@ Another change in the code should prevent fcrondyn from not returning to the pro
 a command has been run.</para>
 	</listitem>
 	<listitem>
-	    <para>bug fix : using DESTDIR with make wasn't working with the doc.</para>
+	    <para>use open() instead of fopen() to write files, for more security.</para>
 	</listitem>
 	<listitem>
 	    <para>fcrontab sets euid=uid before running the editor. This is required by
 some programs (for instance, perl).</para>
 	</listitem>
 	<listitem>
-	    <para>use open() instead of fopen() to write files, for more security.</para>
+	    <para>bug fix : using DESTDIR with make did not work with the doc.</para>
+	</listitem>
+	<listitem>
+	    <para>Code clean : changed macros to make parameters clearly different
+from vars.</para>
 	</listitem>
     </itemizedlist>
 

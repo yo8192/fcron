@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.15 2002-09-15 18:09:52 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.16 2002-10-05 14:28:37 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -34,13 +34,10 @@ well.</para>
 	    <para>Use (or remove from config.h.in) MAX_USER_CON & MAX_IDLE_TIME.</para>
 	</listitem>
 	<listitem>
-	    <para>Change macros to make parameters clearly different from vars.</para>
-	</listitem>
-	<listitem>
 	    <para>Use directory notifications (?) (portable ?) (cf. dnotify)</para>
 	</listitem>
 	<listitem>
-	    <para>PAM support (included in fcron, but need more tests by people 
+	    <para>PAM support (included in fcron, but needs more tests by people 
 using PAM - not implemented in fcrondyn)</para>
 	</listitem>
 	<listitem>
