@@ -8,104 +8,125 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.21 2003-07-14 10:56:53 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.22 2003-09-12 20:55:59 thib Exp $ -->
 
-<sect1 id="todo">
-    <title>Todo</title>
-    <para>Here are some things that should be done ... Note that some of these entries
- are just some ideas, which <emphasis>may</emphasis> be done in the long run.</para>
-    <para>If you plan to help me, please send a mail at &email; to prevent two
-people from doing the same thing. You can send me some propositions as
-well.</para>
-    <itemizedlist>
+   <sect1 id="todo">
+      <title>Todo</title>
+      <para>Here are some things that should be done ... Note that some of these
+	 entries are just some ideas, which <emphasis>may</emphasis> be done
+	 in the long run.</para> 
+      <para>If you plan to help me, please send a mail at &email; to prevent
+	 two people from doing the same thing. You can send me some propositions as
+	 well, or ask me to move something to the top of the heap ;) .</para>
+      <sect2>
+	 <title>High priority</title>
+	 <itemizedlist>
 	    <listitem>
-		<para>add psgml-docbook-dtd.cache, psgml-ecat.file to RCS & CVS</para>
+	       <para>add psgml-docbook-dtd.cache, psgml-ecat.file to RCS &
+		  CVS</para>
 	    </listitem>
 	    <listitem>
-		<para>mail of wohler@newt.com</para>
+	       <para>mails from wohler@newt.com : improve the doc + change (?)  the
+		  name of fcrondyn -> fcronc ?? </para>
 	    </listitem>
-	<listitem>
-	    <para>crash when /var is full ???</para>
-	</listitem>
-        <listitem>
-            <para>problem with daylight savings ? ("already running" ...) (cf. Nick's mails -- Warning : he has a new address))</para>
-        </listitem>
 	    <listitem>
-		<para>add a new FAQ entry : what should be done to completely replace vixie cron by fcron ? Are there some incompatibilities ?</para>
+	       <para>crash when /var is full ???</para>
 	    </listitem>
-	<listitem>
-	    <para>bug fix : makewhatis does not work correctly with fcron 2.9.0
-	    and following</para>
-	    <para>Help is welcome to catch this bug !</para>
-	</listitem>
-	<listitem>
-	    <para>Use directory notifications (?) (portable ?) (cf. dnotify)</para>
-	</listitem>
-	<listitem>
-	    <para>PAM support (included in fcron, but needs more tests by people 
-using PAM - not implemented in fcrondyn : is it needed if fcrondyn anyway ?)</para>
-	</listitem>
-	<listitem>
-	    <para>implement more commands for fcrondyn, and make it more secure
-and reliable</para>
-	</listitem>
-	<listitem>
-	    <para>add a timezone option instead of the tzdiff (so it would look like !timezone(europe/paris)) (?)</para>
-	</listitem>
-	<listitem>
-	    <para>For environment settings, make a var substitution.</para>
-	</listitem>
-	<listitem>
-	    <para>add a return code for jobs which would mean that they should
-not be run again (in case of an error, etc...).</para>
-	</listitem>
-	<listitem>
-	    <para>add a system of modules : at startup, fcron loads some modules
-(.so files). Then, when fcron should run the job, it calls a function of the
-module, and let it manage the job (threads ?). (do linux dlopen(), etc exist on
-other systems ? - yes : thanks Harring ;) dlopen exists on all POSIX system - even windoze - abait it does not use the same insterface of function calls. But it can be easily implemented to port to another system.).</para>
-	</listitem>
-	<listitem>
-	    <para>(related to the system of modules ? create a kind of dependencies ?)
-Add a way to run a job only if a command returns true. It would permit, for instance,
-to run some jobs on a laptop only if it is on AC power.</para>
-	</listitem>
-	<listitem>
-	    <para>add a system of data flow</para>
-	</listitem>
-	<listitem>
-	    <para>Add a way to stop a job (SIGSTOP) if the lavg gets to high, and 
-restart it (SIGCONT) when the lavg has decreased.</para>
-	</listitem>
-	<listitem>
-	    <para>Add a timeout for task completion : if a task takes more than
-a specified timeout, then start another script with the initial task PID as argument. 
-That would allow a kill with different signals (-HUP, -TERM -STOP, .... or 
-any other action like sending a mail to sysadmin to alert him/her that a task is taking 
-too much time and that he has to have a look at it.) </para>
-	</listitem>
-	<listitem>
-	    <para>Add a directory similar to xinet.d or logrotate.d
- to add job entries (?).</para>
-	</listitem>
-    </itemizedlist>
-</sect1>
+	    <listitem>
+	       <para>problem with daylight savings ? ("already running" ...)
+		  (cf. Nick's mails -- Warning : he has a new address))</para>
+	    </listitem>
+	    <listitem>
+	       <para>add a new FAQ entry : what should be done to completely
+		  replace vixie cron by fcron ? Are there some incompatibilities
+		  ?</para>
+	    </listitem>
+	    <listitem>
+	       <para>add an option to prevent fcron from running a job if the
+		  system is running on battery (anacron does it ?)</para>
+	    </listitem>
+	    <listitem>
+	       <para>bug fix : makewhatis does not work correctly with fcron 2.9.0
+		  and following</para>
+	       <para>Help is welcome to catch this bug !</para>
+	    </listitem>
+	 </itemizedlist>
+      </sect2>
+      <sect2>
+	 <title>Low priority</title>
+	 <itemizedlist>
+	    <listitem>
+	       <para>Use directory notifications (?) (portable ?)
+		  (cf. dnotify)</para>
+	    </listitem>
+	    <listitem>
+	       <para>PAM support (included in fcron, but needs more tests by people
+		  using PAM - not implemented in fcrondyn : is it needed in
+		  fcrondyn anyway ?)</para>
+	    </listitem>
+	    <listitem>
+	       <para>implement more commands for fcrondyn, and make it more secure
+		  and reliable</para>
+	    </listitem>
+	    <listitem>
+	       <para>add a timezone option instead of the tzdiff (so it would look
+		  like !timezone(europe/paris)) (?)</para>
+	    </listitem>
+	    <listitem>
+	       <para>For environment settings, make a var substitution.</para>
+	    </listitem>
+	    <listitem>
+	       <para>add a return code for jobs which would mean that they should
+		  not be run again (in case of an error, etc...).</para>
+	    </listitem>
+	 </itemizedlist>
+      </sect2>
+      <sect2>
+	 <title>Ideas</title>
+	 <itemizedlist>
+	    <listitem>
+	       <para>add a system of modules : at startup, fcron loads some modules
+		  (.so files). Then, when fcron should run the job, it calls a
+		  function of the module, and let it manage the job (threads
+		  ?). (do linux dlopen(), etc exist on other systems ? - yes :
+		  thanks Harring ;) dlopen exists on all POSIX system - even
+		  windoze - abait it does not use the same insterface of function
+		  calls. But it can be easily implemented to port to another
+		  system.).</para>
+	    </listitem>
+	    <listitem>
+	       <para>(related to the system of modules ? create a kind of
+		  dependencies ?)  Add a way to run a job only if a command returns
+		  true. It would permit, for instance, to run some jobs on a laptop
+		  only if it is on AC power.</para>
+	    </listitem>
+	    <listitem>
+	       <para>add a system of data flow</para>
+	    </listitem>
+	    <listitem>
+	       <para>Add a way to stop a job (SIGSTOP) if the lavg gets to high,
+		  and restart it (SIGCONT) when the lavg has decreased.</para>
+	    </listitem>
+	    <listitem>
+	       <para>Add a timeout for task completion : if a task takes more than
+		  a specified timeout, then start another script with the initial
+		  task PID as argument.  That would allow a kill with different
+		  signals (-HUP, -TERM -STOP, .... or any other action like sending
+		  a mail to sysadmin to alert him/her that a task is taking too
+		  much time and that he has to have a look at it.) </para>
+	    </listitem>
+	    <listitem>
+	       <para>Add a directory similar to xinet.d or logrotate.d to add job
+		  entries (?).</para>
+	    </listitem>
+	 </itemizedlist>
+      </sect2>
+   </sect1>
 
 
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
-sgml-omittag:t
-sgml-shorttag:t
-sgml-namecase-general:t
-sgml-general-insert-case:lower
-sgml-minimize-attributes:nil
-sgml-always-quote-attributes:t
-sgml-indent-step:4
-sgml-indent-data:nil
-sgml-exposed-tags:nil
-sgml-local-catalogs:nil
-sgml-local-ecat-files:nil
 End:
 -->
