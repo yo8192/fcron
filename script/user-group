@@ -4,15 +4,16 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.8 2001-03-07 19:32:21 thib Exp $
+# $Id: user-group,v 1.9 2001-07-09 13:12:08 thib Exp $
 
-# take 3 arguments : 	username
+# take 4 arguments : 	username
 # 			groupname
 #                       automatic answer
+#                       the src dir
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
-if test $# -ne 3; then
+if test $# -ne 4; then
     echo "Too few/many arguments"
     exit 1
 fi
@@ -20,6 +21,7 @@ fi
 USERNAME=$1
 GROUPNAME=$2
 ANSWER=$3
+SRCDIR=$4
 
 INSTALL="nothing"
 INSTALLED=0
@@ -36,8 +38,8 @@ else
   CMD="groupadd $GROUPNAME"
 fi
 
-echo -n "Checking if $GROUPNAME is in /etc/group ... "
-if grep "^$GROUPNAME:" /etc/group > /dev/null; then
+echo -n "Checking if group $GROUPNAME exists ... "
+if $SRCDIR/script/has_group.pl $GROUPNAME; then
   echo "yes."
   INSTALLED=1
 else
@@ -53,6 +55,7 @@ else
     do
       echo "Would you like to add $GROUPNAME in /etc/passwd with the following command ?"
       echo "    $CMD"
+      echo "If you use NYS, ldap, or similar, you should add the group manually (say no here)"
       echo -n "Please answer with 'y' or 'n' (default: 'y'): "
       read INSTALL NOTHING
     done
@@ -84,8 +87,8 @@ GID="`cat /etc/group | grep fcron | awk -F ":" '{print $3}'`"
 INSTALL="nothing"
 INSTALLED=0
 
-echo -n "Checking if $USERNAME is in /etc/passwd ... "
-if grep "^$USERNAME:" /etc/passwd > /dev/null; then
+echo -n "Checking if user $USERNAME exists ... "
+if $SRCDIR/script/has_user.pl $USERNAME; then
   echo "yes."
   INSTALLED=1
 else
@@ -109,6 +112,7 @@ else
     do
       echo "Would you like to add $USERNAME in /etc/passwd with the following command ?"
       echo "    $CMD"
+      echo "If you use NYS, ldap, or similar, you should add the user manually (say no here)"
       echo -n "Please answer with 'y' or 'n' (default: 'y'): "
       read INSTALL NOTHING
     done
