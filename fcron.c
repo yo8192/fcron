@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.67 2002-10-06 16:56:04 thib Exp $ */
+ /* $Id: fcron.c,v 1.68 2002-10-28 17:52:03 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.67 2002-10-06 16:56:04 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.68 2002-10-28 17:52:03 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -96,6 +96,8 @@ short int serial_running;     /* number of running serial jobs */
 
 /* do not run more than this number of serial job simultaneously */
 short int serial_max_running = SERIAL_MAX_RUNNING; 
+short int serial_queue_max   = SERIAL_QUEUE_MAX;
+short int lavg_queue_max     = LAVG_QUEUE_MAX;
 
 struct lavg_t *lavg_array;      /* jobs waiting for a given system load value */
 short int lavg_array_size;    /* size of lavg_array */
@@ -286,6 +288,7 @@ parseopt(int argc, char *argv[])
 	{"maxserial", 1, NULL, 'm'},
 	{"configfile", 1, NULL, 'c'},
 	{"newspooldir", 1, NULL, 'n'},
+	{"queuelen", 1, NULL, 'q'},
 	{0,0,0,0}
     };
 #endif /* HAVE_GETOPT_LONG */
@@ -297,12 +300,12 @@ parseopt(int argc, char *argv[])
 
     while(1) {
 #ifdef HAVE_GETOPT_LONG
-	c = getopt_long(argc, argv, "dfbyhVos:l:m:c:n:", opt, NULL);
+	c = getopt_long(argc, argv, "dfbyhVos:l:m:c:n:q:", opt, NULL);
 #else
-	c = getopt(argc, argv, "dfbyhVos:l:m:c:n:");
+	c = getopt(argc, argv, "dfbyhVos:l:m:c:n:q:");
 #endif /* HAVE_GETOPT_LONG */
 	if ( c == EOF ) break;
-	switch (c) {
+	switch ( (char)c ) {
 
 	case 'V':
 	    info(); break;
@@ -347,6 +350,12 @@ parseopt(int argc, char *argv[])
 
 	case 'n':
 	    create_spooldir(optarg);
+	    break;
+
+	case 'q':
+	    if ( (lavg_queue_max = serial_queue_max = strtol(optarg, NULL, 10)) < 5 
+		|| serial_queue_max >= SHRT_MAX )
+		die("Queue length can only be set between 5 and %d.", SHRT_MAX);
 	    break;
 
 	case ':':
