@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.6 2000-06-18 13:12:56 thib Exp $ */
+ /* $Id: fileconf.c,v 1.7 2000-06-19 12:42:49 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -247,6 +247,13 @@ read_file(char *filename, char *user)
 
     fclose(file);
     
+    if ( cf->cf_mailto != NULL && cf->cf_mailto[0] == '\0' ) {
+	CL *line;
+
+	for (line = cf->cf_line_base; line; line = line->cl_next)
+	    clear_mail(line->cl_option);
+    }    
+
     if ( ! need_correction )
 	return OK;
     else
@@ -418,10 +425,11 @@ read_opt(char *ptr, CL *cl)
 		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
 	}
 	else if( strcmp(opt_name, "reset")==0 ) {
-	    if ( in_brackets && ((ptr = get_bool(ptr, &i)) == NULL || i == 0) )
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
-	    bzero(cl, sizeof(cl));
- 	    if (debug_opt)
+	    if ( i == 1 )
+		bzero(cl, sizeof(cl));
+	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 	else if(strcmp(opt_name, "f") == 0 || strcmp(opt_name, "first") == 0){
@@ -433,11 +441,21 @@ read_opt(char *ptr, CL *cl)
 	else if(strcmp(opt_name, "r")==0 || strcmp(opt_name, "runfreq")==0) {
 	    if( ! in_brackets || (ptr=get_num(ptr, &i, 65534, NULL)) == NULL )
 		Handle_err;
-	    cl->cl_remain = i;
+	    cl->cl_runfreq = i;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
 	}
-	else if(strcmp(opt_name, "m")==0 || strcmp(opt_name, "mailto")==0) {
+	else if(strcmp(opt_name, "m")==0 || strcmp(opt_name, "mail")==0){
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		clear_mail(cl->cl_option);
+	    else
+		set_mail(cl->cl_option);	
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+	else if( strcmp(opt_name, "mailto") == 0) {
 	    char buf[50];
 	    bzero(buf, sizeof(buf));
 
@@ -535,6 +553,8 @@ read_freq(char *ptr, CF *cf)
     
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
+    set_freq(cl->cl_option);
+    cl->cl_runfreq = 0;
 
     /* skip the @ */
     ptr++;
@@ -615,7 +635,7 @@ read_arys(char *ptr, CF *cf)
 
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
-
+    set_td(cl->cl_option);
 
     /* set cl_remain if not specified or 
      * if set to 1 to skip unnecessary tests */
@@ -640,7 +660,10 @@ read_arys(char *ptr, CF *cf)
 
     }
 
-    cl->cl_runfreq = cl->cl_remain = i;
+    if ( i != 0 )
+	cl->cl_remain = cl->cl_runfreq = i;
+    else
+	cl->cl_remain = cl->cl_runfreq;
 
     if (debug_opt)
 	fprintf(stderr, "     ");
