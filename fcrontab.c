@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.28 2001-01-04 15:51:40 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.29 2001-01-12 21:41:24 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.28 2001-01-04 15:51:40 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.29 2001-01-12 21:41:24 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -92,7 +92,7 @@ info(void)
 {
     fprintf(stderr,
 	    "fcrontab " VERSION_QUOTED " - user interface to daemon fcron\n"
-	    "Copyright 2000 Thibault Godouet <fcron@free.fr>\n"
+	    "Copyright 2000-2001 Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	);
@@ -267,21 +267,23 @@ copy(char *orig, char *dest)
      * except for root. Root requires filesystem uid root for security
      * reasons */
 #if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (asuid == 0) {
-	if (seteuid(0) != 0) error_e("seteuid(0)");
-    } else {
-    	if (seteuid(fcrontab_uid) != 0)
-	   error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
-    }
+    if (asuid != 0 && seteuid(fcrontab_uid) != 0)
+	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
 #endif
     if ((to = fopen(dest, "w")) == NULL) {
 	error_e("copy: dest");
 	return ERR;
     }
 #if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(uid) != 0)
+    if (asuid != 0 && seteuid(uid) != 0)
 	die_e("seteuid(uid[%d])", uid);
 #endif
+    if (asuid == 0 ) {
+	if ( fchmod(fileno(to), S_IWUSR | S_IRUSR) != 0 )
+	    error_e("Could not fchmod %s to 600", dest);
+	if ( fchown(fileno(to), 0, fcrontab_gid) != 0 )
+	    error_e("Could not fchown %s to root", dest);
+    }
 
     while ( (c = getc(from)) != EOF )
 	if ( putc(c, to) == EOF ) {
