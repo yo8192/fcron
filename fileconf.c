@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.64 2002-10-05 14:26:05 thib Exp $ */
+ /* $Id: fileconf.c,v 1.65 2002-10-06 16:56:22 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -36,16 +36,16 @@ char *get_num(char *ptr, int *num, int max, short int decimal,
 char *get_nice(char *ptr, int *nice);
 char *get_bool(char *ptr, int *i);
 char *read_field(char *ptr, bitstr_t *ary, int max, const char **names);
-void read_freq(char *ptr, CF *cf);
-void read_arys(char *ptr, CF *cf);
-void read_period(char *ptr, CF *cf);
-void read_env(char *ptr, CF *cf);
-char *read_opt(char *ptr, CL *cl);
-char *check_username(char *ptr, CF *cf, CL *cl);
+void read_freq(char *ptr, cf_t *cf);
+void read_arys(char *ptr, cf_t *cf);
+void read_period(char *ptr, cf_t *cf);
+void read_env(char *ptr, cf_t *cf);
+char *read_opt(char *ptr, cl_t *cl);
+char *check_username(char *ptr, cf_t *cf, cl_t *cl);
 
 
 char need_correction;
-CL default_line;    /* default options for a line */
+cl_t default_line;    /* default options for a line */
 char *file_name;
 int line;
 
@@ -148,9 +148,9 @@ get_line(char *str, size_t size, FILE *file)
 
 int
 read_file(char *filename)
-    /* read file "name" and append CF list */
+    /* read file "name" and append cf_t list */
 {
-    CF *cf = NULL;
+    cf_t *cf = NULL;
     FILE *file = NULL;
     char buf[LINE_LEN];
     int max_lines;
@@ -160,7 +160,7 @@ read_file(char *filename)
     int ret;
     
     bzero(buf, sizeof(buf));
-    bzero(&default_line, sizeof(CL));
+    bzero(&default_line, sizeof(cl_t));
     need_correction = 0;
     line = 1;
     file_name = filename;
@@ -176,7 +176,7 @@ read_file(char *filename)
 	return ERR;
     }
 
-    Alloc(cf, CF);
+    Alloc(cf, cf_t);
     cf->cf_user = strdup2(user);
     default_line.cl_file = cf;
     default_line.cl_runas = strdup2(runas);
@@ -273,7 +273,7 @@ read_file(char *filename)
 }
 
 void
-read_env(char *ptr, CF *cf)
+read_env(char *ptr, cf_t *cf)
     /* append env variable list.
      * (remove blanks) */
 {
@@ -428,7 +428,7 @@ get_bool(char *ptr, int *i)
 
 
 char *
-read_opt(char *ptr, CL *cl)
+read_opt(char *ptr, cl_t *cl)
     /* read one or several options and fill in the field "option" */
 {
     char opt_name[20];
@@ -543,7 +543,7 @@ read_opt(char *ptr, CL *cl)
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
 	    if ( i == 1 ) {
-		bzero(cl, sizeof(CL));
+		bzero(cl, sizeof(cl_t));
 		Set(cl->cl_runas, runas);
 		Set(cl->cl_mailto, runas);
 		set_default_opt(cl->cl_option);
@@ -1035,7 +1035,7 @@ get_time(char *ptr, time_t *time, int zero_allowed)
 
 
 char *
-check_username(char *ptr, CF *cf, CL *cl)
+check_username(char *ptr, cf_t *cf, cl_t *cl)
     /* check ptr to see if the first word is a username, returns new ptr */
 {
     short int indx = 0;
@@ -1070,13 +1070,13 @@ check_username(char *ptr, CF *cf, CL *cl)
 
 
 void
-read_freq(char *ptr, CF *cf)
+read_freq(char *ptr, cf_t *cf)
     /* read a freq entry, and append a line to cf */
 {
-    CL *cl = NULL;
+    cl_t *cl = NULL;
     
-    Alloc(cl, CL);
-    memcpy(cl, &default_line, sizeof(CL));
+    Alloc(cl, cl_t);
+    memcpy(cl, &default_line, sizeof(cl_t));
     cl->cl_runas = strdup2(default_line.cl_runas);
     cl->cl_mailto = strdup2(default_line.cl_mailto);
     cl->cl_first = -1; /* 0 is a valid value, so we have to use -1 to detect unset */
@@ -1171,14 +1171,14 @@ read_freq(char *ptr, CF *cf)
   }
 
 void
-read_arys(char *ptr, CF *cf)
+read_arys(char *ptr, cf_t *cf)
     /* read a run freq number plus a normal fcron line */
 {
-    CL *cl = NULL;
+    cl_t *cl = NULL;
     unsigned int i = 0;
 
-    Alloc(cl, CL);
-    memcpy(cl, &default_line, sizeof(CL));
+    Alloc(cl, cl_t);
+    memcpy(cl, &default_line, sizeof(cl_t));
     cl->cl_runas = strdup2(default_line.cl_runas);
     cl->cl_mailto = strdup2(default_line.cl_mailto);
 
@@ -1261,14 +1261,14 @@ read_arys(char *ptr, CF *cf)
 }
 
 void
-read_period(char *ptr, CF *cf)
+read_period(char *ptr, cf_t *cf)
     /* read a line to run periodically (i.e. once a day, once a week, etc) */
 {
-    CL *cl = NULL;
+    cl_t *cl = NULL;
     short int remain = 8;
 
-    Alloc(cl, CL);
-    memcpy(cl, &default_line, sizeof(CL));
+    Alloc(cl, cl_t);
+    memcpy(cl, &default_line, sizeof(cl_t));
     cl->cl_runas = strdup2(default_line.cl_runas);
     cl->cl_mailto = strdup2(default_line.cl_mailto);
 
@@ -1594,10 +1594,10 @@ delete_file(const char *user_name)
     /* free a file if user_name is not null 
      *   otherwise free all files */
 {
-    CF *file = NULL;
-    CF *prev_file = NULL;
-    CL *line = NULL;
-    CL *cur_line = NULL;
+    cf_t *file = NULL;
+    cf_t *prev_file = NULL;
+    cl_t *line = NULL;
+    cl_t *cur_line = NULL;
     env_t *env = NULL;
     env_t *cur_env = NULL;
 
@@ -1693,8 +1693,8 @@ save_file(char *path)
     /* Store the informations relatives to the executions
      * of tasks at a defined frequency of system's running time */
 {
-    CF *file = NULL;
-    CL *line = NULL;
+    cf_t *file = NULL;
+    cl_t *line = NULL;
     int fd;
     env_t *env = NULL;
 
@@ -1704,10 +1704,22 @@ save_file(char *path)
     for (file = file_base; file; file = file->cf_next) {
 
 	/* open file */
-	fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC);
+	fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR | S_IWUSR);
 	if ( fd == -1 ) {
 	    error_e("Could not open %s : file has not be installed.", path);
 	    return ERR;
+	}
+
+	/* save_file() is run under user's right.
+	 * If fcrontab is run by root for a normal user, we must change the file's
+	 * ownership to this user, in order to make fcron check the runas fields.
+	 * (a malicious user could put a runas(root) and wait for the fcrontab to be
+	 * installed by root) */
+	if ( fchown(fd, asuid, fcrontab_gid) != 0 ) {
+            error_e("Could not fchown %s : file has not been installed.", path);
+            close(fd);
+            remove(path);
+            return ERR;
 	}
 
 	/* save file : */
