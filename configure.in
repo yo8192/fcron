@@ -13,7 +13,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.7)
 
-vers="2.9.3"
+vers="2.9.4"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -1005,7 +1005,7 @@ AC_ARG_WITH(dsssl-dir,
     AC_MSG_WARN([
 
 $DSSSL_DIR/html/docbook.dsl does not exist. You will probably not be able to generate the documentation from the DocBook source files.])
-    AC_MSG_WARN([Use --with-dssl-dir to specify a directory.
+    AC_MSG_WARN([Use --with-dsssl-dir to specify a directory.
 ])
   fi
 )
