@@ -430,16 +430,29 @@ AC_ARG_WITH(username,
     AC_MSG_ERROR(Need USERNAME.)
     ;;
   yes)
-    username=fcron
-    AC_MSG_RESULT(fcron)
+    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+	username=fcron
+	AC_MSG_RESULT(fcron)
+    else
+        AC_MSG_RESULT(root)
+    fi
     ;;
   *)
-    username="$withval";
-    AC_MSG_RESULT($withval)
+    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+	username="$withval";
+	AC_MSG_RESULT($withval)
+    else
+	AC_MSG_RESULT(root)
+	AC_MSG_ERROR(username must be root as your system has no seteuid)
+    fi
     ;;
     esac ],
-    username=fcron
-    AC_MSG_RESULT(fcron)
+    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+	username=fcron
+	AC_MSG_RESULT(fcron)
+    else
+        AC_MSG_RESULT(root)
+    fi
 )
 
 AC_MSG_CHECKING(groupname to run under)
@@ -450,16 +463,29 @@ AC_ARG_WITH(groupname,
     AC_MSG_ERROR(Need GROUPNAME.)
     ;;
   yes)
-    groupname=fcron
-    AC_MSG_RESULT(fcron)
+    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+	groupname=fcron
+	AC_MSG_RESULT(fcron)
+    else
+        AC_MSG_RESULT(root)
+    fi
     ;;
   *)
-    groupname="$withval";
-    AC_MSG_RESULT($withval)
+    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+	groupname="$withval";
+	AC_MSG_RESULT($withval)
+    else
+	AC_MSG_RESULT(root)
+	AC_MSG_ERROR(groupname must be root as your system has no setegid)
+    fi
     ;;
     esac ],
-    groupname=fcron
-    AC_MSG_RESULT(fcron)
+    if test \( $setreuid -eq 1 \) -a \( $setregid -eq 1 \) ; then
+	groupname=fcron
+	AC_MSG_RESULT(fcron)
+    else
+        AC_MSG_RESULT(root)
+    fi
 )
 
 fi
