@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.14 2000-08-29 18:01:39 thib Exp $ */
+ /* $Id: config.h.in,v 1.15 2000-09-04 13:08:15 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -37,7 +37,11 @@
 /* (they are overridden by Makefile's value ) */
 
 #ifndef VERSION
-#define VERSION	"1.0.0"   /* default version if not defined in Makefile */
+#define VERSION	"1.0.0" /* default version if not defined in Makefile */
+#endif
+
+#ifndef SENDMAIL        /* mail command location */ 
+#define SENDMAIL	"/usr/lib/sendmail"
 #endif
 
 #ifndef FCRONTABS        /* directory where is stored users' fcrontabs */
@@ -46,6 +50,11 @@
 
 #ifndef ETC             /* directory where are stored fcrontab.allow/deny */
 #define ETC             "/etc/"
+#endif
+
+#ifndef PROC_LOADAVG    /* do we have a mounted procfs with loadavg file on
+			 * this system ? */
+#define PROC_LOADAVG    1
 #endif
 
 #ifndef PROC            /* directory where is mounted the procfs */
@@ -77,8 +86,6 @@
 #define FCRON_ALLOW      "fcron.allow"
 
 #define FCRON_DENY       "fcron.deny"
-
-#define SENDMAIL	"/usr/lib/sendmail" /* mail command */
 
 #define SENDMAIL_ARGS	"-Ffcron", "-odi"   /* args of mail command */
 

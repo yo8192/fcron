@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.22 2000-09-03 19:03:10 thib Exp $ */
+ /* $Id: database.c,v 1.23 2000-09-04 13:10:13 thib Exp $ */
 
 #include "fcron.h"
 
@@ -747,6 +747,13 @@ check_lavg(time_t lim)
      * and return the time to sleep */
 {
     time_t tts = time_to_sleep(lim);
+
+#if PROC_LOADAVG == 0
+    while ( lavg_num > 0 )
+	run_lavg_job(0);
+    return tts;
+#endif /* PROC_LOADAVG = 0 */ 
+
     register int i = 0;
     short int l_avg[3];
 

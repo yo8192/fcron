@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.15 2000-08-29 18:03:03 thib Exp $ */
+ /* $Id: fileconf.c,v 1.16 2000-09-04 13:09:21 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -537,6 +537,10 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 	    cl->cl_lavg[2] = i;
 	    set_lavg(cl->cl_option);
+#if PROC_LOADAVG == 0
+	    warn("As fcron has been compiled with no procfs support,\n"
+		 "you will not be able to use the lavg* options");
+#endif /* PROC_LOADAVG = 0 */ 
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : 'lavg15' %d\n", i);
 	}
@@ -546,6 +550,10 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 	    cl->cl_lavg[0] = i;
 	    set_lavg(cl->cl_option);
+#if PROC_LOADAVG == 0
+	    warn("As fcron has been compiled with no procfs support,\n"
+		 "you will not be able to use the lavg* options");
+#endif /* PROC_LOADAVG = 0 */ 
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : 'lavg1' %d\n", i);
 	}
@@ -555,6 +563,10 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 	    cl->cl_lavg[1] = i;
 	    set_lavg(cl->cl_option);
+#if PROC_LOADAVG == 0
+	    warn("As fcron has been compiled with no procfs support,\n"
+		 "you will not be able to use the lavg* options");
+#endif /* PROC_LOADAVG = 0 */ 
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : 'lavg5' %d\n", i);
 	}
@@ -564,6 +576,10 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 	    cl->cl_lavg[2] = i;
 	    set_lavg(cl->cl_option);
+#if PROC_LOADAVG == 0
+	    warn("As fcron has been compiled with no procfs support,\n"
+		 "you will not be able to use the lavg* options");
+#endif /* PROC_LOADAVG = 0 */ 
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : 'lavg15' %d\n", i);
 	}
