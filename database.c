@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.18 2000-08-22 21:19:41 thib Exp $ */
+ /* $Id: database.c,v 1.19 2000-08-28 17:57:19 thib Exp $ */
 
 #include "fcron.h"
 
@@ -31,7 +31,8 @@ int get_nb_mdays(int year, int mon);
 void goto_non_matching(CL *line, struct tm *tm);
 void run_serial_job(void);
 void run_queue_job(CL *line);
-
+void run_lavg_job(int i);
+void get_lavg(short int l_avg[3]);
 
 
 void
@@ -40,9 +41,9 @@ test_jobs(time_t t2)
 {
     struct job *j;
 
-    //
+/*      // */
     debug("Looking for jobs to execute ...");
-    //
+/*      // */
 
     while ( (j=queue_base) && j->j_line->cl_nextexe <= t2 ){
 	set_next_exe(j->j_line, 0);
@@ -59,6 +60,8 @@ test_jobs(time_t t2)
 		 j->j_line->cl_shell
 		);
 	} 
+	else if ( is_lavg(j->j_line->cl_option) )
+	    add_lavg_job(j->j_line);
 	else if ( is_serial(j->j_line->cl_option) )
 	    add_serial_job(j->j_line);
 	else
@@ -73,21 +76,21 @@ add_serial_job(CL *line)
 {
     short int i;
 
-    //
-    debug("inserting in serial queue %s", line->cl_shell);
-    //
-
 #if SERIAL_ONCE
     /* check if the line is already in the serial queue */
     if ( line->cl_pid != -1 ) {
 #endif /* SERIAL_ONCE */
 
+/*  	// */
+	debug("inserting in serial queue %s", line->cl_shell);
+/*  	// */
+
 	line->cl_pid = -1;
 
-	if ( serial_num > serial_array_size )
+	if ( serial_num >= serial_array_size ) {
 	    if ( serial_num >= SERIAL_QUEUE_MAX )
 		/* run next job in the queue before adding the new one */
-		run_serial_job(void);
+		run_serial_job();
 	    else {
 		CL **ptr = NULL;
 		short int old_size = serial_array_size;
@@ -98,20 +101,32 @@ add_serial_job(CL *line)
 		if ( (ptr = calloc(serial_array_size, sizeof(CL *))) == NULL )
 		    die_e("could not calloc serial_array");
 
-		memcpy(ptr, serial_array, (sizeof(CL *) * old_size));
+		/* copy lines in order to have the first line at the index 0 */
+		memcpy(ptr + serial_array_index, serial_array,
+		       (sizeof(CL*) * (old_size - serial_array_index)) );
+		memcpy(ptr, serial_array + (old_size - serial_array_index),
+		       (sizeof(CL*) * serial_array_index));
+		serial_array_index = 0;
 		free(serial_array);
 		serial_array = ptr;
 	    }
-    }
-	    
-    if ( (i = serial_array_index + serial_num) >= serial_array_size )
-	i -= serial_array_size;
-    serial_array[i] = line;
+	}
 
-    serial_num++;
+	if ( (i = serial_array_index + serial_num) >= serial_array_size )
+	    i -= serial_array_size;
+	
+	serial_array[i] = line;
+
+	serial_num++;
+
+ 	debug("num: %d size:%d index:%d curline: %d", serial_num,
+	      serial_array_size, serial_array_index, i);
+
 
 #if SERIAL_ONCE
-}
+    }
+    else
+	debug("already in serial queue %s", line->cl_shell);
 #endif /* SERIAL_ONCE */
 
 }
@@ -121,12 +136,15 @@ void
 run_serial_job(void)
     /* run the next serialized job */
 {
-    //
-//    debug("running next serial job");
-    //    
+/*      // */
+/*      debug("running next serial job"); */
+/*      //     */
 
     if ( serial_num != 0 ) {
+	debug("num: %d running:%d  index:%d", serial_num, serial_running,
+	      serial_array_index);
 	run_queue_job(serial_array[serial_array_index]);
+	serial_array[serial_array_index] = NULL;
 
 	serial_running++;
 	if ( ++serial_array_index >= serial_array_size )
@@ -139,12 +157,12 @@ run_serial_job(void)
 
 void
 run_queue_job(CL *line)
-    /* run the next non-serialized job */
+    /* run a job */
 {
 
-    //
-//    debug("run_queue_job");
-    //
+/*      // */
+/*      debug("run_queue_job"); */
+/*      // */
 
     /* append job to the list of executed job */
     if ( exe_num >= exe_array_size ) {
@@ -152,7 +170,7 @@ run_queue_job(CL *line)
 	short int old_size = exe_array_size;
 
 	debug("Resizing exe_array");
-	exe_array_size = (exe_array_size + EXE_ARRAY_GROW_SIZE);
+	exe_array_size = (exe_array_size + EXE_GROW_SIZE);
 	
 	if ( (ptr = calloc(exe_array_size, sizeof(CL *))) == NULL )
 	    die_e("could not calloc exe_array");
@@ -177,26 +195,29 @@ wait_chld(void)
     int pid;
 
 
-//
-//    debug("wait_chld");
-//
+/*      // */
+/*      debug("wait_chld"); */
+/*      // */
+
     while ( (pid = wait3(NULL, WNOHANG, NULL)) > 0 ) {
 	i = 0;
-	while ( i < exe_array_size ) {
-	    if (exe_array[i] != NULL && pid == exe_array[i]->cl_pid) {
+	while ( i < exe_num ) {
+	    if (pid == exe_array[i]->cl_pid) {
+		debug("job finished: %s", exe_array[i]->cl_shell);
 		exe_array[i]->cl_pid = 0;
 		exe_array[i]->cl_file->cf_running -= 1;
 
-		if(is_serial(exe_array[i]->cl_option)) {
-		    if (--serial_running == 0)
+		if ( is_serial_once(exe_array[i]->cl_option) ) {
+		    clear_serial_once(exe_array[i]->cl_option);
+		    if ( --serial_running <= 0 )
 			run_serial_job();
 		}
-		else if (is_serial_once(exe_array[i]->cl_option))
-		    if ( --serial_running == 0 ) {
-			clear_serial_once(exe_array[i]->cl_option);
+		else if ( is_serial(exe_array[i]->cl_option)
+		     && ! is_lavg(exe_array[i]->cl_option) ) {
+		    if (--serial_running <= 0)
 			run_serial_job();
-		    }
-		
+		}
+
 		if (i < --exe_num) {
 		    exe_array[i] = exe_array[exe_num];
 		    exe_array[exe_num] = NULL;
@@ -227,7 +248,7 @@ wait_all(int *counter)
 
     while ( (*counter > 0) && (pid = wait3(NULL, 0, NULL)) > 0 ) {
 	i = 0;
-	while ( i < exe_array_size ) {
+	while ( i < exe_num ) {
 	    if (pid == exe_array[i]->cl_pid) {
 		exe_array[i]->cl_pid = 0;
 		exe_array[i]->cl_file->cf_running -= 1;
@@ -618,7 +639,165 @@ insert_nextexe(CL *line)
 
 }
 
-long
+void
+add_lavg_job(CL *line)
+    /* add the next queued job in lavg queue */
+{
+
+#if LAVG_ONCE
+    /* check if the line is already in the lavg queue */
+    if ( line->cl_pid != -1 ) {
+#endif /* LAVG_ONCE */
+
+/*  	// */
+	debug("inserting in lavg queue %s", line->cl_shell);
+/*  	// */
+
+	line->cl_pid = -1;
+
+	/* append job to the list of lavg job */
+	if ( lavg_num >= lavg_array_size ) {
+	    if ( lavg_num >= LAVG_QUEUE_MAX ) {
+		/* run the next lavg job (the oldest one) */
+		register int i;
+		int j = 0;
+		
+		for (i = 1; i < lavg_num; i++)
+		    if ( lavg_array[i].l_since < lavg_array[j].l_since )
+			j = i;
+		run_lavg_job(j);
+	    }
+	    else {
+		struct lavg *ptr = NULL;
+		short int old_size = lavg_array_size;
+		
+		debug("Resizing lavg_array");
+		lavg_array_size = (lavg_array_size + LAVG_GROW_SIZE);
+		
+		if ( (ptr = calloc(lavg_array_size, sizeof(lavg))) == NULL )
+		    die_e("could not calloc lavg_array");
+		
+		memcpy(ptr, lavg_array, (sizeof(lavg) * old_size));
+		free(lavg_array);
+		lavg_array = ptr;
+	    }
+	}
+
+	lavg_array[lavg_num].l_line = line;
+	lavg_array[lavg_num++].l_since = now;
+
+#if LAVG_ONCE
+    }
+    else
+	debug("already in lavg queue %s", line->cl_shell);
+#endif /* LAVG_ONCE */
+
+}
+
+void
+run_lavg_job(int i)
+{
+
+    run_queue_job(lavg_array[i].l_line);
+
+    if (i < --lavg_num) {
+	lavg_array[i] = lavg_array[lavg_num];
+	lavg_array[lavg_num].l_line = NULL;
+    }
+    else
+	lavg_array[i].l_line = NULL;	
+
+}
+
+
+
+void
+get_lavg(short int l_avg[3])
+    /* return the 1, 5 and 15 mins system load average */
+{
+    FILE *f = NULL;
+    float fl = 0;
+
+    if ( (f = fopen(PROC "loadavg", "r")) == NULL )
+	error_e("could not open '"PROC"loadavg' (make sure /proc is mounted)");
+
+    fscanf(f, "%f", &fl);
+    l_avg[0] = fl * 10;
+    fscanf(f, " %f", &fl);
+    l_avg[1] = fl * 10;
+    fscanf(f, " %f", &fl);
+    l_avg[2] = fl * 10;
+
+    debug("get_lavg: %d, %d, %d", l_avg[0], l_avg[1], l_avg[2]);
+
+    fclose(f);
+
+}
+
+
+time_t
+check_lavg(time_t lim)
+    /* run a job based on system load average if one should be run
+     * and return the time to sleep */
+{
+    time_t tts = time_to_sleep(lim);
+    register int i = 0;
+    short int l_avg[3];
+
+    /* first, check if some lines must be executed because of until */
+    while ( i < lavg_num )
+	if ( lavg_array[i].l_line->cl_until != 0 &&
+	     lavg_array[i].l_since + lavg_array[i].l_line->cl_until < now ) {
+	    debug("until '%s' %d %d", lavg_array[i].l_line->cl_shell,
+		  lavg_array[i].l_since, lavg_array[i].l_line->cl_until);
+	    run_lavg_job(i);
+	} else
+	    i++;
+
+    if ( lavg_num == 0 )
+	return tts;
+	
+    i = 0;
+    get_lavg(l_avg);
+    while ( i < lavg_num ) {
+	/* check if the line should be executed */
+	if ( ( is_land(lavg_array[i].l_line->cl_option)
+	       && ( l_avg[0] < lavg_array[i].l_line->cl_lavg[0]
+		    || lavg_array[i].l_line->cl_lavg[0] == 0 )
+	       && ( l_avg[1] < lavg_array[i].l_line->cl_lavg[1]
+		    || lavg_array[i].l_line->cl_lavg[1] == 0 )
+	       && ( l_avg[2] < lavg_array[i].l_line->cl_lavg[2]
+		    || lavg_array[i].l_line->cl_lavg[2] == 0 ) 
+	    )
+	     || 
+	     ( is_lor(lavg_array[i].l_line->cl_option) 
+	       &&  ( l_avg[0] < lavg_array[i].l_line->cl_lavg[0]
+		     || l_avg[1] < lavg_array[i].l_line->cl_lavg[1]
+		     || l_avg[2] < lavg_array[i].l_line->cl_lavg[2] )
+		 )
+	    ) {
+	    debug("lavg '%s' %s %d:%d %d:%d %d:%d",
+		  lavg_array[i].l_line->cl_shell,
+		  (is_land(lavg_array[i].l_line->cl_option)) ? "and" : "or",
+		  l_avg[0], lavg_array[i].l_line->cl_lavg[0],
+		  l_avg[1], lavg_array[i].l_line->cl_lavg[1],
+		  l_avg[2], lavg_array[i].l_line->cl_lavg[2]);
+	    run_lavg_job(i);
+
+	} else
+	    i++;
+    }
+
+    
+    if ( lavg_num == 0 )
+	return tts;
+    else
+	return (LAVG_SLEEP < tts) ? LAVG_SLEEP : tts;
+    
+
+}
+
+time_t
 time_to_sleep(time_t lim)
   /* return the time to sleep until next task have to be executed. */
 {
@@ -635,7 +814,7 @@ time_to_sleep(time_t lim)
     if ( (tts = tts - ti) < 0)
 	tts = 0;
 
-    debug("Time to sleep: %lds", tts);
+/*      // debug("Time to sleep: %lds", tts); */
 
     return tts;
 }
