@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.18 2002-10-06 17:22:24 thib Exp $
+# $Id: Makefile.in,v 1.19 2003-07-14 12:11:00 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -148,8 +148,9 @@ vclean: clean
 ci: clean
 # we run a "cd .." because it makes appear the path of the file ( ./doc/XXXX )
 # during the ci-ing
+# the symbolic links verX_X_X has been created since version 2.9.4
 	@(cd ..; find ./doc/ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
-             -exec ci -l {} \;)
+             -exec ci -l -Nver`echo $(VERSION) | tr '.' '_'` {} \;)
 
 tarhtmldoc: doc
 	mkdir fcron-$(VERSION)-doc-html
