@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.2 2000-05-15 18:28:55 thib Exp $ */
+ /* $Id: job.c,v 1.3 2000-05-16 19:53:47 thib Exp $ */
 
 #include "fcron.h"
 
@@ -167,8 +167,11 @@ run_job(CF *file, CL *line)
 	////////t
 
 	line->cl_pid = pid;
+
+	////////////
+	debug("    cf_running: %d", file->cf_running);
+
 	file->cf_running += 1;
-	jobs_running++;
 
 	explain("  Job `%s' started (pid %d)", line->cl_shell, line->cl_pid);
 
@@ -215,8 +218,11 @@ end_job(CF *file, CL *line, int status)
 	die_e("Can't close file descriptor %d", line->cl_mailfd);
 
     line->cl_pid = 0;
+
+    ////////////
+    debug("    cf_running: %d", file->cf_running);
+
     file->cf_running -= 1;
-    jobs_running--;
 
 }
 
