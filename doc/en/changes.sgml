@@ -8,10 +8,19 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.1 2002-01-03 14:28:51 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.2 2002-01-03 22:39:56 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
+
+    <itemizedlist>
+	<title>From version 2.1.0 to 2.1.1</title>
+	<listitem>
+	    <para>All the documentation has been ported to SGML DocBook.</para>
+	    <para>It results on a much better HTML version, which I recommand you use. It is installed by default in fcron documentation directory (for instance, on my system : <filename>/usr/share/doc/fcron-X.X.X/</filename>).</para>
+	</listitem>
+    </itemizedlist>
+	    
     <itemizedlist>
 	<title>From version 2.0.0 to 2.1.0</title>
 	<listitem>
@@ -568,3 +577,11 @@ fcron crash.</para>
 	</listitem>
     </itemizedlist>
 </sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
+sgml-default-dtd-file: "fcron-doc.ced"
+End:
+-->
