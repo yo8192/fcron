@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.35 2000-11-02 10:58:03 thib Exp $ */
+ /* $Id: database.c,v 1.36 2000-11-02 19:15:03 thib Exp $ */
 
 #include "fcron.h"
 
@@ -512,6 +512,8 @@ goto_non_matching(CL *line, struct tm *ftime)
      * not match the line */
 {
     register int i;
+    /* to prevent from invinite loop with unvalid lines : */
+    short int year_limit = MAXYEAR_SCHEDULE_TIME;
     
     /* check if we are in an interval of execution */
     if( ! ( bit_test(line->cl_mins, ftime->tm_min) &&
@@ -544,6 +546,13 @@ goto_non_matching(CL *line, struct tm *ftime)
 		if(++ftime->tm_mon == 12) {
 		    ftime->tm_mon = 0;
 		    ftime->tm_year++;
+		    if (--year_limit <= 0) {
+			error("Can't found a non matching date for %s "
+			      "in the next %d years. Maybe this line is "
+			      "corrupted : consider reinstalling the fcrontab",
+			      line->cl_shell, MAXYEAR_SCHEDULE_TIME);
+			return;
+		    }
 		}
 	    }
 	}
@@ -588,6 +597,8 @@ set_next_exe(CL *line, char is_new_line)
 	register int i;
 	int max;
 	register char has_changed = 0;
+	/* to prevent from invinite loop with unvalid lines : */
+	short int year_limit = MAXYEAR_SCHEDULE_TIME;
 
 	ft = localtime(&now);
 
@@ -608,13 +619,21 @@ set_next_exe(CL *line, char is_new_line)
 	for (i = ftime.tm_mon; (bit_test(line->cl_mons, i)==0) && (i<12); i++);
 	if (i >= 12) {
 	    ftime.tm_year++;
+	    if (--year_limit <= 0) {
+		error("Can't found a matching date for %s in the next %d"
+		      " years. Maybe this line is corrupted : consider"
+		      " reinstalling the fcrontab.",
+		      line->cl_shell, MAXYEAR_SCHEDULE_TIME);
+		goto set_cl_nextexe;
+	    }
 	    if ( has_changed < 3) {
 		has_changed = 3;
 		ftime.tm_mon = 0;
 		ftime.tm_mday = 1;
 		ftime.tm_hour = 0;
 		ftime.tm_min = 0;
-	    }
+	    } else
+		ftime.tm_mon = 0;		
 	    goto setMonth;
 	}
 	if (ftime.tm_mon !=  i) {
@@ -641,15 +660,16 @@ set_next_exe(CL *line, char is_new_line)
 		    ftime.tm_mday = 1;
 		    ftime.tm_hour = 0;
 		    ftime.tm_min = 0;
-		}
+		} else
+		    ftime.tm_mday = 1;
 		goto setMonth;
 	    }
 	    if ( ftime.tm_mday != i ) {
 		ftime.tm_mday = i;
 		if ( has_changed < 1) {
 		    has_changed = 1;
-		ftime.tm_hour = 0;
-		ftime.tm_min = 0;	
+		    ftime.tm_hour = 0;
+		    ftime.tm_min = 0;	
 		}    
 	    }
 
@@ -678,7 +698,8 @@ set_next_exe(CL *line, char is_new_line)
 			ftime.tm_mday = 1;
 			ftime.tm_hour = 0;
 			ftime.tm_min = 0;
-		    }
+		    } else
+			ftime.tm_mday = 1;
 		    goto setMonth;
 		}
 		if (j >= 7)
@@ -704,7 +725,8 @@ set_next_exe(CL *line, char is_new_line)
 		has_changed = 1;
 		ftime.tm_hour = 0;
 		ftime.tm_min = 0;
-	    }
+	    } else
+		ftime.tm_hour = 0;
 	    goto setDay;
 	}
 	if ( ftime.tm_hour != i ) {
@@ -721,7 +743,7 @@ set_next_exe(CL *line, char is_new_line)
 	}
 	ftime.tm_min = i;
    
-    
+      set_cl_nextexe:    
 	line->cl_nextexe = mktime(&ftime);
 
 	if ( ! is_new_line )
