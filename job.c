@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.61 2004-08-12 09:27:04 thib Exp $ */
+ /* $Id: job.c,v 1.62 2005-02-26 15:09:25 thib Exp $ */
 
 #include "fcron.h"
 
@@ -323,7 +323,7 @@ run_job(struct exe_t *exeent)
 #ifdef HAVE_SETLINEBUF
 		    setlinebuf(stdout);
 		    setlinebuf(stderr);
-#elif
+#else
 		    setvbuf(stdout, NULL, _IONBF, 0);
 		    setvbuf(stderr, NULL, _IONBF, 0);
 #endif
