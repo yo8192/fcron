@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.40 2002-03-02 17:28:48 thib Exp $ */
+ /* $Id: config.h.in,v 1.41 2002-03-31 15:05:58 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -102,13 +102,17 @@
 #define PATH_LEN 256         /* max length of a file path */
 #define SOCKET_MSG_LEN 20    /* max length of a socket msg (fcrondyn) */
 
-#define MAX_MSG 150           /* max length of a log message */
+#define MAX_MSG 150          /* max length of a log message */
 
 
 /* *** socket *** */
 #define MAX_CONNECTION 25    /* max simultaneous connection allowed */
 #define MAX_USER_CON 3       /* max number of connection for a normal user */
 #define MAX_IDLE_TIME 300    /* time (in sec) a socket stay idle before being closed */
+#define MAX_WAIT_TIME 10     /* time (in sec) we wait for data on a socket */
+#define MAX_AUTH_FAIL 10     /* auth nobody for some time if more than x fails */
+#define AUTH_WAIT 60     /* if too many fails, wait this time (seconds) before auth
+                              * another client */
 
 
 /* *** system dependent *** */
