@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.35 2004-11-13 19:49:21 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.36 2004-11-14 16:33:04 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -22,6 +22,9 @@ A copy of the license is included in gfdl.sgml.
 	 </listitem>
 	 <listitem>
 	    <para>Fixed several typos in the doc.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Updated debian package scripts (patch from debian maintainer).</para>
 	 </listitem>
       </itemizedlist>
 
