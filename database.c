@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.16 2000-06-22 12:31:57 thib Exp $ */
+ /* $Id: database.c,v 1.17 2000-06-30 09:49:07 thib Exp $ */
 
 #include "fcron.h"
 
@@ -40,7 +40,9 @@ test_jobs(time_t t2)
 {
     struct job *j;
 
+    //
     debug("Looking for jobs to execute ...");
+    //
 
     while ( (j=queue_base) && j->j_line->cl_nextexe <= t2 ){
 	set_next_exe(j->j_line, 0);
@@ -71,8 +73,11 @@ add_serial_job(CL *line)
 {
     short int i;
 
+    //
     debug("inserting in serial queue %s", line->cl_shell);
+    //
 
+    /* check if the line is already in the queue */
     if ( line->cl_pid != -1 ) {
 
 	line->cl_pid = -1;
@@ -107,9 +112,10 @@ void
 run_serial_job(void)
     /* run the next serialized job */
 {
-    
-    debug("running next serial job");
-    
+    //
+//    debug("running next serial job");
+    //    
+
     if ( serial_num != 0 ) {
 	run_queue_job(serial_array[serial_array_index]);
 
@@ -128,7 +134,7 @@ run_queue_job(CL *line)
 {
 
     //
-    debug("run_queue_job");
+//    debug("run_queue_job");
     //
 
     /* append job to the list of executed job */
@@ -163,7 +169,7 @@ wait_chld(void)
 
 
 //
-    debug("wait_chld");
+//    debug("wait_chld");
 //
     while ( (pid = wait3(NULL, WNOHANG, NULL)) > 0 ) {
 	i = 0;
@@ -194,7 +200,7 @@ wait_chld(void)
 	    i++;
 	}
 	/* execution shouldn't come here */
-	error("not in exe_array !");
+	debug("not in exe_array !");
       nextloop:
     }
 
@@ -228,7 +234,7 @@ wait_all(int *counter)
 	    i++;
 	}
 	/* execution shouldn't come here */
-	error("not in exe_array !");
+	debug("not in exe_array !");
       nextloop:
     }    
 
@@ -299,6 +305,8 @@ set_wday(struct tm *date)
 } 
 
 
+
+
 void
 goto_non_matching(CL *line, struct tm *ftime)
     /* search the first the nearest time and date that does
@@ -309,22 +317,30 @@ goto_non_matching(CL *line, struct tm *ftime)
     /* check if we are in an interval of execution */
     if( ! ( bit_test(line->cl_mins, ftime->tm_min) &&
 	    bit_test(line->cl_hrs, ftime->tm_hour) &&
-	    bit_test(line->cl_days, ftime->tm_mday) &&
-	    bit_test(line->cl_dow, ftime->tm_wday) &&
+	    (
+		(is_dayand(line->cl_option) &&
+		 bit_test(line->cl_days, ftime->tm_mday) &&
+		 bit_test(line->cl_dow, ftime->tm_wday))
+		||
+		(is_dayor(line->cl_option) && (
+		    bit_test(line->cl_days, ftime->tm_mday) ||
+		    bit_test(line->cl_dow, ftime->tm_wday)))
+		) &&
 	    bit_test(line->cl_mons, ftime->tm_mon)
 	) )
 	return;
     
 
     for(i=ftime->tm_min; bit_test(line->cl_mins, i) && (i<60); i++);
+    ftime->tm_min = i;
     if (i == 60) {
 	ftime->tm_min = 0;
-	if (ftime->tm_hour++ == 24) {
+	if (++ftime->tm_hour == 24) {
 	    ftime->tm_hour = 0;
-	    if(ftime->tm_mday++ == 
+	    if(++ftime->tm_mday == 
 	       get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
 		ftime->tm_mday = 0;
-		if(ftime->tm_mon++ == 12) {
+		if(++ftime->tm_mon == 12) {
 		    ftime->tm_mon = 0;
 		    ftime->tm_year++;
 		}
@@ -333,9 +349,17 @@ goto_non_matching(CL *line, struct tm *ftime)
 
 	set_wday(ftime);
 
-	if( ! ( bit_test(line->cl_hrs, ftime->tm_hour) &&
-		bit_test(line->cl_days, ftime->tm_mday) &&
-		bit_test(line->cl_dow, ftime->tm_wday) &&
+	if( ! ( bit_test(line->cl_mins, ftime->tm_min) &&
+		bit_test(line->cl_hrs, ftime->tm_hour) &&
+		(
+		    (is_dayand(line->cl_option) &&
+		     bit_test(line->cl_days, ftime->tm_mday) &&
+		     bit_test(line->cl_dow, ftime->tm_wday))
+		    ||
+		    (is_dayor(line->cl_option) && (
+			bit_test(line->cl_days, ftime->tm_mday) ||
+			bit_test(line->cl_dow, ftime->tm_wday)))
+		    ) &&
 		bit_test(line->cl_mons, ftime->tm_mon)
 	    ) )
 	    goto exit_fct;
@@ -363,6 +387,7 @@ set_next_exe(CL *line, char is_new_line)
 	struct tm ftime;
 	register int i;
 	int max;
+	register char has_changed = 0;
 
 	ft = localtime(&now);
 
@@ -371,67 +396,115 @@ set_next_exe(CL *line, char is_new_line)
 	   ( localtime() is used in the debug() function) */
 	memcpy(&ftime, ft, sizeof(struct tm));
 
-	ftime.tm_sec = 0;
 	ftime.tm_isdst = -1;
 
+	/* to prevent multiple execution in the same minute */
+	ftime.tm_min += 1;
+	ftime.tm_sec = 0;
 	if ( line->cl_runfreq == 1 && ! is_new_line )
 	    goto_non_matching(line, &ftime);
-	else
-	    /* to prevent multiple execution in the same minute */
-	    ftime.tm_min += 1;
-
     
       setMonth:
 	for (i = ftime.tm_mon; (bit_test(line->cl_mons, i)==0) && (i<12); i++);
 	if (i >= 12) {
 	    ftime.tm_year++;
-	    ftime.tm_mon = 0;
-	    ftime.tm_mday = 1;
-	    ftime.tm_hour = 0;
-	    ftime.tm_min = 0;
+	    if ( has_changed < 3) {
+		has_changed = 3;
+		ftime.tm_mon = 0;
+		ftime.tm_mday = 1;
+		ftime.tm_hour = 0;
+		ftime.tm_min = 0;
+	    }
 	    goto setMonth;
 	}
 	if (ftime.tm_mon !=  i) {
 	    ftime.tm_mon = i;
-	    ftime.tm_mday = 1;
-	    ftime.tm_hour = 0;
-	    ftime.tm_min = 0;
+	    if ( has_changed < 2) {
+		has_changed = 2;
+		ftime.tm_mday = 1;
+		ftime.tm_hour = 0;
+		ftime.tm_min = 0;
+	    }
 	}	    
 
 	/* set the number of days in that month */
 	max = get_nb_mdays( (ftime.tm_year + 1900), ftime.tm_mon);
 
       setDay:
-	for (i=ftime.tm_mday; (bit_test(line->cl_days, i)==0)&&(i<=max); i++);
-	if (i > max) {
-	    ftime.tm_mon++;
-	    ftime.tm_mday = 1;
-	    ftime.tm_hour = 0;
-	    ftime.tm_min = 0;
-	    goto setMonth;
-	}
-	if ( ftime.tm_mday != i ) {
-	    ftime.tm_mday = i;
-	    ftime.tm_hour = 0;
-	    ftime.tm_min = 0;	    
+	if ( is_dayand(line->cl_option) ) {
+	    for (i = ftime.tm_mday; 
+		 (bit_test(line->cl_days, i) == 0) && (i <= max); i++);
+	    if (i > max) {
+		ftime.tm_mon++;
+		if ( has_changed < 2) {
+		    has_changed = 2;
+		    ftime.tm_mday = 1;
+		    ftime.tm_hour = 0;
+		    ftime.tm_min = 0;
+		}
+		goto setMonth;
+	    }
+	    if ( ftime.tm_mday != i ) {
+		ftime.tm_mday = i;
+		if ( has_changed < 1) {
+		    has_changed = 1;
+		ftime.tm_hour = 0;
+		ftime.tm_min = 0;	
+		}    
+	    }
+
+	    set_wday(&ftime);
+
+	    /* check if the day of week is OK */
+	    if ( bit_test(line->cl_dow, ftime.tm_wday) == 0 ) {
+		ftime.tm_mday++;
+		ftime.tm_hour = 0;
+		ftime.tm_min = 0;
+		goto setDay;
+	    }
+	} else {  /* dayor */
+	    register int j;
+
+	    set_wday(&ftime);
+
+	    j = ftime.tm_wday;
+	    i = ftime.tm_mday;
+	    while( (bit_test(line->cl_days, i) == 0)  &&
+		   (bit_test(line->cl_dow, j) == 0) ) {
+		if (i > max) {
+		    ftime.tm_mon++;
+		    if ( has_changed < 2) {
+			has_changed = 2;
+			ftime.tm_mday = 1;
+			ftime.tm_hour = 0;
+			ftime.tm_min = 0;
+		    }
+		    goto setMonth;
+		}
+		if (j >= 7)
+		    j -= 7;
+		i++;
+		j++;
+	    }
+	    if ( ftime.tm_mday != i ) {
+		ftime.tm_mday = i;
+		if ( has_changed < 1) {
+		    has_changed = 1;
+		    ftime.tm_hour = 0;
+		    ftime.tm_min = 0;
+		}    
+	    }
 	}
 
-	set_wday(&ftime);
-
-        /* check if the day of week is OK */
-	if ( bit_test(line->cl_dow, ftime.tm_wday) == 0 ) {
-	    ftime.tm_mday++;
-	    ftime.tm_hour = 0;
-	    ftime.tm_min = 0;
-	    goto setDay;
-	}
-   
       setHour:
 	for (i=ftime.tm_hour; (bit_test(line->cl_hrs, i)==0) && (i<24); i++);
 	if (i >= 24) {
 	    ftime.tm_mday++;
-	    ftime.tm_hour = 0;
-	    ftime.tm_min = 0;
+	    if ( has_changed < 1) {
+		has_changed = 1;
+		ftime.tm_hour = 0;
+		ftime.tm_min = 0;
+	    }
 	    goto setDay;
 	}
 	if ( ftime.tm_hour != i ) {
@@ -471,6 +544,7 @@ set_next_exe(CL *line, char is_new_line)
 	
 
 }
+
 
 void
 insert_nextexe(CL *line)
