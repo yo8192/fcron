@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.69 2001-05-24 20:07:42 thib Exp $
+# $Id: Makefile.in,v 1.70 2001-06-03 10:57:40 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -103,7 +103,7 @@ install: all
 	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcrontab.1 $(DESTMAN)/man1
 	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcrontab.5 $(DESTMAN)/man5
 	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/bitstring.3 $(DESTMAN)/man3
-	cd $(SRCDIR)/doc; $(INSTALL) -m 644 -o $(ROOTNAME) README LICENSE CHANGES *.html \
+	$(INSTALL) -m 644 -o $(ROOTNAME) doc/README doc/LICENSE doc/CHANGES doc/*.html \
 		 $(DESTDOC)/fcron-$(VERSION)/
 
 # in order to get correct rights when upgrading :
