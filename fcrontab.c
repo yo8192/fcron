@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.58 2002-08-22 21:32:12 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.59 2002-08-30 20:04:49 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -47,7 +47,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.58 2002-08-22 21:32:12 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.59 2002-08-30 20:04:49 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -71,6 +71,7 @@ char debug_opt = 0;       /* set to 1 if we are in debug mode */
 #endif
 
 char *user = NULL;
+char *runas = NULL;
 uid_t uid = 0;
 uid_t asuid = 0;
 gid_t asgid = 0;
@@ -310,11 +311,10 @@ write_file(char *file)
 int
 make_file(char *file)
 {
-
     explain("installing file %s for user %s", file, user);
 
     /* read file and create a list in memory */
-    switch ( read_file(file, user) ) {
+    switch ( read_file(file) ) {
     case 2:
     case OK:
 
@@ -502,7 +502,7 @@ edit_file(char *buf)
 
 	    correction = 0;
 
-	    switch ( read_file(tmp_str, user) ) {
+	    switch ( read_file(tmp_str) ) {
 	    case ERR:
 		goto exiterr;
 	    case 2:
@@ -726,6 +726,9 @@ parseopt(int argc, char *argv[])
     extern char *optarg;
     extern int optind, opterr, optopt;
     struct passwd *pass;
+#ifdef SYSFCRONTAB
+    char is_sysfcrontab = 0;
+#endif
 
     /* constants and variables defined by command line */
 
@@ -861,16 +864,38 @@ parseopt(int argc, char *argv[])
 	asgid = pass->pw_gid;
     }
     else {
-	if ( ! (pass = getpwnam(user)) )
-	    die("user \"%s\" is not in passwd file. Aborting.", user);
-	asuid = pass->pw_uid;
-	asgid = pass->pw_gid;
+#ifdef SYSFCRONTAB
+	if ( strcmp(user, SYSFCRONTAB) == 0 ) {
+	    is_sysfcrontab = 1;
+	    asuid = ROOTUID;
+	    asgid = ROOTGID;
+	}
+	else
+#endif /* def SYSFCRONTAB */ 
+	    if ( (pass = getpwnam(user)) ) {
+		asuid = pass->pw_uid;
+		asgid = pass->pw_gid;
+	    }
+	    else
+		die("user \"%s\" is not in passwd file. Aborting.", user);
     }
 
-    if ( ! is_allowed(user) ) {
+    if ( 
+#ifdef SYSFCRONTAB
+	! is_sysfcrontab &&
+#endif
+	! is_allowed(user) ) {
 	die("User \"%s\" is not allowed to use %s. Aborting.",
 	    user, prog_name);	    
     }
+
+#ifdef SYSFCRONTAB
+    if ( is_sysfcrontab )
+	runas = ROOTNAME;
+    else
+#endif
+	runas = user;
+
 }
 
 
@@ -964,8 +989,11 @@ main(int argc, char **argv)
 #endif /* USE_SETE_ID */
     
     /* this program is seteuid : we set default permission mode
-     * to  640 for security reasons */
-    umask(026);
+     * to 640 for a normal user, 600 for root, for security reasons */
+    if ( asuid == ROOTUID )
+	umask(066);
+    else
+	umask(026);
 
     snprintf(buf, sizeof(buf), "%s.orig", user);
 
