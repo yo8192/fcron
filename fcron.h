@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.27 2002-03-02 17:27:34 thib Exp $ */
+ /* $Id: fcron.h,v 1.28 2002-10-06 16:56:15 thib Exp $ */
 
 #ifndef __FCRON_H__
 #define __FCRON_H__
@@ -73,19 +73,19 @@ extern pid_t daemon_pid;
 extern mode_t saved_umask;
 extern char *prog_name;
 extern char sig_hup;
-extern struct CF *file_base;
-extern struct job *queue_base;
+extern struct cf_t *file_base;
+extern struct job_t *queue_base;
 extern unsigned long int next_id;
-extern struct CL **serial_array;
+extern struct cl_t **serial_array;
 extern short int serial_array_size;
 extern short int serial_array_index;
 extern short int serial_num;
 extern short int serial_running;
 extern short int serial_max_running; 
-extern struct exe *exe_array;
+extern struct exe_t *exe_array;
 extern short int exe_array_size;
 extern short int exe_num;
-extern struct lavg *lavg_array;
+extern struct lavg_t *lavg_array;
 extern short int lavg_array_size;
 extern short int lavg_num;
 extern short int lavg_serial_running;

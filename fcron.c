@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.66 2002-08-29 17:33:19 thib Exp $ */
+ /* $Id: fcron.c,v 1.67 2002-10-06 16:56:04 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.66 2002-08-29 17:33:19 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.67 2002-10-06 16:56:04 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -84,11 +84,11 @@ char sig_chld = 0;            /* is 1 when we got a SIGCHLD */
 char sig_debug = 0;           /* is 1 when we got a SIGUSR2 */  
 
 /* jobs database */
-struct CF *file_base;         /* point to the first file of the list */
-struct job *queue_base;       /* ordered list of normal jobs to be run */
+struct cf_t *file_base;         /* point to the first file of the list */
+struct job_t *queue_base;       /* ordered list of normal jobs to be run */
 unsigned long int next_id;    /* id for next line to enter database */
 
-struct CL **serial_array;     /* ordered list of job to be run one by one */
+struct cl_t **serial_array;     /* ordered list of job to be run one by one */
 short int serial_array_size;  /* size of serial_array */
 short int serial_array_index; /* the index of the first job */
 short int serial_num;         /* number of job being queued */
@@ -97,12 +97,12 @@ short int serial_running;     /* number of running serial jobs */
 /* do not run more than this number of serial job simultaneously */
 short int serial_max_running = SERIAL_MAX_RUNNING; 
 
-struct lavg *lavg_array;      /* jobs waiting for a given system load value */
+struct lavg_t *lavg_array;      /* jobs waiting for a given system load value */
 short int lavg_array_size;    /* size of lavg_array */
 short int lavg_num;           /* number of job being queued */
 short int lavg_serial_running;/* number of serialized lavg job being running */
 
-struct exe *exe_array;        /* jobs which are executed */
+struct exe_t *exe_array;        /* jobs which are executed */
 short int exe_array_size;     /* size of exe_array */
 short int exe_num;            /* number of job being executed */
 
@@ -164,8 +164,8 @@ void
 print_schedule(void)
     /* print the current schedule on syslog */
 {
-    CF *cf;
-    CL *cl;
+    cf_t *cf;
+    cl_t *cl;
     struct tm *ftime;
 
     explain("Printing schedule ...");
@@ -188,7 +188,7 @@ void
 xexit(int exit_value) 
     /* exit after having freed memory and removed lock file */
 {
-    CF *f = NULL;
+    cf_t *f = NULL;
 
     now = time(NULL);
 
@@ -584,7 +584,7 @@ main(int argc, char **argv)
     /* initialize exe_array */
     exe_num = 0;
     exe_array_size = EXE_INITIAL_SIZE;
-    if ( (exe_array = calloc(exe_array_size, sizeof(struct exe))) == NULL )
+    if ( (exe_array = calloc(exe_array_size, sizeof(struct exe_t))) == NULL )
 	die_e("could not calloc exe_array");
 
     /* initialize serial_array */
@@ -592,14 +592,14 @@ main(int argc, char **argv)
     serial_array_index = 0;
     serial_num = 0;
     serial_array_size = SERIAL_INITIAL_SIZE;
-    if ( (serial_array = calloc(serial_array_size, sizeof(CL *))) == NULL )
+    if ( (serial_array = calloc(serial_array_size, sizeof(cl_t *))) == NULL )
 	die_e("could not calloc serial_array");
 
     /* initialize lavg_array */
     lavg_num = 0;
     lavg_serial_running = 0;
     lavg_array_size = LAVG_INITIAL_SIZE;
-    if ( (lavg_array = calloc(lavg_array_size, sizeof(lavg))) == NULL )
+    if ( (lavg_array = calloc(lavg_array_size, sizeof(lavg_t))) == NULL )
 	die_e("could not calloc lavg_array");
 
 #ifdef FCRONDYN
