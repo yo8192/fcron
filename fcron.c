@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.57 2001-12-23 22:04:37 thib Exp $ */
+ /* $Id: fcron.c,v 1.58 2002-01-27 16:32:53 thib Exp $ */
 
 #include "fcron.h"
 
@@ -29,7 +29,7 @@
 #include "conf.h"
 #include "job.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.57 2001-12-23 22:04:37 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.58 2002-01-27 16:32:53 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -566,7 +566,9 @@ main(int argc, char **argv)
     if ( (lavg_array = calloc(lavg_array_size, sizeof(lavg))) == NULL )
 	die_e("could not calloc lavg_array");
 
-
+    /* initialize random number generator :
+     * WARNING : easy to guess !!! */
+    srand(time(NULL));
 
     main_loop();
 

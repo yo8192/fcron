@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.55 2001-12-23 22:04:44 thib Exp $ */
+ /* $Id: fileconf.c,v 1.56 2002-01-27 16:33:10 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -928,6 +928,17 @@ read_opt(char *ptr, CL *cl)
 		}
 
 	    }
+	}
+
+	else if( strcmp(opt_name, "random") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		clear_random(cl->cl_option);
+	    else
+		set_random(cl->cl_option);	
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else {

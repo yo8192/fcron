@@ -70,6 +70,7 @@
 <!ENTITY optnice '<link linkend="fcrontab.5.nice"><varname>nice</varname></link>'>
 <!ENTITY optnolog '<link linkend="fcrontab.5.nolog"><varname>nolog</varname></link>'>
 <!ENTITY optnoticenotrun '<link linkend="fcrontab.5.noticenotrun"><varname>noticenotrun</varname></link>'>
+<!ENTITY optrandom '<link linkend="fcrontab.5.random"><varname>random</varname></link>'>
 <!ENTITY optreset '<link linkend="fcrontab.5.reset"><varname>reset</varname></link>'>
 <!ENTITY optrunas '<link linkend="fcrontab.5.runas"><varname>runas</varname></link>'>
 <!ENTITY optrunfreq '<link linkend="fcrontab.5.runfreq"><varname>runfreq</varname></link>'>

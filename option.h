@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.19 2001-12-23 22:06:22 thib Exp $ */
+ /* $Id: option.h,v 1.20 2002-01-27 16:33:31 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -84,6 +84,7 @@
   20     Should we remove a %-job from lavg queue if the interval is exceeded ?
   21     Should user be mailed if a %-job has not run during a period ?
   22     Should fcron log everything about this job or just errors ?
+  23     Should this job be run asap, or randomly in its allowed interval of execution ?
 
 */
 
@@ -400,6 +401,18 @@
 	(_bit_set(opt, 22))
 #define clear_nolog(opt) \
 	(_bit_clear(opt, 22))
+
+
+/*
+  bit 23 : set to 1 : run this job at a random time in its allowed interval of execution.
+           set to 0 : run this job asap (safer)
+*/
+#define	is_random(opt) \
+	(_bit_test(opt, 23))
+#define	set_random(opt) \
+	(_bit_set(opt, 23))
+#define clear_random(opt) \
+	(_bit_clear(opt, 23))
 
 
 #endif /* __OPTIONH__ */

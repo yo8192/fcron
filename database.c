@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.59 2001-12-23 22:04:55 thib Exp $ */
+ /* $Id: database.c,v 1.60 2002-01-27 16:33:20 thib Exp $ */
 
 #include "fcron.h"
 
@@ -793,6 +793,7 @@ set_next_exe(CL *line, char option)
 
 	struct tm *ft;
 	struct tm ftime;
+	time_t nextexe = 0;
 	register int i;
 	int max;
 	register char has_changed = 0;
@@ -946,13 +947,39 @@ set_next_exe(CL *line, char option)
    
       set_cl_nextexe:
 	/* set cl_nextexe (handle the timezone differences) */
-	line->cl_nextexe = mktime(&ftime) + (line->cl_file->cf_tzdiff * 3600);
+	nextexe = mktime(&ftime);
 
-	if ( option != NO_GOTO )
+	if ( is_random(line->cl_option) ) {
+	    /* run the job at a random time during its interval of execution */
+	    struct tm intend;
+	    time_t intend_int;
+
+	    debug("   cmd: %s begin int exec %d/%d/%d wday:%d %02d:%02d "
+		  "(tzdiff=%d)", line->cl_shell, (ftime.tm_mon + 1),
+		  ftime.tm_mday, (ftime.tm_year + 1900), ftime.tm_wday,
+		  ftime.tm_hour, ftime.tm_min, line->cl_file->cf_tzdiff);
+
+	    memcpy(&intend, &ftime, sizeof(intend));
+	    goto_non_matching(line, &intend, END_OF_INTERVAL);
+	    intend_int = mktime(&intend);
+
+	    /* set a random time to add to the first allowed time of execution */
+	    nextexe += ( (i= intend_int - nextexe) > 0) ? (time_t)( rand() % i) : 0 ;
+
+	}
+
+	line->cl_nextexe = nextexe + (line->cl_file->cf_tzdiff * 3600);
+
+	if ( option != NO_GOTO ) {
+	    if ( is_random(line->cl_option) ) {
+		ft = localtime(&nextexe);
+		memcpy(&ftime, ft, sizeof(ftime));
+	    }
 	    debug("   cmd: %s next exec %d/%d/%d wday:%d %02d:%02d "
 		  "(tzdiff=%d)", line->cl_shell, (ftime.tm_mon + 1),
 		  ftime.tm_mday, (ftime.tm_year + 1900), ftime.tm_wday,
 		  ftime.tm_hour, ftime.tm_min, line->cl_file->cf_tzdiff);
+	}
 	
     }
     else {
