@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.45 2001-11-02 13:37:58 thib Exp $ */
+ /* $Id: job.c,v 1.46 2001-11-04 18:57:58 thib Exp $ */
 
 #include "fcron.h"
 
@@ -83,7 +83,6 @@ change_user(struct CL *cl)
 #ifdef HAVE_LIBPAM
     int    retcode = 0;
     const char * const * env;
-    char *a_pam_user;
 #endif
 
     /* First, restore umask to default */
