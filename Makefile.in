@@ -4,13 +4,14 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.60 2001-03-09 18:03:51 thib Exp $
+# $Id: Makefile.in,v 1.61 2001-04-21 08:49:10 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
 # in config.h, so you must modify config.h AND Makefile in order
 # to set the same values in the two files.
 
+SRCDIR		= @srcdir@
 
 # Where should we install it ?
 prefix		= @prefix@
@@ -21,8 +22,9 @@ DESTMAN		= @mandir@
 DESTDOC		= @DOCDIR@
 FCRONTABS	= @FCRONTABS@
 ETC		= @ETC@
-CFLAGS		= @CFLAGS@
+OPTIM		= @CFLAGS@
 LDFLAGS		= @LDFLAGS@
+CPPFLAGS	= @CPPFLAGS@ -I. -I${SRCDIR}
 LIBS		= @LIBS@
 LIBOBJS		= @LIBOBJS@
 DEFS		= @DEFS@ 
@@ -39,7 +41,7 @@ ANSWERALL	= @ANSWERALL@
 #	-DDEBUG		even more verbose
 #	-DCHECKJOBS     send a mail containing the exact shell command
 #			for each execution of each job.
-OPTIM = @CFLAGS@
+#OPTIM = @CFLAGS@
 #OPTIM=	-DDEBUG -g -DFOREGROUND -DMALLOC_CHECK_=2
 #OPTIM=	-DDEBUG -g -DCHECKJOBS -Wall -Wpointer-arith -Wstrict-prototypes
 #OPTIM=	-DDEBUG -Wall -Wpointer-arith -Wstrict-prototypes
@@ -57,11 +59,11 @@ OPTION =
 ####################################
 
 VERSION= @VERSION@
-CFLAGS= $(OPTIM) $(OPTION) $(DEFS)
+CFLAGS= $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
 OBJSD = fcron.o subs.o database.o job.o log.o conf.o $(LIBOBJS)
 OBJS= fcrontab.o fileconf.o subs.o log.o allow.o
-HEADERSD = fcron.h config.h global.h option.h getloadavg.h
-HEADERS = fcrontab.h config.h global.h option.h
+HEADERSD = $(SRCDIR)/fcron.h config.h $(SRCDIR)/global.h $(SRCDIR)/option.h $(SRCDIR)/getloadavg.h
+HEADERS = $(SRCDIR)/fcrontab.h config.h $(SRCDIR)/global.h $(SRCDIR)/option.h
 
 # this is two regular expressions
 RCSNOLOG=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\)
@@ -75,21 +77,21 @@ fcron: $(OBJSD) $(HEADERSD)
 fcrontab: $(OBJS) $(HEADERS)
 	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJS)
 
-fcrontab.o: fcrontab.c $(HEADERS)
-	$(CC) $(CFLAGS) -c fcrontab.c 
+fcrontab.o: $(SRCDIR)/fcrontab.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $(SRCDIR)/fcrontab.c 
 
-fileconf.o:  fileconf.c $(HEADERS)
-	$(CC) $(CFLAGS) -c fileconf.c 
+fileconf.o:  $(SRCDIR)/fileconf.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $(SRCDIR)/fileconf.c 
 
-allow.o:  allow.c $(HEADERS)
-	$(CC) $(CFLAGS) -c allow.c 
+allow.o:  $(SRCDIR)/allow.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $(SRCDIR)/allow.c 
 
-%.o: %.c $(HEADERSD)
+%.o: $(SRCDIR)/%.c $(HEADERSD)
 	$(CC) $(CFLAGS) -c $<
 
 install: all
 
-	script/user-group $(USERNAME) $(GROUPNAME) $(ANSWERALL)
+	$(SRCDIR)/script/user-group $(USERNAME) $(GROUPNAME) $(ANSWERALL)
 
 	if test ! -d $(DESTSBIN); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTSBIN) ; fi
 	if test ! -d $(DESTBIN); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTBIN) ; fi
@@ -103,12 +105,12 @@ install: all
 
 	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 110 -s fcron $(DESTSBIN)
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrontab $(DESTBIN)
-	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) files/fcron.allow files/fcron.deny $(ETC)
-	$(INSTALL) -m 644 -o $(ROOTNAME) doc/fcron.8 $(DESTMAN)/man8
-	$(INSTALL) -m 644 -o $(ROOTNAME) doc/fcrontab.1 $(DESTMAN)/man1
-	$(INSTALL) -m 644 -o $(ROOTNAME) doc/fcrontab.5 $(DESTMAN)/man5
-	$(INSTALL) -m 644 -o $(ROOTNAME) doc/bitstring.3 $(DESTMAN)/man3
-	cd doc; $(INSTALL) -m 644 -o $(ROOTNAME) README LICENSE CHANGES *.html \
+	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.allow $(SRCDIR)/files/fcron.deny $(ETC)
+	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcron.8 $(DESTMAN)/man8
+	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcrontab.1 $(DESTMAN)/man1
+	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcrontab.5 $(DESTMAN)/man5
+	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/bitstring.3 $(DESTMAN)/man3
+	cd $(SRCDIR)/doc; $(INSTALL) -m 644 -o $(ROOTNAME) README LICENSE CHANGES *.html \
 		 $(DESTDOC)/fcron-$(VERSION)/
 
 # in order to get correct rights when upgrading :
@@ -118,11 +120,11 @@ install: all
 	if test -f $(ETC)/fcron.deny; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.deny ; fi
 	if test -f $(ETC)/fcron.allow; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.allow ; fi
 
-	script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS)  $(ANSWERALL)
+	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS) $(ANSWERALL) $(SRCDIR)
 
 install-boot: install
 	if test "$(DEBUG)" = "1"; then \
-	  script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) 0 $(FCRONTABS)  $(ANSWERALL);\
+	  $(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) 0 $(FCRONTABS)  $(ANSWERALL) $(SRCDIR);\
 	fi
 
 install-restart: install
@@ -139,7 +141,7 @@ uninstall:
 	rm -f $(DESTMAN)/man3/bitstring.3
 	rm -f $(DESTMAN)/man5/fcrontab.5
 	rm -f $(DESTMAN)/man8/fcron.8
-	script/boot-uninstall
+	$(SRCDIR)/script/boot-uninstall
 
 clean:
 	rm -f *.o
