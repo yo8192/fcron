@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.49 2001-07-04 16:15:54 thib Exp $ */
+ /* $Id: fileconf.c,v 1.50 2001-07-09 21:07:28 thib Exp $ */
 
 #include "fcrontab.h"
 #include "fileconf.h"
@@ -560,7 +560,8 @@ read_opt(char *ptr, CL *cl)
 	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_nextexe)))==NULL)
 		Handle_err;
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\" %ld\n",opt_name,cl->cl_nextexe);
+		fprintf(stderr, "  Opt : \"%s\" %ld\n", opt_name,
+			(long int)cl->cl_nextexe);
 	}
 
 	else if(strcmp(opt_name, "r")==0 || strcmp(opt_name, "runfreq")==0) {
@@ -783,7 +784,8 @@ read_opt(char *ptr, CL *cl)
 	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_until)))==NULL)
 		Handle_err;
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\" %ld\n",opt_name,cl->cl_until);
+		fprintf(stderr, "  Opt : \"%s\" %ld\n", opt_name,
+			(long int)cl->cl_until);
 	}
 
 	else if(strcmp(opt_name, "m")==0 || strcmp(opt_name, "mail")==0){
@@ -1057,7 +1059,7 @@ read_freq(char *ptr, CF *cf)
     set_freq(cl->cl_option);
 
     /* then cl_timefreq */
-    if ( (ptr = get_time(ptr, &(cl->cl_timefreq))) == NULL) {
+    if ( (ptr = get_time(ptr, (time_t *) &(cl->cl_timefreq))) == NULL) {
 	fprintf(stderr, "%s:%d: Error while reading frequency:"
 		" skipping line.\n", file_name, line);
 	goto exiterr;
@@ -1098,7 +1100,7 @@ read_freq(char *ptr, CF *cf)
 
     if ( debug_opt )
 	fprintf(stderr, "  Cmd \"%s\", timefreq %ld, first %ld\n",
-		cl->cl_shell, cl->cl_timefreq, cl->cl_nextexe);
+		cl->cl_shell, cl->cl_timefreq, (long int)cl->cl_nextexe);
     
     return;
 
