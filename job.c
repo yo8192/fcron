@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.41 2001-07-10 12:03:38 thib Exp $ */
+ /* $Id: job.c,v 1.42 2001-08-20 10:53:22 thib Exp $ */
 
 #include "fcron.h"
 #include "job.h"
@@ -200,7 +200,7 @@ run_job(struct exe *exeent)
 
 
 	/* now, run the job */
-	switch ( fork() ) {
+	switch ( pid = fork() ) {
 	case -1:
 	    error_e("Fork error : could not exec \"%s\"", line->cl_shell);
 	    break;
@@ -224,6 +224,12 @@ run_job(struct exe *exeent)
 
 	default:
 	    /* parent */
+	    if ( ! is_nolog(line->cl_option) ) {
+		foreground = 0;
+		explain("Job %s started for user %s (pid %d)", line->cl_shell,
+			line->cl_file->cf_user, pid);
+		foreground = 1;
+	    }
 	    /* we use a while because of a possible interruption by a signal */
 	    while ( (pid = wait3(&status, 0, NULL)) > 0) {
 		end_job(line, status, mailfd, mailpos);
@@ -240,10 +246,6 @@ run_job(struct exe *exeent)
 
 	exeent->e_pid = pid;
 	line->cl_file->cf_running += 1;
-	if ( ! is_nolog(line->cl_option) )
-	    explain("Job %s started for user %s (pid %d)", line->cl_shell,
-		    line->cl_file->cf_user, pid);
-
     }
 
 }
@@ -256,17 +258,18 @@ end_job(CL *line, int status, int mailfd, short mailpos)
     char mail_output;
     char *m;
 
-
-    if (is_mailzerolength(line->cl_option) || (
-	(is_mail(line->cl_option) && lseek(mailfd, 0, SEEK_END) > mailpos)) )
+    if (is_mailzerolength(line->cl_option) || 
+	( ( is_mail(line->cl_option) &&
+	    ( lseek(mailfd, 0, SEEK_END) > mailpos ||
+	      ! (WIFEXITED(status) && WEXITSTATUS(status) == 0) ) ) ) )
 	/* an output exit : we will mail it */
 	mail_output = 1;
     else
 	/* no output */
 	mail_output = 0;
 
-    m= (mail_output == 1) ? " (mailing output)" : "";
-    if (WIFEXITED(status) && WEXITSTATUS(status)==0) {
+    m = (mail_output == 1) ? " (mailing output)" : "";
+    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
 	foreground = 0;
 	debug("Job %s terminated%s", line->cl_shell, m);
     }
