@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.21 2001-01-07 20:56:19 thib Exp $
+# $Id: boot-install,v 1.22 2001-01-12 21:37:16 thib Exp $
 
 # take 5 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -208,6 +208,7 @@ else
   fi
   if test \( -z "$RESTART" \) -o \( "$RESTART" = "y" \); then
     $KILL
+    sleep 2   # wait for fcron to stop
     $CMD
     RESTARTED=1
   fi
