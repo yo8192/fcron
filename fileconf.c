@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.24 2000-11-13 15:46:28 thib Exp $ */
+ /* $Id: fileconf.c,v 1.25 2000-11-14 19:46:23 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -167,9 +167,10 @@ read_file(char *filename, char *user)
 
     /* check if user is allowed to read file */
     /* create a temp file with user's permissions */
-    if (uid != 0 && setuid(uid) < 0)
-	die_e("setuid(uid)");
-
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    if (seteuid(uid) != 0)
+	die_e("seteuid(uid[%d])", uid);
+#endif
     if ( access(file_name, R_OK) != 0 )
 	die_e("User %s can't read file '%s'", user, file_name);
     else if ( (file = fopen(file_name, "r")) == NULL ) {
@@ -177,12 +178,13 @@ read_file(char *filename, char *user)
 		strerror(errno));
 	return ERR;
     }
-    if (setuid(fcrontab_uid) < 0) {
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    if (seteuid(fcrontab_uid) != 0) {
 	fclose(file);
-	error_e("setuid(fcrontab_uid)");	
+	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);	
 	return ERR;
     }
-
+#endif
 
     Alloc(cf, CF);
     default_line.cl_file = cf;
