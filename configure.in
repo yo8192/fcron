@@ -541,36 +541,6 @@ CFLAGS=$cflags
 AC_DEFINE_UNQUOTED(CFLAGS, "$cflags")
 
 
-if test "$bootinstall" = ""; then
-  bootinstall=1
-fi
-AC_MSG_CHECKING(install interactively a boot script)
-AC_ARG_WITH(boot-install,
-[  --with-boot-install=[yes|no]	Install (interactively) a boot script (default: yes).],
-[ case "$withval" in
-  no)
-    bootinstall=0
-    AC_MSG_RESULT(no)
-    ;;
-  yes)
-    bootinstall=1
-    AC_MSG_RESULT(yes)
-    ;;
-  *)
-    AC_MSG_ERROR(Must be set to either "yes" or "no".)
-    ;;
-  esac ],
-    if test "$bootinstall" = "1"; then
-      AC_MSG_RESULT(yes)
-    else
-      AC_MSG_RESULT(no)
-    fi
-)
-BOOTINSTALL="$bootinstall"
-AC_DEFINE_UNQUOTED(BOOTINSTALL, "$bootinstall")
-AC_SUBST(BOOTINSTALL)
-
-
 AC_MSG_CHECKING(automatic answer to make install's questions)
 AC_ARG_WITH(answer-all,
 [  --with-answer-all=[yes|no]	Answer the argument to every make install's questions.],
@@ -623,39 +593,6 @@ USEPAM="$usepam"
 AC_SUBST(USEPAM)
 
 
-fcrondyn=1
-AC_MSG_CHECKING(if fcrondyn should be compiled)
-AC_ARG_WITH(fcrondyn,
-[ --with-fcrondyn=[yes|no]	Compile (or not) fcrondyn (default: yes).],
-[ case "$withval" in
-  no)
-    fcrondyn=0
-    AC_MSG_RESULT(no)
-    ;;
-  yes)
-    if test "$crypt" -eq 1; then
-      AC_MSG_RESULT(yes)
-    else
-      AC_MSG_ERROR(Need a crypt() function.)
-    fi
-    ;;
-  *)
-    AC_MSG_ERROR(Must be set to either "yes" or "no".)
-    ;;
-  esac ],
-  if test "$crypt" -eq 1; then
-    AC_MSG_RESULT(yes)
-  else
-    AC_MSG_RESULT(no)
-  fi
-)
-FCRONDYN="$fcrondyn"
-if test "$fcrondyn" = 1; then
-  AC_DEFINE_UNQUOTED(FCRONDYN, "$fcrondyn")
-  AC_SUBST(FCRONDYN)
-fi
-
-
 dnl ---------------------------------------------------------------------
 dnl Users and groups ...
 
@@ -670,19 +607,21 @@ AC_ARG_WITH(run-non-privileged,
     AC_MSG_RESULT(yes)
     AC_MSG_WARN([
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 WARNING : 
 	This option allows a non privileged user to run fcron. When used,
 	fcron does not change its rights before running a job (i.e.,
 	if joe runs fcron, every job will run as joe).
-	It means that SHOULD NOT RUN FCRON AS A PRIVILEGED USER WHEN COMPILED
-	WITH THIS OPTION or you'll have a serious security hole.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	It means that YOU SHOULD NOT RUN FCRON AS A PRIVILEGED USER WHEN
+	COMPILED WITH THIS OPTION or you'll have a serious security hole.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ])
     AC_DEFINE(RUN_NON_PRIVILEGED)
     RUN_NON_PRIVILEGED=1
     AC_SUBST(RUN_NON_PRIVILEGED)
+    bootinstall=0
+    fcrondyn=0
     ;;
   *)
     AC_MSG_ERROR(Invalid argument : please use 'yes' or 'no'.)
@@ -690,6 +629,73 @@ WARNING :
   esac],
   AC_MSG_RESULT(no)
 )
+
+
+if test "$bootinstall" = ""; then
+  bootinstall=1
+fi
+AC_MSG_CHECKING(install interactively a boot script)
+AC_ARG_WITH(boot-install,
+[  --with-boot-install=[yes|no]	Install (interactively) a boot script (default: yes).],
+[ case "$withval" in
+  no)
+    bootinstall=0
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    bootinstall=1
+    AC_MSG_RESULT(yes)
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+    if test "$bootinstall" = "1"; then
+      AC_MSG_RESULT(yes)
+    else
+      AC_MSG_RESULT(no)
+    fi
+)
+BOOTINSTALL="$bootinstall"
+AC_DEFINE_UNQUOTED(BOOTINSTALL, "$bootinstall")
+AC_SUBST(BOOTINSTALL)
+
+
+if test "$fcrondyn" = ""; then
+  fcrondyn=1
+fi
+AC_MSG_CHECKING(if fcrondyn should be compiled)
+AC_ARG_WITH(fcrondyn,
+[ --with-fcrondyn=[yes|no]	Compile (or not) fcrondyn (default: yes).],
+[ case "$withval" in
+  no)
+    fcrondyn=0
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    if test "$crypt" -eq 1; then
+      fcrondyn=1
+      AC_MSG_RESULT(yes)
+    else
+      AC_MSG_ERROR(Need a crypt() function.)
+    fi
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+  if test "$fcrondyn" = "1" && test "$crypt" -eq 1; then
+    AC_MSG_RESULT(yes)
+  else
+    fcrondyn=0
+    AC_MSG_RESULT(no)
+  fi
+)
+FCRONDYN="$fcrondyn"
+if test "$fcrondyn" = 1; then
+  AC_DEFINE_UNQUOTED(FCRONDYN, "$fcrondyn")
+  AC_SUBST(FCRONDYN)
+fi
 
 
 AC_MSG_CHECKING(root's username)
