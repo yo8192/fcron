@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.11 2000-09-12 19:52:50 thib Exp $ */
+ /* $Id: fcron.h,v 1.12 2000-09-30 11:56:59 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -54,7 +54,6 @@
 #include "getloadavg.h"
 #endif
 
-
 /* global variables */
 extern time_t now;
 extern char debug_opt;
@@ -71,7 +70,7 @@ extern short int serial_array_size;
 extern short int serial_array_index;
 extern short int serial_num;
 extern short int serial_running;
-extern struct CL **exe_array;
+extern struct exe *exe_array;
 extern short int exe_array_size;
 extern short int exe_num;
 extern struct lavg *lavg_array;
@@ -126,7 +125,7 @@ extern void save_file(CF *file_name, char *path);
 /* end of conf.c */
 
 /* job.c */
-extern void run_job(CL *line);
+extern void run_job(struct exe *exeent);
 /* end of job.c */
 
 

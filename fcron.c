@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.29 2000-09-15 20:17:07 thib Exp $ */
+ /* $Id: fcron.c,v 1.30 2000-09-30 11:55:58 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.29 2000-09-15 20:17:07 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.30 2000-09-30 11:55:58 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -76,7 +76,7 @@ struct lavg *lavg_array;      /* jobs waiting for a given system load value */
 short int lavg_array_size;    /* size of lavg_array */
 short int lavg_num;           /* number of job being queued */
 
-struct CL **exe_array;        /* jobs which are executed */
+struct exe *exe_array;        /* jobs which are executed */
 short int exe_array_size;     /* size of exe_array */
 short int exe_num;            /* number of job being executed */
 
@@ -427,7 +427,7 @@ main(int argc, char **argv)
     /* initialize exe_array */
     exe_num = 0;
     exe_array_size = EXE_INITIAL_SIZE;
-    if ( (exe_array = calloc(exe_array_size, sizeof(CL *))) == NULL )
+    if ( (exe_array = calloc(exe_array_size, sizeof(struct exe))) == NULL )
 	die_e("could not calloc exe_array");
 
     /* initialize serial_array */
@@ -518,8 +518,8 @@ main_loop()
 	debug("\n");
 	test_jobs(now);
 
-	if ( serial_running <= 0)
-	    run_serial_job();
+    	if ( serial_running <= 0)
+     	    run_serial_job();
 
 	if ( save <= now ) {
 	    save = now + SAVE;

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.23 2000-09-13 15:38:48 thib Exp $ */
+ /* $Id: job.c,v 1.24 2000-09-30 11:58:23 thib Exp $ */
 
 #include "fcron.h"
 
@@ -88,11 +88,12 @@ sig_dfl(void)
 }
 
 void 
-run_job(CL *line)
+run_job(struct exe *exeent)
     /* fork(), redirect outputs to a temp file, and execl() the task */ 
 {
 
     pid_t pid;
+    CL *line = exeent->e_line;
 
 /*      // */
 /*      debug("run_job"); */
@@ -211,9 +212,9 @@ run_job(CL *line)
     default:
 	/* parent */
 
-	line->cl_pid = pid;
+	exeent->e_pid = pid;
 	line->cl_file->cf_running += 1;
-	explain("Job `%s' started (pid %d)", line->cl_shell, line->cl_pid);
+	explain("Job `%s' started (pid %d)", line->cl_shell, pid);
 
     }
 
