@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.h,v 1.6 2003-12-25 22:50:33 thib Exp $ */
+ /* $Id: database.h,v 1.7 2004-08-12 09:50:21 thib Exp $ */
 
 #ifndef __DATABASE_H__
 #define __DATABASE_H__
@@ -32,17 +32,19 @@ extern void wait_chld(void);
 extern void wait_all(int *counter);
 extern time_t time_to_sleep(time_t lim);
 extern time_t check_lavg(time_t lim);
-extern void set_next_exe(struct cl_t *line, char option);
+extern void set_next_exe(struct cl_t *line, char option, int info_fd);
 #define NO_GOTO 1      /* set_next_exe() : no goto_non_matching() */
 #define NO_GOTO_LOG 2  /* set_next_exe() : NO_GOTO but also log nextexe time */
+#define FROM_CUR_NEXTEXE 4 /* set_next_exe() : compute from nextexe, not now */
 extern void set_next_exe_notrun(struct cl_t *line, char context);
 #define LAVG 1         /* set_next_exe_notrun() : context */
 #define SYSDOWN 2      /* set_next_exe_notrun() : context */
 #define QUEUE_FULL 3   /* set_next_exe_notrun() : context */
 extern void mail_notrun(struct cl_t *line, char context, struct tm *since);
 extern void insert_nextexe(struct cl_t *line);
-extern void add_serial_job(struct cl_t *line);
-extern void add_lavg_job(struct cl_t *line);
+extern void run_normal_job(cl_t *line, int fd);
+extern void add_serial_job(struct cl_t *line, int fd);
+extern void add_lavg_job(struct cl_t *line, int fd);
 extern void run_serial_job(void);
 
 #endif /* __DATABASE_H__ */
