@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.13 2000-06-15 20:18:38 thib Exp $
+# $Id: Makefile.in,v 1.14 2000-06-15 20:40:27 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -28,8 +28,8 @@ ETC=/etc/
 #			for each execution of each job.
 #OPTIM=		-DDEBUG -g -DFOREGROUND
 #OPTIM=		-DDEBUG -DCHECKJOBS -Wall -Wpointer-arith -Wstrict-prototypes
-#OPTIM=		-DDEBUG -Wall -Wpointer-arith -Wstrict-prototypes
-OPTIM=		-O2 -Wall
+OPTIM=		-DDEBUG -Wall -Wpointer-arith -Wstrict-prototypes
+#OPTIM=		-O2 -Wall
 #OPTIM=		-O3 -mcpu=i686 -Wall
 
 
