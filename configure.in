@@ -13,7 +13,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.57)
 
-vers="2.9.5.1"
+vers="2.9.6"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -1091,8 +1091,8 @@ dnl Info for user
 dnl ---------------------------------------------------------------------
 
 echo
-echo "Sum up :"
-echo "------"
+echo "Summary :"
+echo "-------"
 echo
 echo -n "run in debug mode by default :      "
 if test "$debug" -eq "1"; then

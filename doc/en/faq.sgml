@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.11 2004-07-11 18:11:29 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.12 2005-02-26 15:17:47 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
@@ -18,8 +18,7 @@ practical approach.</para>
     <qandaset>
 	<qandaentry>
 	    <question>
-		<para>How does fcron handle system clock adjustments (daylight
-savings, etc) ?</para>
+		<para>How does fcron handle system clock adjustments ?</para>
 	    </question>
 	    <answer>
 		<para>
@@ -50,8 +49,8 @@ during the interval because they are scheduled to run in a past time.</para>
 		<para>
        As special case is when "@xxx" style scheduling rules are involved, you
 must consider the "adjustment-interval". The "adjustment-interval" is the time
-difference between the original system time and the new system time. If the ...
-<!-- I need some help here.  What would happen? --> run at "adjust-interval" too
+difference between the original system time and the new system time. The concerned
+jobs will run at "adjust-interval" too
 early or too late depending of the nature of the adjust.</para>
 		<para>
        To conclude, fcron behaves quite well for small clock adjusts. Each job
@@ -61,6 +60,58 @@ a big change in the time and date, you should probably reset all the scheduled
 "nextexe" by running "fcrontab -z" on all the fcrontabs.</para>
 	    </answer>
 	</qandaentry>
+	 <qandaentry>
+	    <question>
+	       <para>How does fcron handle daylight saving time changes ?</para>
+	    </question>
+	    <answer>
+	       <para>There are two types of daylight saving time change : 
+the remove-one-hour change (for instance, "at 3:00, it will be 2:00"), 
+and the add-one-hour one (for instance, "at 2:00, it will be 3:00").
+In both cases, fcron will run the job only once (more precisely, it won't
+run the job twice as many as it should have).</para>
+	       <para>In the first case, the official time changes as follow
+(in order of real chronological time) : [x, 2:00] -> i1 : [2:00, 3:00]
+ -> i2 : [2:00, 3:00] -> [3:00, y]. i1 and i2 are the names of the two
+intervals [2:00, 3:00]. For this kind of DST change, a job which should
+run between 2:00 and 3:00 will run either in i1 or in i2, but not both.
+Consequently, a job scheduled to run every day at 2:30 (for instance)
+will be run only once. There is no way for a user to know if the job will
+be run in i1 or i2.</para>
+	       <para>In the second case, there is a gap in time :
+the official time changes as follow (in order of real chronological time) :
+[x, 2:00] -> [3:00, y]. A job scheduled between 2:00 and 3:00 will get
+run once, and only once, even if it should have been run several times.
+For instance, a job which should have run every 10 minutes will run only
+once, not 6 times, between 1:59 and 3:01. A job scheduled to run at
+2:xx will run at 3:xx. For instance, if a job is scheduled to run
+every day at 2:30, it will run at 3:30 the day of this kind of DST change.
+</para>
+	    </answer>
+	 </qandaentry>
+	 <qandaentry>
+	    <question>
+	       <para>What about fcron and software suspend 
+		  (aka. suspend to RAM, to disk) ?</para>
+	    </question>
+	    <answer>
+	       <para>We suppose here that you are using swsusp and the hibernate
+		  script to do a "suspend to disk", but it should be similar
+		  with other methods.</para>
+	       <para>When you switch on your computer after a suspend to disk,
+		  the system time will be incorrect, and will then be corrected
+		  by the hibernate script. Before it is corrected, fcron may
+		  compute the time and date of the next execution of a job :
+		  the computation would then be incorrect (please see the entry
+		  about system clock adjustment in the present FAQ).</para>
+	       <para>So you should have the hibernate script stop fcron before
+		  the suspend, and then restart it when the system is switched on,
+		  ie. put a line like "RestartServices fcron" in your hibernate.conf
+		  file. That way, the system time will always be correct when
+		  fcron runs (assuming that fcron is started after the system time
+		  is corrected).</para>
+	    </answer>
+	 </qandaentry>
 	<qandaentry>
 	    <question>
 		<para>How can I prevent fcrontab from considering the first
@@ -257,8 +308,11 @@ and set appropriately the paths :</para>
 	    </question>
 	    <answer>
 	       <para>As far as I know, fcron supports completely the syntax of
-		  Vixie cron's crontab. So you should not have any problem with that
-		  (otherwise, please contact me at &email;).</para>
+		  Vixie cron's crontab, excepted the @* syntax (@annually,
+		  @weekly, etc : if you use that, you will have to replace it
+		  with the explicit equivalent given in crontab(5)). So you
+		  should not have much problem with that (otherwise, please
+		  contact me at &email;).</para>
 	       <para>The main problem is about the management of the system (f)crontab.
 		  Vixie cron monitors the changes on /etc/crontab every minute,
 		  and automatically takes into account the changes if any.
@@ -273,6 +327,14 @@ and set appropriately the paths :</para>
 		  /usr/bin/crontab, and to reinstall the system (f)crontab
 	       with fcrontab /etc/crontab each time you modify it
 		  (if you find something else to do, please tell me !).</para>
+	       <para>You can also use the script script/check_system_crontabs
+		  to generate a system fcrontab from /etc/(f)crontab and /etc/cron.d/,
+		  and install it automatically. If you choose to do that, take 
+		  a look at the beginning of the script : you will find insctructions
+		  on how to use it -- and a few warnings you should pay attention to.
+		  With this script, the behavior of fcron should be very similar
+		  to Vixie cron's one concerning /etc/crontab and /etc/cron.d/.
+	       </para>
 	    </answer>
 	 </qandaentry>
     </qandaset>

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.31 2004-11-13 19:45:19 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.32 2005-02-26 15:17:50 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -25,13 +25,14 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
+	       <para>NetBSD : bug from Gabor Z. Papp : fifo file created as fcron.fif instead of fcron.fifo</para>
+	    </listitem>
+	    <listitem>
 	       <para>port to HP-UX : mails from Scott Tinsley : test in autoconf
 	       to remove call to "ioctl(fd, TIOCNOTTY, 0);"</para>
 	    </listitem>
-	 </itemizedlist>
-	 <itemizedlist>
 	    <listitem>
-	       <para>add something on fcron's incompatibility with Vixie cron @* syntax -- fix that.</para>
+	       <para>bug fix : fcron freezes if the filesystem on which it operates has no space left ? (cannot reproduce it on my linux system)</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
@@ -50,7 +51,9 @@ A copy of the license is included in gfdl.sgml.
 	    </listitem>
 	    <listitem>
 	       <para>add a timezone option instead of the tzdiff (so it would
-		  look like !timezone(europe/paris)) (?)</para>
+		  look like !timezone(europe/paris)) (-> cf. tzset() and TZ env var :
+		  set TZ before every set_next_exe(), etc)
+	       </para>
 	    </listitem>
 	    <listitem>
 	       <para>For environment settings, make a var substitution.</para>

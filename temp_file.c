@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: temp_file.c,v 1.3 2003-12-25 22:51:47 thib Exp $ */
+ /* $Id: temp_file.c,v 1.4 2005-02-26 15:15:03 thib Exp $ */
 
 #include "global.h"
 #include "temp_file.h"
@@ -34,6 +34,8 @@ extern char debug_opt;
 int
 temp_file(char **name)
     /* Open a temporary file and return its file descriptor */
+    /* Returns the filename to *name if name is not null. */
+    /* (die on error) */
 {
     int fd;
 #ifdef HAVE_MKSTEMP
@@ -43,7 +45,7 @@ temp_file(char **name)
     strcat(name_local, "fcr-XXXXXX");
     if ( (fd = mkstemp(name_local)) == -1 )
 	die_e("Can't find a unique temporary filename");
-    /* we must set the file mode to 600 (some version of mkstemp may set it
+    /* we must set the file mode to 600 (some versions of mkstemp may set it
      * incorrectly) */
     if ( fchmod(fd, S_IWUSR | S_IRUSR) != 0 )
 	die_e("Can't fchmod temp file");

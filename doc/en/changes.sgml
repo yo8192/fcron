@@ -8,10 +8,34 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.36 2004-11-14 16:33:04 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.37 2005-02-26 15:18:10 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
+
+      <itemizedlist>
+	 <title>From version 2.9.5.1 to 2.9.6</title>
+	 <listitem>
+	    <para>fixed the bug which made jobs run an hour too early after
+	       a daylight saving time change.</para>
+	    <para>Added detailed explanations about when a job will run
+	    when there is a DST change in the FAQ.</para>
+	 </listitem>
+	 <listitem>
+	    <para>fixed fcrondyn's "Unknown command" bug on x86_64 
+	       (thanks go to Georgi Georgiev).</para>
+	 </listitem>
+	 <listitem>
+	    <para>made fcrontab behave better when there is no space left
+	       in the spool directory (used to truncate the fcrontab source file).
+	    </para>
+	 <listitem>
+	    <para>Added a script, check_system_crontabs, to emulate Vixie cron's 
+	       behavior about /etc/crontab and /etc/cron.d. Please have a look
+	       at the top of script/check_system_crontabs for more information.
+	    </para>
+	 </listitem>
+      </itemizedlist>
 
       <itemizedlist>
 	 <title>From version 2.9.5 to 2.9.5.1</title>
@@ -59,7 +83,7 @@ A copy of the license is included in gfdl.sgml.
 	    strerror()).</para>
 	 </listitem>
 	 <listitem>
-	    <para>Fixed a bug which happened on Daylight Time Save change
+	    <para>Fixed a bug which happened on Daylight Saving Time change
 	       on some systems. It would make fcron run into a nasty infinite loop.
 	       Added a sanity check in set_nextexe() to avoid such things.</para>
 	 </listitem>
