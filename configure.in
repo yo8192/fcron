@@ -6,7 +6,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.7)
 
-vers="0.9.3"
+vers="0.9.4"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -45,6 +45,9 @@ AC_FUNC_WAIT3
 AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
 AC_FUNC_GETLOADAVG
 AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv)
+AC_CHECK_FUNCS(mkstemp)
+AC_CHECK_FUNCS(setreuid, [setreuid=1], [setreuid=0])
+AC_CHECK_FUNCS(setregid, [setregid=1], [setregid=0])
 
 dnl Checks for programs.
 
@@ -414,6 +417,11 @@ AC_DEFINE_UNQUOTED(DOCDIR, "$docdir")
 AC_SUBST(DOCDIR)
 
 
+if test \( $setreuid -eq 0 \) -o \( $setregid -eq 0 \) ; then
+	username="root"
+	groupname="root"
+else
+
 AC_MSG_CHECKING(username to run under)
 AC_ARG_WITH(username,
 [ --with-username=USERNAME	Username to run under (default daemon) ],
@@ -422,18 +430,17 @@ AC_ARG_WITH(username,
     AC_MSG_ERROR(Need USERNAME.)
     ;;
   yes)
-    USERNAME=daemon
+    username=daemon
     AC_MSG_RESULT(daemon)
     ;;
   *)
-    USERNAME="$withval";
+    username="$withval";
     AC_MSG_RESULT($withval)
     ;;
     esac ],
-    USERNAME=daemon
+    username=daemon
     AC_MSG_RESULT(daemon)
 )
-AC_SUBST(USERNAME)
 
 AC_MSG_CHECKING(groupname to run under)
 AC_ARG_WITH(groupname,
@@ -443,18 +450,26 @@ AC_ARG_WITH(groupname,
     AC_MSG_ERROR(Need GROUPNAME.)
     ;;
   yes)
-    GROUPNAME=daemon
+    groupname=daemon
     AC_MSG_RESULT(daemon)
     ;;
   *)
-    GROUPNAME="$withval";
+    groupname="$withval";
     AC_MSG_RESULT($withval)
     ;;
     esac ],
-    GROUPNAME=daemon
+    groupname=daemon
     AC_MSG_RESULT(daemon)
 )
+
+fi
+
+USERNAME="$username"
+AC_SUBST(USERNAME)
+AC_DEFINE_UNQUOTED(USERNAME, "$username")
+GROUPNAME="$groupname"
 AC_SUBST(GROUPNAME)
+AC_DEFINE_UNQUOTED(GROUPNAME, "$groupname")
 
 AC_OUTPUT(Makefile)
 
