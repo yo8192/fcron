@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrondyn.1.sgml,v 1.11 2004-08-17 12:58:03 thib Exp $ -->
+<!-- $Id: fcrondyn.1.sgml,v 1.12 2004-11-13 19:45:31 thib Exp $ -->
 
 <refentry id="fcrondyn.1">
     <refmeta>
@@ -69,10 +69,10 @@ and a list of commands.</para>
 	    <varlistentry>
 		<term><option>-c</option> <replaceable>file</replaceable></term>
 		<listitem>
-		    <para>Make &fcrontab; use config file
+		    <para>Make &fcrondyn; use config file
 <replaceable>file</replaceable> instead of default config file
 <filename>&etc;/&fcron.conf.location;</filename>. To interact with a running
-&fcron; process, &fcrontab; must use the same config file as the process. That
+&fcron; process, &fcrondyn; must use the same config file as the process. That
 way, several &fcron; processes can run simultaneously on an only system.</para>
 		</listitem>
 	    </varlistentry>
@@ -92,7 +92,7 @@ messages will be output in order to check if anything went wrong.</para>
 	    <varlistentry>
 		<term><option>-V</option></term>
 		<listitem>
-		    <para>Display an informational message about &fcrontab;,
+		    <para>Display an informational message about &fcrondyn;,
 including its version and the license under which it is distributed.</para>
 		</listitem>
 	    </varlistentry>
