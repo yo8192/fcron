@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.57 2001-02-10 12:55:43 thib Exp $
+# $Id: Makefile.in,v 1.58 2001-02-11 21:16:59 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -116,11 +116,11 @@ install: all
 	if test -f $(ETC)/fcron.deny; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.deny ; fi
 	if test -f $(ETC)/fcron.allow; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.allow ; fi
 
-	script/sysVinit-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS)  $(ANSWERALL)
+	script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS)  $(ANSWERALL)
 
 install-boot: install
 	if test "$(DEBUG)" = "1"; then \
-	  script/sysVinit-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) 0 $(FCRONTABS)  $(ANSWERALL);\
+	  script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) 0 $(FCRONTABS)  $(ANSWERALL);\
 	fi
 
 install-restart: install
@@ -137,7 +137,7 @@ uninstall:
 	rm -f $(DESTMAN)/man3/bitstring.3
 	rm -f $(DESTMAN)/man5/fcrontab.5
 	rm -f $(DESTMAN)/man8/fcron.8
-	script/sysVinit-uninstall
+	script/boot-uninstall
 
 clean:
 	rm -f *.o
