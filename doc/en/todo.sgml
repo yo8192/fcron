@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.18 2002-11-01 18:18:07 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.19 2002-11-01 19:03:37 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -22,12 +22,6 @@ well.</para>
 	    <para>bug fix : makewhatis does not work correctly with fcron 2.9.0
 	    and following</para>
 	    <para>Help is welcome to catch this bug !</para>
-	</listitem>
-	<listitem>
-	    <para>make fcron more robust concerning system crash, hardware failure, etc.
-In particular, save files under a temporary name, check if everything's all right,
-and if yes, replace the old file by renaming the temporary file (use rename()
-or a direct save if rename() fails (EBUSY) ) --> fcrontab/convert-fcrontab support.</para>
 	</listitem>
 	<listitem>
 	    <para>Use directory notifications (?) (portable ?) (cf. dnotify)</para>
