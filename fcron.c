@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.51 2001-07-04 17:45:39 thib Exp $ */
+ /* $Id: fcron.c,v 1.52 2001-07-07 17:52:02 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.51 2001-07-04 17:45:39 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.52 2001-07-07 17:52:02 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -504,21 +504,6 @@ main(int argc, char **argv)
      * is running, otherwise update value of pid in lock file */
     get_lock();
     
-    /* become USERNAME : this is needed to be able to be signaled
-     * by fcrontab */
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    {
-	struct passwd *pass;
-
-	if ( ! (pass = getpwnam(USERNAME)) )
-	    die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
-	if (setregid(pass->pw_gid, 0) != 0 )
-	    die_e("Could not setregid to " GROUPNAME);
-	if (setreuid(pass->pw_uid, 0) != 0 )
-	    die_e("Could not setreuid to " USERNAME);
-    }
-#endif
-
     /* this program belongs to root : we set default permission mode
      * to  600 for security reasons, but we reset them to the saved
      * umask just before we run a job */
