@@ -22,15 +22,15 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.59 2002-10-05 14:26:34 thib Exp $ */
+ /* $Id: conf.c,v 1.60 2002-10-06 17:08:05 thib Exp $ */
 
 #include "fcron.h"
 
 #include "conf.h"
 #include "database.h"
 
-int read_file(const char *file_name, CF *cf);
-int add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str,
+int read_file(const char *file_name, cf_t *cf);
+int add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str,
 		     time_t t_save);
 int read_strn(int fd, char **str, short int size);
 int read_type(int fd, short int *type, short int *size);
@@ -49,7 +49,7 @@ reload_all(const char *dir_name)
     /* save all current configuration, remove it from the memory,
      * and reload from dir_name */
 {
-    CF *f = NULL;
+    cf_t *f = NULL;
 
     explain("Removing current configuration from memory");
 
@@ -205,7 +205,7 @@ void
 synchronize_file(char *file_name)
 {
 
-    CF *cur_f = NULL;
+    cf_t *cur_f = NULL;
     char *user = NULL;
 
     if (strchr(file_name, '.') != NULL ) {
@@ -213,7 +213,7 @@ synchronize_file(char *file_name)
 	 * version in database in order to keep a maximum of fields
 	 * (cl_nextexe) to their current value */
 
-	CF *prev = NULL;
+	cf_t *prev = NULL;
 
 	/* set user name  */
 	/* we add 4 to file_name pointer because of the "new."
@@ -229,9 +229,9 @@ synchronize_file(char *file_name)
 	if (cur_f != NULL) {
 	    /* an old version of this file exist in database */
 
-	    CF *old = NULL;
-	    CL *old_l = NULL;
-	    CL *new_l = NULL;
+	    cf_t *old = NULL;
+	    cl_t *old_l = NULL;
+	    cl_t *new_l = NULL;
 	    /* size used when comparing two line : 
 	     * it's the size of all time table (mins, days ...) */
 	    const size_t size=( bitstr_size(60) + bitstr_size(24) + 
@@ -241,7 +241,7 @@ synchronize_file(char *file_name)
 	    old = cur_f;
 
 	    /* load new file */
-	    Alloc(cur_f, CF);
+	    Alloc(cur_f, cf_t);
 	    if ( read_file(file_name, cur_f) != 0 ) {
 		/* an error as occured */
 		return;
@@ -325,7 +325,7 @@ synchronize_file(char *file_name)
 	    /* no old version exist in database : load this file
 	     * as a normal file, but change its name */
 	
-	    Alloc(cur_f, CF);
+	    Alloc(cur_f, cf_t);
 
 	    if ( read_file(file_name, cur_f) != 0 ) {
 		/* an error as occured */
@@ -349,7 +349,7 @@ synchronize_file(char *file_name)
     else {
 	/* this is a normal file */
 	
-	Alloc(cur_f, CF);
+	Alloc(cur_f, cf_t);
 
 	if ( read_file(file_name, cur_f) != 0 ) {
 	    /* an error as occured */
@@ -421,12 +421,12 @@ read_type(int fd, short int *type, short int *size)
         }
 
 int
-read_file(const char *file_name, CF *cf)
+read_file(const char *file_name, cf_t *cf)
     /* read a formated fcrontab.
        return ERR on error, OK otherwise */
 {
     FILE *ff = NULL;
-    CL *cl = NULL;
+    cl_t *cl = NULL;
     env_t *env = NULL;
     char buf[LINE_LEN];
     long int bufi = 0;
@@ -521,7 +521,7 @@ read_file(const char *file_name, CF *cf)
 	goto err;
     }
 	
-    Alloc(cl, CL);
+    Alloc(cl, cl_t);
     /* main loop : read env variables, and lines */
     while ( read_type(fileno(ff), &type, &size) == OK ) {
 	/* action is determined by the type of the field */
@@ -626,7 +626,7 @@ read_file(const char *file_name, CF *cf)
 
 	case S_ENDLINE_T:
 	    if (add_line_to_file(cl, cf, runas, runas_str, t_save) == 0)
-		Alloc(cl, CL);
+		Alloc(cl, cl_t);
 	    break;
 
 	    /* default case in "switch(type)" */
@@ -689,7 +689,7 @@ read_file(const char *file_name, CF *cf)
 
 
 int
-add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str, time_t t_save)
+add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save)
     /* check if the line is valid, and if yes, add it to the file cf */
 {
     time_t slept = now - t_save;
@@ -714,7 +714,7 @@ add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str, time_t t_save)
     }
 	    
     /* we need that here because the user's name contained in the
-     * struct CF may be required */
+     * struct cf_t may be required */
     cl->cl_file = cf;
 
     /* check if the mailto field is valid */
@@ -829,16 +829,16 @@ delete_file(const char *user_name)
     /* free a file if user_name is not null 
      *   otherwise free all files */
 {
-    CF *file;
-    CF *prev_file = NULL;
-    CL *line;
-    CL *cur_line;
+    cf_t *file;
+    cf_t *prev_file = NULL;
+    cl_t *line;
+    cl_t *cur_line;
     env_t *env = NULL;
     env_t *cur_env = NULL;
-    struct job *j = NULL;
-    struct job *prev_j;
+    struct job_t *j = NULL;
+    struct job_t *prev_j;
     int i, k;
-    struct CL **s_a = NULL;
+    struct cl_t **s_a = NULL;
 
     file = file_base;
     while ( file != NULL) {
@@ -886,7 +886,7 @@ delete_file(const char *user_name)
 	for ( i = 0; i < serial_array_size; i++)
 	    if (serial_array[i] != NULL && serial_array[i]->cl_file == file ) {
 		if ( ! s_a )
-		    s_a = calloc(serial_array_size, sizeof(CL *));
+		    s_a = calloc(serial_array_size, sizeof(cl_t *));
 		debug("removing %s from serial queue",
 		      serial_array[i]->cl_shell);
 		serial_num--;
@@ -1014,14 +1014,14 @@ delete_file(const char *user_name)
         }
 
 void
-save_file(CF *arg_file)
+save_file(cf_t *arg_file)
     /* Store the informations relatives to the executions
      * of tasks at a defined frequency of system's running time */
 {
-    CF *file = NULL;
-    CL *line = NULL;
+    cf_t *file = NULL;
+    cl_t *line = NULL;
     int fd;
-    CF *start_file = NULL;
+    cf_t *start_file = NULL;
     env_t *env = NULL;
 
     if (arg_file != NULL)
@@ -1035,7 +1035,7 @@ save_file(CF *arg_file)
 	debug("Saving %s...", file->cf_user);
 
 	/* open file */
-	fd = open(file->cf_user, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC);
+	fd = open(file->cf_user, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR|S_IWUSR);
 	if ( fd == -1 ) {
 	    error_e("Could not open %s", file->cf_user);
 	    goto next_file;
