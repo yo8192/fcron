@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.15 2004-08-12 09:50:36 thib Exp $ */
+ /* $Id: socket.c,v 1.16 2004-08-17 12:53:46 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -369,7 +369,7 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 		    || is_root )
 		    print_line(fd, j->j_line, fields, 0, 0, 0);
 		else
-		    Send_err_msg(fd, err_job_nallowed_str);
+		    Send_err_msg(fd, err_job_nfound_str);
 		found = 1;
 		break;
 	    }
@@ -494,16 +494,51 @@ cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
     char *err_str = NULL;
 
     /* find the corresponding job */
-    for ( exe_index = 0 ; exe_index < exe_num; exe_index++ )
+    for ( exe_index = 0 ; exe_index < exe_num; exe_index++ ) {
 	if ( exe_array[exe_index].e_line != NULL 
 	     && cmd[2] == exe_array[exe_index].e_line->cl_id ) {
+
 	    found = 1;
-	    break;
+
+	    /* check if the request is valid */
+	    if ( ! is_root &&
+		 strcmp(client->fcl_user,
+			exe_array[exe_index].e_line->cl_file->cf_user) != 0 ) {
+
+		if ( cmd[0] == CMD_RENICE )
+		    err_str = "%s tried to renice to %ld job id %ld for %s : "
+			"not allowed.";
+		else if (cmd[0] == CMD_SEND_SIGNAL)
+		    err_str = "%s tried to send signal %ld to id %ld for %s : "
+			"not allowed.";
+		else
+		    err_str = "cannot run unknown cmd with arg %ld on job id "
+			"%ld for %s : not allowed.";
+
+		warn(err_str, client->fcl_user, cmd[1], cmd[2],
+		     client->fcl_user);
+		Send_err_msg_end(fd, err_job_nfound_str);
+	    }
+	    else {
+		/* request is valid : do it */
+
+		if ( cmd[0] == CMD_SEND_SIGNAL )
+		    cmd_send_signal(client, cmd, fd, exe_index);
+		else if ( cmd[0] == CMD_RENICE )
+		    cmd_renice(client, cmd, fd, exe_index, is_root);
+		else {
+		    Send_err_msg_end(fd, err_cmd_unknown_str);
+		    return;
+		}
+	    }
 	}
+    }
+
     if ( ! found ) {
 
 	if ( cmd[0] == CMD_RENICE )
-	    err_str = "cannot renice job id %ld for %s : no corresponding running job.";
+	    err_str = "cannot renice job id %ld for %s : no corresponding "
+		"running job.";
 	else if (cmd[0] == CMD_SEND_SIGNAL)
 	    err_str = "cannot send signal to job id %ld for %s :"
 		" no corresponding running job.";
@@ -513,34 +548,11 @@ cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 
 	warn(err_str, cmd[2], client->fcl_user);
 	Send_err_msg_end(fd, err_rjob_nfound_str);
-	return;
+    }
+    else {
+	Tell_no_more_data(fd);
     }
     
-    /* check if the request is valid */
-    if ( ! is_root &&
-	 strcmp(client->fcl_user, exe_array[exe_index].e_line->cl_file->cf_user) != 0 ) {
-
-	if ( cmd[0] == CMD_RENICE )
-	    err_str = "%s tried to renice to %ld job id %ld for %s : not allowed.";
-	else if (cmd[0] == CMD_SEND_SIGNAL)
-	    err_str = "%s tried to send signal %ld to id %ld for %s : not allowed.";
-	else
-	    err_str = "cannot run unknown cmd with arg %ld on job id %ld for %s :"
-		" not allowed.";
-
-	warn(err_str, client->fcl_user, cmd[1], cmd[2], client->fcl_user);
-	Send_err_msg_end(fd, err_job_nallowed_str);
-	return;
-    }
-
-    if ( cmd[0] == CMD_SEND_SIGNAL )
-	cmd_send_signal(client, cmd, fd, exe_index);
-    else if ( cmd[0] == CMD_RENICE )
-	cmd_renice(client, cmd, fd, exe_index, is_root);
-    else {
-	Send_err_msg_end(fd, err_cmd_unknown_str);
-	return;
-    }
 }
 
 
@@ -567,7 +579,8 @@ cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index, int
 	return;
     }
     else {
-	Send_err_msg_end(fd, err_no_err_str);
+	send_msg_fd(fd, "Command successfully completed on process %d.",
+		    exe_array[exe_index].e_job_pid);
 	return;
     }
 
@@ -598,7 +611,8 @@ cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index
 	return;
     }
     else {
-	Send_err_msg_end(fd, err_no_err_str);
+	send_msg_fd(fd, "Command successfully completed on process %d.",
+		    exe_array[exe_index].e_job_pid);
 	return;
     }
 }
