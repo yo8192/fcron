@@ -2,7 +2,7 @@
 # Uninstall fcron under SysV system.
 #
 
-# $Id: boot-uninstall,v 1.5 2001-02-11 21:15:44 thib Exp $
+# $Id: boot-uninstall,v 1.6 2001-03-02 17:48:34 thib Exp $
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
@@ -27,7 +27,8 @@ else
     rm -f $ROOTDIR/rc6.d/K60fcron
   else
     echo
-    echo "You may delete fcron from your boot script manually"
+    echo "You should delete fcron from your boot script manually"
     echo
   fi
 fi
+
