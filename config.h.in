@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.29 2001-05-29 19:32:45 thib Exp $ */
+ /* $Id: config.h.in,v 1.30 2001-06-03 10:59:09 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -278,6 +278,9 @@
 
 /* Define if you have the <stdarg.h> header file.  */
 #undef HAVE_STDARG_H
+
+/* Define if you have the <strings.h> header file.  */
+#undef HAVE_STRINGS_H
 
 /* Define if you have the <sys/dir.h> header file.  */
 #undef HAVE_SYS_DIR_H

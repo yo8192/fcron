@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.28 2001-05-28 18:48:48 thib Exp $ */
+ /* $Id: global.h,v 1.29 2001-06-03 10:57:18 thib Exp $ */
 
 
 /* 
@@ -57,6 +57,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
