@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.25 2001-05-15 00:45:55 thib Exp $ */
+ /* $Id: global.h,v 1.26 2001-05-17 00:57:26 thib Exp $ */
 
 
 /* 
@@ -99,6 +99,10 @@
 
 /* constants for fcrontabs needed to load and save the fcrontabs to disk */
 #include "save.h"
+/* log part */
+#include "log.h"
+/* functions used by both fcrontab and fcron */
+#include "subs.h"
 
 /* you should not change this (nor need to do it) */
 #define ERR     -1           

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.44 2001-05-15 00:45:21 thib Exp $ */
+ /* $Id: fileconf.c,v 1.45 2001-05-17 00:53:29 thib Exp $ */
 
 #include "fcrontab.h"
 #include "fileconf.h"
@@ -46,10 +46,6 @@ char need_correction;
 CL default_line;    /* default options for a line */
 char *file_name;
 int line;
-extern char *user;
-extern uid_t uid;
-extern uid_t asuid;
-extern uid_t fcrontab_uid;
 
 /* warning : all names must have the same length */
 const char *dows_ary[] = {
