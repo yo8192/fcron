@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.10 2000-06-16 11:51:36 thib Exp $ */
+ /* $Id: database.c,v 1.11 2000-06-19 12:42:16 thib Exp $ */
 
 #include "fcron.h"
 
@@ -42,7 +42,7 @@ test_jobs(time_t t2)
 
     while ( (j=queue_base) && j->j_line->cl_nextexe <= t2 ){
 	set_next_exe(j->j_line, 0);
-	if (--(j->j_line->cl_remain) > 0) {
+	if ( j->j_line->cl_remain > 0 && (j->j_line->cl_remain)-- > 0) {
 	    debug("    cl_remain: %d", j->j_line->cl_remain);
 	    continue ;
 	}
@@ -249,7 +249,7 @@ set_next_exe(CL *line, char is_new_line)
   /* set the cl_nextexe of a given CL and insert it in the queue */
 {
 
-    if (line->cl_timefreq == 0) {
+    if ( is_td(line->cl_option) ) {
 
 	struct tm *ft;
 	struct tm ftime;
