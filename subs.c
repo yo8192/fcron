@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.14 2001-07-09 11:50:13 thib Exp $ */
+ /* $Id: subs.c,v 1.15 2001-08-17 19:50:08 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -144,7 +144,9 @@ init_conf(void)
     fcronallow = strdup2(ETC "/" FCRON_ALLOW);
     fcrondeny = strdup2(ETC "/" FCRON_DENY);
     shell = strdup2(SHELL);
+#ifdef SENDMAIL
     sendmail = strdup2(SENDMAIL);
+#endif
     editor = strdup2(EDITOR);
 }
 
