@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: install.sgml,v 1.1 2002-01-03 14:27:02 thib Exp $ -->
+<!-- $Id: install.sgml,v 1.2 2002-01-03 22:39:28 thib Exp $ -->
 
 <sect1 id="install">
     <title>How to install fcron</title>
@@ -150,7 +150,6 @@ A copy of the license is included in gfdl.sgml.
 	</itemizedlist>
     </note>
 </sect1>
-
 
 <!-- Keep this comment at the end of the file
 Local variables:
