@@ -22,29 +22,29 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.16 2000-06-22 12:34:55 thib Exp $ */
+ /* $Id: job.c,v 1.17 2000-06-25 20:07:17 thib Exp $ */
 
 #include "fcron.h"
 
 int temp_file(void);
 void xwrite(int fd, char *string);
 void launch_mailer(CL *line, int mailfd);
-int change_user(const char *user);
+int change_user(uid_t uid);
 void sig_dfl(void);
 void end_job(CL *line, int status, int mailfd, short mailpos);
 void end_mailer(CL *line, int status);
 
 
 int
-change_user(const char *user)
+change_user(uid_t uid)
 {
     struct passwd *pas;
 
 
     /* Obtain password entry and change privileges */
 
-    if ((pas = getpwnam(user)) == NULL) 
-        die("failed to get uid for %s", user);
+    if ((pas = getpwuid(uid)) == NULL) 
+        die("failed to get passwd fields for user's uid %d", uid);
     
     setenv("USER", pas->pw_name, 1);
     setenv("HOME", pas->pw_dir, 1);
@@ -52,14 +52,14 @@ change_user(const char *user)
 
     /* Change running state to the user in question */
 
-    if (initgroups(user, pas->pw_gid) < 0)
-	die_e("initgroups failed: %s", user);
+    if (initgroups(pas->pw_name, pas->pw_gid) < 0)
+	die_e("initgroups failed: %s", pas->pw_name);
 
     if (setregid(pas->pw_gid, pas->pw_gid) < 0) 
-	die("setregid failed: %s %d", user, pas->pw_gid);
+	die("setregid failed: %s %d", pas->pw_name, pas->pw_gid);
     
     if (setreuid(pas->pw_uid, pas->pw_uid) < 0) 
-	die("setreuid failed: %s %d", user, pas->pw_uid);
+	die("setreuid failed: %s %d", pas->pw_name, pas->pw_uid);
 
     return(pas->pw_uid);
 }
@@ -103,11 +103,14 @@ run_job(CL *line)
 	int status = 0;
 
 	foreground = 0;
-	if (change_user(line->cl_file->cf_user) < 0)
+	if (change_user(line->cl_runas) < 0)
 	    return ;
 
 	sig_dfl();
 
+	if ( line->cl_nice != 0 && nice(line->cl_nice) != 0 )
+	    error_e("could not set nice value");
+	
 	if ( ! is_mail(line->cl_option) ) {
 	    if ( (mailfd = open("/dev/null", O_RDWR)) < 0 )
 		die_e("open: /dev/null:");
