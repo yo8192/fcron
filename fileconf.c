@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.37 2001-01-30 17:41:35 thib Exp $ */
+ /* $Id: fileconf.c,v 1.38 2001-02-01 20:49:31 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -826,6 +826,17 @@ read_opt(char *ptr, CL *cl)
 		set_dayand(cl->cl_option);
 	    else
 		set_dayor(cl->cl_option);	
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+	}
+
+	else if( strcmp(opt_name, "nolog") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		clear_nolog(cl->cl_option);
+	    else
+		set_nolog(cl->cl_option);	
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.32 2001-01-30 17:42:27 thib Exp $ */
+ /* $Id: job.c,v 1.33 2001-02-01 20:52:06 thib Exp $ */
 
 #include "fcron.h"
 
@@ -255,7 +255,8 @@ run_job(struct exe *exeent)
 
 	exeent->e_pid = pid;
 	line->cl_file->cf_running += 1;
-	explain("Job %s started (pid %d)", line->cl_shell, pid);
+	if ( ! is_nolog(line->cl_option) )
+	    explain("Job %s started (pid %d)", line->cl_shell, pid);
 
     }
 
@@ -284,7 +285,7 @@ end_job(CL *line, int status, int mailfd, short mailpos)
 	debug("Job %s terminated%s", line->cl_shell, m);
     }
     else if (WIFEXITED(status))
-	explain("Job %s terminated (exit status: %d)%s",
+	warn("Job %s terminated (exit status: %d)%s",
 		line->cl_shell, WEXITSTATUS(status), m);
     else if (WIFSIGNALED(status))
 	error("Job %s terminated due to signal %d%s",
