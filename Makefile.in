@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.23 2000-08-22 18:01:41 thib Exp $
+# $Id: Makefile.in,v 1.24 2000-08-28 18:00:24 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -26,11 +26,10 @@ ETC=/etc/
 #	-DDEBUG		even more verbose
 #	-DCHECKJOBS     send a mail containing the exact shell command
 #			for each execution of each job.
-#OPTIM=	-DDEBUG -g -DFOREGROUND
-#OPTIM=	-DDEBUG -DCHECKJOBS -Wall -Wpointer-arith -Wstrict-prototypes
+OPTIM=	-DDEBUG -g -DFOREGROUND
 #OPTIM=	-DDEBUG -g -DCHECKJOBS -Wall -Wpointer-arith -Wstrict-prototypes
 #OPTIM=	-DDEBUG -Wall -Wpointer-arith -Wstrict-prototypes
-OPTIM=	-O2 -Wall
+#OPTIM=	-O2 -Wall
 #OPTIM=	-O3 -mcpu=i686 -Wall
 
 
@@ -68,8 +67,8 @@ VERSION= 0.9.1
 CFLAGS= $(INCLUDE) $(OPTIM) $(OTHERFLAGS) $(OPTION) -DVERSION=\"$(VERSION)\" -DFCRONTABS=\"$(FCRONTABS)\" -DETC=\"$(ETC)\"
 OBJSD = fcron.o subs.o database.o job.o log.o conf.o
 OBJS= fcrontab.o fileconf.o subs.o log.o allow.c
-HEADERSD = fcron.h config.h global.h Makefile
-HEADERS = fcrontab.h config.h global.h Makefile
+HEADERSD = fcron.h config.h global.h Makefile option.h
+HEADERS = fcrontab.h config.h global.h Makefile option.h
 
 # this is two regular expressions
 RCSNOLOG=.*\(.html\|VERSION\|MANIFEST\)

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.9 2000-06-21 09:48:58 thib Exp $ */
+ /* $Id: fcron.h,v 1.10 2000-08-28 17:59:15 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -54,6 +54,9 @@ extern short int serial_running;
 extern struct CL **exe_array;
 extern short int exe_array_size;
 extern short int exe_num;
+extern struct lavg *lavg_array;
+extern short int lavg_array_size;
+extern short int lavg_num;
 /* end of global variables */
 
 
@@ -87,9 +90,11 @@ extern void test_jobs(time_t t2);
 extern void wait_chld(void);
 extern void wait_all(int *counter);
 extern time_t time_to_sleep(time_t lim);
+extern time_t check_lavg(time_t lim);
 extern void set_next_exe(CL *line, char is_new_line);
 extern void insert_nextexe(CL *line);
 extern void add_serial_job(CL *line);
+extern void add_lavg_job(CL *line);
 extern void run_serial_job(void);
 /* end of database.c */
 
