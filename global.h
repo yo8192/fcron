@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.10 2000-06-21 09:48:59 thib Exp $ */
+ /* $Id: global.h,v 1.11 2000-06-21 13:46:37 thib Exp $ */
 
 
 /* 
@@ -94,12 +94,12 @@ typedef struct CL {
     char         cl_option;     /* options for that line (see option.h) */
     char	 *cl_shell;	/* shell command			*/
     pid_t	 cl_pid;	/* running pid, 0, or armed (-1)        */
-    time_t       cl_nextexe;    /* time and date of the next execution */
-    short int    cl_remain;     /* remaining until next execution      */
-    time_t       cl_timefreq;   /* Run every n seconds                 */
-    short int    cl_runfreq;    /* Run once every n matches            */
+    time_t       cl_nextexe;    /* time and date of the next execution  */
+    short int    cl_remain;     /* remaining until next execution       */
+    time_t       cl_timefreq;   /* Run every n seconds                  */
+    short int    cl_runfreq;    /* Run once every n matches             */
     /* see bitstring(3) man page for more details */
-    bitstr_t	 bit_decl(cl_mins, 60); /* 0-59			*/
+    bitstr_t	 bit_decl(cl_mins, 60); /* 0-59			        */
     bitstr_t	 bit_decl(cl_hrs, 24);	/* 0-23				*/
     bitstr_t	 bit_decl(cl_days, 32);	/* 1-31				*/
     bitstr_t	 bit_decl(cl_mons, 12);	/* 0-11                 	*/
