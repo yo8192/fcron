@@ -44,7 +44,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_WAIT3
 AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
 AC_FUNC_GETLOADAVG
-AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv)
+AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv gethostname)
 AC_CHECK_FUNCS(mkstemp)
 AC_CHECK_FUNCS(setreuid, [setreuid=1], [setreuid=0])
 AC_CHECK_FUNCS(setregid, [setregid=1], [setregid=0])
