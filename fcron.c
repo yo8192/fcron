@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.13 2000-06-16 11:52:31 thib Exp $ */
+ /* $Id: fcron.c,v 1.14 2000-06-18 13:11:11 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.13 2000-06-16 11:52:31 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.14 2000-06-18 13:11:11 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -449,7 +449,11 @@ void main_loop()
     /* synchronize save with jobs execution */
     save = now + SAVE;
 
-    stime = time_to_sleep(save);
+    if ( (stime = time_to_sleep(save)) < 60 )
+	/* force first execution after 60 sec : execution of job during
+	   system boot time is not what we want */
+	stime = 60;
+    
 
     for (;;) {
 	
@@ -462,6 +466,8 @@ void main_loop()
 	    sig_chld = 0;
 	}
 	else if (sig_conf > 0) {
+
+	    now = time(NULL);
 
 	    if (sig_conf == 1)
 		/* update configuration */
