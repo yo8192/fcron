@@ -6,14 +6,27 @@
 # processname: fcron
 # pidfile: /var/run/fcron.pid
 # config: /var/spool/fcron/*
-# $Id: sysVinit-launcher,v 1.5 2000-09-30 11:54:16 thib Exp $
+# $Id: sysVinit-launcher,v 1.6 2000-11-02 19:10:34 thib Exp $
+
+export PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
 FUNCTION=0
+SBIN=@@DESTSBIN@
 
 # Source function library.
 if test -f /etc/rc.d/init.d/functions; then
     . /etc/rc.d/init.d/functions
-    FUNCTION=1
+    STARTCMD="daemon fcron"
+    STOPCMD="killproc fcron"
+    FINALECHO=""
+elif start-stop-daemon -V > /dev/null; then
+    STARTCMD="start-stop-daemon --start --quiet --exec $SBIN/fcron -- -b"
+    STOPCMD="start-stop-daemon --stop --quiet --exec $SBIN/fcron"
+    FINALECHO="echo ."
+else
+    STARTCMD="$SBIN/fcron -b"
+    STOPCMD="killall -TERM $SBIN/fcron"
+    FINALECHO="echo ."
 fi
 
 RETVAL=0
@@ -22,30 +35,22 @@ RETVAL=0
 #  See how we were called.
 case "$1" in
   start)
-	echo -n "Starting fcron: "
-	if test $FUNCTION -eq 1; then
-	    daemon fcron
-	else
-	    fcron -b
-	fi
+	echo -n "Starting fcron"
+	$STARTCMD
 	RETVAL=$?
-	echo
 	if test -d /var/lock/subsys/; then
 	    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/fcron
 	fi
+	$FINALECHO
 	;;
   stop)
 	echo -n "Shutting down fcron"
-	if test $FUNCTION -eq 1; then
-	    killproc fcron
-	else
-	    killall -TERM fcron
-	fi
+	$STOPCMD
 	RETVAL=$?
-	echo
 	if test -d /var/lock/subsys/; then
 	    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/fcron
 	fi
+	$FINALECHO
 	;;
   status)
 	if test $FUNCTION -eq 1; then
