@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.39 2000-09-17 20:08:46 thib Exp $
+# $Id: Makefile.in,v 1.40 2000-10-08 10:09:36 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -28,7 +28,8 @@ LIBOBJS		= @LIBOBJS@
 DEFS		= @DEFS@ 
 CC		= @CC@
 INSTALL		= @INSTALL@
-
+USERNAME 	= @USERNAME@
+GROUPNAME	= @GROUPNAME@
 
 # Optimize or debug ?
 #	-DDEBUG		even more verbose
@@ -84,19 +85,26 @@ allow.o:  allow.c $(HEADERS)
 
 install: all
 
-	$(INSTALL) -m 111 -o root -s fcron $(DESTSBIN)
-	$(INSTALL) -m 4111 -o root -s fcrontab $(DESTBIN)
+	$(INSTALL) -g root -o root -m 755 -d $(DESTSBIN)
+	$(INSTALL) -g root -o root -m 755 -d $(DESTBIN)
+	$(INSTALL) -g root -o root -m 755 -d $(ETC)
+	$(INSTALL) -g root -o root -m 755 -d $(DESTMAN)/man1
+	$(INSTALL) -g root -o root -m 755 -d $(DESTMAN)/man3
+	$(INSTALL) -g root -o root -m 755 -d $(DESTMAN)/man5
+	$(INSTALL) -g root -o root -m 755 -d $(DESTMAN)/man8
+	$(INSTALL) -g root -o root -m 755 -d $(DESTDOC)/fcron-$(VERSION)
+	$(INSTALL) -g GROUPNAME -o USERNAME -m 700 -d $(FCRONTABS)
+
+	$(INSTALL) -g GROUPNAME -o USERNAME -m 110 -s fcron $(DESTSBIN)
+	$(INSTALL) -g GROUPNAME -o USERNAME -m 4111 -s fcrontab $(DESTBIN)
 	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 700 -o root files/fcron.allow files/fcron.deny $(ETC)
 	$(INSTALL) -m 644 -o root doc/fcron.8 $(DESTMAN)/man8
 	$(INSTALL) -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1
 	$(INSTALL) -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5
 	$(INSTALL) -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3
 	(cd script ; ./sysVinit-install "$(INSTALL)" $(DESTSBIN))
-	mkdir -p $(DESTDOC)/fcron-$(VERSION)
 	cd doc; $(INSTALL) -m 644 -o root README LICENSE CHANGES *.html \
 		 $(DESTDOC)/fcron-$(VERSION)/
-	mkdir -p $(FCRONTABS)
-	chmod 700 $(FCRONTABS)
 
 
 uninstall:
