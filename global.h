@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.29 2001-06-03 10:57:18 thib Exp $ */
+ /* $Id: global.h,v 1.30 2001-06-22 21:08:43 thib Exp $ */
 
 
 /* 
@@ -123,6 +123,15 @@
 #define Alloc(ptr, type) \
         if( (ptr = calloc(1, sizeof(type))) == NULL ) \
             die_e("Could not calloc.");
+
+#define Set(var, value) \
+          free(var); \
+          var = strdup2(value);
+
+#define Skip_blanks(ptr) \
+        while((*ptr == ' ') || (*ptr == '\t')) \
+	    ptr++;
+
 
 #define debug if(debug_opt) Debug
 
