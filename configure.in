@@ -1,5 +1,10 @@
 nl Process this file with autoconf to produce a configure script.
 
+
+dnl ---------------------------------------------------------------------
+dnl Initial settings
+dnl ---------------------------------------------------------------------
+
 AC_INIT(allow.c)
 if test \( "$prefix" = "NONE" \) -o \( -z "$prefix" \); then
   prefix="/usr"
@@ -14,6 +19,11 @@ AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
 VERSION="$vers"
 AC_SUBST(VERSION)
+
+
+dnl ---------------------------------------------------------------------
+dnl Check for programs, header files, types, etc (autoconf builtins)
+dnl ---------------------------------------------------------------------
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -73,7 +83,14 @@ AC_CHECK_FUNCS(flock lockf)
 AC_CHECK_FUNCS(seteuid, [seteuid=1], [seteuid=0])
 AC_CHECK_FUNCS(setegid, [setegid=1], [setegid=0])
 
-dnl Checks for programs.
+
+dnl ---------------------------------------------------------------------
+dnl Check for fcron more specific stuffs (paths, progs, ...)
+dnl ---------------------------------------------------------------------
+
+
+dnl ---------------------------------------------------------------------
+dnl Programs ...
 
 AC_ARG_WITH(sendmail,
 [  --with-sendmail=PATH	Path to sendmail.],
@@ -185,6 +202,10 @@ File $withval is not an executable file])
 Cannot determine path to vi: try option --with-editor=PATH])
   fi ]
 )
+
+
+dnl ---------------------------------------------------------------------
+dnl Paths ...
 
 AC_MSG_CHECKING(location of etc directory)
 AC_ARG_WITH(etcdir,
@@ -354,47 +375,6 @@ AC_DEFINE_UNQUOTED(PROC, "$proc")
 AC_SUBST(PROC)
 fi
 
-AC_ARG_WITH(debug,
-[  --with-debug=CFLAGS	Use default debug flags or CFLAGS if given to compile fcron in debug mode.],
-[ case "$withval" in
-  no)
-    cflags="-O2 -Wall"
-    debug="0"
-    ;;
-  yes)
-    cflags="-DDEBUG -g -Wall -DFOREGROUND -DMALLOC_CHECK_=2 -Wpointer-arith -Wstrict-prototypes"
-    debug="1"
-    ;;
-  *)
-    cflags="$withval"
-    debug="1"
-    ;;
-  esac ],
-    cflags="-O2 -Wall"
-    debug="0"
-)
-DEBUG=$debug
-AC_SUBST(DEBUG)
-
-
-AC_ARG_WITH(cflags,
-[  --with-cflags=CFLAGS	Use CFLAGS flags to compile fcron.],
-[ case "$withval" in
-  no)
-    AC_MSG_ERROR(Need an explicit value for --with-cflags.)
-    ;;
-  yes)
-    AC_MSG_ERROR(Need an explicit value for --with-cflags.)
-    ;;
-  *)
-    cflags="$withval"
-    ;;
-  esac ],
-)
-CFLAGS=$cflags
-AC_DEFINE_UNQUOTED(CFLAGS, "$cflags")
-
-
 AC_MSG_CHECKING(location of doc directory)
 AC_ARG_WITH(docdir,
 [  --with-docdir=PATH	Directory containing documentation.],
@@ -449,6 +429,51 @@ if test "$mandir" = "\${prefix}/man"; then
   AC_DEFINE_UNQUOTED(mandir, "$mandir")
 fi
 
+
+dnl ---------------------------------------------------------------------
+dnl Misc ...
+
+AC_ARG_WITH(debug,
+[  --with-debug=CFLAGS	Use default debug flags or CFLAGS if given to compile fcron in debug mode.],
+[ case "$withval" in
+  no)
+    cflags="-O2 -Wall"
+    debug="0"
+    ;;
+  yes)
+    cflags="-DDEBUG -g -Wall -DFOREGROUND -DMALLOC_CHECK_=2 -Wpointer-arith -Wstrict-prototypes"
+    debug="1"
+    ;;
+  *)
+    cflags="$withval"
+    debug="1"
+    ;;
+  esac ],
+    cflags="-O2 -Wall"
+    debug="0"
+)
+DEBUG=$debug
+AC_SUBST(DEBUG)
+
+
+AC_ARG_WITH(cflags,
+[  --with-cflags=CFLAGS	Use CFLAGS flags to compile fcron.],
+[ case "$withval" in
+  no)
+    AC_MSG_ERROR(Need an explicit value for --with-cflags.)
+    ;;
+  yes)
+    AC_MSG_ERROR(Need an explicit value for --with-cflags.)
+    ;;
+  *)
+    cflags="$withval"
+    ;;
+  esac ],
+)
+CFLAGS=$cflags
+AC_DEFINE_UNQUOTED(CFLAGS, "$cflags")
+
+
 AC_MSG_CHECKING(automatic answer to make install's questions)
 AC_ARG_WITH(answer-all,
 [  --with-answer-all=[yes|no]	Answer the argument to every make install's questions.],
@@ -472,6 +497,37 @@ ANSWERALL="$answerall"
 AC_DEFINE_UNQUOTED(ANSWERALL, "$answerall")
 AC_SUBST(ANSWERALL)
 
+
+AC_MSG_CHECKING(if pam should be used if available)
+AC_ARG_WITH(pam,
+[ --with-pam=[yes|no]	Use (or not) PAM if available (default: yes).],
+[ case "$withval" in
+  no)
+    usepam=0
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    AC_MSG_RESULT(yes)
+    AC_CHECK_LIB(pam, pam_acct_mgmt)
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+  AC_MSG_RESULT(yes)
+  AC_CHECK_LIB(pam, pam_acct_mgmt)
+)
+if echo "$LIBS" | grep -e "-lpam" > /dev/null ; then
+  usepam=1
+else
+  usepam=0
+fi
+USEPAM="$usepam"
+AC_SUBST(USEPAM)
+
+
+dnl ---------------------------------------------------------------------
+dnl Users and groups ...
 
 AC_MSG_CHECKING(root's username)
 AC_ARG_WITH(rootname,
@@ -652,41 +708,43 @@ if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
 fi
 
 
-AC_MSG_CHECKING(if pam should be used if available)
-AC_ARG_WITH(pam,
-[ --with-pam=[yes|no]	Use (or not) PAM if available (default: yes).],
-[ case "$withval" in
-  no)
-    usepam=0
-    AC_MSG_RESULT(no)
-    ;;
-  yes)
-    AC_MSG_RESULT(yes)
-    AC_CHECK_LIB(pam, pam_acct_mgmt)
-    ;;
-  *)
-    AC_MSG_ERROR(Must be set to either "yes" or "no".)
-    ;;
-  esac ],
-  AC_MSG_RESULT(yes)
-  AC_CHECK_LIB(pam, pam_acct_mgmt)
-)
-if echo "$LIBS" | grep -e "-lpam" > /dev/null ; then
-  usepam=1
-else
-  usepam=0
-fi
-USEPAM="$usepam"
-AC_SUBST(USEPAM)
-
-
+dnl ---------------------------------------------------------------------
 dnl DocBook
 
 AC_PATH_PROG(JADE,openjade)
-
 if test -z "$JADE"; then
 	AC_PATH_PROG(JADE,jade)
 fi
+
+AC_PATH_PROG(NSGMLS, nsgmls)
+AC_PATH_PROG(SGMLSPL, sgmlspl)
+
+
+DB2MAN_SPEC="/usr/share/sgml/docbook/utils-0.6.9/helpers/docbook2man-spec.pl"
+
+AC_MSG_CHECKING(Looking for docbook2man-spec file)
+AC_ARG_WITH(db2man-spec,
+[ --with-db2man-spec=PATH	set the PATH to docbook2man-spec file.],
+[ case "$withval" in
+  no) 
+    DB2MAN_SPEC=""
+    AC_MSG_RESULT(none)
+    ;;
+  yes)
+    AC_MSG_ERROR(Must be set to PATH or "no".)
+    ;;
+  *)
+    if ! test -f "$withval"; then
+      AC_MSG_ERROR($withval is not a file.)
+    fi
+    DB2MAN_SPEC="$withval"
+    AC_MSG_RESULT($withval)
+    ;;
+  esac ],
+  AC_MSG_RESULT(default)
+)
+AC_SUBST(DB2MAN_SPEC)
+
 
 DSSSL_DIR="/usr/share/sgml/docbook/dsssl-stylesheets-1.72/"
 
@@ -696,16 +754,27 @@ AC_ARG_WITH(dsssl-dir,
 [ case "$withval" in
   no) 
     DSSSL_DIR=""
+    AC_MSG_RESULT(none)
     ;;
   yes)
     AC_MSG_ERROR(Must be set to DIR or "no".)
     ;;
   *)
+    if ! test -f "$withval/html/docbook.dsl"; then
+      AC_MSG_ERROR($withval/html/docbook.dsl does not exist.)
+    fi
     DSSSL_DIR="$withval"
+    AC_MSG_RESULT($withval)
     ;;
   esac ],
+  AC_MSG_RESULT(default)
 )
 AC_SUBST(DSSSL_DIR)
+
+
+dnl ---------------------------------------------------------------------
+dnl Final settings
+dnl ---------------------------------------------------------------------
 
 
 dnl We set exec_prefix to $prefix (also done in Makefile)
@@ -718,5 +787,3 @@ AC_SUBST(BINDIREX)
 AC_SUBST(SBINDIREX)
 
 AC_OUTPUT(Makefile doc/Makefile doc/stylesheets/fcron-doc.dsl)
-
-
