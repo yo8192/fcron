@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.10 2003-09-12 21:34:55 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.11 2003-12-25 22:41:56 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.10 2003-09-12 21:34:55 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.11 2003-12-25 22:41:56 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -104,7 +104,7 @@ info(void)
 {
     fprintf(stderr,
 	    "fcrondyn " VERSION_QUOTED " - interact dynamically with daemon fcron\n"
-	    "Copyright 2000-2002 Thibault Godouet <fcron@free.fr>\n"
+	    "Copyright 2000-2004 Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	);
@@ -233,7 +233,7 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 	    else {
 		Write_cmd( user_uid );
 		if ( debug_opt )
-		    fprintf(stderr, "  uid = %d\n", user_uid);
+		    fprintf(stderr, "  uid = %d\n", (int)user_uid);
 	    }
 
 	}
@@ -265,9 +265,9 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 		if ( debug_opt )
 		    fprintf(stderr, "  uid = %d\n",
 #ifdef SYSFCRONTAB
-			    (pass) ? pass->pw_uid : SYSFCRONTAB_UID
+			    (pass) ? (int)pass->pw_uid : (int)SYSFCRONTAB_UID
 #else
-			    pass->pw_uid
+			    (int)pass->pw_uid
 #endif
 			);
 		break;
