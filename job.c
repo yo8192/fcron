@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.22 2000-09-05 19:55:57 thib Exp $ */
+ /* $Id: job.c,v 1.23 2000-09-13 15:38:48 thib Exp $ */
 
 #include "fcron.h"
 
@@ -46,7 +46,7 @@ change_user(uid_t uid)
     if ((pas = getpwuid(uid)) == NULL) 
         die("failed to get passwd fields for user's uid %d", uid);
     
-#ifdef __linux__
+#ifdef HAVE_SETENV
     setenv("USER", pas->pw_name, 1);
     setenv("HOME", pas->pw_dir, 1);
     setenv("SHELL", pas->pw_shell, 1);
@@ -60,7 +60,7 @@ change_user(uid_t uid)
 	strcat( strcpy(buf, "SHELL"), "=");
 	putenv( strncat(buf, pas->pw_name, sizeof(buf)-6) );
     }
-#endif /* __linux__ */
+#endif /* HAVE_SETENV */
 
     /* Change running state to the user in question */
 
