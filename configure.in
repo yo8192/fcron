@@ -8,7 +8,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.7)
 
-vers="2.0.0"
+vers="2.1.0"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -31,6 +31,7 @@ AC_CHECK_HEADERS(errno.h sys/fcntl.h getopt.h limits.h)
 AC_CHECK_HEADERS(stdarg.h)
 AC_CHECK_HEADERS(sys/termios.h)
 AC_CHECK_HEADERS(strings.h)
+AC_CHECK_HEADERS(security/pam_appl.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -635,6 +636,27 @@ AC_DEFINE_UNQUOTED(GROUPNAME, "$groupname")
 if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
   AC_DEFINE(USE_SETE_ID)
 fi
+
+
+AC_MSG_CHECKING(if pam should be used if available)
+AC_ARG_WITH(pam,
+[ --with-pam=[yes|no]	Use (or not) PAM if available (default: yes).],
+[ case "$withval" in
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    AC_MSG_RESULT(yes)
+    AC_CHECK_LIB(pam, pam_start)
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+  AC_MSG_RESULT(yes)
+  AC_CHECK_LIB(pam, pam_start)
+)
+
 
 dnl We set exec_prefix to $prefix (also done in Makefile)
 exec_prefix=$prefix

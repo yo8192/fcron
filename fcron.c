@@ -21,11 +21,15 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.55 2001-08-20 10:54:45 thib Exp $ */
+ /* $Id: fcron.c,v 1.56 2001-09-12 13:44:50 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.55 2001-08-20 10:54:45 thib Exp $";
+#include "database.h"
+#include "conf.h"
+#include "job.h"
+
+char rcs_info[] = "$Id: fcron.c,v 1.56 2001-09-12 13:44:50 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -96,6 +100,10 @@ short int exe_num;            /* number of job being executed */
 time_t begin_sleep;           /* the time at which sleep began */
 time_t now;                   /* the current time */
 
+#ifdef HAVE_LIBPAM
+pam_handle_t *pamh = NULL;
+const struct pam_conv apamconv = { NULL };
+#endif
 
 void
 info(void)
@@ -241,7 +249,7 @@ parseopt(int argc, char *argv[])
   /* set options */
 {
 
-    char c;
+    int c;
     int i;
 
 #ifdef HAVE_GETOPT_LONG
@@ -271,7 +279,7 @@ parseopt(int argc, char *argv[])
 #else
 	c = getopt(argc, argv, "dfbhVs:m:c:n:");
 #endif /* HAVE_GETOPT_LONG */
-	if (c == EOF) break;
+	if ( c == EOF ) break;
 	switch (c) {
 
 	case 'V':
