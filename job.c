@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.59 2004-04-29 19:24:59 thib Exp $ */
+ /* $Id: job.c,v 1.60 2004-07-11 18:05:23 thib Exp $ */
 
 #include "fcron.h"
 
@@ -52,8 +52,9 @@ die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str)
 {
     char buf[MAX_MSG];
 
-    strcpy(buf, str);
-    strcat(buf, " for '%s'");
+    strncpy(buf, str, sizeof(buf)-1);
+    strncat(buf, " for '%s'", sizeof(buf)-strlen(buf)-1);
+    buf[sizeof(buf)-1]='\0';
 
     if (is_mail(cl->cl_option)) {
 	FILE *mailf = create_mail(cl, "Could not run fcron job");
@@ -109,12 +110,20 @@ change_user(struct cl_t *cl)
     setenv("SHELL", pas->pw_shell, 1);
 #else
     {
-	strcat( strcpy(env_user, "USER"), "=");
-	putenv( strncat(env_user, pas->pw_name, sizeof(env_user)-6) );
-	strcat( strcpy(env_home, "HOME"), "=");
-	putenv( strncat(env_home, pas->pw_dir, sizeof(env_home)-6) );
-	strcat( strcpy(env_shell, "SHELL"), "=");
-	putenv( strncat(env_shell, pas->pw_shell, sizeof(env_shell)-7) );
+	strcpy(env_user, "USER=");
+	strncat(env_user, pas->pw_name, sizeof(env_user)-5-1);
+	env_user[sizeof(env_user)-1]='\0';
+	putenv( env_user ); 
+
+	strcpy(env_home, "HOME=");
+	strncat(env_home, pas->pw_dir, sizeof(env_home)-5-1);
+	env_home[sizeof(env_home)-1]='\0';
+	putenv( env_home );
+
+	strcpy(env_shell, "SHELL=");
+	strncat(env_shell, pas->pw_shell, sizeof(env_shell)-6-1);
+	env_shell[sizeof(env_shell)-1]='\0';
+	putenv( env_shell );
     }
 #endif /* HAVE_SETENV */
 
@@ -239,6 +248,7 @@ run_job(struct exe_t *exeent)
     pid_t pid;
     cl_t *line = exeent->e_line;
     int pipe_pid_fd[2];
+    int i=0, j;
 
     /* prepare the job execution */
     if ( pipe(pipe_pid_fd) != 0 ) {
@@ -428,9 +438,14 @@ run_job(struct exe_t *exeent)
 	line->cl_file->cf_running += 1;
 
 	/* read the pid of the job */
-	if (read(pipe_pid_fd[0], &(exeent->e_job_pid), sizeof(pid_t)) < sizeof(pid_t)) {
-	    error_e("Could not read job pid : setting it to -1");
-	    exeent->e_job_pid = -1;
+	while ( i < sizeof(pid_t) ) {
+	    j = read(pipe_pid_fd[0], (char*)(&(exeent->e_job_pid))+i, sizeof(pid_t));
+	    if ( j < 0 ) {
+		error_e("Could not read job pid : setting it to -1");
+		exeent->e_job_pid = -1;
+		break;
+	    }
+	    i += j;
 	}
 	close(pipe_pid_fd[0]);
     }
