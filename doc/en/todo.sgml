@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.9 2002-08-10 20:42:10 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.10 2002-08-11 21:08:57 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -40,9 +40,6 @@ these functions or not implemented yet)</para>
 	</listitem>
 	<listitem>
 	    <para>make fcrondyn more secure and reliable</para>
-	</listitem>
-	<listitem>
-	    <para>allow a non-privileged user to run fcron</para>
 	</listitem>
 	<listitem>
 	    <para>add a return code for jobs which would mean that they should
