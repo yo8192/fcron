@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.15 2000-06-18 15:28:15 thib Exp $ */
+ /* $Id: fcron.c,v 1.16 2000-06-19 12:42:32 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.15 2000-06-18 15:28:15 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.16 2000-06-19 12:42:32 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -338,11 +338,9 @@ main(int argc, char **argv)
 
     if (foreground == 0) {
 
-	/*
-	 * close stdin and stdout (stderr normally redirected by caller).
+	/* close stdin, stdout and stderr.
 	 * close unused descriptors
-	 * optional detach from controlling terminal
-	 */
+	 * optional detach from controlling terminal */
 
 	int fd;
 	pid_t pid;
@@ -372,14 +370,11 @@ main(int argc, char **argv)
 	    close(fd);
 	}
 
-	fclose(stdin);
-	fclose(stdout);
-
 	if ( (i = open("/dev/null", O_RDWR)) < 0)
 	    die_e("open: /dev/null:");
-	dup2(i, 0);
-	dup2(i, 1);
-
+ 	close(0); dup2(i, 0);
+	close(1); dup2(i, 1);
+	close(2); dup2(i, 2);
 
 	if(debug_opt) {
 	    /* wait until child death and log his return value
@@ -451,7 +446,7 @@ void main_loop()
     /* synchronize save with jobs execution */
     save = now + SAVE;
 
-    if ( (stime = time_to_sleep(save)) < 60 )
+    if ( (stime = time_to_sleep(save)) < FIRST_SLEEP )
 	/* force first execution after 60 sec : execution of job during
 	   system boot time is not what we want */
 	stime = 60;
@@ -463,13 +458,13 @@ void main_loop()
 	gettimeofday(&tv, NULL);
 	usleep( 1000000 - tv.tv_usec );
 
+	now = time(NULL);
+
 	if (sig_chld > 0) {
 	    wait_chld();
 	    sig_chld = 0;
 	}
 	else if (sig_conf > 0) {
-
-	    now = time(NULL);
 
 	    if (sig_conf == 1)
 		/* update configuration */
@@ -483,11 +478,9 @@ void main_loop()
 	else {
 	    debug("\n");
 
-	    now = time(NULL);
-
 	    test_jobs(now);
 
-	    if ( save - now <= 60 ) {
+	    if ( save - now <= SAVE_VARIATION ) {
 		save = now + SAVE;
 		/* save all files */
 		save_file(NULL, NULL);

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.5 2000-06-18 13:10:43 thib Exp $ */
+ /* $Id: config.h.in,v 1.6 2000-06-19 12:41:43 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -94,6 +94,14 @@
 #define MAX_MSG 150           /* max length of a log message */
 
 
+/* *** time *** */
+#define FIRST_SLEEP 60      /* fcron sleep at least this time after startup
+			     * before executing a job, to avoid to run jobs
+			     * during system boot */
+#define SAVE_VARIATION 120  /* if a job is run at less than SAVE_VARIATION
+			     * from normal time to save, save is performed
+			     * after execution of the job.
+			     * This is intended to avoid unneeded wakeups */
 
 /* *** system dependent *** */
 
