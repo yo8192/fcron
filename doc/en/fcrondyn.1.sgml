@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrondyn.1.sgml,v 1.10 2003-12-25 22:59:41 thib Exp $ -->
+<!-- $Id: fcrondyn.1.sgml,v 1.11 2004-08-17 12:58:03 thib Exp $ -->
 
 <refentry id="fcrondyn.1">
     <refmeta>
@@ -208,14 +208,16 @@ job. <emphasis><type>jobid</type></emphasis> is the one given by
 		<term><command>runnow</command>
 <emphasis><type>jobid</type></emphasis></term>
 		<listitem>
-		    <para></para>
+		    <para>Instead of waiting for the next scheduled execution
+		    time, run the job now. The next execution time is changed as
+		    if the job had run on schedule.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term><command>run</command>
 <emphasis><type>jobid</type></emphasis></term>
 		<listitem>
-		    <para></para>
+		    <para>Run the job now. Its next execution time is not changed.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
