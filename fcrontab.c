@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.49 2001-10-29 13:21:29 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.50 2001-11-02 13:38:15 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -45,7 +45,7 @@
 #include "allow.h"
 #include "fileconf.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.49 2001-10-29 13:21:29 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.50 2001-11-02 13:38:15 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -88,8 +88,10 @@ char foreground = 1;
 pid_t daemon_pid = 0;
 
 #ifdef HAVE_LIBPAM
+int conv_pam(int num_msg, const struct pam_message **msgm,
+	     struct pam_response **response, void *appdata_ptr);
 pam_handle_t *pamh = NULL;
-const struct pam_conv apamconv = { NULL };
+const struct pam_conv apamconv = { conv_pam, NULL };
 #endif
 
 void
@@ -604,6 +606,183 @@ reinstall(char *buf)
 
 }
 
+
+#ifdef HAVE_LIBPAM
+/* Derived from Andrew Morgan <morgan@linux.kernel.org> work in Linux PAM misc lib. */
+
+#define CONV_ECHO_ON  1                            /* types of echo state */
+#define CONV_ECHO_OFF 0
+
+#define _pam_overwrite(x)        \
+do {                             \
+     register char *__xx__;      \
+     if ((__xx__=(x)))           \
+          while (*__xx__)        \
+               *__xx__++ = '\0'; \
+} while (0)
+
+
+static char *read_string(int echo, const char *prompt)
+/* read a line of input string, giving prompt when appropriate */
+{
+    struct termios term_before, term_tmp;
+    char line[PAM_MAX_MSG_SIZE];
+    int nc, have_term=0;
+
+    debug("called with echo='%s', prompt='%s'.", echo ? "ON":"OFF" , prompt);
+
+    if (isatty(STDIN_FILENO)) {                      /* terminal state */
+
+	/* is a terminal so record settings and flush it */
+	if ( tcgetattr(STDIN_FILENO, &term_before) != 0 ) {
+	    debug("error: failed to get terminal settings");
+	    return NULL;
+	}
+	memcpy(&term_tmp, &term_before, sizeof(term_tmp));
+	if (!echo) 
+	    term_tmp.c_lflag &= ~(ECHO);
+	have_term = 1;
+
+    } 
+    else if (!echo)
+	debug("warning: cannot turn echo off");
+
+    /* reading the line */
+    while (1) {
+
+	fprintf(stderr, "%s", prompt);
+	/* this may, or may not set echo off -- drop pending input */
+	if (have_term)
+	    (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term_tmp);
+
+	nc = read(STDIN_FILENO, line, PAM_MAX_MSG_SIZE-1);
+	if (have_term) {
+	    (void) tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
+	    if (!echo)             /* do we need a newline? */
+		fprintf(stderr,"\n");
+	}
+	if (nc > 0) {                 /* we got some user input */
+	    char *input;
+
+	    if (nc > 0 && line[nc-1] == '\n') {     /* <NUL> terminate */
+		line[--nc] = '\0';
+	    } else {
+		line[nc] = '\0';
+	    }
+	    input = ( (line) ? strdup(line):NULL );
+	    _pam_overwrite(line);
+
+	    return input;                  /* return malloc()ed string */
+	} else if (nc == 0) {                                /* Ctrl-D */
+	    debug("user did not want to type anything");
+	    fprintf(stderr, "\n");
+	    break;
+	}
+    }
+
+    if (have_term)
+	(void) tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
+
+    memset(line, 0, PAM_MAX_MSG_SIZE);                      /* clean up */
+    return NULL;
+}
+
+
+int
+conv_pam(int num_msg, const struct pam_message **msgm, struct pam_response **response,
+	 void *appdata_ptr)
+/* text based conversation for pam. */
+{
+    int count = 0;
+    struct pam_response *reply;
+
+    if (num_msg <= 0 )
+	return PAM_CONV_ERR;
+
+    reply = (struct pam_response *) calloc(num_msg, sizeof(struct pam_response));
+    if (reply == NULL) {
+	debug("no memory for responses");
+	return PAM_CONV_ERR;
+    }
+
+    for (count = 0; count < num_msg; ++count) {
+	char *string = NULL;
+
+	switch ( msgm[count]->msg_style ) {
+	case PAM_PROMPT_ECHO_OFF:
+	    string = read_string(CONV_ECHO_OFF,msgm[count]->msg);
+	    if (string == NULL) {
+		goto failed_conversation;
+	    }
+	    break;
+	case PAM_PROMPT_ECHO_ON:
+	    string = read_string(CONV_ECHO_ON,msgm[count]->msg);
+	    if (string == NULL) {
+		goto failed_conversation;
+	    }
+	    break;
+	case PAM_ERROR_MSG:
+	    if (fprintf(stderr,"%s\n",msgm[count]->msg) < 0) {
+		goto failed_conversation;
+	    }
+	    break;
+	case PAM_TEXT_INFO:
+	    if (fprintf(stdout,"%s\n",msgm[count]->msg) < 0) {
+		goto failed_conversation;
+	    }
+	    break;
+	default:
+	    fprintf(stderr, "erroneous conversation (%d)\n"
+		    ,msgm[count]->msg_style);
+	    goto failed_conversation;
+	}
+
+	if (string) {                         /* must add to reply array */
+	    /* add string to list of responses */
+
+	    reply[count].resp_retcode = 0;
+	    reply[count].resp = string;
+	    string = NULL;
+	}
+    }
+
+    /* New (0.59+) behavior is to always have a reply - this is
+       compatable with the X/Open (March 1997) spec. */
+    *response = reply;
+    reply = NULL;
+
+    return PAM_SUCCESS;
+
+failed_conversation:
+
+    if (reply) {
+	for (count=0; count<num_msg; ++count) {
+	    if (reply[count].resp == NULL) {
+		continue;
+	    }
+	    switch (msgm[count]->msg_style) {
+	    case PAM_PROMPT_ECHO_ON:
+	    case PAM_PROMPT_ECHO_OFF:
+		_pam_overwrite(reply[count].resp);
+		free(reply[count].resp);
+		break;
+	    case PAM_ERROR_MSG:
+	    case PAM_TEXT_INFO:
+		/* should not actually be able to get here... */
+		free(reply[count].resp);
+	    }                                            
+	    reply[count].resp = NULL;
+	}
+	/* forget reply too */
+	free(reply);
+	reply = NULL;
+    }
+
+    return PAM_CONV_ERR;
+}
+#endif
+
+
 void
 parseopt(int argc, char *argv[])
   /* set options */
@@ -792,15 +971,18 @@ main(int argc, char **argv)
     /* Open PAM session for the user and obtain any security
        credentials we might need */
 
-    debug("username: %s", pass->pw_name);
-    retcode = pam_start("fcrontab", pass->pw_name, &apamconv, &pamh);
+    debug("username: %s", user);
+    retcode = pam_start("fcrontab", user, &apamconv, &pamh);
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM");
-    retcode = pam_acct_mgmt(pamh, PAM_SILENT);
+    retcode = pam_authenticate(pamh, 0);    /* is user really user? */
+    if (retcode != PAM_SUCCESS)
+	die_pame(pamh, retcode, "Could not authenticate user using PAM (%d)", retcode);
+    retcode = pam_acct_mgmt(pamh, 0); /* permitted access? */
     if (retcode != PAM_SUCCESS)
 	die_pame(pamh, retcode, "Could not init PAM account management (%d)", retcode);
-    retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED | PAM_SILENT);
+    retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED);
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not set PAM credentials");
-    retcode = pam_open_session(pamh, PAM_SILENT);
+    retcode = pam_open_session(pamh, 0);
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not open PAM session");
 
     env = (const char * const *) pam_getenvlist(pamh);
