@@ -4,45 +4,45 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.102 2003-12-29 15:39:37 thib Exp $
+# $Id: Makefile.in,v 1.103 2003-12-29 18:26:07 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
 # in config.h, so you must modify config.h AND Makefile in order
 # to set the same values in the two files.
 
-SRCDIR		= @srcdir@
+SRCDIR		:= @srcdir@
 # Useful to build packages
 # you may want to use this var with a : 'make DESTDIR=dir install'
-DESTDIR		=
+DESTDIR		:=
 
 # Where should we install it ?
-prefix		= $(DESTDIR)@prefix@
+prefix		:= $(DESTDIR)@prefix@
 # We set exec_prefix to $prefix (if you change this, you should also change
 #  it in configure.in)
-exec_prefix	= $(DESTDIR)@exec_prefix@
-DESTSBIN	= @sbindir@
-DESTBIN		= @bindir@
-FCRONTABS	= $(DESTDIR)@FCRONTABS@
-ETC		= $(DESTDIR)@ETC@
-OPTIM		= @CFLAGS@
-LDFLAGS		= @LDFLAGS@
-CPPFLAGS	= @CPPFLAGS@ -I. -I${SRCDIR}
-LIBS		= @LIBS@
-LIBOBJS		= @LIBOBJS@
-DEFS		= @DEFS@ 
-CC		= @CC@
-INSTALL		= @INSTALL@
-ROOTNAME	= @ROOTNAME@
-ROOTGROUP	= @ROOTGROUP@
-USERNAME 	= @USERNAME@
-GROUPNAME	= @GROUPNAME@
-SYSFCRONTAB	= @SYSFCRONTAB@
-DEBUG		= @DEBUG@
-BOOTINSTALL	= @BOOTINSTALL@
-ANSWERALL	= @ANSWERALL@
-USEPAM		= @USEPAM@
-FCRONDYN	= @FCRONDYN@
+exec_prefix	:= $(DESTDIR)@exec_prefix@
+DESTSBIN	:= @sbindir@
+DESTBIN		:= @bindir@
+FCRONTABS	:= $(DESTDIR)@FCRONTABS@
+ETC		:= $(DESTDIR)@ETC@
+OPTIM		:= @CFLAGS@
+LDFLAGS		:= @LDFLAGS@
+CPPFLAGS	:= @CPPFLAGS@ -I. -I${SRCDIR}
+LIBS		:= @LIBS@
+LIBOBJS		:= @LIBOBJS@
+DEFS		:= @DEFS@ 
+CC		:= @CC@
+INSTALL		:= @INSTALL@
+ROOTNAME	:= @ROOTNAME@
+ROOTGROUP	:= @ROOTGROUP@
+USERNAME 	:= @USERNAME@
+GROUPNAME	:= @GROUPNAME@
+SYSFCRONTAB	:= @SYSFCRONTAB@
+DEBUG		:= @DEBUG@
+BOOTINSTALL	:= @BOOTINSTALL@
+ANSWERALL	:= @ANSWERALL@
+USEPAM		:= @USEPAM@
+FCRONDYN	:= @FCRONDYN@
 
 # Options
 #	-DDEBUG		even more verbose
@@ -51,34 +51,34 @@ FCRONDYN	= @FCRONDYN@
 #	-DFOREGROUND=[0|1]    default run in foreground ?
 #OPTION=	-DCHECKJOBS
 #OPTION=	-O3 -mcpu=i686
-OPTION = 
+OPTION := 
 
 
 ####################################
 # Should not be changed under this #
 ####################################
 
-VERSION = @VERSION@
+VERSION := @VERSION@
 CFLAGS += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
 ifeq ($(FCRONDYN), 1)
 LIBOBJS := socket.o $(LIBOBJS)
 endif
-OBJSD = fcron.o subs.o save.o temp_file.o log.o database.o job.o conf.o $(LIBOBJS)
-OBJSTAB = fcrontab.o subs.o save.o temp_file.o  log.o fileconf.o allow.o read_string.o
-OBJSDYN = fcrondyn.o subs.o log.o allow.o read_string.o
-OBJCONV = convert-fcrontab.o subs.o save.o log.o
-OBJSIG = fcronsighup.o subs.o log.o allow.o
-HEADERSALL = config.h $(SRCDIR)/global.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/save.h $(SRCDIR)/option.h $(SRCDIR)/dyncom.h
+OBJSD := fcron.o subs.o save.o temp_file.o log.o database.o job.o conf.o $(LIBOBJS)
+OBJSTAB := fcrontab.o subs.o save.o temp_file.o  log.o fileconf.o allow.o read_string.o
+OBJSDYN := fcrondyn.o subs.o log.o allow.o read_string.o
+OBJCONV := convert-fcrontab.o subs.o save.o log.o
+OBJSIG := fcronsighup.o subs.o log.o allow.o
+HEADERSALL := config.h $(SRCDIR)/global.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/save.h $(SRCDIR)/option.h $(SRCDIR)/dyncom.h
 
 # this is a regular expression :
 # do not ci automaticaly generated files and doc (done by doc's Makefile)
-RCSNOCI=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|config.log\|config.status\|config.h\|config.cache\|Makefile\|doc.*\|CVS.*\)
+RCSNOCI:=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|config.log\|config.status\|config.h\|config.cache\|Makefile\|doc.*\|CVS.*\)
 
-RUN_NON_PRIVILEGED = @RUN_NON_PRIVILEGED@
+RUN_NON_PRIVILEGED := @RUN_NON_PRIVILEGED@
 ifeq ($(RUN_NON_PRIVILEGED), 1)
-	BINMODE=111
+	BINMODE:=111
 else
-	BINMODE=6111
+	BINMODE:=6111
 endif
 
 ifeq ($(FCRONDYN), 1)
@@ -134,11 +134,13 @@ endif
 	make -C doc install
 
 # in order to get correct rights when upgrading :
-	find $(FCRONTABS) -type f \( -name "*.orig" -a ! -name "$(ROOTNAME).orig" -a ! -name "$(SYSFCRONTAB).orig" \) -exec chown $(USERNAME):$(GROUPNAME) {} \; -exec chmod 640 {} \;
-	find $(FCRONTABS) -type f \( -name "$(ROOTNAME).orig" -o -name "$(SYSFCRONTAB).orig" \) -exec chown $(ROOTNAME):$(GROUPNAME) {} \; -exec chmod 600 {} \;
-	find $(FCRONTABS) -type f ! -name "*.orig" -exec chown $(ROOTNAME):$(ROOTGROUP) {} \; -exec chmod 600 {} \;
-	if test -f $(ETC)/fcron.deny; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.deny ; fi
-	if test -f $(ETC)/fcron.allow; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.allow ; fi
+# Note : we don't use "chown user:group file" because some systems use ":"
+#        and others "." as separator.
+	find $(FCRONTABS) -type f \( -name "*.orig" -a ! -name "$(ROOTNAME).orig" -a ! -name "$(SYSFCRONTAB).orig" \) -exec chown $(USERNAME) {} \; -exec chgrp $(GROUPNAME) {} \; -exec chmod 640 {} \;
+	find $(FCRONTABS) -type f \( -name "$(ROOTNAME).orig" -o -name "$(SYSFCRONTAB).orig" \) -exec chown $(ROOTNAME) {} \; -exec chgrp $(GROUPNAME) {} \; -exec chmod 600 {} \;
+	find $(FCRONTABS) -type f ! -name "*.orig" -exec chown $(ROOTNAME) {} \; -exec chgrp $(ROOTGROUP) {} \; -exec chmod 600 {} \;
+	if test -f $(ETC)/fcron.deny; then chown $(ROOTNAME) $(ETC)/fcron.deny ; chgrp $(GROUPNAME) $(ETC)/fcron.deny ; fi
+	if test -f $(ETC)/fcron.allow; then chown $(ROOTNAME) $(ETC)/fcron.allow ; chgrp $(GROUPNAME) $(ETC)/fcron.allow ; fi
 
 ifeq ($(BOOTINSTALL), 1)
 	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS) $(ANSWERALL) $(SRCDIR)
