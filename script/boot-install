@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.25 2001-02-11 21:16:23 thib Exp $
+# $Id: boot-install,v 1.26 2001-02-11 21:37:41 thib Exp $
 
 # take 5 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -48,9 +48,9 @@ SYSV=0
 RESTARTED=0
 INSTALLED=0
 
-if $IS_FREEBSD -eq 1; then 
+if test $IS_FREEBSD -eq 1; then 
   if test -x /usr/local/etc/rc.d/fcron.sh; then
-    echo "Fcron is already in /etc/rc.d/rc.local."
+    echo "Fcron is already in /usr/local/etc/rc.d/."
     INSTALLED=1
   else
     if test $ANSWER -eq 2; then
