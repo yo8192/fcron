@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.41 2001-03-01 18:40:47 thib Exp $ */
+ /* $Id: fileconf.c,v 1.42 2001-03-10 13:10:23 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -406,8 +406,16 @@ get_bool(char *ptr, int *i)
 	ptr += 3;
 	goto true;
     }
+    else if ( strncmp(ptr, "yes", 3) == 0 ) {
+	ptr += 2;
+	goto true;
+    }
     else if ( strncmp(ptr, "false", 5) == 0 ) {
 	ptr += 4;
+	goto false;
+    }
+    else if ( strncmp(ptr, "no", 2) == 0 ) {
+	ptr += 1;
 	goto false;
     }
     else
