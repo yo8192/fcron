@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.45 2000-11-10 17:35:32 thib Exp $
+# $Id: Makefile.in,v 1.46 2000-11-14 19:46:38 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -97,7 +97,7 @@ install: all
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 700 -d $(FCRONTABS)
 
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 110 -s fcron $(DESTSBIN)
-	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 4111 -s fcrontab $(DESTBIN)
+	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrontab $(DESTBIN)
 	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 640 -o root -g $(GROUPNAME) files/fcron.allow files/fcron.deny $(ETC)
 	$(INSTALL) -m 644 -o root doc/fcron.8 $(DESTMAN)/man8
 	$(INSTALL) -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1
@@ -111,7 +111,7 @@ install: all
 	if test -f $(ETC)/fcron.deny; then chown $(USERNAME):$(GROUPNAME) $(ETC)/fcron.deny ; fi
 	if test -f $(ETC)/fcron.allow; then chown $(USERNAME):$(GROUPNAME) $(ETC)/fcron.allow ; fi
 
-#	(cd script ; ./sysVinit-install "$(INSTALL)" $(DESTSBIN) $(DEBUG))
+	(cd script ; ./sysVinit-install "$(INSTALL)" $(DESTSBIN) $(DEBUG))
 
 # reinstall the fcrontabs
 # to do that, the old (if any) version of fcron must not run
