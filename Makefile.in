@@ -2,33 +2,33 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.28 2000-09-04 13:10:09 thib Exp $
+# @configure_input@
 
-# ********************************************************* #
-# *** Begin of configurable stuffs ************************ #
-
-#
-# take also a look at "config.h" for more config
-#
+# $Id: Makefile.in,v 1.29 2000-09-12 16:41:18 thib Exp $
 
 # Where should we install it ?
-DESTSBIN= /usr/sbin/
-DESTBIN= /usr/bin/
-
-#DESTMAN= /usr/share/man/
-DESTMAN= /usr/man/
-
-#DESTDOC= /usr/share/
-DESTDOC= /usr/doc/
-
-FCRONTABS=/var/spool/fcron/
-ETC=/etc/
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+DESTSBIN	= @sbindir@
+DESTBIN		= @bindir@
+DESTMAN		= @mandir@
+DESTDOC		= $(prefix)/doc
+FCRONTABS	= @FCRONTABS@
+ETC		= @ETC@
+CFLAGS		= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+LIBOBJS		= @LIBOBJS@
+DEFS		= @DEFS@ 
+CC		= @CC@
+INSTALL		= @INSTALL@
 
 
 # Optimize or debug ?
 #	-DDEBUG		even more verbose
 #	-DCHECKJOBS     send a mail containing the exact shell command
 #			for each execution of each job.
+#OPTIM = @CFLAGS@
 OPTIM=	-DDEBUG -g -DFOREGROUND -DMALLOC_CHECK_=2
 #OPTIM=	-DDEBUG -g -DCHECKJOBS -Wall -Wpointer-arith -Wstrict-prototypes
 #OPTIM=	-DDEBUG -Wall -Wpointer-arith -Wstrict-prototypes
@@ -42,39 +42,19 @@ OPTIM=	-DDEBUG -g -DFOREGROUND -DMALLOC_CHECK_=2
 OPTION = -DPROC_LOADAVG=1
 
 
-# Want other flags ?
-#OTHERFLAGS=
-
-
-# Want a nonstandard CC ?
-CC= gcc
-
-
-# Any include ?
-INCLUDE=	-I.
-
-
-# The name of the BSD like install program
-#INSTALL = installbsd
-INSTALL= install
-
-
-# *** End of configurable stuffs ************************** #
-# ********************************************************* #
-
 ####################################
 # Should not be changed under this #
 ####################################
 
-VERSION= 0.9.2
-CFLAGS= $(INCLUDE) $(OPTIM) $(OTHERFLAGS) $(OPTION) -DVERSION=\"$(VERSION)\" -DFCRONTABS=\"$(FCRONTABS)\" -DETC=\"$(ETC)\"
-OBJSD = fcron.o subs.o database.o job.o log.o conf.o
-OBJS= fcrontab.o fileconf.o subs.o log.o allow.c
-HEADERSD = fcron.h config.h global.h option.h
+VERSION= @VERSION@
+CFLAGS= $(INCLUDE) $(OPTIM) $(OTHERFLAGS) $(OPTION) $(DEFS) $(LIBS)
+OBJSD = fcron.o subs.o database.o job.o log.o conf.o getloadavg.o $(LIBOBJS)
+OBJS= fcrontab.o fileconf.o subs.o log.o allow.o
+HEADERSD = fcron.h config.h global.h option.h getloadavg.h
 HEADERS = fcrontab.h config.h global.h option.h
 
 # this is two regular expressions
-RCSNOLOG=.*\(.html\|VERSION\|MANIFEST\)
+RCSNOLOG=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\)
 REXP_MANPAGES=.*[158]
 
 all: fcron fcrontab updatedoc
@@ -99,14 +79,14 @@ allow.o:  allow.c $(HEADERS)
 
 install: all
 
-	$(INSTALL) -c -m 111 -o root -s fcron $(DESTSBIN)/
-	$(INSTALL) -c -m 4111 -o root -s fcrontab $(DESTBIN)/
-	$(INSTALL) -c -m 700 -o root files/fcron.allow $(ETC)/
-	$(INSTALL) -c -m 700 -o root files/fcron.deny $(ETC)/
-	$(INSTALL) -c -m 644 -o root doc/fcron.8 $(DESTMAN)/man8/
-	$(INSTALL) -c -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1/
-	$(INSTALL) -c -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5/
-	$(INSTALL) -c -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3/
+	$(INSTALL) -c -m 111 -o root -s fcron $(DESTSBIN)
+	$(INSTALL) -c -m 4111 -o root -s fcrontab $(DESTBIN)
+	$(INSTALL) -c -m 700 -o root files/fcron.allow $(ETC)
+	$(INSTALL) -c -m 700 -o root files/fcron.deny $(ETC)
+	$(INSTALL) -c -m 644 -o root doc/fcron.8 $(DESTMAN)/man8
+	$(INSTALL) -c -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1
+	$(INSTALL) -c -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5
+	$(INSTALL) -c -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3
 	(cd script ; ./sysVinit-install $(INSTALL) $(DESTSBIN))
 	mkdir -p $(DESTDOC)/fcron-$(VERSION)
 	cd doc; $(INSTALL) -c -m 644 -o root README LICENSE CHANGES *.html \
@@ -117,10 +97,18 @@ install: all
 
 uninstall:
 	rm -f $(DESTSBIN)/fcron
+	rm -f $(DESTBIN)/fcrontab
+	rm -fR $(DESTDOC)/fcron-$(VERSION)
+	rm -f $(DESTMAN)/man1/fcrontab.1
+	rm -f $(DESTMAN)/man3/bitstring.3
+	rm -f $(DESTMAN)/man5/fcrontab.5
+	rm -f $(DESTMAN)/man8/fcron.8
 	script/sysVinit-uninstall
 
 clean:
 	rm -f *.o
+	rm -f doc/fcrontab.1 doc/fcron.8 doc/fcrontab.5
+	rm -f config.log config.status config.h config.cache Makefile
 	rm -f fcron fcrontab
 
 vclean: clean
@@ -138,8 +126,10 @@ vclean: clean
 updatedoc: doc/*
 	script/gen-doc $(VERSION)
 
+configure: configure.in
+	autoconf
 
-tar: vclean updatedoc
+tar: updatedoc configure vclean
 
 	echo $(VERSION) > ./VERSION
 
