@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.48 2001-02-14 13:53:17 thib Exp $ */
+ /* $Id: database.c,v 1.49 2001-02-27 20:50:22 thib Exp $ */
 
 #include "fcron.h"
 
@@ -948,7 +948,7 @@ set_next_exe(CL *line, char option)
 
 void
 set_next_exe_notrun(CL *line, char context)
-    /* set the time of the next execution and send a mail to tell him the job
+    /* set the time of the next execution and send a mail to tell user his job
      * has not run if necessary */
 {
     time_t next_period = 0;
