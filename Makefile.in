@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.65 2001-05-15 00:46:22 thib Exp $
+# $Id: Makefile.in,v 1.66 2001-05-15 01:17:38 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -162,7 +162,7 @@ configure: configure.in
 # is set in the configure.in file)
 	autoconf
 	./configure
-	make tar ; exit 0
+	$(MAKE) tar && echo "Success !" && exit 999
 
 tar: configure updatedoc vclean
 
