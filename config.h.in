@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.31 2001-06-05 10:18:16 thib Exp $ */
+ /* $Id: config.h.in,v 1.32 2001-06-22 21:09:30 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -33,13 +33,33 @@
 /* beginning of configurable stuff ********************************** */
 
 
-/* fcron allow and deny file are located in directory ETC (see below) */
+/* fcron allow, deny and conf files are located in directory ETC (see below) */
 #define FCRON_ALLOW      "fcron.allow"
-
 #define FCRON_DENY       "fcron.deny"
+#define FCRON_CONF       "fcron.conf"
 
 #define SENDMAIL_ARGS	"-Ffcron", "-odi"   /* args of mail command */
 
+
+/* *** time *** */
+#define FIRST_SLEEP 20      /* fcron sleep at least this time after startup
+			     * before executing a job, to avoid to run jobs
+			     * during system boot */
+
+#define LAVG_SLEEP 30 /* the time we sleep when some jobs are in lavg queue */
+
+#define SAVE            1800  /* save every n seconds */
+
+/* *** behavior *** */
+#define SERIAL_ONCE 0 /* can a job be several times in the serial queue at
+		       * the same moment ? */
+
+#define LAVG_ONCE 1 /* can a job be several times in the lavg queue at
+		     * the same moment ? */
+
+#define MAXYEAR_SCHEDULE_TIME 10 /* a job can't be scheduled further than
+                             * now + MAXYEAR_SCHEDULE years. This is used
+                             * to prevent infinite loop on corrupted lines */
 
 /* *** memory *** */
 #define EXE_INITIAL_SIZE 6 /* initial number of possible running job 
@@ -83,26 +103,6 @@
 
 #define MAX_MSG 150           /* max length of a log message */
 
-
-/* *** time *** */
-#define FIRST_SLEEP 20      /* fcron sleep at least this time after startup
-			     * before executing a job, to avoid to run jobs
-			     * during system boot */
-
-#define LAVG_SLEEP 30 /* the time we sleep when some jobs are in lavg queue */
-
-#define SAVE            1800  /* save every n seconds */
-
-/* *** behavior *** */
-#define SERIAL_ONCE 0 /* can a job be several times in the serial queue at
-		       * the same moment ? */
-
-#define LAVG_ONCE 1 /* can a job be several times in the lavg queue at
-		     * the same moment ? */
-
-#define MAXYEAR_SCHEDULE_TIME 10 /* a job can't be scheduled further than
-                             * now + MAXYEAR_SCHEDULE years. This is used
-                             * to prevent infinite loop on corrupted lines */
 
 /* *** system dependent *** */
 #define EXIT_ERR   1         /* code returned by fcron/fcrontab on error */

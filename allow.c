@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: allow.c,v 1.8 2001-06-12 06:40:54 thib Exp $ */
+ /* $Id: allow.c,v 1.9 2001-06-22 21:10:30 thib Exp $ */
 
 #include "fcrontab.h"
 #include "allow.h"
@@ -84,8 +84,8 @@ is_allowed(char *user)
 	return 0;
 
     /* check if user is in fcron.allow and/or in fcron.deny files */
-    allow = in_file(user, ETC "/" FCRON_ALLOW);
-    deny = in_file(user, ETC "/" FCRON_DENY);
+    allow = in_file(user, fcronallow);
+    deny = in_file(user, fcrondeny);
 
     if ( allow == -1 && deny == -1 )
 	/* neither fcron.allow nor fcron.deny exist :

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.38 2001-06-03 10:54:22 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.39 2001-06-22 21:06:37 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.38 2001-06-03 10:54:22 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.39 2001-06-22 21:06:37 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -135,7 +135,7 @@ read_pid(void)
     FILE *fp = NULL;
     pid_t pid = 0;
     
-    if ((fp = fopen(PIDFILE, "r")) != NULL) {
+    if ((fp = fopen(pidfile, "r")) != NULL) {
 	fscanf(fp, "%d", (int *) &pid);    
 	fclose(fp);
     }
@@ -157,7 +157,7 @@ sig_daemon(void)
 	FILE *fp = NULL;
 	int	fd = 0;
 	struct tm *tm = NULL;
-
+	char sigfile[PATH_LEN];
 
 	t = time(NULL);
 	tm = localtime(&t);
@@ -179,6 +179,7 @@ sig_daemon(void)
 	fprintf(stderr, "Modifications will be taken into account"
 		" at %s.\n", buf);
 
+	snprintf(sigfile, sizeof(sigfile), "%s/fcrontab.sig", fcrontabs);
 
 #if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
 	if (seteuid(fcrontab_uid) != 0)
@@ -187,7 +188,7 @@ sig_daemon(void)
 
 	switch ( fork() ) {
 	case -1:
-	    remove(FCRONTABS "/fcrontab.sig");
+	    remove(sigfile);
 	    die_e("could not fork : daemon has not been signaled");
 	    break;
 	case 0:
@@ -201,9 +202,9 @@ sig_daemon(void)
 	foreground = 0;
 
 	/* try to create a lock file */
-	if ((fd = open(FCRONTABS "/fcrontab.sig", O_RDWR|O_CREAT, 0644)) == -1
+	if ((fd = open(sigfile, O_RDWR|O_CREAT, 0644)) == -1
 	    || ((fp = fdopen(fd, "r+")) == NULL) )
-	    die_e("can't open or create " FCRONTABS "/fcrontab.sig");	
+	    die_e("can't open or create %s", sigfile);	
     
 #ifdef HAVE_FLOCK
 	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
@@ -224,7 +225,7 @@ sig_daemon(void)
 	fclose(fp);
 	close(fd);
 
-	remove(FCRONTABS "/fcrontab.sig");
+	remove(sigfile);
     }
     else
 	fprintf(stderr, "Modifications will be taken into account"
@@ -378,7 +379,7 @@ write_file(char *file)
 	    return_val = ERR;
     }
 
-    /* copy original file to FCRONTABS dir */
+    /* copy original file to fcrontabs dir */
     snprintf(buf, sizeof(buf), "%s.orig", user);
     if ( copy(file, buf) == ERR )
 	return_val = ERR;
@@ -448,7 +449,7 @@ edit_file(char *buf)
     /* copy file to a temp file, edit that file, and install it
        if necessary */
 {
-    char *editor = NULL;
+    char *cureditor = NULL;
     pid_t pid;
     int status;
     struct stat st;
@@ -460,11 +461,11 @@ edit_file(char *buf)
     char correction = 0;
     short return_val = EXIT_OK;
 
-    explain("fcrontabs : editing %s's fcrontab", user);	
+    explain("fcrontab : editing %s's fcrontab", user);	
 
-    if ( (editor = getenv("VISUAL")) == NULL || strcmp(editor, "\0") == 0 )
-	if( (editor = getenv("EDITOR")) == NULL || strcmp(editor, "\0") == 0 )
-	    editor = EDITOR;
+    if ((cureditor=getenv("VISUAL")) == NULL || strcmp(cureditor, "\0") == 0 )
+	if((cureditor=getenv("EDITOR"))==NULL || strcmp(cureditor, "\0") == 0 )
+	    cureditor = editor;
 	
     file = temp_file(&tmp_str);
     if ( (fi = fdopen(file, "w")) == NULL ) {
@@ -530,8 +531,8 @@ edit_file(char *buf)
 		goto exiterr;
 	    }
 #endif
-	    execlp(editor, editor, tmp_str, NULL);
-	    error_e("Error while running \"%s\"", editor);
+	    execlp(cureditor, cureditor, tmp_str, NULL);
+	    error_e("Error while running \"%s\"", cureditor);
 	    goto exiterr;
 
 	case -1:
@@ -720,7 +721,7 @@ parseopt(int argc, char *argv[])
     /* constants and variables defined by command line */
 
     while(1) {
-	c = getopt(argc, argv, "u:lrezdnhV");
+	c = getopt(argc, argv, "u:lrezdnhVc:");
 	if (c == EOF) break;
 	switch (c) {
 
@@ -793,6 +794,10 @@ parseopt(int argc, char *argv[])
 	    ignore_prev = 1;
 	    break;
 	    
+	case 'c':
+	    Set(fcronconf, optarg);
+	    break;
+
 	case ':':
 	    fprintf(stderr, "(setopt) Missing parameter");
 	    usage();
@@ -805,6 +810,9 @@ parseopt(int argc, char *argv[])
 	}
     }
 
+    /* read fcron.conf and update global parameters */
+    read_conf();
+    
     /* read the file name and/or user and check validity of the arguments */
     if (argc - optind > 2)
 	usage();
@@ -891,8 +899,8 @@ main(int argc, char **argv)
 	    if (seteuid(fcrontab_uid) != 0) 
 		die_e("Could not change uid to fcrontab_uid[%d]",fcrontab_uid);
 	/* change directory */
-	if (chdir(FCRONTABS) != 0) {
-	    error_e("Could not chdir to " FCRONTABS );
+	if (chdir(fcrontabs) != 0) {
+	    error_e("Could not chdir to %s", fcrontabs);
 	    xexit (EXIT_ERR);
 	}
 	/* get user's permissions */
@@ -907,8 +915,8 @@ main(int argc, char **argv)
     if (setgid(0) != 0)
     	die_e("Could not change gid to 0");
     /* change directory */
-    if (chdir(FCRONTABS) != 0) {
-	error_e("Could not chdir to " FCRONTABS );
+    if (chdir(fcrontabs) != 0) {
+	error_e("Could not chdir to %s", fcrontabs);
 	xexit (EXIT_ERR);
     }
 #endif

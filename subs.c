@@ -22,12 +22,25 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.9 2001-06-12 06:40:33 thib Exp $ */
+ /* $Id: subs.c,v 1.10 2001-06-22 21:10:18 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
 
+void init_conf(void);
+
 extern char *tmp_path;
+extern char debug_opt;
+
+/* fcron.conf parameters */
+char *fcronconf = NULL;
+char *fcronallow = NULL;
+char *fcrondeny = NULL;
+char *fcrontabs = NULL;
+char *pidfile = NULL;
+char *editor = NULL;
+char *shell = NULL;
+char *sendmail = NULL;
 
 int
 remove_blanks(char *str)
@@ -117,6 +130,125 @@ temp_file(char **name)
 #endif
 
     return fd;
+}
+
+
+void
+init_conf(void)
+/* initialises config with compiled in constants */
+{
+    /* set fcronconf if cmd line option -c has not been used */
+    if (fcronconf == NULL)
+	fcronconf = strdup2(ETC "/" FCRON_CONF);
+    fcronallow = strdup2(ETC "/" FCRON_ALLOW);
+    fcrondeny = strdup2(ETC "/" FCRON_DENY);
+    fcrontabs = strdup2(FCRONTABS);
+    pidfile = strdup2(PIDFILE);
+    editor = strdup2(EDITOR);
+    shell = strdup2(SHELL);
+    sendmail = strdup2(SENDMAIL);
+}
+
+
+void
+read_conf(void)
+/* reads in a config file and updates the necessary global variables */
+{
+    FILE *f = NULL;
+    struct stat st;
+    char buf[LINE_LEN];
+    char *ptr1 = NULL, *ptr2 = NULL;
+    short namesize = 0;
+    char err_on_enoent = 0;
+
+    if (fcronconf != NULL)
+	/* fcronconf has been set by -c option : file must exist */
+	err_on_enoent = 1;
+	
+    init_conf();
+
+    if ( (f = fopen(fcronconf, "r")) == NULL ) {
+	if ( errno == ENOENT ) {
+	    if ( err_on_enoent )
+		die_e("Could not read %s", fcronconf);
+	    else
+		/* file does not exist, it is not an error  */
+		return;
+	}
+	else {
+	    error_e("Could not read %s : config file ignored", fcronconf);
+	    return;
+	}
+    }
+
+    /* check if the file is secure : owned and writable only by root */
+    if ( fstat(fileno(f), &st) != 0 || st.st_uid != 0
+	 || st.st_mode & S_IWGRP || st.st_mode & S_IWOTH ) {
+	error("Conf file (%s) must be owned by root and (no more than) 644 : "
+	      "ignored", fcronconf);
+	fclose(f);
+	return;
+    }
+    
+    while ( (ptr1 = fgets(buf, sizeof(buf), f)) != NULL ) {
+
+	Skip_blanks(ptr1); /* at the beginning of the line */
+	
+	/* ignore comments and blank lines */
+	if ( *ptr1 == '#' || *ptr1 == '\n' || *ptr1 == '\0')
+	    continue;
+
+	remove_blanks(ptr1); /* at the end of the line */
+
+	ptr2 = ptr1;
+
+	/* get the name of the var */
+	while ( (isalnum( (int) *ptr2) || *ptr2 == '_') 
+		&& *ptr2 != '=' && ! isspace( (int) *ptr2) )
+	    ptr2++;
+	
+	if ( (namesize = ptr2 - ptr1) == 0 )
+	    /* name is zero-length */
+	    error("Zero-length var name at line %s : line ignored", buf);
+
+	/* skip the blanks and the "=" and go to the value */
+	while ( isspace( (int) *ptr2 ) ) ptr2++;
+	if ( *ptr2 == '=' ) ptr2++;
+	while ( isspace( (int) *ptr2 ) ) ptr2++;
+
+	/* find which var the line refers to and update it */
+	if ( strncmp(ptr1, "fcronallow", 10) == 0 )
+	    fcronallow = strdup2(ptr2);
+	else if ( strncmp(ptr1, "fcrondeny", 9) == 0 )
+	    fcrondeny = strdup2(ptr2);
+	else if ( strncmp(ptr1, "fcrontabs", 9) == 0 )
+	    fcrontabs = strdup2(ptr2);
+	else if ( strncmp(ptr1, "pidfile", 7) == 0 )
+	    pidfile = strdup2(ptr2);
+	else if ( strncmp(ptr1, "editor", 6) == 0 )
+	    editor = strdup2(ptr2);
+	else if ( strncmp(ptr1, "shell", 5) == 0 )
+	    shell = strdup2(ptr2);
+	else if ( strncmp(ptr1, "sendmail", 8) == 0 )
+	    sendmail = strdup2(ptr2);
+	else
+	    error("Unknown var name at line %s : line ignored", buf);
+
+    }
+
+    if (debug_opt) {
+	debug("fcronconf=%s", fcronconf);
+	debug("fcronallow=%s", fcronallow);
+	debug("fcrondeny=%s", fcrondeny);
+	debug("fcrontabs=%s", fcrontabs);
+	debug("pidfile=%s", pidfile);
+	debug("editor=%s", editor);
+	debug("shell=%s", shell);
+	debug("sendmail=%s", sendmail);
+    }
+
+    fclose(f);
+
 }
 
 

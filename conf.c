@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.45 2001-05-28 18:48:54 thib Exp $ */
+ /* $Id: conf.c,v 1.46 2001-06-22 21:09:00 thib Exp $ */
 
 #include "fcron.h"
 #include "conf.h"
@@ -82,7 +82,7 @@ synchronize_dir(const char *dir_name)
     struct dirent *den;
 
     if ( strcmp(dir_name, ".") == 0 )
-	explain("updating configuration from " FCRONTABS );
+	explain("updating configuration from %s", fcrontabs);
     else
 	explain("updating configuration from %s", dir_name);
 

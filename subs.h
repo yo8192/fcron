@@ -21,15 +21,30 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.h,v 1.2 2001-05-15 00:51:17 thib Exp $ */
+ /* $Id: subs.h,v 1.3 2001-06-22 21:10:27 thib Exp $ */
 
 #ifndef __SUBS_H__
 #define __SUBS_H__
+
+
+/* global variables */
+
+/* fcron.conf parameters */
+extern char *fcronconf;
+extern char *fcronallow;
+extern char *fcrondeny;
+extern char *fcrontabs;
+extern char *pidfile;
+extern char *editor;
+extern char *shell;
+extern char *sendmail;
+/* end of global variables */
 
 /* functions prototypes */
 extern int remove_blanks(char *str);
 extern char *strdup2(const char *);
 extern int temp_file(char **name);
+extern void read_conf(void);
 extern int save_type(FILE *f, short int type);
 extern int save_str(FILE *f, short int type, char *str);
 extern int save_strn(FILE *f, short int type, char *str, short int size);

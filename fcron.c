@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.48 2001-06-05 10:17:56 thib Exp $ */
+ /* $Id: fcron.c,v 1.49 2001-06-22 21:08:03 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.48 2001-06-05 10:17:56 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.49 2001-06-22 21:08:03 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -158,7 +158,7 @@ xexit(int exit_value)
 	f = file_base;
     }
 
-    remove(PIDFILE);
+    remove(pidfile);
     
     explain("Exiting with code %d", exit_value);
     exit (exit_value);
@@ -179,17 +179,17 @@ get_lock()
     if ( ! daemon_lockfp ) {
 	int fd;
 
-	if (((fd = open(PIDFILE, O_RDWR|O_CREAT, 0644)) == -1 )
+	if (((fd = open(pidfile, O_RDWR|O_CREAT, 0644)) == -1 )
 	    || ((daemon_lockfp = fdopen(fd, "r+"))) == NULL)
-	    die_e("can't open or create " PIDFILE);
+	    die_e("can't open or create %s", pidfile);
 	
 #ifdef HAVE_FLOCK
 	/* flock() seems to keep the lock over a fork() (contrary to lockf() ):
 	 * we only need to lock the file once */
   	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
   	    fscanf(daemon_lockfp, "%d", &otherpid);
-  	    die("can't lock " PIDFILE ", running daemon's pid may be %d",
-  		otherpid);
+  	    die("can't lock %s, running daemon's pid may be %d",
+		pidfile, otherpid);
   	}
 #endif /* HAVE_FLOCK */
 
@@ -200,8 +200,8 @@ get_lock()
 #ifndef HAVE_FLOCK
     if ( lockf(fileno(daemon_lockfp), F_TLOCK, 0) != 0 ) {
 	fscanf(daemon_lockfp, "%d", &otherpid);
-	die("can't lock " PIDFILE ", running daemon's pid may be %d",
-	    otherpid);
+	die("can't lock %s, running daemon's pid may be %d",
+	     pidfile, otherpid);
     }
 #endif /* ! HAVE_FLOCK */
 
@@ -238,6 +238,7 @@ parseopt(int argc, char *argv[])
 	{"version", 0, NULL, 'V'},
 	{"savetime", 1, NULL, 's'},
 	{"maxserial", 1, NULL, 'm'},
+	{"configfile", 1, NULL, 'c'},
 	{0,0,0,0}
     };
 #endif /* HAVE_GETOPT_H */
@@ -249,9 +250,9 @@ parseopt(int argc, char *argv[])
 
     while(1) {
 #ifdef HAVE_GETOPT_H
-	c = getopt_long(argc, argv, "dfbhVs:m:", opt, NULL);
+	c = getopt_long(argc, argv, "dfbhVs:m:c:", opt, NULL);
 #else
-	c = getopt(argc, argv, "dfbhVs:m:");
+	c = getopt(argc, argv, "dfbhVs:m:c:");
 #endif /* HAVE_GETOPT_H */
 	if (c == EOF) break;
 	switch (c) {
@@ -281,6 +282,10 @@ parseopt(int argc, char *argv[])
 	    if ( (serial_max_running = strtol(optarg, NULL, 10)) <= 0 
 		 || serial_max_running >= SHRT_MAX )
 		die("Max running can only be set between 1 and %d.",SHRT_MAX);
+	    break;
+
+	case 'c':
+	    Set(fcronconf, optarg);
 	    break;
 
 	case ':':
@@ -358,7 +363,7 @@ int
 main(int argc, char **argv)
 {
 
-    /* we set it to 022 in order to get a PIDFILE readable by fcrontab
+    /* we set it to 022 in order to get a pidfile readable by fcrontab
      * (will be set to 066 later) */
     saved_umask = umask(022);
 
@@ -379,10 +384,13 @@ main(int argc, char **argv)
 
     parseopt(argc, argv);
 
+    /* read fcron.conf and update global parameters */
+    read_conf();
+
     /* change directory */
 
-    if (chdir(FCRONTABS) != 0)
-	die_e("Could not change dir to " FCRONTABS);
+    if (chdir(fcrontabs) != 0)
+	die_e("Could not change dir to %s", fcrontabs);
     
 
     if (foreground == 0) {

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.38 2001-05-15 00:37:54 thib Exp $ */
+ /* $Id: job.c,v 1.39 2001-06-22 21:06:05 thib Exp $ */
 
 #include "fcron.h"
 #include "job.h"
@@ -157,7 +157,7 @@ run_job(struct exe *exeent)
     case 0:
 	/* child */
     {
-	char *shell;
+	char *curshell;
 	char *home;
 	env_t *env;
 	int mailfd = 0;
@@ -205,15 +205,16 @@ run_job(struct exe *exeent)
 		    die_e("Could not chdir to HOME dir /");
 	    }
 
-	if ( (shell = getenv("SHELL")) == NULL )
-	    shell = SHELL;
-	else if ( access(shell, X_OK) != 0 ) {
+	if ( (curshell = getenv("SHELL")) == NULL )
+	    curshell = shell;
+	else if ( access(curshell, X_OK) != 0 ) {
 	    if (errno == ENOENT)
-		error("shell \"%s\" : no file or directory. SHELL set to "
-		      SHELL, shell);
+		error("shell \"%s\" : no file or directory. SHELL set to %s",
+		      curshell, shell);
 	    else
-		error_e("shell \"%s\" not valid : SHELL set to " SHELL, shell);
-	    shell = SHELL;
+		error_e("shell \"%s\" not valid : SHELL set to %s",
+			curshell, shell);
+	    curshell = shell;
 	}
 
 
@@ -229,14 +230,14 @@ run_job(struct exe *exeent)
 #ifdef CHECKJOBS
 	    /* this will force to mail a message containing at least the exact
 	     * and complete command executed for each execution of all jobs */
-	    debug("Execing \"%s -c %s\"", shell, line->cl_shell);
+	    debug("Execing \"%s -c %s\"", curshell, line->cl_shell);
 #endif /* CHECKJOBS */
 
-	    execl(shell, shell, "-c", line->cl_shell, NULL);
+	    execl(curshell, curshell, "-c", line->cl_shell, NULL);
 	    /* execl returns only on error */
-	    error_e("Can't find \"%s\". Trying a execlp(\"sh\", ...)", shell);
+	    error_e("Can't find \"%s\". Trying a execlp(\"sh\",...)",curshell);
 	    execlp("sh", "sh",  "-c", line->cl_shell, NULL);
-	    die_e("execl() \"%s -c %s\" error", shell, line->cl_shell);
+	    die_e("execl() \"%s -c %s\" error", curshell, line->cl_shell);
 
 	    /* execution never gets here */
 
@@ -321,8 +322,8 @@ launch_mailer(CL *line, int mailfd)
     xcloselog();
 
     /* run sendmail with mail file as standard input */
-    execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, line->cl_mailto, NULL);
-    error_e("Can't find \""SENDMAIL"\". Trying a execlp(\"sendmail\")");
+    execl(sendmail, sendmail, SENDMAIL_ARGS, line->cl_mailto, NULL);
+    error_e("Can't find \"%s\". Trying a execlp(\"sendmail\")", sendmail);
     execlp("sendmail", "sendmail", SENDMAIL_ARGS, line->cl_mailto, NULL);
     die_e("Can't exec " SENDMAIL);
 #else /* defined(SENDMAIL) */
