@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.92 2002-09-28 15:09:44 thib Exp $
+# $Id: Makefile.in,v 1.90 2002-09-28 15:06:11 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
