@@ -2,35 +2,42 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.10 2000-09-18 08:24:33 thib Exp $
+# $Id: boot-install,v 1.11 2000-11-02 19:08:59 thib Exp $
 
-# take 2 arguments : the name of the BSD-like install program
-#                    and the DESTSBIN directory
+# take 3 arguments : the name of the BSD-like install program
+#                    the DESTSBIN directory, and the value of DEBUG
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
 startdir=$pwd
-DEBUG=1
+DEBUG=$3
 
-if test $# -ne 2; then
+if test $# -ne 3; then
     echo "Too few/many arguments"
     exit 1
 fi
 
-$1 -c -m 755 -o root fcron-launcher $2
+if test $DEBUG -eq 1; then
+    STARTCMD="fcron -b -d"
+else
+    STARTCMD="fcron -b"
+fi    
 
 if test -f /etc/rc.d/rc.M; then
     # Slackware
-    if ! cat /etc/rc.d/rc.local | grep "fcron-launcher"; then
-	echo "fcron-launcher" >> /etc/rc.d/rc.local
+    if ! cat /etc/rc.d/rc.local | grep $STARTCMD; then
+	echo $STARTCMD >> /etc/rc.d/rc.local
     fi
-
+    killall -TERM fcron
+    fcron-launcher
 fi 
 if test -f /etc/rc; then
     # FreeBSD
-    if ! cat /etc/rc.local | grep "fcron-launcher"; then
-	echo "fcron-launcher" >> /etc/rc.local
+    if ! cat /etc/rc.local | grep $STARTCMD; then
+	echo $STARTCMD >> /etc/rc.local
     fi
+    killall -TERM fcron
+    fcron-launcher
 fi
 ROOTDIR=""
 if test -d /etc/rc.d/init.d/; then
@@ -39,11 +46,15 @@ elif test -d /etc/init.d/; then
     ROOTDIR="/etc"
 fi
 if test $ROOTDIR != ""; then
+    $1 -c -m 755 -o root sysVinit-launcher $ROOTDIR/init.d/fcron
     if test $DEBUG -eq 1; then
-      $1 -c -m 755 -o root sysVinit-launcher-debug $ROOTDIR/init.d/fcron
-    else
-      $1 -c -m 755 -o root sysVinit-launcher $ROOTDIR/init.d/fcron
+	cat $ROOTDIR/init.d/fcron | sed 's: -b: -b -d:' >$ROOTDIR/init.d/fcron2
+	mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
+	chmod +x $ROOTDIR/init.d/fcron
     fi
+    cat $ROOTDIR/init.d/fcron | sed "s:@@DESTSBIN@:$2:" >$ROOTDIR/init.d/fcron2
+    mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
+    chmod +x $ROOTDIR/init.d/fcron
     
     cd $ROOTDIR/rc2.d/ ; ln -f -s ../init.d/fcron S40fcron
     cd $ROOTDIR/rc3.d/ ; ln -f -s ../init.d/fcron S40fcron
@@ -53,4 +64,8 @@ if test $ROOTDIR != ""; then
     cd $ROOTDIR/rc0.d/ ; ln -f -s ../init.d/fcron  K60fcron
     cd $ROOTDIR/rc6.d/ ; ln -f -s ../init.d/fcron  K60fcron
     cd $startdir
+
+    killall -TERM fcron
+    $ROOTDIR/init.d/fcron restart
 fi
+
