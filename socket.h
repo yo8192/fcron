@@ -21,17 +21,36 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.h,v 1.1 2002-02-25 18:46:54 thib Exp $ */
+ /* $Id: socket.h,v 1.2 2002-03-02 17:29:50 thib Exp $ */
+
+/* This file describe the communication protocol between fcron and fcrondyn */
 
 #ifndef __SOCKET_H__
 #define __SOCKET_H__
 
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
+#include "dyncom.h"
 
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
+
+/* public var defined by socket.c */
+extern fd_set read_set;
+extern int set_max_fd;
+
+/* functions prototypes */
+extern void init_socket(void);
+extern void check_socket(int num);
+extern void close_socket(void);
+
+
+
+/* struct used by fcron : */
+typedef struct fcrondyn_cl {
+    struct fcrondyn_cl *fcl_next;
+    int fcl_sock_fd;
+    char *fcl_user;
+    time_t fcl_idle_since;
+    int fcl_cmd_len;
+    long int *fcl_cmd;
+} fcrondyn_cl;
+
 
 #endif /* __SOCKET_H__ */
