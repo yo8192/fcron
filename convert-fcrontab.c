@@ -22,15 +22,12 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.c,v 1.16 2002-11-17 13:13:52 thib Exp $ */
+ /* $Id: convert-fcrontab.c,v 1.17 2003-09-12 20:55:27 thib Exp $ */
 
+#include "convert-fcrontab.h"
 #include "global.h"
 
-/* log.c */
-#include "log.h"
-#include "subs.h"
-
-char rcs_info[] = "$Id: convert-fcrontab.c,v 1.16 2002-11-17 13:13:52 thib Exp $";
+char rcs_info[] = "$Id: convert-fcrontab.c,v 1.17 2003-09-12 20:55:27 thib Exp $";
 
 void info(void);
 void usage(void);
