@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: gen-doc,v 1.2 2000-05-15 18:28:22 thib Exp $
+# $Id: gen-doc,v 1.3 2000-05-15 19:51:01 thib Exp $
 
 if test $UID -eq 0; then
   su $USER
@@ -32,6 +32,9 @@ if test $PREVIOUS != $1; then
 	rm -f tmp
     fi
     done
+
+  cd ..
+
 fi
 
 
