@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.23 2000-11-10 17:35:00 thib Exp $ */
+ /* $Id: fileconf.c,v 1.24 2000-11-13 15:46:28 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -173,7 +173,7 @@ read_file(char *filename, char *user)
     if ( access(file_name, R_OK) != 0 )
 	die_e("User %s can't read file '%s'", user, file_name);
     else if ( (file = fopen(file_name, "r")) == NULL ) {
-	fprintf(stderr, "Could not open3 '%s': %s\n", file_name,
+	fprintf(stderr, "Could not open '%s': %s\n", file_name,
 		strerror(errno));
 	return ERR;
     }
@@ -334,8 +334,10 @@ read_env(char *ptr, CF *cf)
 		fprintf(stderr, "%s:%d:MAILTO: '%s' is not in passwd :"
 			" ignored\n", file_name, line, val);	
 		need_correction = 1;
-	    } else
+	    } else {
 		default_line.cl_mailto = pass->pw_uid;
+		set_mail(default_line.cl_option);
+	    }
 	}
 	    
     }
@@ -689,8 +691,10 @@ read_opt(char *ptr, CL *cl)
 		    fprintf(stderr, "%s:%d:mailto: '%s' is not in passwd :"
 			    " ignored\n", file_name, line, buf);	
 		    need_correction = 1;
-		} else
+		} else {
 		    cl->cl_mailto = pass->pw_uid;
+		    set_mail(default_line.cl_option);
+		}
 	    }
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' '%s'\n", opt_name, buf);
@@ -836,15 +840,14 @@ read_freq(char *ptr, CF *cf)
 	if ( (ptr = get_time(ptr, &(cl->cl_nextexe))) == NULL ) {
 	    fprintf(stderr, "%s:%d: Error while reading first delay:"
 		    " skipping line.\n", file_name, line);
-	    need_correction = 1;
-	    return;
+	    goto exiterr;
 	}
 	
 	Skip_blanks(ptr);
     }
     else if ( isalnum(*ptr) ) {
 	if ( (ptr = read_opt(ptr, cl)) == NULL )
-	    return;
+	    goto exiterr;
     }
     else
 	Skip_blanks(ptr);
@@ -857,16 +860,13 @@ read_freq(char *ptr, CF *cf)
     if ( (ptr = get_time(ptr, &(cl->cl_timefreq))) == NULL) {
 	fprintf(stderr, "%s:%d: Error while reading frequency:"
 		" skipping line.\n", file_name, line);
-	need_correction = 1;
-	return;
+	goto exiterr;
     }
 	
     if ( cl->cl_timefreq == 0) {
 	fprintf(stderr, "%s:%d: no freq specified: skipping line.\n",
 		file_name, line);
-	need_correction = 1;
-	free(cl);
-	return;
+	goto exiterr;
     }
 
     if ( cl->cl_nextexe == 0 )
@@ -879,9 +879,13 @@ read_freq(char *ptr, CF *cf)
     if ( (cl->cl_shell = get_string(ptr)) == NULL ) {
 	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
 		file_name, line);
-	free(cl);
-	need_correction = 1;
-	return;
+	goto exiterr;
+  }
+    if ( strcmp(cl->cl_shell, "\0") == 0 ) {
+	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
+		file_name, line);
+	free(cl->cl_shell);
+	goto exiterr;
     }
 
     cl->cl_next = cf->cf_line_base;
@@ -890,7 +894,13 @@ read_freq(char *ptr, CF *cf)
     if ( debug_opt )
 	fprintf(stderr, "  Cmd '%s', timefreq %ld, first %ld\n",
 		cl->cl_shell, cl->cl_timefreq, cl->cl_nextexe);
+    
+    return;
 
+  exiterr:
+    free(cl);
+    need_correction = 1;
+    return;
 }
 
 
@@ -922,15 +932,13 @@ read_arys(char *ptr, CF *cf)
 	    if ( (ptr = get_num(ptr, &i, USHRT_MAX, 0, NULL)) == NULL ) {
 		fprintf(stderr, "%s:%d: Error while reading runfreq:"
 			" skipping line.\n", file_name, line);
-		free(cl);
-		return;
+		goto exiterr;
 	    } else
 		cl->cl_runfreq = i;
 	}
 	else if ( isalnum(*ptr) )
 	    if ( (ptr = read_opt(ptr, cl)) == NULL ) {
-		free(cl);
-		return;
+		goto exiterr;
 	    }
 	Skip_blanks(ptr);
     }
@@ -960,9 +968,12 @@ read_arys(char *ptr, CF *cf)
     if ( (cl->cl_shell = get_string(ptr)) == NULL ) {
 	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
 		file_name, line);
-	need_correction = 1;
-	free(cl);
-	return;
+	goto exiterr;	
+    }
+    if ( strcmp(cl->cl_shell, "\0") == 0 ) {
+	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
+		file_name, line);
+	goto exiterr;
     }
 
     /* check for non matching if option runfreq is set to 1 */
@@ -992,18 +1003,21 @@ read_arys(char *ptr, CF *cf)
 
 	fprintf(stderr, "%s:%d: runfreq=1 with no intervals: skipping line.\n",
 		file_name, line);
-	free(cl);
-	need_correction = 1;
-	return;
+	goto exiterr;
     }
-  ok:
 
+  ok:
     cl->cl_next = cf->cf_line_base;
     cf->cf_line_base = cl;
 
     if ( debug_opt )
 	fprintf(stderr, "  Cmd '%s'\n", cl->cl_shell);
+    return;
 
+  exiterr:
+    need_correction = 1;
+    free(cl);
+    return;
 
 }
 
@@ -1146,9 +1160,15 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	if (start < stop)
 	    for (i = start;  i <= stop;  i += step)
 		bit_set(ary, i);
-	else
-	    for (i = start;  i >= stop;  i -= step)
+	else {
+	    short int field_max = ( max == 12 ) ? 11 : max;
+	    /* this is a field like (for hours field) "22-3" :
+	     * we should set from 22 to 3 (not from 3 to 22 or nothing :)) ) */
+	    for (i = start;  i <= field_max;  i += step)
 		bit_set(ary, i);
+	    for (i -= (field_max + 1);  i <= stop;  i += step)
+		bit_set(ary, i);
+	}
 
 	/* finally, remove unwanted values */
 	while ( *ptr == '~' ) {
@@ -1253,8 +1273,7 @@ delete_file(const char *user_name)
 void
 save_file(char *path)
     /* Store the informations relatives to the executions
-     * of tasks at a defined frequency of time of system's
-     * run */
+     * of tasks at a defined frequency of system's running time */
 {
     CF *file = NULL;
     CL *line = NULL;
@@ -1298,11 +1317,6 @@ save_file(char *path)
 	    fprintf(f, "%s%c", line->cl_shell, '\0');
 	}
 
-	/* finally, write the number of lines to permit to check if the file
-	 * is complete (i.e. fcron may has been interrupted during
-	 * save process */
-/*  //	fprintf(f, "eof\n"); */
-	    
 	fclose(f);
 
     }
