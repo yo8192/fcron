@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.99 2003-09-12 21:35:14 thib Exp $
+# $Id: Makefile.in,v 1.100 2003-12-25 22:49:50 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -131,7 +131,7 @@ ifeq ($(USEPAM), 1)
 	$(SRCDIR)/script/install-pam-conf $(SRCDIR) $(ETC) $(ROOTNAME) $(ROOTGROUP) "$(INSTALL)"
 endif
 
-	@(cd doc && make install)
+	make -C doc install
 
 # in order to get correct rights when upgrading :
 	find $(FCRONTABS) -type f \( -name "*.orig" -a ! -name "$(ROOTNAME).orig" -a ! -name "$(SYSFCRONTAB).orig" \) -exec chown $(USERNAME):$(GROUPNAME) {} \; -exec chmod 640 {} \;
@@ -158,7 +158,7 @@ uninstall:
 	rm -f $(DESTBIN)/fcrontab
 	rm -f $(DESTBIN)/fcronsighup
 	rm -f $(DESTBIN)/fcrondyn
-	@(cd doc && make uninstall)
+	make -C doc uninstall
 	$(SRCDIR)/script/boot-uninstall
 
 clean:
@@ -168,18 +168,18 @@ clean:
 ciclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
 	rm -fR autom4te*
-	@(cd doc && make clean)
+	make -C doc clean
 
 vclean: ciclean
 	rm -f config.log config.status config.h config.cache Makefile
 
 
 files/fcron.conf: $(SRCDIR)/files/fcron.conf.in config.h
-	mkdir files
+	if test ! -d files; then mkdir files ; fi
 	$(SRCDIR)/script/gen-in.pl $(SRCDIR)/files/fcron.conf.in files/fcron.conf ./
 
 updatedoc:
-	@(cd doc && make doc)
+	make -C doc doc
 
 configure: configure.in
 # update configure script, then Makefile and config.h, and finally 
@@ -199,13 +199,13 @@ ci: ciclean
 	@(find ./ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
           -exec ci -l -Nver`echo $(VERSION) | tr '.' '_'` {} \;)
 # ci the doc files
-	@(cd doc && make ci)
+	make -C doc ci
 
 tar: configure updatedoc vclean ci
 
 	echo $(VERSION) > ./VERSION
 
-	@(cd doc && make tarclean)
+	make -C doc tarclean
 
 	@(find ./ -type f ! -regex '.*RCS.*' | \
              sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
