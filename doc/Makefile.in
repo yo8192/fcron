@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.16 2002-10-05 14:57:42 thib Exp $
+# $Id: Makefile.in,v 1.17 2002-10-06 17:11:30 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -40,7 +40,7 @@ MANPAGES = fcron.8 fcron.conf.5 fcrontab.1 fcrontab.5 fcrondyn.1
 
 # this is a regular expression :
 # do not ci these files
-RCSNOCI=.*\(bitstring.3\|fcron-doc.ced\|HTML.*\|txt.*\|man.*\|CVS.*\)
+RCSNOCI=.*\(bitstring.3\|fcron-doc.ced\|Makefile\|stylesheets/fcron-doc.dsl\|fcron-doc.mod\|HTML.*\|txt.*\|man.*\|CVS.*\)
 
 all: doc
 
@@ -130,13 +130,6 @@ uninstall:
 	rm -f $(DESTMAN)/man8/fcron.8
 
 
-htmltar: HTML/index.html clean
-
-	@(ln -s HTML fcron-doc-html-$(VERSION))
-	(tar -czvf fcron-doc-html-$(VERSION).tar.gz fcron-doc-html-$(VERSION)/*)
-	@(rm -f fcron-doc-html-$(VERSION))
-
-
 clean:
 	@(for i in man txt stylesheets . ; do \
 	  cd $$i ; \
@@ -152,7 +145,7 @@ tarclean: clean
 vclean: clean
 	rm -f HTML/* man/* txt/*
 
-tar: doc tarclean
+ci: doc clean
 # we run a "cd .." because it makes appear the path of the file ( ./doc/XXXX )
 # during the ci-ing
 	@(cd ..; find ./doc/ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
