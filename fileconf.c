@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.19 2000-09-17 20:07:44 thib Exp $ */
+ /* $Id: fileconf.c,v 1.20 2000-09-30 11:55:22 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -443,7 +443,7 @@ read_opt(char *ptr, CL *cl)
     /* read one or several options and fill in the field "option" */
 {
     char opt_name[20];
-    int i;
+    unsigned int i;
     char in_brackets;
     
 #define Handle_err \
@@ -483,6 +483,28 @@ read_opt(char *ptr, CL *cl)
 		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
 	}
 
+	else if (strcmp(opt_name, "serialonce") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if (i == 0 )
+		set_serial_sev(cl->cl_option);
+	    else
+		clear_serial_sev(cl->cl_option);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+
+	else if (strcmp(opt_name, "exesev") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if (i == 0 )
+		clear_exe_sev(cl->cl_option);
+	    else
+		set_exe_sev(cl->cl_option);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+
 	else if(strcmp(opt_name, "b")==0 || strcmp(opt_name, "bootrun")==0){
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
@@ -514,7 +536,7 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if(strcmp(opt_name, "r")==0 || strcmp(opt_name, "runfreq")==0) {
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 65535, 0, NULL))==NULL )
+	    if(!in_brackets ||(ptr=get_num(ptr, &i, USHRT_MAX, 0, NULL))==NULL)
 		Handle_err;
 	    cl->cl_runfreq = i;
  	    if (debug_opt)
@@ -522,21 +544,21 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if( strcmp(opt_name, "lavg") == 0 ) {
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
+	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL))==NULL)
 		Handle_err;
 	    cl->cl_lavg[0] = i;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : 'lavg1' %d\n", i);
 	    if ( *ptr++ != ',' )
 		Handle_err;
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
+	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL))==NULL)
 		Handle_err;
 	    cl->cl_lavg[1] = i;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : 'lavg5' %d\n", i);
 	    if ( *ptr++ != ',' )
 		Handle_err;
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL)) == NULL )
 		Handle_err;
 	    cl->cl_lavg[2] = i;
 	    set_lavg(cl->cl_option);
@@ -549,7 +571,7 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if( strcmp(opt_name, "lavg1") == 0 ) {
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
+	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL))==NULL)
 		Handle_err;
 	    cl->cl_lavg[0] = i;
 	    set_lavg(cl->cl_option);
@@ -562,7 +584,7 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if( strcmp(opt_name, "lavg5") == 0 ) {
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
+	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL))==NULL)
 		Handle_err;
 	    cl->cl_lavg[1] = i;
 	    set_lavg(cl->cl_option);
@@ -575,7 +597,7 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if( strcmp(opt_name, "lavg15") == 0 ) {
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
+	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL))==NULL)
 		Handle_err;
 	    cl->cl_lavg[2] = i;
 	    set_lavg(cl->cl_option);
@@ -875,33 +897,33 @@ read_arys(char *ptr, CF *cf)
     /* read a run freq number plus a normal fcron line */
 {
     CL *cl = NULL;
-    int i;
+    unsigned int i = 0;
 
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
     set_td(cl->cl_option);
 
-    i = 0;
     /* set cl_remain if not specified */
     if ( *ptr == '&' ) {
 	ptr++;
 	if ( isdigit(*ptr) ) {
-	    if ( (ptr = get_num(ptr, &i, 65535, 0, NULL)) == NULL ) {
+	    if ( (ptr = get_num(ptr, &i, USHRT_MAX, 0, NULL)) == NULL ) {
 		fprintf(stderr, "%s:%d: Error while reading runfreq:"
 			" skipping line.\n", file_name, line);
 		free(cl);
 		return;
-	    }
+	    } else
+		cl->cl_runfreq = i;
 	}
 	else if ( isalnum(*ptr) )
-	    if ( (ptr = read_opt(ptr, cl)) == NULL )
+	    if ( (ptr = read_opt(ptr, cl)) == NULL ) {
+		free(cl);
 		return;
-
+	    }
 	Skip_blanks(ptr);
-
     }
 
-    cl->cl_remain = cl->cl_runfreq = i;
+    cl->cl_remain = cl->cl_runfreq;
 
     if (debug_opt)
 	fprintf(stderr, "     ");
