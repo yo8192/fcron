@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.7 2000-06-20 20:36:19 thib Exp $ */
+ /* $Id: config.h.in,v 1.8 2000-06-21 09:48:36 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -66,6 +66,12 @@
 #endif
 
 
+
+/* *** system dependent *** */
+#define EXIT_ERR   1         /* code returned by fcron/fcrontab on error */
+#define EXIT_OK    0         /* code returned  on normal exit */
+
+
 /* *** paths *** */
 
 #define FCRON_ALLOW      "fcron.allow"
@@ -84,13 +90,12 @@
 
 
 /* *** memory *** */
-
-#define EXE_ARRAY_INITIAL_SIZE 10 /* initial number of possible running job 
-				   * if more job have to be run simultaneously,
-				   * fcron will have to perform a realloc() */
-#define EXE_ARRAY_GROW_SIZE 10 /* this is the number of entries that will be
-				* added to exe_array each time it has to grow
-				* up */
+#define EXE_ARRAY_INITIAL_SIZE 6 /* initial number of possible running job 
+				  * if more jobs have to be run simultaneously,
+				  * fcron will have to calloc() more memory */
+#define EXE_ARRAY_GROW_SIZE 5 /* this is the number of entries that will be
+			       * added to exe_array each time it has to grow
+			       * up */
 
 #define MAXENTRIES  256  /* max lines in non-root fcrontabs */
 
@@ -113,13 +118,18 @@
 			     * after execution of the job.
 			     * This is intended to avoid unneeded wakeups */
 
-/* *** system dependent *** */
 
-#define ERR     -1           
-#define OK       0
+/* *** behavior *** */
+#define SERIAL_QUEUE_MAX 30 /* if serial queue contains this number of entries,
+			     * the next serial job to be executed will be run
+			     * non-serially each time a serial job is added */
+#define SERIAL_INITIAL_SIZE 10 /* initial number of possible serial job. If
+				* more jobs have to be in queuesimultaneously,
+				* fcron will have to calloc() more memory */
+#define SERIAL_GROW_SIZE 10 /* this is the number of entries that will be
+			     * added to serial queue each time it has to grow
+			     * up */
 
-#define EXIT_ERR   1         /* code returned by fcron/fcrontab on error */
-#define EXIT_OK    0         /* code returned  on normal exit */
 
 /* Syslog facility and priorities messages will be logged to (see syslog(3)) */
 #define SYSLOG_FACILITY LOG_CRON

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.10 2000-06-19 12:41:27 thib Exp $ */
+ /* $Id: conf.c,v 1.11 2000-06-21 09:48:26 thib Exp $ */
 
 #include "fcron.h"
 
@@ -216,8 +216,7 @@ synchronize_file(char *file_name)
 	    CL *new_l = NULL;
 	    /* size used when comparing two line : 
 	     * it's the size of all time table (mins, days ...) */
-	    const size_t size=( sizeof(time_t) + sizeof(short int) + 
-				bitstr_size(60) + bitstr_size(24) + 
+	    const size_t size=( bitstr_size(60) + bitstr_size(24) + 
 				bitstr_size(32) + bitstr_size(12) +
 				bitstr_size(7) );
 	    
@@ -253,10 +252,13 @@ synchronize_file(char *file_name)
 
 		    /* compare the shell command and the fields 
 		       from cl_mins down to cl_runfreq or the timefreq */
-		    if ( strcmp(new_l->cl_shell, old_l->cl_shell) == 0 &&
-			 memcmp( &(new_l->cl_timefreq), &(old_l->cl_timefreq),
-				 size)==0
-			) {
+		    if ( strcmp(new_l->cl_shell, old_l->cl_shell) == 0 && (
+			( is_freq(new_l->cl_option) && 
+			  new_l->cl_timefreq == old_l->cl_timefreq ) ||
+			( is_td(new_l->cl_option) &&
+			  memcmp( &(new_l->cl_mins), &(old_l->cl_mins),
+				  size)==0 )
+			) ) {
 			
 			new_l->cl_remain = old_l->cl_remain;
 			new_l->cl_nextexe = old_l->cl_nextexe;
@@ -449,8 +451,11 @@ read_file(const char *file_name, CF *cf)
 
 	if ( is_td(cl->cl_option) ) {
 	    /* set the time and date of the next execution  */
-	    if ( cl->cl_nextexe <= now )
+	    if ( cl->cl_nextexe <= now ) {
+		if ( is_bootrun(cl->cl_option) )
+		    add_serial_job(cl);
 		set_next_exe(cl, 1);
+	    }
 	    else
 		insert_nextexe(cl);
 	} else {
@@ -458,17 +463,17 @@ read_file(const char *file_name, CF *cf)
 	    insert_nextexe(cl);
 	}	    
 
+	if ( cl->cl_pid == -1)
+	    add_serial_job(cl);
+
 	/* check if the task has not been stopped during execution */
 	if (cl->cl_pid > 0) {
 	    /* job has been stopped during execution :
 	     * launch it again */
 	    warn("job '%s' has not terminated : will be executed"
 		 " again now.", cl->cl_shell);
-	    /* we don't set cl_nextexe to 0 because this value is 
-	     * reserved to the entries based on frequency */
-	    cl->cl_nextexe = 1;
-	    insert_nextexe(cl);
 	    cl->cl_pid = 0;
+	    add_serial_job(cl);
 	}
 	    
 

@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.17 2000-06-20 20:37:51 thib Exp $ */
+ /* $Id: fcron.c,v 1.18 2000-06-21 09:48:56 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.17 2000-06-20 20:37:51 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.18 2000-06-21 09:48:56 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -54,7 +54,11 @@ char sig_chld = 0;            /* is 1 when we got a SIGCHLD */
 /* jobs database */
 struct CF *file_base;         /* point to the first file of the list */
 struct job *queue_base;       /* ordered list of normal jobs to be run */
-struct job *serial_base;      /* ordered list of job to be run one by one */
+struct CL **serial_array;     /* ordered list of job to be run one by one */
+short int serial_array_size;  /* size of serial_base array */
+short int serial_array_index; /* the index of the first job */
+short int serial_num;         /* number of job being queued */
+short int serial_running;     /* number of running serial jobs */
 struct CL **exe_array;        /* jobs which are executed */
 short int exe_array_size;     /* size of exe_array */
 short int exe_num;            /* number of job being executed */
@@ -425,9 +429,19 @@ main(int argc, char **argv)
 
 
     /* initialize exe_array */
+    exe_num = 0;
     exe_array_size = EXE_ARRAY_INITIAL_SIZE;
     if ( (exe_array = calloc(exe_array_size, sizeof(CL *))) == NULL )
 	die_e("could not calloc exe_array");
+
+    /* initialize serial_array */
+    serial_running = 0;
+    serial_array_index = 0;
+    serial_num = 0;
+    serial_array_size = SERIAL_INITIAL_SIZE;
+    if ( (serial_array = calloc(serial_array_size, sizeof(CL *))) == NULL )
+	die_e("could not calloc serial_array");
+
 
     main_loop();
 
@@ -487,6 +501,9 @@ void main_loop()
 	    debug("\n");
 
 	    test_jobs(now);
+
+	    if ( serial_running == 0)
+		run_serial_job();
 
 	    if ( save - now <= SAVE_VARIATION ) {
 		save = now + SAVE;

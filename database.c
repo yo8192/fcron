@@ -22,13 +22,15 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.12 2000-06-20 20:36:26 thib Exp $ */
+ /* $Id: database.c,v 1.13 2000-06-21 09:48:54 thib Exp $ */
 
 #include "fcron.h"
 
 int is_leap_year(int year);
 int get_nb_mdays(int year, int mon);
 void goto_non_matching(CL *line, struct tm *tm);
+void run_serial_job(void);
+void run_queue_job(CL *line);
 
 
 
@@ -55,11 +57,98 @@ test_jobs(time_t t2)
 		 j->j_line->cl_shell
 		);
 	} 
+	else if ( is_serial(j->j_line->cl_option) )
+	    add_serial_job(j->j_line);
 	else
-	    run_job(j->j_line);
+	    run_queue_job(j->j_line);
     }
 
 }
+
+void
+add_serial_job(CL *line)
+    /* add the next queued job in serial queue */
+{
+    short int i;
+
+    if ( line->cl_pid != -1 ) {
+	line->cl_pid = -1;
+	serial_num++;
+
+	if ( serial_num > serial_array_size ) {
+	    CL **ptr = NULL;
+	    short int old_size = serial_array_size;
+
+	    debug("Resizing serial_array");
+	    serial_array_size = (serial_array_size + SERIAL_GROW_SIZE);
+	
+	    if ( (ptr = calloc(serial_array_size, sizeof(CL *))) == NULL )
+		die_e("could not calloc serial_array");
+
+	    memcpy(ptr, serial_array, (sizeof(CL *) * old_size));
+	    free(serial_array);
+	    serial_array = ptr;
+	}
+	    
+	if ( (i = serial_array_index + serial_num) >= serial_array_size )
+	    i -= serial_array_size;
+	serial_array[i] = line;
+
+    }
+
+    else {
+	/* job is already in serial queue : advance his execution */
+
+	///////////////
+	// Put the corresponding code
+	//////////////
+
+    }
+
+}
+
+
+void
+run_serial_job(void)
+    /* run the next serialized job */
+{
+    if ( serial_num != 0 ) {
+	run_job(serial_array[serial_array_index]);
+
+	serial_running++;
+	serial_array_index++;
+	serial_num--;
+	
+    }
+}
+		    
+
+void
+run_queue_job(CL *line)
+    /* run the next non-serialized job */
+{
+
+    /* append job to the list of executed job */
+    if ( exe_num >= exe_array_size ) {
+	CL **ptr = NULL;
+	short int old_size = exe_array_size;
+
+	debug("Resizing exe_array");
+	exe_array_size = (exe_array_size + EXE_ARRAY_GROW_SIZE);
+	
+	if ( (ptr = calloc(exe_array_size, sizeof(CL *))) == NULL )
+	    die_e("could not calloc exe_array");
+
+	memcpy(ptr, exe_array, (sizeof(CL *) * old_size));
+	free(exe_array);
+	exe_array = ptr;
+    }
+    exe_array[exe_num++] = line;
+
+    run_job(line);
+
+}
+
 
 
 void
@@ -68,7 +157,6 @@ wait_chld(void)
 {
     short int i = 0;
     int pid;
-    CL *line = NULL;
 
 
 //
@@ -77,10 +165,13 @@ wait_chld(void)
     while ( (pid = wait3(NULL, WNOHANG, NULL)) > 0 ) {
 	i = 0;
 	while ( i < exe_array_size ) {
-	    line = exe_array[i];
-	    if (line != NULL && pid == line->cl_pid) {
+	    if (exe_array[i] != NULL && pid == exe_array[i]->cl_pid) {
 		exe_array[i]->cl_pid = 0;
 		exe_array[i]->cl_file->cf_running -= 1;
+
+		if(is_serial(exe_array[i]->cl_option) && --serial_running == 0)
+		    run_serial_job();
+		    
 		if (i < --exe_num) {
 		    exe_array[i] = exe_array[exe_num];
 		    exe_array[exe_num] = NULL;
@@ -397,7 +488,10 @@ insert_nextexe(CL *line)
 
 		break;
 	    }
+	    else
+		jprev = j;
 
+	jprev = NULL;
 	if (j == NULL || line->cl_nextexe < j->j_line->cl_nextexe)
 	    j = queue_base;
 	while (j != NULL && (line->cl_nextexe >= j->j_line->cl_nextexe)) {
