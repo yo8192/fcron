@@ -21,7 +21,31 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.10 2000-09-30 11:59:34 thib Exp $ */
+ /* $Id: option.h,v 1.11 2000-12-04 20:20:09 thib Exp $ */
+
+/* This has been inspired from bitstring(3) : here is the original copyright :
+ */
+
+/*
+ * Copyright (c) 1989 The Regents of the University of California.
+ * All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Paul Vixie.
+ *
+ * Redistribution and use in source and binary forms are permitted
+ * provided that the above copyright notice and this paragraph are
+ * duplicated in all such forms and that any documentation,
+ * advertising materials, and other materials related to such
+ * distribution and use acknowledge that the software was developed
+ * by the University of California, Berkeley.  The name of the
+ * University may not be used to endorse or promote products derived
+ * from this software without specific prior written permission.
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ */
 
 /* read and set options of a line */
 
@@ -43,6 +67,12 @@
   9      does this line use option runas ?
   10     can this job be executed several times simultaneously
   11     can this job be put several times in the serial queue simultaneously
+  12     can this job be put several times in the lavg queue simultaneously
+  13     should mins field be ignored in goto_non_matching() ?
+  14     should hrs field be ignored in goto_non_matching() ?
+  15     should days field be ignored in goto_non_matching() ?
+  16     should mons field be ignored in goto_non_matching() ?
+  17     should dow field be ignored in goto_non_matching() ?
 
 */
 
@@ -56,14 +86,17 @@
 
 /* internal macros */
 
+#define	_bit_byte(bit) \
+	((bit) >> 3)
+
 #define	_bit_set(opt, bit) \
-	(opt |= (1u << bit))
+	((opt)[_bit_byte(bit)] |= (1 << ((bit)&0x7)))
 
 #define	_bit_test(opt, bit) \
-	(opt & (1u << bit))
+	((opt)[_bit_byte(bit)] & (1 << ((bit)&0x7)))
 
 #define	_bit_clear(opt, bit) \
-	(opt &= ~(1u << bit))
+	((opt)[_bit_byte(bit)] &= ~(1 << ((bit)&0x7)))
 
 
 /* external macros */
@@ -206,7 +239,7 @@
 	(_bit_clear(opt, 10))
 
 
-#if ( SERIAL_ONCE == 0 )
+#if ( SERIAL_ONCE == 1 )
 /*
   bit 11 : set to 1 : can be put several times in serial queue simultaneously
            set to 0 : can only be put once in serial queue simultaneously
@@ -229,6 +262,91 @@
 #define clear_serial_sev(opt) \
 	(_bit_set(opt, 11))
 #endif /* SERIAL_ONCE == 0 */
+
+
+#if ( LAVG_ONCE == 1 )
+/*
+  bit 12 : set to 1 : can be put several times in lavg queue simultaneously
+           set to 0 : can only be put once in lavg queue simultaneously
+*/
+#define	is_lavg_sev(opt) \
+	(_bit_test(opt, 12))
+#define	set_lavg_sev(opt) \
+	(_bit_set(opt, 12))
+#define clear_lavg_sev(opt) \
+	(_bit_clear(opt, 12))
+#else
+/*
+  bit 12 : set to 1 : can only be put once in lavg queue simultaneously
+           set to 0 : can be put several times in lavg queue simultaneously
+*/
+#define	is_lavg_sev(opt) \
+	( ! _bit_test(opt, 12))
+#define	set_lavg_sev(opt) \
+	(_bit_clear(opt, 12))
+#define clear_lavg_sev(opt) \
+	(_bit_set(opt, 12))
+#endif /* LAVG_ONCE == 0 */
+
+
+/*
+  bit 13 : set to 1 : mins field should be ignored in goto_non_matching()
+           set to 0 : mins field should not be ignored in goto_non_matching()
+*/
+#define	is_ign_mins(opt) \
+	(_bit_test(opt, 13))
+#define	set_ign_mins(opt) \
+	(_bit_set(opt, 13))
+#define clear_ign_mins(opt) \
+	(_bit_clear(opt, 13))
+
+
+/*
+  bit 14 : set to 1 : hrs field should be ignored in goto_non_matching()
+           set to 0 : hrs field should not be ignored in goto_non_matching()
+*/
+#define	is_ign_hrs(opt) \
+	(_bit_test(opt, 14))
+#define	set_ign_hrs(opt) \
+	(_bit_set(opt, 14))
+#define clear_ign_hrs(opt) \
+	(_bit_clear(opt, 14))
+
+
+/*
+  bit 15 : set to 1 : days field should be ignored in goto_non_matching()
+           set to 0 : days field should not be ignored in goto_non_matching()
+*/
+#define	is_ign_days(opt) \
+	(_bit_test(opt, 15))
+#define	set_ign_days(opt) \
+	(_bit_set(opt, 15))
+#define clear_ign_days(opt) \
+	(_bit_clear(opt, 15))
+
+
+/*
+  bit 16 : set to 1 : mons field should be ignored in goto_non_matching()
+           set to 0 : mons field should not be ignored in goto_non_matching()
+*/
+#define	is_ign_mons(opt) \
+	(_bit_test(opt, 16))
+#define	set_ign_mons(opt) \
+	(_bit_set(opt, 16))
+#define clear_ign_mons(opt) \
+	(_bit_clear(opt, 16))
+
+
+/*
+  bit 17 : set to 1 : dow field should be ignored in goto_non_matching()
+           set to 0 : dow field should not be ignored in goto_non_matching()
+*/
+#define	is_ign_dow(opt) \
+	(_bit_test(opt, 17))
+#define	set_ign_dow(opt) \
+	(_bit_set(opt, 17))
+#define clear_ign_dow(opt) \
+	(_bit_clear(opt, 17))
 
 
 #endif /* __OPTIONH__ */
