@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.52 2002-08-29 17:30:54 thib Exp $ */
+ /* $Id: job.c,v 1.53 2002-09-07 13:07:48 thib Exp $ */
 
 #include "fcron.h"
 
@@ -448,6 +448,9 @@ launch_mailer(CL *line, FILE *mailf)
     if ( dup2(fileno(mailf), 0) != 0 ) die_e("Can't dup2(fileno(mailf))");
 
     xcloselog();
+
+    if ( chdir("/") < 0 )
+	die_e("Could not chdir to /");
 
     /* run sendmail with mail file as standard input */
     execl(sendmail, sendmail, SENDMAIL_ARGS, line->cl_mailto, NULL);
