@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.44 2001-05-24 19:59:35 thib Exp $ */
+ /* $Id: conf.c,v 1.45 2001-05-28 18:48:54 thib Exp $ */
 
 #include "fcron.h"
 #include "conf.h"
@@ -388,6 +388,25 @@ read_type(int fd, short int *type, short int *size)
 
 }
 
+
+/* macros for read_file() */
+/* read "size" bytes from file "ff", put them in "to", and check for errors */
+#define Read(to, size, err_str) \
+        { \
+          if ( read(fileno(ff), &(to), size) < size ) { \
+            error_e(err_str); \
+	    goto err; \
+	  } \
+        }
+
+#define Read_strn(to, size, err_str) \
+        { \
+          if ( read_strn(fileno(ff), &(to), size) != OK ) { \
+            error_e(err_str); \
+	    goto err; \
+	  } \
+        }
+
 int
 read_file(const char *file_name, CF *cf)
     /* read a formated fcrontab.
@@ -500,52 +519,33 @@ read_file(const char *file_name, CF *cf)
 	case S_ENVVAR_T:
 	    /* read a env variable and add it to the env var list */
 	    Alloc(env, env_t);
-	    if ( read_strn(fileno(ff), &env->e_val, size) == OK ) {
-		debug("  Env: \"%s\"", env->e_val );
-		env->e_next = cf->cf_env_base;
-		cf->cf_env_base = env;	    
-	    }
-	    else {
-		error_e("Error while reading env var");
-		goto err;
-	    }
+	    Read_strn(env->e_val, size, "Error while reading env var");
+	    /* Read_strn go to "err" on error */
+	    debug("  Env: \"%s\"", env->e_val );
+	    env->e_next = cf->cf_env_base;
+	    cf->cf_env_base = env;	    
 	    break;
 
 	case S_TZDIFF_T:
 	    /* time diff between local (real) and system hour */
-	    if ( read(fileno(ff), &bufi, size) < size ) {
-		error_e("Error while reading tzdiff field");
-		goto err;
-	    }
+	    Read(bufi, size, "Error while reading tzdiff field");
 	    cf->cf_tzdiff = (signed char) bufi;
 	    break;
 
 	case S_SHELL_T:
-	    if ( read_strn(fileno(ff), &cl->cl_shell, size) != OK ) {
-		error_e("Error while reading shell field");
-		goto err;
-	    }
+	    Read_strn(cl->cl_shell, size, "Error while reading shell field");
 	    break;
 
 	case S_RUNAS_T:
-	    if ( read_strn(fileno(ff), &cl->cl_runas, size) != OK ) {
-		error_e("Error while reading runas field");
-		goto err;
-	    }
+	    Read_strn(cl->cl_runas, size, "Error while reading runas field");
 	    break;
 
 	case S_MAILTO_T:
-	    if ( read_strn(fileno(ff), &cl->cl_mailto, size) != OK ) {
-		error_e("Error while reading mailto field");
-		goto err;
-	    }
+	    Read_strn(cl->cl_mailto, size, "Error while reading mailto field");
 	    break;
 
 	case S_NEXTEXE_T:
-	    if ( read(fileno(ff), &bufi, size) < size ) {
-		error_e("Error while reading nextexe field");
-		goto err;
-	    }
+	    Read(bufi, size, "Error while reading nextexe field");
 	    cl->cl_nextexe = (time_t) bufi;
 	    break;
 
@@ -553,98 +553,59 @@ read_file(const char *file_name, CF *cf)
 	    if (size < OPTION_SIZE)
 		/* set the options not defined in the savefile to default */
 		set_default_opt(cl->cl_option);
-	    if ( read(fileno(ff), &(cl->cl_option), size) < size ) {
-		error_e("Error while reading option field");
-		goto err;
-	    }
+	    Read(cl->cl_option, size, "Error while reading option field");
 	    break;
 
 	case S_NUMEXE_T:
-	    if ( read(fileno(ff), &(cl->cl_numexe), size) < size ) {
-		error_e("Error while reading numexe field");
-		goto err;
-	    }
+	    Read(cl->cl_numexe, size, "Error while reading numexe field");
 	    break;
 
 	case S_LAVG_T:
-	    if ( read(fileno(ff), &(cl->cl_lavg), size) < size ) {
-		error_e("Error while reading lavg field");
-		goto err;
-	    }
+	    Read(cl->cl_lavg, size, "Error while reading lavg field");
 	    break;
 
 	case S_UNTIL_T:
-	    if ( read(fileno(ff), &bufi, size) < size ) {
-		error_e("Error while reading until field");
-		goto err;
-	    }
+	    Read(bufi, size, "Error while reading until field");
 	    cl->cl_until = (time_t) bufi;
 	    break;
 
 	case S_NICE_T:
-	    if ( read(fileno(ff), &(cl->cl_nice), size) < size ) {
-		error_e("Error while reading nice field");
-		goto err;
-	    }
+	    Read(cl->cl_nice, size, "Error while reading nice field");
 	    break;
 
 	case S_RUNFREQ_T:
-	    if ( read(fileno(ff), &bufi, size) < size ) {
-		error_e("Error while reading runfreq field");
-		goto err;
-	    }
+	    Read(bufi, size, "Error while reading runfreq field");
 	    cl->cl_runfreq = (unsigned short) bufi;
 	    break;
 
 	case S_REMAIN_T:
-	    if ( read(fileno(ff), &bufi, size) < size ) {
-		error_e("Error while reading remain field");
-		goto err;
-	    }
+	    Read(bufi, size, "Error while reading remain field");
 	    cl->cl_remain = (unsigned short) bufi;
 	    break;
 
 	case S_TIMEFREQ_T:
-	    if ( read(fileno(ff), &bufi, size) < size ) {
-		error_e("Error while reading timefreq field");
-		goto err;
-	    }
+	    Read(bufi, size, "Error while reading timefreq field");
 	    cl->cl_timefreq = (time_t) bufi;
 	    break;
 
 	case S_MINS_T:
-	    if ( read(fileno(ff), &(cl->cl_mins), size) < size ) {
-		error_e("Error while reading mins field");
-		goto err;
-	    }
+	    Read(cl->cl_mins, size, "Error while reading mins field");
 	    break;
 
 	case S_HRS_T:
-	    if ( read(fileno(ff), &(cl->cl_hrs), size) < size ) {
-		error_e("Error while reading hrs field");
-		goto err;
-	    }
+	    Read(cl->cl_hrs, size, "Error while reading hrs field");
 	    break;
 
 	case S_DAYS_T:
-	    if ( read(fileno(ff), &(cl->cl_days), size) < size ) {
-		error_e("Error while reading days field");
-		goto err;
-	    }
+	    Read(cl->cl_days, size, "Error while reading days field");
 	    break;
 
 	case S_MONS_T:
-	    if ( read(fileno(ff), &(cl->cl_mons), size) < size ) {
-		error_e("Error while reading mons field");
-		goto err;
-	    }
+	    Read(cl->cl_mons, size, "Error while reading mons field");
 	    break;
 
 	case S_DOW_T:
-	    if ( read(fileno(ff), &(cl->cl_dow), size) < size ) {
-		error_e("Error while reading dow field");
-		goto err;
-	    }
+	    Read(cl->cl_dow, size, "Error while reading dow field");
 	    break;
 
 	case S_ENDLINE_T:
