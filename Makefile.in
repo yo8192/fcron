@@ -4,7 +4,13 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.37 2000-09-15 20:17:42 thib Exp $
+# $Id: Makefile.in,v 1.38 2000-09-16 12:35:58 thib Exp $
+
+# The following should not be edited manually (use configure options)
+# If you must do it, BEWARE : some of the following is also defined
+# in config.h, so you must modify config.h AND Makefile in order
+# to set the same values in the two files.
+
 
 # Where should we install it ?
 prefix		= @prefix@
