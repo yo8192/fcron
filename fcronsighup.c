@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.1 2001-07-07 17:29:51 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.2 2001-07-09 11:49:11 thib Exp $ */
 
 #include "global.h"
 
@@ -30,7 +30,7 @@
 #include "subs.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.1 2001-07-07 17:29:51 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.2 2001-07-09 11:49:11 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
@@ -173,6 +173,7 @@ sig_daemon(void)
 	remove(sigfile);
     }
     else
+	/* we are root */
 	fprintf(stderr, "Modifications will be taken into account"
 		" right now.\n");
 

@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.52 2001-07-07 17:52:02 thib Exp $ */
+ /* $Id: fcron.c,v 1.53 2001-07-09 11:49:24 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.52 2001-07-07 17:52:02 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.53 2001-07-09 11:49:24 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -63,9 +63,6 @@ char *tmp_path = "";
 pid_t daemon_pid;
 mode_t saved_umask;           /* default root umask */
 char *prog_name = NULL;         
-
-/* locking */
-static FILE *daemon_lockfp = NULL;
 
 /* have we got a signal ? */
 char sig_conf = 0;            /* is 1 when we got a SIGHUP, 2 for a SIGUSR1 */ 
@@ -176,41 +173,29 @@ get_lock()
      * if not, write our pid to /var/run/fcron.pid in order to lock,
      * and to permit fcrontab to read our pid and signal us */
 {
-    int otherpid = 0, foreopt;
+    int otherpid = 0;
+    FILE *daemon_lockfp = NULL;
+    int fd;
 
-    foreopt = foreground;
-    foreground = 1;
-
-    if ( ! daemon_lockfp ) {
-	int fd;
-
-	if (((fd = open(pidfile, O_RDWR|O_CREAT, 0644)) == -1 )
-	    || ((daemon_lockfp = fdopen(fd, "r+"))) == NULL)
-	    die_e("can't open or create %s", pidfile);
+    if (((fd = open(pidfile, O_RDWR|O_CREAT, 0644)) == -1 )
+	|| ((daemon_lockfp = fdopen(fd, "r+"))) == NULL)
+	die_e("can't open or create %s", pidfile);
 	
 #ifdef HAVE_FLOCK
-	/* flock() seems to keep the lock over a fork() (contrary to lockf() ):
-	 * we only need to lock the file once */
-  	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
-  	    fscanf(daemon_lockfp, "%d", &otherpid);
-  	    die("can't lock %s, running daemon's pid may be %d",
-		pidfile, otherpid);
-  	}
-#endif /* HAVE_FLOCK */
-
-	fcntl(fd, F_SETFD, 1);
-
+    if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
+	fscanf(daemon_lockfp, "%d", &otherpid);
+	die_e("can't lock %s, running daemon's pid may be %d",
+	    pidfile, otherpid);
     }
-    
-#ifndef HAVE_FLOCK
+#else /* HAVE_FLOCK */
     if ( lockf(fileno(daemon_lockfp), F_TLOCK, 0) != 0 ) {
 	fscanf(daemon_lockfp, "%d", &otherpid);
-	die("can't lock %s, running daemon's pid may be %d",
-	     pidfile, otherpid);
+	die_e("can't lock %s, running daemon's pid may be %d",
+	    pidfile, otherpid);
     }
 #endif /* ! HAVE_FLOCK */
 
-    foreground = foreopt;
+    fcntl(fd, F_SETFD, 1);
 
     rewind(daemon_lockfp);
     fprintf(daemon_lockfp, "%d\n", (int) daemon_pid);
@@ -220,7 +205,6 @@ get_lock()
     /* abandon fd and daemon_lockfp even though the file is open. we need to
      * keep it open and locked, but we don't need the handles elsewhere.
      */
-
 
 }
 
@@ -459,9 +443,6 @@ main(int argc, char **argv)
 	int fd, i;
 	pid_t pid;
 
-	/* check if another fcron daemon is running */
-	get_lock();
-
 	switch ( pid = fork() ) {
 	case -1:
 	    die_e("fork");
@@ -473,7 +454,6 @@ main(int argc, char **argv)
 	    /* parent */
 /*  	    printf("%s[%d] " VERSION_QUOTED " : started.\n", */
 /*  		   prog_name, pid); */
-
 	    exit(0);
 	}
 
@@ -491,8 +471,8 @@ main(int argc, char **argv)
 	close(2); dup2(i, 2);
 
 	/* close most other open fds */
-	i = fileno(daemon_lockfp);
-	for(fd = 3; fd < 250; fd++) if (fd != i) (void) close(fd);
+	xcloselog();
+	for(fd = 3; fd < 250; fd++) (void) close(fd);
 
 	/* finally, create a new session */
 	if ( setsid() == -1 )
@@ -500,8 +480,7 @@ main(int argc, char **argv)
 
     }
 
-    /* if we are in foreground, check if another fcron daemon
-     * is running, otherwise update value of pid in lock file */
+    /* check if another fcron daemon is running, create pid file and lock it */
     get_lock();
     
     /* this program belongs to root : we set default permission mode
