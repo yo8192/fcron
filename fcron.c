@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.9 2000-05-31 19:11:40 thib Exp $ */
+ /* $Id: fcron.c,v 1.10 2000-06-04 12:07:50 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.9 2000-05-31 19:11:40 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.10 2000-06-04 12:07:50 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -514,8 +514,8 @@ void main_loop()
 
 	    test_jobs(t2);
 
-	    if ( (save = ( (save-dt) >= 0 ) ? save-dt : 0) == 0) {
-		save = SAVE - (t2 % 60);
+	    if ( (save = ( (save-dt) >= 0 ) ? save-dt : 0) <= 60) {
+		save = SAVE;
 		/* save all files */
 		save_file(NULL, NULL);
 	    }
