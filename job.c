@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.57 2003-12-25 22:39:55 thib Exp $ */
+ /* $Id: job.c,v 1.58 2004-01-29 10:26:49 thib Exp $ */
 
 #include "fcron.h"
 
@@ -41,7 +41,7 @@ char env_home[PATH_LEN];
 char env_shell[PATH_LEN];
 #endif
 
-#ifdef CONFIG_FLASK
+#ifdef WITH_SELINUX
 extern char **environ;
 #endif
 
@@ -187,12 +187,16 @@ create_mail(cl_t *line, char *subject)
     int mailfd = temp_file(NULL);
     FILE *mailf = fdopen(mailfd, "r+");
     char hostname[USER_NAME_LEN];
+    /* is this a complete mail address ? (ie. with a "@", not only a username) */
+    char complete_adr = 0;
+    int i;
 
     if ( mailf == NULL )
 	die_e("Could not fdopen() mailfd");
 
     /* write mail header */
-    fprintf(mailf, "To: %s", line->cl_file->cf_user);
+    fprintf(mailf, "To: %s", line->cl_mailto);
+
 #ifdef HAVE_GETHOSTNAME
     if (gethostname(hostname, sizeof(hostname)) != 0) {
 	error_e("Could not get hostname");
@@ -201,7 +205,16 @@ create_mail(cl_t *line, char *subject)
     else {
 	/* it is unspecified whether a truncated hostname is NUL-terminated */
 	hostname[USER_NAME_LEN-1] = '\0';
-	fprintf(mailf, "@%s", hostname);
+
+	/* check if mailto is a complete mail address */
+	for ( i = 0 ; line->cl_mailto[i] != '\0' ; i++ ) {
+	    if ( line->cl_mailto[i] == '\@' ) {
+		complete_adr = 1;
+		break;
+	    }
+	}
+	if ( ! complete_adr )
+	    fprintf(mailf, "@%s", hostname);
     }
 #else
     hostname[0] = '\0';
@@ -249,8 +262,8 @@ run_job(struct exe_t *exeent)
  	int to_stdout = foreground && is_stdout(line->cl_option);
 	int pipe_fd[2];
 	short int mailpos = 0;	/* 'empty mail file' size */
-#ifdef CONFIG_FLASK
-	int flask_enabled = is_flask_enabled();
+#ifdef WITH_SELINUX
+	int flask_enabled = is_selinux_enabled();
 #endif
  
 	/* */
@@ -352,10 +365,10 @@ run_job(struct exe_t *exeent)
 	    debug("Execing \"%s -c %s\"", curshell, line->cl_shell);
 #endif /* CHECKJOBS */
 
-#ifdef CONFIG_FLASK
-	    if(flask_enabled)
-		execle_secure(shell, line->cl_file->cf_user_sid, shell, "-c", line->cl_shell, NULL, environ);
-	    else
+#ifdef WITH_SELINUX
+	    if(flask_enabled && setexeccon(line->cl_file->cf_user_context) )
+		die_e("Can't set execute context \"%s\".",
+		      line->cl_file->cf_user_context);
 #endif
 	    execl(curshell, curshell, "-c", line->cl_shell, NULL);
 	    /* execl returns only on error */
