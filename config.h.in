@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.43 2002-08-10 20:41:11 thib Exp $ */
+ /* $Id: config.h.in,v 1.44 2002-08-25 17:26:45 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -97,10 +97,13 @@
 #define MAXENTRIES  256  /* max lines in non-root fcrontabs */
 
 #define LINE_LEN    1024     /* max line length in user's config file */
-#define FNAME_LEN 512        /* max length of a file name */
 #define USER_NAME_LEN 128    /* max length of a user name */
-#define PATH_LEN 256         /* max length of a file path */
+#define PATH_LEN 512         /* max length of a file path */
 #define SOCKET_MSG_LEN 20    /* max length of a socket msg (fcrondyn) */
+
+/* WARNING : do not set this too low, or add some more tests in print_field, print_line,
+ *           etc ... */
+#define TERM_LEN 196         /* max nb of char in a term line */
 
 #define MAX_MSG 150          /* max length of a log message */
 
