@@ -10,10 +10,6 @@ AC_DEFINE_UNQUOTED(VERSION, $version)
 VERSION="$vers"
 AC_SUBST(VERSION)
 
-if test "X$CFLAGS" = "X"; then
-CFLAGS=-O
-fi
-
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -26,6 +22,8 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h sys/file.h sys/ioctl.h sys/time.h syslog.h unistd.h)
+AC_CHECK_HEADERS(errno.h sys/fcntl.h getopt.h)
+AC_CHECK_HEADERS(stdarg.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -67,7 +65,7 @@ Cannot determine path to sendmail: try option with-sendmail=PATH])
     ;;
   *)
     AC_MSG_CHECKING(sendmail)
-    if test -x "$withval"; then
+    if test -f "$withval"; then
       AC_DEFINE_UNQUOTED(SENDMAIL, "$withval")
       AC_MSG_RESULT($withval)
     else
@@ -103,7 +101,7 @@ Cannot determine path to sh: try option with-shell=PATH])
     ;;
   *)
     AC_MSG_CHECKING(shell)
-    if test -x "$withval"; then
+    if test -f "$withval"; then
       AC_DEFINE_UNQUOTED(SHELL, "$withval")
       AC_MSG_RESULT($withval)
     else
@@ -139,7 +137,7 @@ Cannot determine path to vi: try option with-editor=PATH])
     ;;
   *)
     AC_MSG_CHECKING(editor)
-    if test -x "$withval"; then
+    if test -f "$withval"; then
       AC_DEFINE_UNQUOTED(EDITOR, "$withval")
       AC_MSG_RESULT($withval)
     else
@@ -261,6 +259,7 @@ AC_ARG_WITH(proc,
     AC_MSG_WARN([
 Without proc, you won't be able to use the lavg* options 
 ])
+    AC_DEFINE(NOLOADAVG)
     ;;
   yes)
     if test -f /proc/loadavg ; then
@@ -292,7 +291,21 @@ PROC="$proc"
 AC_SUBST(PROC)
 fi
 
-
+AC_ARG_WITH(debug,
+[  --with-debug=CFLAGS    Use default debug flags or CFLAGS if given to compile fcron.],
+[ case "$withval" in
+  no)
+    CFLAGS="-O2 -Wall"
+    ;;
+  yes)
+    CFLAGS="-DDEBUG -g -DFOREGROUND -DMALLOC_CHECK_=2 -Wpointer-arith -Wstrict-prototypes"
+    ;;
+  *)
+    CFLAGS="$withval"
+    ;;
+  esac ],
+    CFLAGS="-O2 -Wall"
+)
 
 AC_OUTPUT(Makefile)
 
