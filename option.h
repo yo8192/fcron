@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.5 2000-06-22 12:35:03 thib Exp $ */
+ /* $Id: option.h,v 1.6 2000-06-25 20:07:48 thib Exp $ */
 
 /* read and set options of a line */
 
@@ -40,6 +40,7 @@
   6      is this job run serially only once (for bootrun) ?
   7      does the output have to be mailed to user ?
   8      does the output (even if zero-length) must be mailed to user ?
+  9      does this line use option runas ?
 
 */
 
@@ -174,6 +175,18 @@
 	(_bit_set(opt, 8))
 #define clear_mailzerolength(opt) \
 	(_bit_clear(opt, 8))
+
+
+/*
+  bit 9 : set to 1 : line uses option runas
+          set to 0 : line does not use option runas
+*/
+#define	is_runas(opt) \
+	(_bit_test(opt, 9))
+#define	set_runas(opt) \
+	(_bit_set(opt, 9))
+#define clear_runas(opt) \
+	(_bit_clear(opt, 9))
 
 
 #endif /* __OPTIONH__ */
