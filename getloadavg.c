@@ -18,28 +18,20 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "config.h"
+#include "global.h"
 
 #define _POSIX_SOURCE 1
-
-/* System Headers */
-
-#include <stdio.h>
 
 /* Local headers */
 
 #include "getloadavg.h"
 
-/* File scope variables */
-
-static char rcsid[] = "$Id: getloadavg.c,v 1.1 2000-09-12 16:40:42 thib Exp $";
-
 /* Global functions */
 
 int
 getloadavg(double *result, int n)
-/* return the current load average as a floating point number, or <0 for
- * error
+/* return the current load average as a floating point number,
+ * the number of load averages read, or <0 for error
  */
 {
     FILE *fp;
@@ -48,8 +40,11 @@ getloadavg(double *result, int n)
     if (n > 3)
 	n = 3;
 
-    if ((fp = fopen(PROC "/loadavg", "r")) == NULL)
+    if ((fp = fopen(PROC "/loadavg", "r")) == NULL) {
+	error_e("could not open '"PROC"/loadavg'"
+		" (make sure procfs is mounted)");
 	i = -1;
+    }
     else {
 	for (i = 0; i < n; i++) {
 	    if (fscanf(fp, "%lf", result) != 1)
@@ -59,5 +54,5 @@ getloadavg(double *result, int n)
     }
   end:
     fclose(fp);
-    return i;
+    return (i<0) ? i : i+1;
 }
