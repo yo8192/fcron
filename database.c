@@ -22,12 +22,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.39 2000-12-04 20:19:12 thib Exp $ */
+ /* $Id: database.c,v 1.40 2000-12-10 10:58:33 thib Exp $ */
 
 #include "fcron.h"
 
 int is_leap_year(int year);
 int get_nb_mdays(int year, int mon);
+void set_wday(struct tm *date);
 void goto_non_matching(CL *line, struct tm *tm);
 void run_normal_job(CL *line);
 void run_serial_job(void);
@@ -505,77 +506,178 @@ goto_non_matching(CL *line, struct tm *ftime)
     /* search the first the nearest time and date that does
      * not match the line */
 {
-    /* to prevent from invinite loop with unvalid lines : */
-    short int year_limit = MAXYEAR_SCHEDULE_TIME;
-    /* we have to ignore the fields containing single numbers */
-    char ignore_mins = (is_ign_mins(line->cl_option)) ? 1:0;
-    char ignore_hrs = (is_ign_hrs(line->cl_option)) ? 1:0;
-    char ignore_days = (is_ign_days(line->cl_option)) ? 1:0;
-    char ignore_mons = (is_ign_mons(line->cl_option)) ? 1:0;
-    char ignore_dow = (is_ign_dow(line->cl_option)) ? 1:0;
-    
-    /* */
-    debug("   ignore: %d %d %d %d %d", ignore_mins, ignore_hrs, ignore_days, ignore_mons, ignore_dow);
-    /* */
-
-    /* check if we are in an interval of execution */    
-    while ( (ignore_mins == 1 || bit_test(line->cl_mins, ftime->tm_min)) &&
-	    (ignore_hrs == 1 || bit_test(line->cl_hrs, ftime->tm_hour)) &&
-	    (
-		(is_dayand(line->cl_option) &&
-		 (ignore_days==1 || bit_test(line->cl_days, ftime->tm_mday)) &&
-		 (ignore_dow==1 || bit_test(line->cl_dow, ftime->tm_wday)))
-		||
-		(is_dayor(line->cl_option) &&
-		 (ignore_days == 1 || bit_test(line->cl_days, ftime->tm_mday)||
-		  ignore_dow == 1 || bit_test(line->cl_dow, ftime->tm_wday)))
-		) &&
-	    (ignore_mons == 1 || bit_test(line->cl_mons, ftime->tm_mon))
-	) {
-
-	if (ignore_mins) ftime->tm_min = 60; 
-	else {
-	    do ftime->tm_min++ ;
-	    while(bit_test(line->cl_mins,ftime->tm_min) && (ftime->tm_min<60));
-	}
-	if (ftime->tm_min >= 60) {
-	    ftime->tm_min = 0;
-	    if (ignore_hrs && ignore_mins) ftime->tm_hour = 24;
-	    else ftime->tm_hour++;
-	    if (ftime->tm_hour >= 24) {
-		ftime->tm_hour = 0;
-		if (ignore_days && ignore_hrs && ignore_mins)ftime->tm_mday=32;
-		else ftime->tm_mday++;
-		if (ftime->tm_mday >= 
-		    get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
-		    ftime->tm_mday = 0;
-		    if(ignore_mons && ignore_days && ignore_hrs && ignore_mins)
-			ftime->tm_mon = 12;
-		    else ftime->tm_mon++;
-		    if (ftime->tm_mon >= 12) {
-			ftime->tm_mon = 0;
-			ftime->tm_year++;
-			if (--year_limit <= 0) {
-			    error("Can't found a non matching date for %s in "
-				  "the next %d years. Maybe this line is "
-				  "corrupted : consider reinstalling the "
-				  "fcrontab", line->cl_shell, 
-				  MAXYEAR_SCHEDULE_TIME);
-			    return;
+    if ( is_freq_periodically(line->cl_option)) {
+	int max = get_nb_mdays(ftime->tm_year, ftime->tm_mon);
+	if (is_freq_mid(line->cl_option)) {
+	    if (is_freq_mins(line->cl_option))
+		/* nothing to do : return */
+		return;
+	    else if (is_freq_hrs(line->cl_option)) {
+		if (ftime->tm_min >= 30)
+		    ftime->tm_hour++;
+		ftime->tm_min = 30;
+	    } else {
+		ftime->tm_min = 0;
+		if (is_freq_days(line->cl_option)) {
+		    if (ftime->tm_hour >= 12)
+			ftime->tm_mday++;
+		    ftime->tm_hour = 12;
+		} else {
+		    ftime->tm_hour = 0;
+		    if (is_freq_dow(line->cl_option)) {
+			int to_add = (ftime->tm_wday >= 4) ? 11-ftime->tm_wday:
+			    4 - ftime->tm_wday;
+			if (ftime->tm_mday + to_add > max) {
+			    ftime->tm_mon++;
+			    ftime->tm_mday = ftime->tm_mday + to_add - max;
+			} else
+			    ftime->tm_mday += to_add;
+		    } else {
+			ftime->tm_mday = 1;
+			if (is_freq_mons(line->cl_option)) {
+			    if (ftime->tm_mday >= 15)
+				ftime->tm_mon++;
+			    ftime->tm_mday = 15;
 			}
 		    }
 		}
-		set_wday(ftime);
 	    }
 	}
-    }
-	  
-    debug("   '%s' first non matching %d/%d/%d wday:%d %02d:%02d",
-	  line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
-	  (ftime->tm_year + 1900), ftime->tm_wday,
-	  ftime->tm_hour, ftime->tm_min);
-    return;
+	else { /* is_freq_mid(line->cl_option) */
+	    if (is_freq_mins(line->cl_option))
+		/* nothing to do */
+		return;
+	    else {
+		ftime->tm_min = 0;
+		if (is_freq_hrs(line->cl_option))
+		    ftime->tm_hour++;
+		else {
+		    ftime->tm_hour = 0;
+		    if (is_freq_days(line->cl_option))
+			ftime->tm_mday++;
+		    else {
+			if (is_freq_dow(line->cl_option)) {
+			    int to_add=(ftime->tm_wday==0)?1: 8-ftime->tm_wday;
+			    if (ftime->tm_mday + to_add > max) {
+				ftime->tm_mday = ftime->tm_mday + to_add - max;
+				ftime->tm_mon++;
+			    } else
+				ftime->tm_mday += to_add;
+			} else {
+			    ftime->tm_mday = 1;
+			    if (is_freq_mons(line->cl_option))
+				ftime->tm_mon++;
+			}
+		    }
+		}
+	    }
+	}
+	/* a value may exceed the max value of a field */
+	if (ftime->tm_min >= 60) {
+	    ftime->tm_min = 0;
+	    ftime->tm_hour++;
+	}
+	if (ftime->tm_hour >= 24) {
+	    ftime->tm_hour = 0;
+	    ftime->tm_mday++;
+	}
+	/* the month field may have changed */
+	max = get_nb_mdays(ftime->tm_year, ftime->tm_mon);
+	if (ftime->tm_mday >= max) {
+	    ftime->tm_mday = 1;
+	    ftime->tm_mon++;
+	}
+	if (ftime->tm_mon >= 12) {
+	    ftime->tm_mon = 0;
+	    ftime->tm_year++;
+	}
+	if (debug_opt)
+	    set_wday(ftime);
+	debug("   '%s' first non matching %d/%d/%d wday:%d %02d:%02d",
+	      line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
+	      (ftime->tm_year + 1900), ftime->tm_wday,
+	      ftime->tm_hour, ftime->tm_min);
 
+	return;
+    }
+    else { 
+	/* this line should be run once per interval of the selected field */
+	
+	/* to prevent from invinite loop with unvalid lines : */
+	short int year_limit = MAXYEAR_SCHEDULE_TIME;
+	/* we have to ignore the fields containing single numbers */
+	char ignore_mins = (is_freq_mins(line->cl_option)) ? 1:0;
+	char ignore_hrs = (is_freq_hrs(line->cl_option)) ? 1:0;
+	char ignore_days = (is_freq_days(line->cl_option)) ? 1:0;
+	char ignore_mons = (is_freq_mons(line->cl_option)) ? 1:0;
+	char ignore_dow = (is_freq_dow(line->cl_option)) ? 1:0;
+    
+	/* */
+	debug("   ignore: %d %d %d %d %d", ignore_mins, ignore_hrs,
+	      ignore_days, ignore_mons, ignore_dow);
+	/* */
+
+	/* check if we are in an interval of execution */    
+	while ((ignore_mins == 1 || bit_test(line->cl_mins, ftime->tm_min)) &&
+	       (ignore_hrs == 1 || bit_test(line->cl_hrs, ftime->tm_hour)) &&
+	       (
+		   (is_dayand(line->cl_option) &&
+		    (ignore_days==1||bit_test(line->cl_days,ftime->tm_mday)) &&
+		    (ignore_dow==1 || bit_test(line->cl_dow, ftime->tm_wday)))
+		   ||
+		   (is_dayor(line->cl_option) &&
+		    (ignore_days==1||bit_test(line->cl_days, ftime->tm_mday) ||
+		     ignore_dow == 1 || bit_test(line->cl_dow,ftime->tm_wday)))
+		   ) &&
+	       (ignore_mons == 1 || bit_test(line->cl_mons, ftime->tm_mon))
+	    ) {
+	    
+	    if (ignore_mins) ftime->tm_min = 60; 
+	    else {
+		do ftime->tm_min++ ;
+		while ( bit_test(line->cl_mins, ftime->tm_min) 
+			&& (ftime->tm_min < 60) );
+	    }
+	    if (ftime->tm_min >= 60) {
+		ftime->tm_min = 0;
+		if (ignore_hrs && ignore_mins) ftime->tm_hour = 24;
+		else ftime->tm_hour++;
+		if (ftime->tm_hour >= 24) {
+		    ftime->tm_hour = 0;
+		    if (ignore_days && ignore_hrs && ignore_mins)
+			ftime->tm_mday=32;
+		    else ftime->tm_mday++;
+		    if (ftime->tm_mday >= 
+			get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
+			ftime->tm_mday = 0;
+			if(ignore_mons && ignore_days && ignore_hrs
+			   && ignore_mins)
+			    ftime->tm_mon = 12;
+			else ftime->tm_mon++;
+			if (ftime->tm_mon >= 12) {
+			    ftime->tm_mon = 0;
+			    ftime->tm_year++;
+			    if (--year_limit <= 0) {
+				error("Can't found a non matching date for %s "
+				      "in the next %d years. Maybe this line "
+				      "is corrupted : consider reinstalling "
+				      "the fcrontab", line->cl_shell, 
+				      MAXYEAR_SCHEDULE_TIME);
+				return;
+			    }
+			}
+		    }
+		    set_wday(ftime);
+		}
+	    }
+	}
+	  
+	debug("   '%s' first non matching %d/%d/%d wday:%d %02d:%02d",
+	      line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
+	      (ftime->tm_year + 1900), ftime->tm_wday,
+	      ftime->tm_hour, ftime->tm_min);
+	return;
+    }
 }
 
 

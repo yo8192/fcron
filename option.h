@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.11 2000-12-04 20:20:09 thib Exp $ */
+ /* $Id: option.h,v 1.12 2000-12-10 10:59:15 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -73,6 +73,8 @@
   15     should days field be ignored in goto_non_matching() ?
   16     should mons field be ignored in goto_non_matching() ?
   17     should dow field be ignored in goto_non_matching() ?
+  18     First freq is the freq (*ly) or the first field to take into account ?
+  19     Freq (ie daily) is from middle to middle of interval (ie nightly) ?
 
 */
 
@@ -290,63 +292,87 @@
 
 
 /*
-  bit 13 : set to 1 : mins field should be ignored in goto_non_matching()
-           set to 0 : mins field should not be ignored in goto_non_matching()
+  bit 13 : set to 1 : mins field is the limit
+           set to 0 : mins field is not the limit
 */
-#define	is_ign_mins(opt) \
+#define	is_freq_mins(opt) \
 	(_bit_test(opt, 13))
-#define	set_ign_mins(opt) \
+#define	set_freq_mins(opt) \
 	(_bit_set(opt, 13))
-#define clear_ign_mins(opt) \
+#define clear_freq_mins(opt) \
 	(_bit_clear(opt, 13))
 
 
 /*
-  bit 14 : set to 1 : hrs field should be ignored in goto_non_matching()
-           set to 0 : hrs field should not be ignored in goto_non_matching()
+  bit 14 : set to 1 : hrs field is the limit
+           set to 0 : hrs field is not the limit
 */
-#define	is_ign_hrs(opt) \
+#define	is_freq_hrs(opt) \
 	(_bit_test(opt, 14))
-#define	set_ign_hrs(opt) \
+#define	set_freq_hrs(opt) \
 	(_bit_set(opt, 14))
-#define clear_ign_hrs(opt) \
+#define clear_freq_hrs(opt) \
 	(_bit_clear(opt, 14))
 
 
 /*
-  bit 15 : set to 1 : days field should be ignored in goto_non_matching()
-           set to 0 : days field should not be ignored in goto_non_matching()
+  bit 15 : set to 1 : days field is the limit
+           set to 0 : days field is not the limit
 */
-#define	is_ign_days(opt) \
+#define	is_freq_days(opt) \
 	(_bit_test(opt, 15))
-#define	set_ign_days(opt) \
+#define	set_freq_days(opt) \
 	(_bit_set(opt, 15))
-#define clear_ign_days(opt) \
+#define clear_freq_days(opt) \
 	(_bit_clear(opt, 15))
 
 
 /*
-  bit 16 : set to 1 : mons field should be ignored in goto_non_matching()
-           set to 0 : mons field should not be ignored in goto_non_matching()
+  bit 16 : set to 1 : mons field is the limit
+           set to 0 : mons field is not the limit
 */
-#define	is_ign_mons(opt) \
+#define	is_freq_mons(opt) \
 	(_bit_test(opt, 16))
-#define	set_ign_mons(opt) \
+#define	set_freq_mons(opt) \
 	(_bit_set(opt, 16))
-#define clear_ign_mons(opt) \
+#define clear_freq_mons(opt) \
 	(_bit_clear(opt, 16))
 
 
 /*
-  bit 17 : set to 1 : dow field should be ignored in goto_non_matching()
-           set to 0 : dow field should not be ignored in goto_non_matching()
+  bit 17 : set to 1 : dow field is the limit
+           set to 0 : dow field is not the limit
 */
-#define	is_ign_dow(opt) \
+#define	is_freq_dow(opt) \
 	(_bit_test(opt, 17))
-#define	set_ign_dow(opt) \
+#define	set_freq_dow(opt) \
 	(_bit_set(opt, 17))
-#define clear_ign_dow(opt) \
+#define clear_freq_dow(opt) \
 	(_bit_clear(opt, 17))
+
+
+/*
+  bit 18 : set to 1 : limit field is freq to run the line (once a hour, etc)
+           set to 0 : run once per interval of the limit field
+*/
+#define	is_freq_periodically(opt) \
+	(_bit_test(opt, 18))
+#define	set_freq_periodically(opt) \
+	(_bit_set(opt, 18))
+#define clear_freq_periodically(opt) \
+	(_bit_clear(opt, 18))
+
+
+/*
+  bit 19 : set to 1 : run once from mid-interval to mid-interval (i.e. nightly)
+           set to 0 : run once from begin to the end of interval (i.e. daily)
+*/
+#define	is_freq_mid(opt) \
+	(_bit_test(opt, 19))
+#define	set_freq_mid(opt) \
+	(_bit_set(opt, 19))
+#define clear_freq_mid(opt) \
+	(_bit_clear(opt, 19))
 
 
 #endif /* __OPTIONH__ */
