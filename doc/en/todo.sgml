@@ -8,13 +8,16 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.29 2004-08-17 12:56:26 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.30 2004-09-02 22:08:04 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
       <para>Here are some things that should be done ... Note that some of these
 	 entries are just some ideas, which <emphasis>may</emphasis> be done in
 	 the long run.</para> 
+      <para>If you see something you'd really like to see implemented here, feel
+	 free to send me a mail: it may make me move it to the top of my to-do list ;) .
+      </para>
       <para>If you plan to help me, please send a mail at &email; to prevent two
 	 people from doing the same thing. You can send me some propositions as
 	 well, or ask me to move something to the top of the heap ;) .</para>
@@ -24,10 +27,6 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>port to HP-UX : mails from Scott Tinsley : test in autoconf
 	       to remove call to "ioctl(fd, TIOCNOTTY, 0);"</para>
-	    </listitem>
-	    <listitem>
-	       <para>mails from B. Wohler : improve the doc + change (?)  the
-		  name of fcrondyn -> fcronc ?? </para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
@@ -39,10 +38,7 @@ A copy of the license is included in gfdl.sgml.
 		  (file/line lists, serial queue, lavg list, exe list),
 		  and work with them only through functions/macros.
 	       + secure equivalent to str[n]{cat|copy|...}</para>
-	       <para>Note : thoroughly check for bugs which can be introduced
-		  during the code cleaning (make sure that after the
-		  modification, the code executed is still the same as before
-		  !).</para>
+	       <para>Note : may introduce bugs, so it will be done in fcron 3.1.x, and needs to be tested thoroughly..</para>
 	    </listitem>
 	    <listitem>
 	       <para>Mem footprint reduction : use an/some union(s) in CL struct.</para>
@@ -94,18 +90,12 @@ A copy of the license is included in gfdl.sgml.
 		  returns true. It would permit, for instance, to run some jobs
 		  on a laptop only if it is on AC power.</para>
 	       <para>and depending on the return value of the command, cancel
-		  the execution, or wait x seconds before trying again, etc</para>
+		  the execution, or wait x seconds before trying again, etc. 
+	       In this case, needs change the way the jobs are queued ?</para>
 	    </listitem>
 	    <listitem>
-	       <para>add an option to prevent fcron from running a job if the
-		  system is running on battery (anacron does it ?)
-	       (add another queue - when system comes on-line, run the job
-	       or move it to serialq. Do the same for lavg+serial job 
-		  -> when trying to run a job from serialq, test if system is on-line
-		  and/or lavg is low, or move it back to another queue)</para>
-	    </listitem>
-	    <listitem>
-	       <para>add a system of data flow</para>
+	       <para>add an option/module to prevent fcron from running a job if the
+		  system is running on battery (anacron does it ?)</para>
 	    </listitem>
 	    <listitem>
 	       <para>Add a way to stop a job (SIGSTOP) if the lavg gets to high,
