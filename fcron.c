@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.39 2001-01-27 15:33:39 thib Exp $ */
+ /* $Id: fcron.c,v 1.40 2001-02-10 12:56:02 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.39 2001-01-27 15:33:39 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.40 2001-02-10 12:56:02 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -53,6 +53,7 @@ char foreground = 0; /* set to 1 when we are on foreground, else 0 */
 #endif
 
 char  *cdir = FCRONTABS;      /* the dir where are stored users' fcrontabs */
+time_t save_time = SAVE;
 
 /* process identity */
 pid_t daemon_pid;               
@@ -116,6 +117,7 @@ usage()
 	    "  -f     --foreground     Stay in foreground.\n"
 	    "  -b     --background     Go to background.\n"
 	    "  -h     --help           Show this help message.\n"
+	    "  -s t   --savetime t     Save fcrontabs on disk every t sec.\n"  
 	);
     
     exit(EXIT_ERR);
@@ -215,6 +217,7 @@ parseopt(int argc, char *argv[])
 	{"background",0,NULL,'b'},
 	{"help",0,NULL,'h'},
 	{"version",0,NULL,'V'},
+	{"savetime",1,NULL,'s'},
 	{0,0,0,0}
     };
 #endif /* HAVE_GETOPT_H */
@@ -226,9 +229,9 @@ parseopt(int argc, char *argv[])
 
     while(1) {
 #ifdef HAVE_GETOPT_H
-	c = getopt_long(argc, argv, "dfbhV", opt, NULL);
+	c = getopt_long(argc, argv, "dfbhVs:", opt, NULL);
 #else
-	c = getopt(argc, argv, "dfbhV");
+	c = getopt(argc, argv, "dfbhVs:");
 #endif /* HAVE_GETOPT_H */
 	if (c == -1) break;
 	switch (c) {
@@ -248,8 +251,11 @@ parseopt(int argc, char *argv[])
 	case 'b':
 	    foreground = 0; break;
 
-	case 'c':
-	    cdir = optarg; break;
+	case 's':
+	    if ( (save_time = strtol(optarg, NULL, 10)) < 60 
+		 || save_time >= LONG_MAX )
+		die("Save time can only be set between 60 and %d.", LONG_MAX); 
+	    break;
 
 	case ':':
 	    error("(parseopt) Missing parameter");
@@ -522,7 +528,7 @@ main_loop()
     synchronize_dir(".");
 
     /* synchronize save with jobs execution */
-    save = now + SAVE;
+    save = now + save_time;
 
     if ( serial_num > 0 )
 	stime = FIRST_SLEEP;
@@ -553,7 +559,7 @@ main_loop()
      	    run_serial_job();
 
 	if ( save <= now ) {
-	    save = now + SAVE;
+	    save = now + save_time;
 	    /* save all files */
 	    save_file(NULL);
 	}
