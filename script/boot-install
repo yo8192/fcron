@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.22 2001-01-12 21:37:16 thib Exp $
+# $Id: boot-install,v 1.23 2001-01-30 17:40:51 thib Exp $
 
 # take 5 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -223,6 +223,8 @@ fi
 echo "As a matter of fact, you must know that fcrontabs installed by an old"
 echo "version of fcrontab may not work with this version if you don't" 
 echo "reinstall them."
+echo "Warning : you may lose some informations if you do that (i.e. the last"
+echo "    execution's time and date (@-jobs) as if you run a 'fcrontab -e -n')"
 
 if test "$RESTARTED" -eq 1; then
   REINSTALL="nothing"
