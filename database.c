@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.19 2000-08-28 17:57:19 thib Exp $ */
+ /* $Id: database.c,v 1.20 2000-08-30 09:07:49 thib Exp $ */
 
 #include "fcron.h"
 
@@ -119,8 +119,8 @@ add_serial_job(CL *line)
 
 	serial_num++;
 
- 	debug("num: %d size:%d index:%d curline: %d", serial_num,
-	      serial_array_size, serial_array_index, i);
+ 	debug("num: %d size:%d index:%d curline:%d running:%d", serial_num,
+	      serial_array_size, serial_array_index, i, serial_running);
 
 
 #if SERIAL_ONCE
@@ -140,9 +140,9 @@ run_serial_job(void)
 /*      debug("running next serial job"); */
 /*      //     */
 
+    debug("num: %d running:%d  index:%d", serial_num, serial_running,
+	  serial_array_index);
     if ( serial_num != 0 ) {
-	debug("num: %d running:%d  index:%d", serial_num, serial_running,
-	      serial_array_index);
 	run_queue_job(serial_array[serial_array_index]);
 	serial_array[serial_array_index] = NULL;
 
@@ -663,7 +663,7 @@ add_lavg_job(CL *line)
 		int j = 0;
 		
 		for (i = 1; i < lavg_num; i++)
-		    if ( lavg_array[i].l_since < lavg_array[j].l_since )
+		    if ( lavg_array[i].l_until < lavg_array[j].l_until )
 			j = i;
 		run_lavg_job(j);
 	    }
@@ -684,7 +684,8 @@ add_lavg_job(CL *line)
 	}
 
 	lavg_array[lavg_num].l_line = line;
-	lavg_array[lavg_num++].l_since = now;
+	lavg_array[lavg_num++].l_until = 
+	    (line->cl_until > 0) ? now + line->cl_until : 0;
 
 #if LAVG_ONCE
     }
@@ -746,10 +747,9 @@ check_lavg(time_t lim)
 
     /* first, check if some lines must be executed because of until */
     while ( i < lavg_num )
-	if ( lavg_array[i].l_line->cl_until != 0 &&
-	     lavg_array[i].l_since + lavg_array[i].l_line->cl_until < now ) {
-	    debug("until '%s' %d %d", lavg_array[i].l_line->cl_shell,
-		  lavg_array[i].l_since, lavg_array[i].l_line->cl_until);
+	if ( lavg_array[i].l_line->cl_until && lavg_array[i].l_until < now ) {
+	    debug("until '%s' %d", lavg_array[i].l_line->cl_shell,
+		  lavg_array[i].l_until);
 	    run_lavg_job(i);
 	} else
 	    i++;
