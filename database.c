@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.14 2000-06-21 13:44:27 thib Exp $ */
+ /* $Id: database.c,v 1.15 2000-06-21 14:58:44 thib Exp $ */
 
 #include "fcron.h"
 
@@ -123,7 +123,8 @@ run_serial_job(void)
 	run_queue_job(serial_array[serial_array_index]);
 
 	serial_running++;
-	serial_array_index++;
+	if ( ++serial_array_index >= serial_array_size )
+	    serial_array_index -= serial_array_size;
 	serial_num--;
 	
     }
@@ -134,6 +135,10 @@ void
 run_queue_job(CL *line)
     /* run the next non-serialized job */
 {
+
+    //
+    debug("run_queue_job");
+    //
 
     /* append job to the list of executed job */
     if ( exe_num >= exe_array_size ) {
