@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.21 2000-06-22 12:32:55 thib Exp $ */
+ /* $Id: fcron.c,v 1.22 2000-06-25 20:00:13 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.21 2000-06-22 12:32:55 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.22 2000-06-25 20:00:13 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -233,14 +233,14 @@ parseopt(int argc, char *argv[])
 	    cdir = optarg; break;
 
 	case ':':
-	    error("(setopt) Missing parameter");
+	    error("(parseopt) Missing parameter");
 	    usage();
 
 	case '?':
 	    usage();
 
 	default:
-	    warn("(setopt) Warning: getopt returned %c", c);
+	    warn("(parseopt) Warning: getopt returned %c", c);
 	}
     }
 
