@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.47 2001-06-03 10:56:18 thib Exp $ */
+ /* $Id: fileconf.c,v 1.48 2001-06-22 21:08:18 thib Exp $ */
 
 #include "fcrontab.h"
 #include "fileconf.h"
@@ -40,6 +40,7 @@ void read_arys(char *ptr, CF *cf);
 void read_period(char *ptr, CF *cf);
 void read_env(char *ptr, CF *cf);
 char *read_opt(char *ptr, CL *cl);
+char *check_username(char *ptr, CF *cf, CL *cl);
 
 
 char need_correction;
@@ -992,6 +993,39 @@ get_time(char *ptr, time_t *time)
 }
 
 
+char *
+check_username(char *ptr, CF *cf, CL *cl)
+    /* check ptr to see if the first word is a username, returns new ptr */
+{
+    short int indx = 0;
+    char username[USER_NAME_LEN];
+    struct passwd *userpwent;
+
+    /* check to see if next word is a username */
+    while ( isalnum( (int) ptr[indx]) ) indx++;
+    if (indx > USER_NAME_LEN) indx = USER_NAME_LEN;
+    strncpy(username, ptr, indx);
+    username[indx] = '\0';
+
+    if ((userpwent = getpwnam(username)) != NULL) {
+	/* found the user */
+        ptr = ptr + indx;	/* move ptr to the next word */
+	Skip_blanks(ptr);
+
+	if (getuid() != 0) {
+	    fprintf(stderr, "must be privileged to run as another user : "
+		    "ignoring\n");
+	} else {
+	    free(cl->cl_runas);
+            cl->cl_runas = strdup2(username);
+            if (debug_opt)
+		fprintf(stderr, "  Opt : inline_runas %s\n", username);
+	}
+    }
+
+    return ptr;
+}
+
 
 void
 read_freq(char *ptr, CF *cf)
@@ -1045,8 +1079,9 @@ read_freq(char *ptr, CF *cf)
 	/* time before first execution is not specified */
 	cl->cl_nextexe = cl->cl_timefreq;
 
-
-
+    /* check for inline runas */
+    ptr = check_username(ptr, cf, cl);
+    
     /* get cl_shell field ( remove trailing blanks ) */
     if ( (cl->cl_shell = get_string(ptr)) == NULL ) {
 	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
@@ -1148,6 +1183,9 @@ read_arys(char *ptr, CF *cf)
 	 *  but no end line : we print it here */
 	fprintf(stderr, " remain %d\n", cl->cl_remain);
 
+    /* check for inline runas */
+    ptr = check_username(ptr, cf, cl);
+    
     /* get the shell command (remove trailing blanks) */
     if ( (cl->cl_shell = get_string(ptr)) == NULL ) {
 	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
@@ -1234,6 +1272,9 @@ read_period(char *ptr, CF *cf)
 	 *  but no end line : we print it here */
 	fprintf(stderr, " remain %d\n", cl->cl_remain);
 
+    /* check for inline runas */
+    ptr = check_username(ptr, cf, cl);
+    
     /* get the shell command (remove trailing blanks) */
     if ( (cl->cl_shell = get_string(ptr)) == NULL ) {
 	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
