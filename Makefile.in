@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.36 2000-09-14 19:02:51 thib Exp $
+# $Id: Makefile.in,v 1.37 2000-09-15 20:17:42 thib Exp $
 
 # Where should we install it ?
 prefix		= @prefix@
@@ -58,10 +58,10 @@ REXP_MANPAGES=.*[158]
 
 all: fcron fcrontab updatedoc
 
-fcron: $(OBJSD)
+fcron: $(OBJSD) $(HEADERSD)
 	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJSD)
 
-fcrontab: $(OBJS)
+fcrontab: $(OBJS) $(HEADERS)
 	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJS)
 
 fcrontab.o: fcrontab.c $(HEADERS)
