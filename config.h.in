@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.27 2001-05-15 00:49:11 thib Exp $ */
+ /* $Id: config.h.in,v 1.28 2001-05-28 18:51:24 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -203,9 +203,6 @@
 /* Define if you have the wait3 system call.  */
 #undef HAVE_WAIT3
 
-/* Define if you have <nlist.h>.  */
-#undef NLIST_STRUCT
-
 /* Define if you have the getcwd function.  */
 #undef HAVE_GETCWD
 
@@ -214,6 +211,12 @@
 
 /* Define if you have the gettimeofday function.  */
 #undef HAVE_GETTIMEOFDAY
+
+/* Define if you have the flock function.  */
+#undef HAVE_FLOCK
+
+/* Define if you have the lockf function.  */
+#undef HAVE_LOCKF
 
 /* Define if you have the mkstemp function.  */
 #undef HAVE_MKSTEMP
@@ -266,6 +269,9 @@
 /* Define if you have the <ndir.h> header file.  */
 #undef HAVE_NDIR_H
 
+/* Define if you have <nlist.h>.  */
+#undef NLIST_STRUCT
+
 /* Define if you have the <stdarg.h> header file.  */
 #undef HAVE_STDARG_H
 
@@ -283,6 +289,9 @@
 
 /* Define if you have the <sys/ndir.h> header file.  */
 #undef HAVE_SYS_NDIR_H
+
+/* Define if you have the <sys/termios.h> header file.  */
+#undef HAVE_SYS_TERMIOS_H
 
 /* Define if you have the <sys/time.h> header file.  */
 #undef HAVE_SYS_TIME_H

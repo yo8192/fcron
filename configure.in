@@ -29,6 +29,7 @@ AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h sys/file.h sys/ioctl.h sys/time.h syslog.h unistd.h)
 AC_CHECK_HEADERS(errno.h sys/fcntl.h getopt.h limits.h)
 AC_CHECK_HEADERS(stdarg.h)
+AC_CHECK_HEADERS(sys/termios.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -48,6 +49,7 @@ AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
 AC_FUNC_GETLOADAVG
 AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv gethostname)
 AC_CHECK_FUNCS(mkstemp)
+AC_CHECK_FUNCS(flock, lockf)
 AC_CHECK_FUNCS(setreuid, [setreuid=1], [setreuid=0])
 AC_CHECK_FUNCS(setregid, [setregid=1], [setregid=0])
 

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.27 2001-05-24 19:59:12 thib Exp $ */
+ /* $Id: global.h,v 1.28 2001-05-28 18:48:48 thib Exp $ */
 
 
 /* 
@@ -77,6 +77,10 @@
 #include <time.h>
 #elif HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+
+#ifdef HAVE_SYS_TERMIOS_H
+#include <sys/termios.h>
 #endif
 
 #ifdef HAVE_UNISTD_H

@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.45 2001-05-17 00:53:02 thib Exp $ */
+ /* $Id: fcron.c,v 1.46 2001-05-28 18:48:27 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.45 2001-05-17 00:53:02 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.46 2001-05-28 18:48:27 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -166,35 +166,46 @@ get_lock()
      * if not, write our pid to /var/run/fcron.pid in order to lock,
      * and to permit fcrontab to read our pid and signal us */
 {
+    int otherpid = 0, foreopt;
+
+    foreopt = foreground;
+    foreground = 1;
 
     if ( ! daemon_lockfp ) {
-	int	fd, otherpid, foreopt;
-
-	foreopt = foreground;
-	foreground = 1;
+	int fd;
 
 	if (((fd = open(PIDFILE, O_RDWR|O_CREAT, 0644)) == -1 )
 	    || ((daemon_lockfp = fdopen(fd, "r+"))) == NULL)
 	    die_e("can't open or create " PIDFILE);
 	
-	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
-	    if ((errno == EAGAIN) || (errno == EACCES))
-		errno = EWOULDBLOCK;
-	    fscanf(daemon_lockfp, "%d", &otherpid);
-	    die("can't lock " PIDFILE ", running daemon's pid may be %d",
-		otherpid);
-	}
+#ifdef HAVE_FLOCK
+	/* flock() seems to keep the lock over a fork() (contrary to lockf() ):
+	 * we only need to lock the file once */
+  	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
+  	    fscanf(daemon_lockfp, "%d", &otherpid);
+  	    die("can't lock " PIDFILE ", running daemon's pid may be %d",
+  		otherpid);
+  	}
+#endif /* HAVE_FLOCK */
 
-	(void) fcntl(fd, F_SETFD, 1);
-
-	foreground = foreopt;
+	fcntl(fd, F_SETFD, 1);
 
     }
     
+#ifndef HAVE_FLOCK
+    if ( lockf(fileno(daemon_lockfp), F_TLOCK, 0) != 0 ) {
+	fscanf(daemon_lockfp, "%d", &otherpid);
+	die("can't lock " PIDFILE ", running daemon's pid may be %d",
+	    otherpid);
+    }
+#endif /* ! HAVE_FLOCK */
+
+    foreground = foreopt;
+
     rewind(daemon_lockfp);
     fprintf(daemon_lockfp, "%d\n", daemon_pid);
     fflush(daemon_lockfp);
-    (void) ftruncate(fileno(daemon_lockfp), ftell(daemon_lockfp));
+    ftruncate(fileno(daemon_lockfp), ftell(daemon_lockfp));
 
     /* abandon fd and daemon_lockfp even though the file is open. we need to
      * keep it open and locked, but we don't need the handles elsewhere.
