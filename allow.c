@@ -22,9 +22,10 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: allow.c,v 1.10 2001-07-09 11:50:30 thib Exp $ */
+ /* $Id: allow.c,v 1.11 2001-09-12 13:50:50 thib Exp $ */
 
 #include "fcrontab.h"
+
 #include "allow.h"
 
 int
@@ -72,8 +73,8 @@ is_allowed(char *user)
     /* return 1 if user is allowed to use this soft
      * otherwise return 0 */
 {
-    char allow = 0;
-    char deny = 0;
+    int allow = 0;
+    int deny = 0;
 
     /* check if user is in passwd file */
     if ( ! getpwnam(user) )
