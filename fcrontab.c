@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.62 2002-10-06 16:52:28 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.63 2002-10-28 17:51:13 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -47,7 +47,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.62 2002-10-06 16:52:28 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.63 2002-10-28 17:51:13 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -583,7 +583,7 @@ install_stdin(void)
     int tmp_fd = 0;
     FILE *tmp_file = NULL;
     char *tmp_str = NULL;
-    register int c;
+    int c;
     short return_val = EXIT_OK;
 	    	    
     tmp_fd = temp_file(&tmp_str);

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrondyn.1.sgml,v 1.6 2002-08-29 17:35:00 thib Exp $ -->
+<!-- $Id: fcrondyn.1.sgml,v 1.7 2002-10-28 17:59:42 thib Exp $ -->
 
 <refentry id="fcrondyn.1">
     <refmeta>
@@ -254,12 +254,6 @@ job. <emphasis><type>jobid</type></emphasis> is the one given by
 		<term>PID</term>
 		<listitem>
 		    <para>The pid of the running job.</para>
-		    <warning>
-			<para>This is currently not the pid of the job itself,
-			but the pid of the fcron process controlling it. However,
-			the pid of the job itself should be a number close to
-			that one (under linux at least).</para>
-		    </warning>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>

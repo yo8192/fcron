@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.94 2002-10-06 17:15:58 thib Exp $
+# $Id: Makefile.in,v 1.95 2002-10-28 17:54:31 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -150,7 +150,7 @@ install-boot: install
 install-restart: install
 ifeq ($(DEBUG), 1)
 	kill -TERM `pidof fcron` || exit 0
-	/etc/rc.d/init.d/fcron start
+	/etc/init.d/fcron restart
 endif
 
 uninstall:

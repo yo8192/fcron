@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.21 2002-02-25 18:46:37 thib Exp $ */
+ /* $Id: option.h,v 1.22 2002-10-28 17:56:43 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -67,7 +67,7 @@
   4      should we run this job at fcron startup if it should have been
            executed during system down?
   5      should this job be run serially ?
-  6      is this job should be run serially only once (for bootrun) ?
+  6      should this job be run serially only once (for bootrun) ?
   7      does the output have to be mailed to user ?
   8      does the output (even if zero-length) must be mailed to user ?
   9      if time of execution is exceeded, exec the lavg job or not ?

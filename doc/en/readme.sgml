@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: readme.sgml,v 1.2 2002-07-19 19:45:32 thib Exp $ -->
+<!-- $Id: readme.sgml,v 1.3 2002-10-28 18:00:32 thib Exp $ -->
 
 <sect1 id="readme">
     <title>About fcron</title>
@@ -116,7 +116,8 @@ library.</para></listitem>
 
     <sect2>
 	<title>Compilation and installation</title>
-	<para>See the <link linkend="install">INSTALL</link> file.</para>
+	<para>See the <link linkend="install">install</link> file (either install.txt
+or install.html).</para>
     </sect2>
 
     <sect2>

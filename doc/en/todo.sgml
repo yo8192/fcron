@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.16 2002-10-05 14:28:37 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.17 2002-10-28 17:59:37 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -24,14 +24,10 @@ well.</para>
 	    <para>Help is welcome to catch this bug !</para>
 	</listitem>
 	<listitem>
-	    <para>bug fix (?) : "already running" bug (? - unconfirmed) </para>
-	</listitem>
-	<listitem>
-	    <para>find a way to get user's job pid (not the fcron process
-	    controlling it) (use pipe() ?)</para>
-	</listitem>
-	<listitem>
-	    <para>Use (or remove from config.h.in) MAX_USER_CON & MAX_IDLE_TIME.</para>
+	    <para>make fcron more robust concerning system crash, hardware failure, etc.
+In particular, save files under a temporary name, check if everything's all right,
+and if yes, replace the old file by renaming the temporary file (use rename()
+or a direct save if rename() fails (EBUSY) ).</para>
 	</listitem>
 	<listitem>
 	    <para>Use directory notifications (?) (portable ?) (cf. dnotify)</para>
@@ -41,10 +37,11 @@ well.</para>
 using PAM - not implemented in fcrondyn)</para>
 	</listitem>
 	<listitem>
-	    <para>run one of this job, change its nice value, stop it...</para>
+	    <para>implement more commands for fcrondyn, and make it more secure
+and reliable</para>
 	</listitem>
 	<listitem>
-	    <para>make fcrondyn more secure and reliable</para>
+	    <para>For environment settings, make a var substitution.</para>
 	</listitem>
 	<listitem>
 	    <para>add a return code for jobs which would mean that they should
