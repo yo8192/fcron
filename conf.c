@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.38 2001-01-30 15:53:27 thib Exp $ */
+ /* $Id: conf.c,v 1.39 2001-02-14 13:52:50 thib Exp $ */
 
 #include "fcron.h"
 
@@ -354,6 +354,7 @@ read_str(FILE *f, char *buf, int max)
     for (i = 0; i < max; i++)
 	if ( (buf[i] = fgetc(f)) == '\0')
 	    break;
+    buf[max-1] = '\0';
 
     if ( strlen(buf) == 0 )
 	return NULL;

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.30 2001-02-10 12:53:29 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.31 2001-02-14 13:51:14 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.30 2001-02-10 12:53:29 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.31 2001-02-14 13:51:14 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -870,7 +870,7 @@ main(int argc, char **argv)
 		/* this is just the file name, not the path : complete it */
 		snprintf(file,sizeof(file),"%s/%s",orig_dir,argv[file_opt]);
 	    else
-		strncpy(file, argv[file_opt], sizeof(file));
+		strncpy(file, argv[file_opt], sizeof(file) - 1);
 
 	    if (make_file(file) == OK)
 		xexit ( EXIT_OK );

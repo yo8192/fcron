@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.34 2001-02-10 12:56:12 thib Exp $ */
+ /* $Id: job.c,v 1.35 2001-02-14 13:53:08 thib Exp $ */
 
 #include "fcron.h"
 
@@ -50,11 +50,11 @@ change_user(char *user_name)
     {
 	char buf[PATH_LEN + 5];
 	strcat( strcpy(buf, "USER"), "=");
-	putenv( strncat(buf, pas->pw_name, sizeof(buf)-5) );
+	putenv( strncat(buf, pas->pw_name, sizeof(buf)-6) );
 	strcat( strcpy(buf, "HOME"), "=");
-	putenv( strncat(buf, pas->pw_dir, sizeof(buf)-5) );
+	putenv( strncat(buf, pas->pw_dir, sizeof(buf)-6) );
 	strcat( strcpy(buf, "SHELL"), "=");
-	putenv( strncat(buf, pas->pw_shell, sizeof(buf)-6) );
+	putenv( strncat(buf, pas->pw_shell, sizeof(buf)-7) );
     }
 #endif /* HAVE_SETENV */
 
