@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.31 2000-09-12 20:00:13 thib Exp $
+# $Id: Makefile.in,v 1.32 2000-09-13 06:01:51 thib Exp $
 
 # Where should we install it ?
 prefix		= @prefix@
@@ -107,6 +107,7 @@ uninstall:
 clean:
 	rm -f *.o
 	rm -f doc/fcrontab.1 doc/fcron.8 doc/fcrontab.5
+	rm -f doc/fcrontab.1.html doc/fcron.8.html doc/fcrontab.5.html
 	rm -f fcron fcrontab
 
 vclean: clean
