@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.27 2001-02-14 13:49:36 thib Exp $
+# $Id: boot-install,v 1.28 2001-03-01 18:40:03 thib Exp $
 
 # take 5 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -41,6 +41,9 @@ fi
 echo
 echo "Fcron should be started by your init scripts."
 echo "The installation process is going to try to install fcron in them."
+echo
+echo "Note that if you answer no to a proposition made at this point by"
+echo "the installation script, it will try to propose another way to do it."
 echo
 
 INSTALL="nothing"
@@ -84,7 +87,7 @@ fi
 
 
 INSTALL="nothing"
-if test -f /etc/rc.d/rc.M; then
+if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc.d/rc.M \); then
   # Slackware
   if ! cat /etc/rc.d/rc.local | grep "$STARTCMD"; then
     if cat /etc/rc.d/rc.local | grep fcron; then	
