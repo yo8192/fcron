@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.9 2000-06-18 15:27:06 thib Exp $ */
+ /* $Id: conf.c,v 1.10 2000-06-19 12:41:27 thib Exp $ */
 
 #include "fcron.h"
 
@@ -447,7 +447,7 @@ read_file(const char *file_name, CF *cf)
 
 	cl->cl_shell = read_str(ff, buf, sizeof(buf));
 
-	if ( cl->cl_timefreq == 0 ) {
+	if ( is_td(cl->cl_option) ) {
 	    /* set the time and date of the next execution  */
 	    if ( cl->cl_nextexe <= now )
 		set_next_exe(cl, 1);
