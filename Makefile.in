@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.29 2000-09-12 16:41:18 thib Exp $
+# $Id: Makefile.in,v 1.30 2000-09-12 19:54:49 thib Exp $
 
 # Where should we install it ?
 prefix		= @prefix@
@@ -28,8 +28,8 @@ INSTALL		= @INSTALL@
 #	-DDEBUG		even more verbose
 #	-DCHECKJOBS     send a mail containing the exact shell command
 #			for each execution of each job.
-#OPTIM = @CFLAGS@
-OPTIM=	-DDEBUG -g -DFOREGROUND -DMALLOC_CHECK_=2
+OPTIM = @CFLAGS@
+#OPTIM=	-DDEBUG -g -DFOREGROUND -DMALLOC_CHECK_=2
 #OPTIM=	-DDEBUG -g -DCHECKJOBS -Wall -Wpointer-arith -Wstrict-prototypes
 #OPTIM=	-DDEBUG -Wall -Wpointer-arith -Wstrict-prototypes
 #OPTIM=	-O2 -Wall
@@ -38,8 +38,7 @@ OPTIM=	-DDEBUG -g -DFOREGROUND -DMALLOC_CHECK_=2
 
 # Options
 #	-DFOREGROUND=[0|1]    default run in foreground ?
-#       -DPROC_LOADAVG=[0|1]  do we have a mounted procfs with loadavg file ?
-OPTION = -DPROC_LOADAVG=1
+OPTION = 
 
 
 ####################################
@@ -48,7 +47,7 @@ OPTION = -DPROC_LOADAVG=1
 
 VERSION= @VERSION@
 CFLAGS= $(INCLUDE) $(OPTIM) $(OTHERFLAGS) $(OPTION) $(DEFS) $(LIBS)
-OBJSD = fcron.o subs.o database.o job.o log.o conf.o getloadavg.o $(LIBOBJS)
+OBJSD = fcron.o subs.o database.o job.o log.o conf.o $(LIBOBJS)
 OBJS= fcrontab.o fileconf.o subs.o log.o allow.o
 HEADERSD = fcron.h config.h global.h option.h getloadavg.h
 HEADERS = fcrontab.h config.h global.h option.h
@@ -108,11 +107,11 @@ uninstall:
 clean:
 	rm -f *.o
 	rm -f doc/fcrontab.1 doc/fcron.8 doc/fcrontab.5
-	rm -f config.log config.status config.h config.cache Makefile
 	rm -f fcron fcrontab
 
 vclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
+	rm -f config.log config.status config.h config.cache Makefile
 
 
 %.html: %.in Makefile config.h

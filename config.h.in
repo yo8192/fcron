@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.16 2000-09-12 16:42:28 thib Exp $ */
+ /* $Id: config.h.in,v 1.17 2000-09-12 19:55:14 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -135,64 +135,36 @@
 /* where is located pid file ? */
 #undef PIDFILE
 
-#undef PROC_LOADAVG    1
-#undef DEBUG           0  /* 1 if you want debug mode */
-#undef FOREGROUND      0  /* 1 if you want foreground mode by default */
+#undef NOLOADAVG
+/* 1 if you want debug mode */
+#undef DEBUG
+/* 1 if you want foreground mode by default */
+#undef FOREGROUND
 
 
 /* Define to empty if the keyword does not work.  */
 #undef const
 
-/* Define for DGUX with <sys/dg_sys_info.h>.  */
-#undef DGUX
-
-/* Define if the `getloadavg' function needs to be run setuid or setgid.  */
-#undef GETLOADAVG_PRIVILEGED
-
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef gid_t
-
-/* Define if your system has its own `getloadavg' function.  */
-#undef HAVE_GETLOADAVG
-
-/* Define if you have the strftime function.  */
-#undef HAVE_STRFTIME
-
-/* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
-#undef HAVE_SYS_WAIT_H
-
-/* Define if you have the wait3 system call.  */
-#undef HAVE_WAIT3
-
-/* Define if your struct nlist has an n_un member.  */
-#undef NLIST_NAME_UNION
-
-/* Define if you have <nlist.h>.  */
-#undef NLIST_STRUCT
 
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef pid_t
 
-/* Define as the return type of signal handlers (int or void).  */
-#undef RETSIGTYPE
-
 /* Define to `unsigned' if <sys/types.h> doesn't define.  */
 #undef size_t
 
-/* Define if you have the ANSI C header files.  */
-#undef STDC_HEADERS
-
-/* Define on System V Release 4.  */
-#undef SVR4
-
-/* Define if you can safely include both <sys/time.h> and <time.h>.  */
-#undef TIME_WITH_SYS_TIME
-
-/* Define if your <sys/time.h> declares struct tm.  */
-#undef TM_IN_SYS_TIME
-
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef uid_t
+
+/* Define as the return type of signal handlers (int or void).  */
+#undef RETSIGTYPE
+
+/* Define if your struct nlist has an n_un member.  */
+#undef NLIST_NAME_UNION
+
+/* Define for DGUX with <sys/dg_sys_info.h>.  */
+#undef DGUX
 
 /* Define for Encore UMAX.  */
 #undef UMAX
@@ -200,6 +172,24 @@
 /* Define for Encore UMAX 4.3 that has <inq_status/cpustats.h>
    instead of <sys/cpustats.h>.  */
 #undef UMAX4_3
+
+/* Define on System V Release 4.  */
+#undef SVR4
+
+/* Define if your system has its own `getloadavg' function.  */
+#undef HAVE_GETLOADAVG
+
+/* Define if the `getloadavg' function needs to be run setuid or setgid.  */
+#undef GETLOADAVG_PRIVILEGED
+
+/* Define if you have the strftime function.  */
+#undef HAVE_STRFTIME
+
+/* Define if you have the wait3 system call.  */
+#undef HAVE_WAIT3
+
+/* Define if you have <nlist.h>.  */
+#undef NLIST_STRUCT
 
 /* Define if you have the getcwd function.  */
 #undef HAVE_GETCWD
@@ -219,11 +209,26 @@
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
 
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define if you can safely include both <sys/time.h> and <time.h>.  */
+#undef TIME_WITH_SYS_TIME
+
+/* Define if your <sys/time.h> declares struct tm.  */
+#undef TM_IN_SYS_TIME
+
 /* Define if you have the <dirent.h> header file.  */
 #undef HAVE_DIRENT_H
 
+/* Define if you have the <errno.h> header file.  */
+#undef HAVE_ERRNO_H
+
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
+
+/* Define if you have the <getopt.h> header file.  */
+#undef HAVE_GETOPT_H
 
 /* Define if you have the <mach/mach.h> header file.  */
 #undef HAVE_MACH_MACH_H
@@ -231,8 +236,14 @@
 /* Define if you have the <ndir.h> header file.  */
 #undef HAVE_NDIR_H
 
+/* Define if you have the <stdarg.h> header file.  */
+#undef HAVE_STDARG_H
+
 /* Define if you have the <sys/dir.h> header file.  */
 #undef HAVE_SYS_DIR_H
+
+/* Define if you have the <sys/fcntl.h> header file.  */
+#undef HAVE_SYS_FCNTL_H
 
 /* Define if you have the <sys/file.h> header file.  */
 #undef HAVE_SYS_FILE_H
@@ -245,6 +256,9 @@
 
 /* Define if you have the <sys/time.h> header file.  */
 #undef HAVE_SYS_TIME_H
+
+/* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
+#undef HAVE_SYS_WAIT_H
 
 /* Define if you have the <syslog.h> header file.  */
 #undef HAVE_SYSLOG_H

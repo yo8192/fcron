@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.8 2000-09-03 18:55:04 thib Exp $
+# $Id: boot-install,v 1.9 2000-09-12 19:59:48 thib Exp $
 
 # take 2 arguments : the name of the BSD-like install program
 #                    and the DESTSBIN directory
@@ -13,7 +13,7 @@ startdir=$pwd
 DEBUG=1
 
 if test $# -ne 2; then
-    echo "Too few arguments"
+    echo "Too few/many arguments"
     exit 1
 fi
 
