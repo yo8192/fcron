@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.66 2002-10-28 17:53:31 thib Exp $ */
+ /* $Id: fileconf.c,v 1.67 2002-11-01 18:08:30 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -42,6 +42,7 @@ void read_period(char *ptr, cf_t *cf);
 void read_env(char *ptr, cf_t *cf);
 char *read_opt(char *ptr, cl_t *cl);
 char *check_username(char *ptr, cf_t *cf, cl_t *cl);
+int save_one_file(cf_t *file, char *filename);
 
 
 char need_correction;
@@ -326,6 +327,7 @@ read_env(char *ptr, cf_t *cf)
 
     /* the MAILTO assignment is, in fact, an fcron option :
      *  we don't store it in the same way. */
+    /* please note that we check if the mailto is valid in conf.c */
     if ( strcmp(name, "MAILTO") == 0 ) {
 	if ( strcmp(val, "\0") == 0 )
 	    clear_mail(default_line.cl_option);
@@ -735,8 +737,9 @@ read_opt(char *ptr, cl_t *cl)
 	    if( ! in_brackets )
 		Handle_err;
 
+	    /* please note that we check if the mailto is valid in conf.c */
 	    i = 0;
-	    while ( isalnum( (int) *ptr) && i + 1 < sizeof(buf) )
+	    while ( *ptr != ')' && i + 1 < sizeof(buf) )
 		buf[i++] = *ptr++;
 	    if ( strcmp(buf, "\0") == 0 )
 		clear_mail(cl->cl_option);
@@ -831,7 +834,7 @@ read_opt(char *ptr, cl_t *cl)
 
 		bzero(name, sizeof(name));
 
-		while ( *ptr != ')' && i < sizeof(name))
+		while ( *ptr != ')' && i + 1 < sizeof(name))
 		    name[i++] = *ptr++;
     
 		if ((pas = getpwnam(name)) == NULL) {
@@ -1647,47 +1650,60 @@ delete_file(const char *user_name)
 }
 
 
+/* this function is called in save.c */
+int
+save_one_file(cf_t *file, char *path)
+/* save a given file to disk */
+{
+    int fd;
+
+    /* open file */
+    fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR | S_IWUSR);
+    if ( fd == -1 ) {
+	error_e("Could not open %s : file has not be installed.", path);
+	return ERR;
+    }
+
+    /* save_file() is run under user's rights.
+     * If fcrontab is run by root for a normal user, we must change the file's
+     * ownership to this user, in order to make fcron check the runas fields.
+     * (a malicious user could put a runas(root) and wait for the fcrontab to be
+     * installed by root) */
+    if ( fchown(fd, asuid, fcrontab_gid) != 0 ) {
+	error_e("Could not fchown %s : file has not been installed.", path);
+	close(fd);
+	remove(path);
+	return ERR;
+    }
+
+    /* save file : */
+    if ( write_file_to_disk(fd, file, 0) == ERR ) {
+	close(fd);
+	remove(path);
+	return ERR;
+    }
+
+    close(fd);
+
+    return OK;
+}
+
 int
 save_file(char *path)
     /* Store the informations relatives to the executions
      * of tasks at a defined frequency of system's running time */
 {
     cf_t *file = NULL;
-    int fd;
 
     if (debug_opt)
 	fprintf(stderr, "Saving ...\n");
     
     for (file = file_base; file; file = file->cf_next) {
 
-	/* open file */
-	fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR | S_IWUSR);
-	if ( fd == -1 ) {
-	    error_e("Could not open %s : file has not be installed.", path);
+	if ( save_file_safe(file, path, "fcrontab") == ERR )
 	    return ERR;
-	}
-
-	/* save_file() is run under user's right.
-	 * If fcrontab is run by root for a normal user, we must change the file's
-	 * ownership to this user, in order to make fcron check the runas fields.
-	 * (a malicious user could put a runas(root) and wait for the fcrontab to be
-	 * installed by root) */
-	if ( fchown(fd, asuid, fcrontab_gid) != 0 ) {
-            error_e("Could not fchown %s : file has not been installed.", path);
-            close(fd);
-            remove(path);
-            return ERR;
-	}
-
-	/* save file : */
-	if ( write_file_to_disk(fd, file, 0) == ERR ) {
-            close(fd);
-            remove(path);
-	    return ERR;
-	}
-
-	close(fd);
 
     }
+
     return OK;
 }
