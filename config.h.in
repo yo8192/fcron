@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.19 2000-09-15 20:18:13 thib Exp $ */
+ /* $Id: config.h.in,v 1.20 2000-09-16 12:36:37 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -120,6 +120,11 @@
 
 /* ****************************************************************** */
 /* *** options which are set by configure script ******************** */
+
+/* The following should not be edited manually (use configure options)
+ * If you must do it, BEWARE : some of the following is also defined
+ * in the Makefile, so you must modify config.h AND Makefile in order
+ * to set the same values in the two files. */
 
 #undef VERSION_QUOTED
 
