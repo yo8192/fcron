@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.19 2002-11-01 19:03:37 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.20 2002-11-17 13:14:40 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -18,6 +18,13 @@ A copy of the license is included in gfdl.sgml.
 people from doing the same thing. You can send me some propositions as
 well.</para>
     <itemizedlist>
+	<listitem>
+	    <para>put save_one_file() in save.c (make a single function, instead of 3 different)</para>
+	</listitem>
+	<listitem>
+	    <para>make announce email GPG signed and include the MD5 checksum
+of the source archive.</para>
+	</listitem>
 	<listitem>
 	    <para>bug fix : makewhatis does not work correctly with fcron 2.9.0
 	    and following</para>
@@ -58,6 +65,10 @@ to run some jobs on a laptop only if it is on AC power.</para>
 	<listitem>
 	    <para>Add a way to stop a job (SIGSTOP) if the lavg gets to high, and 
 restart it (SIGCONT) when the lavg has decreased.</para>
+	</listitem>
+	<listitem>
+	    <para>Add a directory similar to xinet.d or logrotate.d
+ to add job entries (?).</para>
 	</listitem>
     </itemizedlist>
 </sect1>
