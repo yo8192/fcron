@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.9 2000-06-21 13:43:50 thib Exp $ */
+ /* $Id: config.h.in,v 1.10 2000-06-22 12:30:55 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -101,6 +101,7 @@
 
 #define LINE_LEN    1024     /* max line length in user's config file */
 #define FNAME_LEN 512        /* max length of a file name */
+#define USER_NAME_LEN 128    /* max length of a user name */
 #define ENV_LEN 50           /* max length of an env variable name */
 
 #define MAX_MSG 150           /* max length of a log message */
@@ -110,11 +111,6 @@
 #define FIRST_SLEEP 20      /* fcron sleep at least this time after startup
 			     * before executing a job, to avoid to run jobs
 			     * during system boot */
-#define SAVE_VARIATION 120  /* if a job is run at less than SAVE_VARIATION
-			     * from normal time to save, save is performed
-			     * after execution of the job.
-			     * This is intended to avoid unneeded wakeups */
-
 
 /* *** behavior *** */
 #define SERIAL_QUEUE_MAX 30 /* if serial queue contains this number of entries,
