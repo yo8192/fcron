@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.21 2000-09-30 11:58:39 thib Exp $ */
+ /* $Id: config.h.in,v 1.22 2000-11-02 19:13:59 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -96,6 +96,10 @@
 #define LAVG_ONCE 1 /* can a job be several times in the lavg queue at
 		     * the same moment ? */
 
+#define MAXYEAR_SCHEDULE_TIME 10 /* a job can't be scheduled further than
+                             * now + MAXYEAR_SCHEDULE years. This is used
+                             * to prevent infinite loop on corrupted lines */
+
 /* *** system dependent *** */
 #define EXIT_ERR   1         /* code returned by fcron/fcrontab on error */
 #define EXIT_OK    0         /* code returned  on normal exit */
@@ -127,6 +131,8 @@
  * to set the same values in the two files. */
 
 #undef VERSION_QUOTED
+
+#undef CFLAGS
 
 /* *** paths *** */
 #undef ETC
