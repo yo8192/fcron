@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.70 2003-07-14 10:51:07 thib Exp $ */
+ /* $Id: fileconf.c,v 1.71 2003-12-25 22:43:25 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -1125,7 +1125,7 @@ read_freq(char *ptr, cf_t *cf)
 	/* time before first execution is not specified */
 	cl->cl_first = cl->cl_timefreq;
     else
-	cl->cl_nextexe = cl->cl_timefreq;
+	cl->cl_nextexe = (cl->cl_first == -1 ) ? cl->cl_timefreq : cl->cl_first;
 
     /* check for inline runas */
     ptr = check_username(ptr, cf, cl);
