@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.71 2004-04-29 20:50:47 thib Exp $ */
+ /* $Id: fcron.c,v 1.72 2005-02-26 15:11:32 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.71 2004-04-29 20:50:47 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.72 2005-02-26 15:11:32 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -542,7 +542,9 @@ main(int argc, char **argv)
 	daemon_pid = getpid();
 
 	if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+#ifndef _HPUX_SOURCE
 	    ioctl(fd, TIOCNOTTY, 0);
+#endif
 	    close(fd);
 	}
 	
@@ -569,6 +571,14 @@ main(int argc, char **argv)
 
     explain("%s[%d] " VERSION_QUOTED " started", prog_name, daemon_pid);
 
+#ifdef _HPUX_SOURCE
+    sigset(SIGTERM, sigterm_handler);
+    sigset(SIGHUP, sighup_handler);
+    sigset(SIGCHLD, sigchild_handler);
+    sigset(SIGUSR1, sigusr1_handler);
+    sigset(SIGUSR2, sigusr2_handler);
+    sigset(SIGPIPE, SIG_IGN);
+#else
     signal(SIGTERM, sigterm_handler);
     signal(SIGHUP, sighup_handler);
     siginterrupt(SIGHUP, 0);
@@ -580,6 +590,7 @@ main(int argc, char **argv)
     siginterrupt(SIGUSR2, 0);
     /* we don't want SIGPIPE to kill fcron, and don't need to handle it */
     signal(SIGPIPE, SIG_IGN);
+#endif
 
     /* initialize job database */
     next_id = 0;
@@ -632,8 +643,10 @@ check_signal()
     if (sig_chld > 0) {
 	wait_chld();
 	sig_chld = 0;
+#ifndef _HPUX_SOURCE
 	(void)signal(SIGCHLD, sigchild_handler);
 	siginterrupt(SIGCHLD, 0);
+#endif
     }
     if (sig_conf > 0) {
 
@@ -641,15 +654,19 @@ check_signal()
 	    /* update configuration */
 	    synchronize_dir(".");
 	    sig_conf = 0;
+#ifndef _HPUX_SOURCE
 	    signal(SIGHUP, sighup_handler);
 	    siginterrupt(SIGHUP, 0);
+#endif
 	}
 	else {
 	    /* reload all configuration */
 	    reload_all(".");
 	    sig_conf = 0;
+#ifndef _HPUX_SOURCE
 	    signal(SIGUSR1, sigusr1_handler);
 	    siginterrupt(SIGUSR1, 0);
+#endif
 	}
 
     }
@@ -658,8 +675,10 @@ check_signal()
 	debug_opt = (debug_opt > 0)? 0 : 1;
 	explain("debug_opt = %d", debug_opt);
 	sig_debug = 0;
+#ifndef _HPUX_SOURCE
 	signal(SIGUSR2, sigusr2_handler);
 	siginterrupt(SIGUSR2, 0);
+#endif
     }
 
 }
