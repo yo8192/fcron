@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.26 2003-12-25 22:59:58 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.27 2003-12-29 14:00:52 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -27,6 +27,9 @@ A copy of the license is included in gfdl.sgml.
 	 <listitem>
 	    <para>Changed the subject line of mail reports : it now contains the
 	    subject line, and is very similar to vixie cron's one.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Added a sum-up at the end of ./configure.</para>
 	 </listitem>
 	 <listitem>
 	    <para>bug fix : "makewhatis" bug is fixed -- at last !</para>
