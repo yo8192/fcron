@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.13 2003-12-25 22:53:15 thib Exp $ */
+ /* $Id: socket.c,v 1.14 2004-07-11 18:11:00 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -202,6 +202,7 @@ auth_client(struct fcrondyn_cl *client)
     if ( (pass_cry = crypt(pass_str, pass_sys)) == NULL ) {
 	error_e("could not crypt()");
 	send(client->fcl_sock_fd, "0", sizeof("0"), 0);
+	Overwrite(pass_str);
 	return;
     }
 
@@ -218,6 +219,8 @@ auth_client(struct fcrondyn_cl *client)
 	      (char *) client->fcl_cmd, client->fcl_sock_fd);
 	send(client->fcl_sock_fd, "0", sizeof("0"), 0);
     }
+
+    Overwrite(pass_str);
 }
 
 
