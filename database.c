@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.31 2000-09-30 11:59:00 thib Exp $ */
+ /* $Id: database.c,v 1.32 2000-10-05 15:02:06 thib Exp $ */
 
 #include "fcron.h"
 
@@ -88,6 +88,9 @@ run_lavg_job(int i)
 {
 
     run_queue_job(lavg_array[i].l_line);
+
+    if ( is_serial(lavg_array[i].l_line->cl_option) )
+	lavg_serial_running++;
 
     if (i < --lavg_num) {
 	lavg_array[i] = lavg_array[lavg_num];
@@ -347,29 +350,38 @@ wait_chld(void)
 	i = 0;
 	while ( i < exe_num ) {
 	    if (pid == exe_array[i].e_pid) {
-		line = exe_array[i].e_line;
-		debug("job finished: %s", line->cl_shell);
-		line->cl_numexe -= 1;
-		line->cl_file->cf_running -= 1;
-
-		if ( is_serial_once(line->cl_option) ) {
-		    clear_serial_once(line->cl_option);
-  		    if ( --serial_running <= 0 )
-  			run_serial_job();
+		if ( exe_array[i].e_line == NULL ) {
+		    /* the corresponding file has been removed from memory */
+		    debug("job finished: pid %d", pid);
 		}
-		else if ( is_serial(line->cl_option)
-		     && ! is_lavg(line->cl_option) ) {
-    		    if (--serial_running <= 0)
-    			run_serial_job();
+		else {
+		    
+		    line = exe_array[i].e_line;
+		    debug("job finished: %s", line->cl_shell);
+		    line->cl_numexe -= 1;
+		    line->cl_file->cf_running -= 1;
+		    
+		    if ( is_serial_once(line->cl_option) ) {
+			clear_serial_once(line->cl_option);
+			if ( --serial_running <= 0 )
+			    run_serial_job();
+		    }
+		    else if ( is_serial(line->cl_option)
+			      && ! is_lavg(line->cl_option) ) {
+			if (--serial_running <= 0)
+			    run_serial_job();
+		    }
+		    else if ( is_lavg(line->cl_option) && 
+			      is_serial(line->cl_option) )
+			lavg_serial_running--;
 		}
-
 		if (i < --exe_num) {
 		    exe_array[i] = exe_array[exe_num];
 		    exe_array[exe_num].e_line = NULL;
 		}
 		else
 		    exe_array[i].e_line = NULL;
-
+		
 		goto nextloop;
 	    }
 	    i++;
@@ -388,27 +400,33 @@ wait_all(int *counter)
 {
     short int i = 0;
     int pid;
-
+    
     debug("Waiting for all jobs");
-
+    
     while ( (*counter > 0) && (pid = wait3(NULL, 0, NULL)) > 0 ) {
 	i = 0;
 	while ( i < exe_num ) {
 	    if (pid == exe_array[i].e_pid) {
-		debug("job finished: %s", exe_array[i].e_line->cl_shell);
-		exe_array[i].e_line->cl_numexe -= 1;
-		exe_array[i].e_line->cl_file->cf_running -= 1;
-
-		if ( is_serial_once(exe_array[i].e_line->cl_option) )
-		    clear_serial_once(exe_array[i].e_line->cl_option);
-
+		if ( exe_array[i].e_line == NULL )
+		    /* the corresponding file has been removed from memory */
+		    debug("job finished: pid %d", pid);
+		else {
+		    
+		    debug("job finished: %s", exe_array[i].e_line->cl_shell);
+		    exe_array[i].e_line->cl_numexe -= 1;
+		    exe_array[i].e_line->cl_file->cf_running -= 1;
+		    
+		    if ( is_serial_once(exe_array[i].e_line->cl_option) )
+			clear_serial_once(exe_array[i].e_line->cl_option);
+		    
+		}
 		if (i < --exe_num) {
 		    exe_array[i] = exe_array[exe_num];
 		    exe_array[exe_num].e_line = NULL;
 		}
 		else
 		    exe_array[i].e_line = NULL;
-
+		
 		goto nextloop;
 	    }
 	    i++;
@@ -417,7 +435,7 @@ wait_all(int *counter)
 	debug("not in exe_array !");
       nextloop:
     }    
-
+    
 }
 
 
@@ -768,6 +786,9 @@ check_lavg(time_t lim)
     i = 0;
     while ( i < lavg_num ) {
 	/* check if the line should be executed */
+	if ( lavg_serial_running > 0 && 
+	     is_serial(lavg_array[i].l_line->cl_option) )
+	    continue;
 	if ( ( is_land(lavg_array[i].l_line->cl_option)
 	       && ( l_avg[0] < lavg_array[i].l_line->cl_lavg[0]
 		    || lavg_array[i].l_line->cl_lavg[0] == 0 )
