@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.20 2000-09-30 11:55:22 thib Exp $ */
+ /* $Id: fileconf.c,v 1.21 2000-10-07 14:13:44 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -248,7 +248,7 @@ read_file(char *filename, char *user)
 	error("%s:%d: maximum number of lines (%d) has been reached by %s",
 	      file_name, line, user);
 
-    cf->cf_user = user;
+    cf->cf_user = strdup2(user);
     cf->cf_next = file_base;
     file_base = cf;
 
@@ -520,9 +520,9 @@ read_opt(char *ptr, CL *cl)
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
 	    if ( i == 1 ) {
-		bzero(cl, sizeof(cl));
-		default_line.cl_runas = uid;
-		default_line.cl_mailto = uid;
+		bzero(cl, sizeof(CL));
+		cl->cl_runas = uid;
+		cl->cl_mailto = uid;
 	    }
 	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s'\n", opt_name);
@@ -816,8 +816,6 @@ read_freq(char *ptr, CF *cf)
     
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
-    set_freq(cl->cl_option);
-    cl->cl_runfreq = 0;
 
     /* skip the @ */
     ptr++;
@@ -839,6 +837,10 @@ read_freq(char *ptr, CF *cf)
     }
     else
 	Skip_blanks(ptr);
+
+    /* we set this here, because it may be unset by read_opt (reset option) */
+    cl->cl_runfreq = 0;
+    set_freq(cl->cl_option);
 
     /* then cl_timefreq */
     if ( (ptr = get_time(ptr, &(cl->cl_timefreq))) == NULL) {
@@ -901,7 +903,6 @@ read_arys(char *ptr, CF *cf)
 
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
-    set_td(cl->cl_option);
 
     /* set cl_remain if not specified */
     if ( *ptr == '&' ) {
@@ -924,6 +925,9 @@ read_arys(char *ptr, CF *cf)
     }
 
     cl->cl_remain = cl->cl_runfreq;
+
+    /* we set this here, because it may be unset by read_opt (reset option) */
+    set_td(cl->cl_option);
 
     if (debug_opt)
 	fprintf(stderr, "     ");
