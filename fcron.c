@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.36 2000-12-30 12:55:06 thib Exp $ */
+ /* $Id: fcron.c,v 1.37 2001-01-04 15:53:04 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.36 2000-12-30 12:55:06 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.37 2001-01-04 15:53:04 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -57,6 +57,9 @@ char  *cdir = FCRONTABS;      /* the dir where are stored users' fcrontabs */
 /* process identity */
 pid_t daemon_pid;               
 char *prog_name = NULL;         
+
+/* locking */
+static FILE *daemon_lockfp = NULL;
 
 /* have we got a signal ? */
 char sig_conf = 0;            /* is 1 when we got a SIGHUP, 2 for a SIGUSR1 */ 
@@ -158,22 +161,21 @@ get_lock()
      * if not, write our pid to /var/run/fcron.pid in order to lock,
      * and to permit fcrontab to read our pid and signal us */
 {
-    static FILE *fp = NULL;
 
-    if ( ! fp ) {
+    if ( ! daemon_lockfp ) {
 	int	fd, otherpid, foreopt;
 
 	foreopt = foreground;
 	foreground = 1;
 
 	if (((fd = open(PIDFILE, O_RDWR|O_CREAT, 0644)) == -1 )
-	    || ((fp = fdopen(fd, "r+"))) == NULL)
+	    || ((daemon_lockfp = fdopen(fd, "r+"))) == NULL)
 	    die_e("can't open or create " PIDFILE);
 	
 	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
 	    if ((errno == EAGAIN) || (errno == EACCES))
 		errno = EWOULDBLOCK;
-	    fscanf(fp, "%d", &otherpid);
+	    fscanf(daemon_lockfp, "%d", &otherpid);
 	    die("can't lock " PIDFILE ", running daemon's pid may be %d",
 		otherpid);
 	}
@@ -183,13 +185,13 @@ get_lock()
 	foreground = foreopt;
 
     }
+    
+    rewind(daemon_lockfp);
+    fprintf(daemon_lockfp, "%d\n", daemon_pid);
+    fflush(daemon_lockfp);
+    (void) ftruncate(fileno(daemon_lockfp), ftell(daemon_lockfp));
 
-    rewind(fp);
-    fprintf(fp, "%d\n", daemon_pid);
-    fflush(fp);
-    (void) ftruncate(fileno(fp), ftell(fp));
-
-    /* abandon fd and fp even though the file is open. we need to
+    /* abandon fd and daemon_lockfp even though the file is open. we need to
      * keep it open and locked, but we don't need the handles elsewhere.
      */
 
@@ -387,8 +389,8 @@ main(int argc, char **argv)
 	    break;
 	default:
 	    /* parent */
-	    printf("%s[%d] " VERSION_QUOTED " : started.\n",
-		   prog_name, pid);
+/*  	    printf("%s[%d] " VERSION_QUOTED " : started.\n", */
+/*  		   prog_name, pid); */
 
 	    exit(0);
 	}
@@ -405,6 +407,10 @@ main(int argc, char **argv)
  	close(0); dup2(i, 0);
 	close(1); dup2(i, 1);
 	close(2); dup2(i, 2);
+
+	/* close most other open fds */
+	i = fileno(daemon_lockfp);
+	for(fd = 3; fd < 250; fd++) if (fd != i) (void) close(fd);
 
 	/* finally, create a new session */
 	if ( setsid() == -1 )
