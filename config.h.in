@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.25 2001-01-12 21:44:35 thib Exp $ */
+ /* $Id: config.h.in,v 1.26 2001-01-27 15:43:56 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -116,6 +116,13 @@
 #define COMPLAIN_LEVEL LOG_ERR    /* error messages */
 #define DEBUG_LEVEL LOG_DEBUG     /* only used when DEBUG is defined */
 
+/* options for local functions */
+#define STD 0
+#define NO_GOTO 1                 /* set_next_exe() : no goto_non_matching() */
+#define NO_GOTO_LOG 2             /* NO_GOTO but also log nextexe time */
+#define END_OF_INTERVAL 1         /* goto_non_matching() */
+#define LAVG 1                    /* set_next_exe_notrun() */
+#define SYSDOWN 2                 /* set_next_exe_notrun() */
 
 
 /* end of configurable stuff **************************************** */
