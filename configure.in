@@ -641,7 +641,7 @@ dnl Users and groups ...
 
 AC_MSG_CHECKING(run non-privileged)
 AC_ARG_WITH(run-non-privileged,
-[ --run-non-privileged=[yes|no]	Run fcron without root's rights (see FAQ !)],
+[ --with-run-non-privileged=[yes|no]	Run fcron without root's rights (see FAQ !)],
 [ case "$withval" in
   no)
     run_non_privileged=0
