@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.13 2002-10-05 14:28:21 thib Exp $
+# $Id: Makefile.in,v 1.14 2002-10-05 14:47:51 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -161,5 +161,5 @@ tar: doc tarclean
 tarhtmldoc: doc
 	ln -s HTML fcron-$(VERSION)-doc-html
 	rm -f fcron-doc-html.tar.gz
-	tar -czvf fcron-doc-html.tar.gz fcron-$(VERSION)-doc-html/*
+	tar -czvf fcron-doc-html.tar.gz `find fcron-$(VERSION)-doc-html/ ! -name CVS`
 	rm -f fcron-$(VERSION)-doc-html
