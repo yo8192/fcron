@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.28 2000-12-10 20:26:40 thib Exp $ */
+ /* $Id: fileconf.c,v 1.29 2000-12-14 21:19:11 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -168,10 +168,6 @@ read_file(char *filename, char *user)
 
     /* check if user is allowed to read file */
     /* create a temp file with user's permissions */
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(uid) != 0)
-	die_e("seteuid(uid[%d])", uid);
-#endif
     if ( access(file_name, R_OK) != 0 )
 	die_e("User %s can't read file '%s'", user, file_name);
     else if ( (file = fopen(file_name, "r")) == NULL ) {
@@ -179,13 +175,6 @@ read_file(char *filename, char *user)
 		strerror(errno));
 	return ERR;
     }
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(fcrontab_uid) != 0) {
-	fclose(file);
-	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);	
-	return ERR;
-    }
-#endif
 
     Alloc(cf, CF);
     default_line.cl_file = cf;
@@ -838,15 +827,19 @@ read_opt(char *ptr, CL *cl)
 		fprintf(stderr, "must be privileged to use option runas: "
 			"skipping option\n");
 		need_correction = 1;
+		if ( ! in_brackets )
+		    Handle_err;
 		while( *ptr != ')' && *ptr != ' ' && *ptr != '\0' )
 		    ptr++;
 	    }
-	    if( ! in_brackets || (ptr = get_runas(ptr, &uid)) == NULL )
-		Handle_err;
-	    cl->cl_runas = uid;
-	    set_runas(cl->cl_option);
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, uid);
+	    else {
+		if( ! in_brackets || (ptr = get_runas(ptr, &uid)) == NULL )
+		    Handle_err;
+		cl->cl_runas = uid;
+		set_runas(cl->cl_option);
+		if (debug_opt)
+		    fprintf(stderr, "  Opt : '%s' %d\n", opt_name, uid);
+	    }
 	}
 
 	else {

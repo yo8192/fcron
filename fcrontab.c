@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.21 2000-12-08 12:51:32 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.22 2000-12-14 21:17:07 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.21 2000-12-08 12:51:32 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.22 2000-12-14 21:17:07 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -177,6 +177,11 @@ sig_daemon(void)
 	    " at %s.\n", buf);
 
 
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    if (seteuid(fcrontab_uid) != 0)
+	die_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
+#endif
+
     /* try to create a lock file */
     if ((fd = open(FCRONTABS "/fcrontab.sig", O_RDWR|O_CREAT, 0644)) == -1
 	|| ((fp = fdopen(fd, "r+")) == NULL) )
@@ -229,6 +234,7 @@ xexit(int exit_val)
     if ( need_sig == 1 ) {
 	/* check if daemon is running */
 	if ( (daemon_pid = read_pid()) != 0 )
+	    /* warning : we change euid to fcrontab_iud in sig_daemon() */
 	    sig_daemon();
 	else
 	    fprintf(stderr, "fcron is not running :\n  modifications will"
@@ -247,27 +253,23 @@ copy(char *orig, char *dest)
     FILE *from = NULL, *to = NULL;
     char c;
 
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(uid) != 0) {
-	error_e("seteuid(uid[%d])", uid);
-	return ERR;
-    }
-#endif
     if ( (from = fopen(orig, "r")) == NULL) {
 	error_e("copy: orig");
 	return ERR;
     }
+    /* create it as fcrontab_uid (to avoid problem if user's uid changed) */
 #if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(fcrontab_uid) != 0) {
-	fclose(from);
+    if (seteuid(fcrontab_uid) != 0)
 	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
-	return ERR;
-    }
 #endif
     if ((to = fopen(dest, "w")) == NULL) {
 	error_e("copy: dest");
 	return ERR;
     }
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    if (seteuid(uid) != 0)
+	die_e("seteuid(uid[%d])", uid);
+#endif
 
     while ( (c = getc(from)) != EOF )
 	if ( putc(c, to) == EOF ) {
@@ -285,40 +287,46 @@ copy(char *orig, char *dest)
 int
 remove_fcrontab(char rm_orig)
     /* remove user's fcrontab and tell daemon to update his conf */
+    /* note : the binary fcrontab is removed by fcron */
 {
+    int return_val = OK;
+    FILE *f;
 
     if ( rm_orig )
 	explain("removing %s's fcrontab", user);
 
     /* remove source and formated file */
-    if ( (rm_orig && remove(buf)) != 0 || remove(user) != 0) {
-	    
-	/* try to remove the temp file in case he has not
-	 * been read by fcron daemon */
-	snprintf(buf, sizeof(buf), "new.%s", user);
-	if ( remove(buf) != 0 ) {
-
-	    if ( errno == ENOENT )
-		return ENOENT;
-	    else
-		error_e("could not remove %s", buf);		
-	}
-
+    if ( (rm_orig && remove(buf)) != 0 ) {
+	if ( errno == ENOENT )
+	    return_val = ENOENT;
+	else
+	    error_e("could not remove %s", buf);		
     }
+
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    if (seteuid(fcrontab_uid) != 0)
+	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
+#endif
+	    
+    /* try to remove the temp file in case he has not
+     * been read by fcron daemon */
+    snprintf(buf, sizeof(buf), "new.%s", user);
+    remove(buf);
 
     /* finally create a file in order to tell the daemon
      * a file was removed, and launch a signal to daemon */
-    { 
-	FILE *f;
-	snprintf(buf, sizeof(buf), "rm.%s", user);
-	f = fopen(buf, "w");
-	fclose(f);
+    snprintf(buf, sizeof(buf), "rm.%s", user);
+    f = fopen(buf, "w");
+    fclose(f);
+    
+    need_sig = 1;
 
-	need_sig = 1;
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    if (seteuid(uid) != 0)
+	die_e("seteuid(uid[%d])", uid);
+#endif
 
-    }
-
-    return OK;
+    return return_val;
 
 }
 
@@ -326,6 +334,7 @@ remove_fcrontab(char rm_orig)
 int
 write_file(char *file)
 {
+    int return_val = OK;
 
     if (ignore_prev == 1)
 	/* if user wants to ignore previous version, we remove it *
@@ -347,9 +356,9 @@ write_file(char *file)
     /* copy original file to FCRONTABS dir */
     snprintf(buf, sizeof(buf), "%s.orig", user);
     if ( copy(file, buf) == ERR )
-	return ERR;
+	return_val = ERR;
 
-    return OK;
+    return return_val;
 }
 
 int
@@ -433,12 +442,6 @@ edit_file(char *buf)
 	
     sprintf(tmp, "/tmp/fcrontab.%d", getpid());
 
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    /* create a temp file with user's permissions */
-    /* (we need to seteuid to uid befor setting it to asuid if user is root) */
-    if (seteuid(uid) != 0 || seteuid(asuid) != 0)
-	die_e("Could not change uid to asuid[%d]", asuid); 
-#endif
     if ( (file = open(tmp, O_CREAT|O_EXCL|O_WRONLY, 0600)) == -1 ) {
 	error_e("could not create file %s", tmp);
 	goto exiterr;
@@ -447,17 +450,10 @@ edit_file(char *buf)
 	error_e("could not fdopen");
 	goto exiterr;
     }
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(uid) != 0 || seteuid(fcrontab_uid) != 0) {
-	error_e("Could not change uid to fcrontab_uid[%d]", fcrontab_uid);
-	goto exiterr;
-    }
-#else
-    if (fchown(file, asuid, asgid) != 0) {
-	error_e("Could not fchown %s to asuid and asgid", tmp);
-	goto exiterr;
-    }
-#endif
+/*      if (fchown(file, asuid, asgid) != 0) { */
+/*  	error_e("Could not fchown %s to asuid and asgid", tmp); */
+/*  	goto exiterr; */
+/*      } */
     /* copy user's fcrontab (if any) to a temp file */
     if ( (f = fopen(buf, "r")) == NULL ) {
 	if ( errno != ENOENT ) {
@@ -586,29 +582,13 @@ edit_file(char *buf)
     need_sig = 1;
     
   end:
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(uid) != 0 ) 
-  	error_e("Could not change uid to [%d]", uid); 
-#endif
     if ( remove(tmp) != 0 )
 	error_e("could not remove %s", tmp);
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(fcrontab_uid) != 0 ) 
-  	die_e("Could not change uid to fcrontab_uid[%d]", fcrontab_uid); 
-#endif
     xexit (EXIT_OK);
 
   exiterr:
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(uid) != 0 ) 
-  	error_e("Could not change uid to [%d]", uid); 
-#endif
     if ( remove(tmp) != 0 )
 	error_e("could not remove %s", tmp);
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(fcrontab_uid) != 0 ) 
-  	die_e("Could not change uid to fcrontab_uid[%d]", fcrontab_uid); 
-#endif
     xexit (EXIT_ERR);
 
 }
@@ -623,11 +603,6 @@ install_stdin(void)
     register char c;
     short return_val = EXIT_OK;
 	    	    
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    /* create a temp file with user's permissions */
-    if (seteuid(uid) != 0)
-	die_e("seteuid(uid[%d])", uid);
-#endif
     sprintf(tmp, "/tmp/fcrontab.%d", getpid());
     if( (tmp_file = fopen(tmp, "w")) == NULL )
 	die_e("Could not open '%s'", tmp);
@@ -637,12 +612,6 @@ install_stdin(void)
 
     fclose(tmp_file);
 
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(fcrontab_uid) != 0) {
-	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
-	goto exiterr;
-    }
-#endif
 
     if ( make_file(tmp) == ERR )
 	goto exiterr;
@@ -652,19 +621,8 @@ install_stdin(void)
   exiterr:
 	return_val = EXIT_ERR;    
   exit:
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    /* create a temp file with user's permissions */
-    if (seteuid(uid) != 0)
-	die_e("seteuid(uid[%d])", uid);
-#endif
     if ( remove(tmp) != 0 )
 	error_e("Could not remove %s", tmp);
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(fcrontab_uid) != 0) {
-	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
-	goto exiterr;
-    }
-#endif
     return return_val;
 
 }
@@ -822,8 +780,8 @@ main(int argc, char **argv)
 	die("user '%s' is not in passwd file. Aborting.", USERNAME);
     fcrontab_uid = pass->pw_uid;
     fcrontab_gid = pass->pw_gid;
-    if (seteuid(fcrontab_uid) != 0 ) 
-	die_e("Could not change uid to " USERNAME "[%d]", fcrontab_uid ); 
+    if (seteuid(uid) != 0) 
+	die_e("Could not change uid to uid[%d]", uid); 
     if (setegid(fcrontab_gid) != 0) 
 	die_e("Could not change gid to " GROUPNAME "[%d]", fcrontab_gid); 
 #else
@@ -836,7 +794,7 @@ main(int argc, char **argv)
 
     /* this program is seteuid : we set default permission mode
      * to  600 for security reasons */
-    umask(066);
+    umask(026);
 
     /* get current dir */
     if ( (orig_dir = getcwd(NULL, 0)) == NULL )
