@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.66 2002-10-06 17:10:11 thib Exp $ */
+ /* $Id: database.c,v 1.67 2002-10-28 17:54:37 thib Exp $ */
 
 #include "fcron.h"
 
@@ -251,10 +251,10 @@ add_serial_job(cl_t *line)
     debug("inserting in serial queue %s", line->cl_shell);
 
     if ( serial_num >= serial_array_size ) {
-	if ( serial_num >= SERIAL_QUEUE_MAX ) {
-  	    error("Could not add %s to serial queue: queue is full (%d jobs). "
-		  "Consider using option serialonce, and/or fcron's option -m",
-  		 line->cl_shell, SERIAL_QUEUE_MAX);
+	if ( serial_num >= serial_queue_max ) {
+  	    error("Could not add job : serial queue is full (%d jobs). "
+		  "Consider using option serialonce, fcron's option -m and/or -q : %s",
+  		 serial_queue_max, line->cl_shell);
 	    if ( is_notice_notrun(line->cl_option) )
 		mail_notrun(line, QUEUE_FULL, NULL);
 	    return;
@@ -316,10 +316,10 @@ add_lavg_job(cl_t *line)
 	
     /* append job to the list of lavg job */
     if ( lavg_num >= lavg_array_size ) {
-	if ( lavg_num >= LAVG_QUEUE_MAX ) {
-  	    error("Could not add %s to lavg queue: queue is full (%d jobs). "
-		  "Consider using options lavgonce, until and strict.",
-  		 line->cl_shell, LAVG_QUEUE_MAX);
+	if ( lavg_num >= lavg_queue_max ) {
+  	    error("Could not add job : lavg queue is full (%d jobs). Consider using "
+		  "options lavgonce, until, strict and/or fcron's option -q.",
+  		 lavg_queue_max, line->cl_shell);
 	    if ( is_notice_notrun(line->cl_option) )
 		mail_notrun(line, QUEUE_FULL, NULL);
 	    return;
@@ -518,7 +518,7 @@ set_wday(struct tm *date)
    * and add this number modulo 7 to the wday number */
 {
     long nod = 0;
-    register int i;
+    int i;
 
     /* we add the number of days of each previous years */
     for (i =  (date->tm_year - 1); i >= 100 ; i--)
@@ -793,9 +793,9 @@ set_next_exe(cl_t *line, char option)
 	struct tm *ft;
 	struct tm ftime;
 	time_t nextexe = 0;
-	register int i;
+	int i;
 	int max;
-	register char has_changed = 0;
+	char has_changed = 0;
 	/* to prevent from invinite loop with unvalid lines : */
 	short int year_limit = MAXYEAR_SCHEDULE_TIME;
 	/* timezone difference */
@@ -888,7 +888,7 @@ set_next_exe(cl_t *line, char option)
 		goto setDay;
 	    }
 	} else {  /* dayor */
-	    register int j;
+	    int j;
 
 	    set_wday(&ftime);
 
@@ -1141,7 +1141,7 @@ check_lavg(time_t lim)
     return tts;
 #else
 
-    register int i = 0;
+    int i = 0;
     double l_avg[3]= {0, 0, 0};
 
     /* first, check if some lines must be executed because of until */
