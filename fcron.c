@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.22 2000-06-25 20:00:13 thib Exp $ */
+ /* $Id: fcron.c,v 1.23 2000-06-28 16:27:49 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.22 2000-06-25 20:00:13 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.23 2000-06-28 16:27:49 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -427,7 +427,7 @@ void main_loop()
     time_t save;               /* time remaining until next save */
     struct timeval tv;         /* we use usec field to get more precision */
     time_t stime;          /* time to sleep until next job
-		                * execution */
+			    * execution */
 
     debug("Entering main loop");
 
@@ -456,7 +456,7 @@ void main_loop()
 	    wait_chld();
 	    sig_chld = 0;
 	}
-	else if (sig_conf > 0) {
+	if (sig_conf > 0) {
 
 	    if (sig_conf == 1)
 		/* update configuration */
@@ -467,20 +467,17 @@ void main_loop()
 
 	    sig_conf = 0;
 	}
-	else {
-	    debug("\n");
+	debug("\n");
 
-	    test_jobs(now);
+	test_jobs(now);
 
-	    if ( serial_running == 0)
-		run_serial_job();
+	if ( serial_running == 0)
+	    run_serial_job();
 
-	    if ( save <= now ) {
-		save = now + SAVE;
-		/* save all files */
-		save_file(NULL, NULL);
-	    }
-
+	if ( save <= now ) {
+	    save = now + SAVE;
+	    /* save all files */
+	    save_file(NULL, NULL);
 	}
 
 	stime = time_to_sleep(save);
