@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.4 2002-07-19 19:32:53 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.5 2002-08-25 17:10:11 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.4 2002-07-19 19:32:53 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.5 2002-08-25 17:10:11 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -492,14 +492,17 @@ talk_fcron(char *cmd_str, int fd)
 	    /* weird ... no data yet ? */
 	    if ( debug_opt )
 		fprintf(stderr, "no data yet ?");
-	    tv.tv_sec = 0;
-	    tv.tv_usec = 25000;
 	}
-	else if ( read_len <= 0 && debug_opt )
-	    fprintf(stderr, "read_len = %d", read_len);
+	else if ( read_len <= 0 ) {
+	    if ( debug_opt )
+		fprintf(stderr, "read_len = %d\n", read_len);
+	    fprintf(stderr, "connection closed by fcron\n");
+	    shutdown(fd, SHUT_RDWR);
+	    return ERR;
+	}
 	else {
 	    write(STDOUT_FILENO, buf, read_len);
-	    if ( read_len > sizeof(END_STR) &&
+	    if ( read_len >= sizeof(END_STR) &&
 		 strncmp(&buf[read_len-sizeof(END_STR)], END_STR, sizeof(END_STR)) == 0)
 		break;
 	}
@@ -527,7 +530,7 @@ interactive_mode(int fd)
 	return ERR;
 
     while (fprintf(stderr, "fcrondyn> ") && fgets(buf, sizeof(buf), stdin) != NULL 
-	   && (return_code = talk_fcron(buf, fd)) != QUIT_CMD) ;
+	   && (return_code = talk_fcron(buf, fd)) != QUIT_CMD && return_code != ERR ) ;
 
     if ( ! existing_connection )
 	close(fd);
