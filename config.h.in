@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.38 2001-12-23 22:05:03 thib Exp $ */
+ /* $Id: config.h.in,v 1.39 2002-02-25 18:44:26 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -151,6 +151,8 @@
 /* where is located pid file ? */
 #undef PIDFILE
 
+/* 1 if we want to compile and install fcrondyn */
+#undef FCRONDYN
 #undef NOLOADAVG
 /* 1 if you want debug mode */
 #undef DEBUG
@@ -313,11 +315,17 @@
 /* Define if you have the <sys/ndir.h> header file.  */
 #undef HAVE_SYS_NDIR_H
 
+/* Define if you have the <sys/socket.h> header file.  */
+#undef HAVE_SYS_SOCKET_H
+
 /* Define if you have the <sys/termios.h> header file.  */
 #undef HAVE_SYS_TERMIOS_H
 
 /* Define if you have the <sys/time.h> header file.  */
 #undef HAVE_SYS_TIME_H
+
+/* Define if you have the <sys/types.h> header file.  */
+#undef HAVE_SYS_TYPES_H
 
 /* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
 #undef HAVE_SYS_WAIT_H

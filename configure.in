@@ -41,6 +41,7 @@ AC_CHECK_HEADERS(errno.h sys/fcntl.h getopt.h limits.h)
 AC_CHECK_HEADERS(stdarg.h)
 AC_CHECK_HEADERS(sys/termios.h)
 AC_CHECK_HEADERS(strings.h)
+AC_CHECK_HEADERS(sys/types.h sys/socket.h)
 AC_CHECK_HEADERS(security/pam_appl.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -524,6 +525,29 @@ else
 fi
 USEPAM="$usepam"
 AC_SUBST(USEPAM)
+
+
+fcrondyn=1
+AC_MSG_CHECKING(if fcrondyn should be compiled)
+AC_ARG_WITH(fcrondyn,
+[ --with-fcrondyn=[yes|no]	Compile (or not) fcrondyn (default: yes).],
+[ case "$withval" in
+  no)
+    fcrondyn=0
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    AC_MSG_RESULT(yes)
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+  AC_MSG_RESULT(yes)
+)
+FCRONDYN="$fcrondyn"
+AC_DEFINE_UNQUOTED(FCRONDYN, "$fcrondyn")
+AC_SUBST(FCRONDYN)
 
 
 dnl ---------------------------------------------------------------------
