@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.68 2002-11-02 19:33:25 thib Exp $ */
+ /* $Id: fileconf.c,v 1.69 2002-11-17 13:13:11 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -42,7 +42,6 @@ void read_period(char *ptr, cf_t *cf);
 void read_env(char *ptr, cf_t *cf);
 char *read_opt(char *ptr, cl_t *cl);
 char *check_username(char *ptr, cf_t *cf, cl_t *cl);
-int save_one_file(cf_t *file, char *filename);
 
 
 char need_correction;
@@ -139,7 +138,7 @@ get_line(char *str, size_t size, FILE *file)
     }
 
     /* line is too long : goto next line and return ERR */
-    while ( ( (c = getc(file)) != EOF ) && ( (char)c != '\n') )
+    while ( ( (char)(c = getc(file)) != EOF ) && ( (char)c != '\n') )
 	;
     line++;
     need_correction = 1;
@@ -1651,45 +1650,6 @@ delete_file(const char *user_name)
 
 }
 
-
-/* this function is called in save.c */
-int
-save_one_file(cf_t *file, char *path)
-/* save a given file to disk */
-{
-    int fd;
-
-    /* open file */
-    fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR | S_IWUSR);
-    if ( fd == -1 ) {
-	error_e("Could not open %s : file has not be installed.", path);
-	return ERR;
-    }
-
-    /* save_file() is run under user's rights.
-     * If fcrontab is run by root for a normal user, we must change the file's
-     * ownership to this user, in order to make fcron check the runas fields.
-     * (a malicious user could put a runas(root) and wait for the fcrontab to be
-     * installed by root) */
-    if ( fchown(fd, asuid, fcrontab_gid) != 0 ) {
-	error_e("Could not fchown %s : file has not been installed.", path);
-	close(fd);
-	remove(path);
-	return ERR;
-    }
-
-    /* save file : */
-    if ( write_file_to_disk(fd, file, 0) == ERR ) {
-	close(fd);
-	remove(path);
-	return ERR;
-    }
-
-    close(fd);
-
-    return OK;
-}
-
 int
 save_file(char *path)
     /* Store the informations relatives to the executions
@@ -1702,7 +1662,12 @@ save_file(char *path)
     
     for (file = file_base; file; file = file->cf_next) {
 
-	if ( save_file_safe(file, path, "fcrontab") == ERR )
+    /* save_file() is run under user's rights.
+     * If fcrontab is run by root for a normal user, we must change the file's
+     * ownership to this user, in order to make fcron check the runas fields.
+     * (a malicious user could put a runas(root) and wait for the fcrontab to be
+     * installed by root) */
+	if ( save_file_safe(file, path, "fcrontab", asuid, fcrontab_gid, 0) == ERR )
 	    return ERR;
 
     }
