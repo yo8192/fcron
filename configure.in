@@ -6,7 +6,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.7)
 
-vers="0.9.4"
+vers="0.9.5"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -417,9 +417,80 @@ AC_DEFINE_UNQUOTED(DOCDIR, "$docdir")
 AC_SUBST(DOCDIR)
 
 
+AC_MSG_CHECKING(root's username)
+AC_ARG_WITH(rootname,
+[ --with-rootname=USERNAME	Root's username (default root) ],
+[ case "$withval" in
+  no)
+    AC_MSG_ERROR(Need rootname.)
+    ;;
+  yes)
+    if cat /etc/passwd | grep "^root:" > /dev/null; then
+	rootname=root
+        AC_MSG_RESULT(root)
+    else
+	AC_MSG_ERROR(Cannot determine root's username: try option --with-rootname=USERNAME)
+    fi
+    ;;
+  *)
+    if cat /etc/passwd | grep "^$withval:" > /dev/null ; then
+	rootname=$withval
+        AC_MSG_RESULT(root)
+    else
+	AC_MSG_ERROR(Invalid root's username : not in /etc/passwd)
+    fi
+    ;;
+    esac ],
+    if cat /etc/passwd | grep "^root:" > /dev/null ; then
+	rootname=root
+        AC_MSG_RESULT(root)
+    else
+	AC_MSG_ERROR(Cannot determine root's username: try option --with-rootname=USERNAME)
+    fi
+)
+
+AC_MSG_CHECKING(root's groupname)
+AC_ARG_WITH(rootgroup,
+[ --with-rootgroup=GROUPNAME	Root's groupname (default root) ],
+[ case "$withval" in
+  no)
+    AC_MSG_ERROR(Need rootgroup.)
+    ;;
+  yes)
+    if cat /etc/passwd | grep "^root:" > /dev/null ; then
+	rootgroup=root
+        AC_MSG_RESULT(root)
+    else
+	AC_MSG_ERROR(Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME)
+    fi
+    ;;
+  *)
+    if cat /etc/passwd | grep "^$withval:" > /dev/null ; then
+	rootgroup=$withval
+        AC_MSG_RESULT(root)
+    else
+	AC_MSG_ERROR(Invalid root's groupname : not in /etc/group)
+    fi
+    ;;
+    esac ],
+    if cat /etc/passwd | grep "^root:" > /dev/null ; then
+	rootgroup=root
+        AC_MSG_RESULT(root)
+    else
+	AC_MSG_ERROR(Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME)
+    fi
+)
+
+ROOTNAME="$rootname"
+AC_SUBST(ROOTNAME)
+AC_DEFINE_UNQUOTED(ROOTNAME, "$rootname")
+ROOTGROUP="$rootgroup"
+AC_SUBST(ROOTGROUP)
+AC_DEFINE_UNQUOTED(ROOTGROUP, "$rootgroup")
+
 if test \( $setreuid -eq 0 \) -o \( $setregid -eq 0 \) ; then
-	username="root"
-	groupname="root"
+	username="$rootname"
+	groupname="$rootgroup"
 else
 
 AC_MSG_CHECKING(username to run under)
@@ -443,7 +514,7 @@ AC_ARG_WITH(username,
 	AC_MSG_RESULT($withval)
     else
 	AC_MSG_RESULT(root)
-	AC_MSG_ERROR(username must be root as your system has no seteuid)
+	AC_MSG_WARN(username must be root as your system has no seteuid)
     fi
     ;;
     esac ],
@@ -476,7 +547,7 @@ AC_ARG_WITH(groupname,
 	AC_MSG_RESULT($withval)
     else
 	AC_MSG_RESULT(root)
-	AC_MSG_ERROR(groupname must be root as your system has no setegid)
+	AC_MSG_WARN(groupname must be root as your system has no setegid)
     fi
     ;;
     esac ],
