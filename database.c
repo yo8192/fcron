@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.60 2002-01-27 16:33:20 thib Exp $ */
+ /* $Id: database.c,v 1.61 2002-02-02 14:52:29 thib Exp $ */
 
 #include "fcron.h"
 
@@ -964,8 +964,8 @@ set_next_exe(CL *line, char option)
 	    intend_int = mktime(&intend);
 
 	    /* set a random time to add to the first allowed time of execution */
-	    nextexe += ( (i= intend_int - nextexe) > 0) ? (time_t)( rand() % i) : 0 ;
-
+	    nextexe += ( (i= intend_int - nextexe) > 0) ? 
+		(time_t)(((float)i * (float)rand())/(float)RAND_MAX) : 0;
 	}
 
 	line->cl_nextexe = nextexe + (line->cl_file->cf_tzdiff * 3600);
