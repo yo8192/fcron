@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.68 2001-05-15 01:22:28 thib Exp $
+# $Id: Makefile.in,v 1.69 2001-05-24 20:07:42 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -175,6 +175,8 @@ tar: configure updatedoc vclean
 
 	@(find ./ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOLOG)" \
              ! -regex "$(REXP_MANPAGES)" -exec ci -l {} \;)
+# re-ci the CHANGES file, as we generally update it during the other files' ci
+	@(ci -l doc/CHANGES)
 
 	@(find ./ -type f ! -regex '.*RCS.*' | \
              sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
