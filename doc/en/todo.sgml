@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.27 2004-07-11 18:12:11 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.28 2004-08-12 09:52:15 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -74,6 +74,12 @@ A copy of the license is included in gfdl.sgml.
 	       <para>PAM support (included in fcron, but needs more tests by
 		  people using PAM - not implemented in fcrondyn : is it needed
 		  in fcrondyn anyway ?)</para>
+	    </listitem>
+	    <listitem>
+	       <para>support for per user serial queue (especially for root)</para>
+	    </listitem>
+	    <listitem>
+	       <para>use readline (if available) for fcrondyn.</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>

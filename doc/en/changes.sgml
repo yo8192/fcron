@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.31 2004-07-11 18:12:15 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.32 2004-08-12 09:52:26 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -17,6 +17,9 @@ A copy of the license is included in gfdl.sgml.
 	 <title>From version 2.9.4 to 2.9.5</title>
 	 <listitem>
 	    <para>Ported to HP-UX (thanks go to Scott Tinsley)</para>
+	 </listitem>
+	 <listitem>
+	    <para>Implemented fcrondyn commands run and runnow.</para>
 	 </listitem>
 	 <listitem>
 	    <para>Merged patch from Russell Coker for new SE Linux.</para>
@@ -35,9 +38,20 @@ A copy of the license is included in gfdl.sgml.
 	    </para>
 	 </listitem>
 	 <listitem>
+	    <para>Internal changes in log.c: code is more segmented, and code
+	    has been added to be able to send log message to fcrondyn. Syslog
+	    messages are now never longer than MAX_MSG (even with string from
+	    strerror()).</para>
+	 </listitem>
+	 <listitem>
 	    <para>Fixed a bug which happened on Daylight Time Save change
 	       on some systems. It would make fcron run into a nasty infinite loop.
 	       Added a sanity check in set_nextexe() to avoid such things.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Fixed a crash bug: in 2.9.4, if a user run ls_exeq when
+	       a job is running and has been removed from its fcrontab,
+	       it makes fcron crash.</para>
 	 </listitem>
 	 <listitem>
 	    <para>Fixed a small bug : scripts were supposing perl was in /usr/bin.</para>
@@ -45,6 +59,10 @@ A copy of the license is included in gfdl.sgml.
 	 <listitem>
 	    <para>Fixed a bug which caused the pid of a child process
 	       to be incorrectly read</para>
+	 </listitem>
+	 <listitem>
+	    <para>fixed memory leak: some strings returned by log.c:make_msg()
+	       weren't always free()d.</para>
 	 </listitem>
       </itemizedlist>
 
