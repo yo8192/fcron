@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.4 2000-06-21 13:46:55 thib Exp $ */
+ /* $Id: option.h,v 1.5 2000-06-22 12:35:03 thib Exp $ */
 
 /* read and set options of a line */
 
@@ -33,13 +33,17 @@
   0      is this job based on time and date or system up time ?
   1      is this job based on system load average ?
   2      perform a logic OR or a logic AND between load averages ?
-  3      should we run this job if it should have been executed
-          during system down?
-  4      should this job be run serially ?
-  5      does the output have to be mailed to user ?
-  6      does the output (even if zero-length) must be mailed to user ?
+  3      perform a logic OR or a logic AND between week day and month day ?
+  4      should we run this job at fcron startup if it should have been
+           executed during system down?
+  5      should this job be run serially ?
+  6      is this job run serially only once (for bootrun) ?
+  7      does the output have to be mailed to user ?
+  8      does the output (even if zero-length) must be mailed to user ?
 
 */
+
+/* default value corresponds to a bit value of 0 */
 
 #ifndef __OPTIONH__
 #define __OPTIONH__
@@ -98,64 +102,78 @@
 	(_bit_clear(opt, 2))
 
 /*
-  bit 3 : set to 1 : run this line if it should have been executed
-                     during system down
-          set to 0 : do not run it
+  bit 3 : set to 1 : perform a logic OR between week day and month day
+          set to 0 : perform a logic AND between week day and month day
 */
-#define	is_bootrun(opt) \
+#define	is_dayor(opt) \
 	(_bit_test(opt, 3))
-#define	set_bootrun(opt) \
+#define	is_dayand(opt) \
+	( ! _bit_test(opt, 3))
+#define	set_dayor(opt) \
 	(_bit_set(opt, 3))
-#define clear_bootrun(opt) \
+#define set_dayand(opt) \
 	(_bit_clear(opt, 3))
 
 
 /*
-  bit 4 : set to 1 : run this line serially
-          set to 0 : do not run it serially
+  bit 4 : set to 1 : run this line at fcron's startup if it should have been
+                     executed during system down
+          set to 0 : do not run it at fcron's startup
 */
-#define	is_serial(opt) \
+#define	is_bootrun(opt) \
 	(_bit_test(opt, 4))
-#define	set_serial(opt) \
+#define	set_bootrun(opt) \
 	(_bit_set(opt, 4))
-#define clear_serial(opt) \
+#define clear_bootrun(opt) \
 	(_bit_clear(opt, 4))
 
 
 /*
-  bit 5 : set to 1 : do not mail output
-          set to 0 : mail output to user
+  bit 5 : set to 1 : run this line serially
+          set to 0 : do not run it serially
 */
-#define	is_mail(opt) \
-	( ! _bit_test(opt, 5))
-#define	set_mail(opt) \
-	(_bit_clear(opt, 5))
-#define clear_mail(opt) \
+#define	is_serial(opt) \
+	(_bit_test(opt, 5))
+#define	set_serial(opt) \
 	(_bit_set(opt, 5))
+#define clear_serial(opt) \
+	(_bit_clear(opt, 5))
 
 
 /*
-  bit 6 : set to 1 : mail output even if it is zero-length to user
-          set to 0 : mail output only if it is non-zero length
+  bit 6 : set to 1 : job is being serialized once
+          set to 0 : job is not being serialized once
 */
-#define	is_zerolength(opt) \
+#define	is_serial_once(opt) \
 	(_bit_test(opt, 6))
-#define	set_zerolength(opt) \
+#define	set_serial_once(opt) \
 	(_bit_set(opt, 6))
-#define clear_zerolength(opt) \
+#define clear_serial_once(opt) \
 	(_bit_clear(opt, 6))
 
 
 /*
-  bit 7 : set to 1 : job is being serialized once
-          set to 0 : job is not being serialized once
+  bit 7 : set to 1 : do not mail output
+          set to 0 : mail output to user
 */
-#define	is_serial_once(opt) \
-	(_bit_test(opt, 7))
-#define	set_serial_once(opt) \
-	(_bit_set(opt, 7))
-#define clear_serial_once(opt) \
+#define	is_mail(opt) \
+	( ! _bit_test(opt, 7))
+#define	set_mail(opt) \
 	(_bit_clear(opt, 7))
+#define clear_mail(opt) \
+	(_bit_set(opt, 7))
+
+
+/*
+  bit 8 : set to 1 : mail output even if it is zero-length to user
+          set to 0 : mail output only if it is non-zero length
+*/
+#define	is_mailzerolength(opt) \
+	(_bit_test(opt, 8))
+#define	set_mailzerolength(opt) \
+	(_bit_set(opt, 8))
+#define clear_mailzerolength(opt) \
+	(_bit_clear(opt, 8))
 
 
 #endif /* __OPTIONH__ */

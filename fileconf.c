@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.8 2000-06-21 15:00:07 thib Exp $ */
+ /* $Id: fileconf.c,v 1.9 2000-06-22 12:33:55 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -30,6 +30,8 @@ char *get_string(char *ptr);
 int get_line(char *str, size_t size, FILE *file);
 char *get_time(char *ptr, time_t *time);
 char *get_num(char *ptr, int *num, int max, const char **names);
+char *get_runas(char *ptr, uid_t *uid);
+char *get_nice(char *ptr, int *nice);
 char *get_bool(char *ptr, int *i);
 char *read_field(char *ptr, bitstr_t *ary, int max, const char **names);
 void read_freq(char *ptr, CF *cf);
@@ -42,6 +44,7 @@ char need_correction;
 CL default_line;    /* default options for a line */
 char *file_name;
 int line;
+extern char *user;
 
 /* warning : all names must have the same length */
 const char *dows_ary[] = {
@@ -337,6 +340,62 @@ read_env(char *ptr, CF *cf)
 
 }
 
+
+char *
+get_runas(char *ptr, uid_t *uid)
+    /* read a user name and put his uid in variable uid */
+{
+    char name[USER_NAME_LEN];
+    struct passwd *pas;
+    int i = 0;
+
+    bzero(name, sizeof(name));
+
+    while ( isalnum(*ptr) && i < sizeof(name))
+	name[i++] = *ptr++;
+    
+    if ((pas = getpwnam(user)) == NULL) {
+        fprintf(stderr, "%s is not in passwd file", name);
+	return NULL;
+    }
+    
+    *uid = pas->pw_uid;
+
+    return ptr;
+
+}
+
+
+char *
+get_nice(char *ptr, int *nice)
+    /* read a nice value and put it in variable nice */
+{
+    char negative = 0;
+
+    if ( *ptr == '-' ) {
+	negative = 1;
+	ptr++;
+    }
+
+    if ( (ptr = get_num(ptr, nice, 20, NULL)) == NULL )
+	return NULL;
+
+    if ( negative == 1 ) {
+	if (getuid() != 0) {
+	    fprintf(stderr, "must be privileged to use a negative argument "
+		    "with nice: set to 0\n");
+	    need_correction = 1;
+	    *nice = 0;
+	}
+
+	*nice *= (-1);
+    }
+
+    return ptr;
+
+}
+
+
 char *
 get_bool(char *ptr, int *i)
     /* get a bool value : either true (1) or false (0)
@@ -381,7 +440,7 @@ read_opt(char *ptr, CL *cl)
 #define Handle_err \
     { \
         fprintf(stderr, "%s:%d: Argument for option '%s' is not valid: " \
-		"skipping line.\n", file_name, line, opt_name); \
+		"skipping end of line.\n", file_name, line, opt_name); \
         need_correction = 1; \
         return NULL; \
     }
@@ -393,7 +452,7 @@ read_opt(char *ptr, CL *cl)
 	i = 0;
 	bzero(opt_name, sizeof(opt_name));
 
-	while ( isalnum(*ptr) )
+	while ( isalnum(*ptr)  && i < sizeof(opt_name))
 	    opt_name[i++] = *ptr++;
     
 	i = 1;
@@ -414,6 +473,7 @@ read_opt(char *ptr, CL *cl)
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
 	}
+
 	else if(strcmp(opt_name, "b")==0 || strcmp(opt_name, "bootrun")==0){
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
@@ -424,6 +484,7 @@ read_opt(char *ptr, CL *cl)
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
 	}
+
 	else if( strcmp(opt_name, "reset")==0 ) {
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
@@ -438,6 +499,7 @@ read_opt(char *ptr, CL *cl)
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' %ld\n",opt_name,cl->cl_nextexe);
 	}
+
 	else if(strcmp(opt_name, "r")==0 || strcmp(opt_name, "runfreq")==0) {
 	    if( ! in_brackets || (ptr=get_num(ptr, &i, 65534, NULL)) == NULL )
 		Handle_err;
@@ -445,6 +507,7 @@ read_opt(char *ptr, CL *cl)
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
 	}
+
 	else if(strcmp(opt_name, "m")==0 || strcmp(opt_name, "mail")==0){
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
@@ -455,6 +518,18 @@ read_opt(char *ptr, CL *cl)
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
 	}
+
+	else if( strcmp(opt_name, "forcemail") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		clear_mailzerolength(cl->cl_option);
+	    else
+		set_mailzerolength(cl->cl_option);	
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+
 	else if( strcmp(opt_name, "mailto") == 0) {
 	    char buf[50];
 	    bzero(buf, sizeof(buf));
@@ -471,6 +546,53 @@ read_opt(char *ptr, CL *cl)
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' '%s'\n", opt_name, buf);
 	}
+
+	else if( strcmp(opt_name, "dayand") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		set_dayor(cl->cl_option);
+	    else
+		set_dayand(cl->cl_option);	
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+
+	else if( strcmp(opt_name, "dayor") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		set_dayand(cl->cl_option);
+	    else
+		set_dayor(cl->cl_option);	
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+
+	else if(strcmp(opt_name, "n") == 0 || strcmp(opt_name, "nice") == 0) {
+	    if( ! in_brackets || (ptr = get_nice(ptr, &i)) == NULL )
+		Handle_err;
+	    cl->cl_nice = (char)i;
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+
+	else if(strcmp(opt_name, "runas") == 0) {
+	    uid_t uid;
+	    if (getuid() != 0) {
+		fprintf(stderr, "must be privileged to use option runas: "
+			"skipping option\n");
+		need_correction = 1;
+		while( *ptr != ')' && *ptr != ' ' && *ptr != '\0' )
+		    ptr++;
+	    }
+	    if( ! in_brackets || (ptr = get_runas(ptr, &uid)) == NULL )
+		Handle_err;
+	    cl->cl_nice = i;
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+
 	else {
 	    fprintf(stderr, "%s:%d: Option '%s' unknown: "
 		    "skipping option.\n", file_name, line, opt_name);  
@@ -552,11 +674,16 @@ read_freq(char *ptr, CF *cf)
     /* read a freq entry, and append a line to cf */
 {
     CL *cl = NULL;
+    struct passwd *pas;
     
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
     set_freq(cl->cl_option);
     cl->cl_runfreq = 0;
+    if ((pas = getpwnam(user)) == NULL) 
+        die("failed to get uid for %s", user);
+    cl->cl_runas = pas->pw_uid;
+    
 
     /* skip the @ */
     ptr++;
