@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.19 2000-08-22 18:01:39 thib Exp $ */
+ /* $Id: job.c,v 1.20 2000-08-28 17:59:54 thib Exp $ */
 
 #include "fcron.h"
 
@@ -46,9 +46,21 @@ change_user(uid_t uid)
     if ((pas = getpwuid(uid)) == NULL) 
         die("failed to get passwd fields for user's uid %d", uid);
     
+#ifdef __linux__
     setenv("USER", pas->pw_name, 1);
     setenv("HOME", pas->pw_dir, 1);
     setenv("SHELL", pas->pw_shell, 1);
+#elif
+    {
+	char buf[PATH_LEN + 5];
+	strcat( strcpy(buf, "USER"), "=");
+	putenv( strncat(buf, pas->pw_name, sizeof(buf)-5) );
+	strcat( strcpy(buf, "HOME"), "=");
+	putenv( strncat(buf, pas->pw_dir, sizeof(buf)-5) );
+	strcat( strcpy(buf, "SHELL"), "=");
+	putenv( strncat(buf, pas->pw_name, sizeof(buf)-6) );
+    }
+#endif /* __linux__ */
 
     /* Change running state to the user in question */
 
@@ -82,9 +94,9 @@ run_job(CL *line)
 
     pid_t pid;
 
-    //
-    //debug("run_job");
-    //
+/*      // */
+/*      debug("run_job"); */
+/*      // */
 
     /* prepare the job execution */
     switch ( pid = fork() ) {
@@ -138,8 +150,8 @@ run_job(CL *line)
 
 	/* set env variables */
 	for ( env = line->cl_file->cf_env_base; env; env = env->e_next)
-	    if ( setenv(env->e_name, env->e_val, 1) != 0 )
-		error("could not setenv()");
+	    if ( putenv(env->e_val) != 0 )
+		error("could not putenv()");
 
 	if ( (home = getenv("HOME")) != NULL )
 	    if (chdir(home) != 0) {
