@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.20 2000-12-04 20:16:24 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.21 2000-12-08 12:51:32 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.20 2000-12-04 20:16:24 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.21 2000-12-08 12:51:32 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -552,9 +552,12 @@ edit_file(char *buf)
 		fprintf(stderr, "\nFile contains some errors. "
 			"Ignore [i] or Correct [c] ? ");
 		/* the 2nd getchar() is for the newline char (\n) */
-		while ( (c = getchar()) && getchar() && c != 'i' && c != 'c' )
+		while ( (c = getchar())	&& c != 'i' && c != 'c' ) {
 		    fprintf(stderr, "Please press c to correct, "
 			    "or i to ignore: ");
+		    while (c != '\n')
+			c = getchar();
+		}
 		if ( c == 'c' ) {
 		    /* free memory used to store the list */
 		    delete_file(user);
@@ -821,8 +824,8 @@ main(int argc, char **argv)
     fcrontab_gid = pass->pw_gid;
     if (seteuid(fcrontab_uid) != 0 ) 
 	die_e("Could not change uid to " USERNAME "[%d]", fcrontab_uid ); 
-    if (setegid(fcrontab_gid) != 0)
-      	die_e("Could not change gid to " GROUPNAME "[%d]", fcrontab_gid); 
+    if (setegid(fcrontab_gid) != 0) 
+	die_e("Could not change gid to " GROUPNAME "[%d]", fcrontab_gid); 
 #else
     if (setuid(0) != 0 ) 
 	die_e("Could not change uid to 0"); 
