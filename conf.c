@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.30 2000-11-13 15:47:50 thib Exp $ */
+ /* $Id: conf.c,v 1.31 2000-12-14 21:21:46 thib Exp $ */
 
 #include "fcron.h"
 
@@ -49,10 +49,9 @@ reload_all(const char *dir_name)
 
     f = file_base;
     while ( f != NULL ) {
-	if ( f->cf_running > 0 ) {
+	if ( f->cf_running > 0 )
 	    wait_all( &f->cf_running );
-	    save_file(f, NULL);
-	}
+	save_file(f, NULL);
 	delete_file(f->cf_user);    
 
 	/* delete_file remove the f file from the list :
@@ -388,6 +387,8 @@ read_file(const char *file_name, CF *cf)
     time_t slept = 0;
     char *user = NULL;
     char zero[bitstr_size(60)];
+    uid_t runas = 0;
+    struct stat file_stat;
 
     bzero(zero, sizeof(zero));
 
@@ -396,6 +397,17 @@ read_file(const char *file_name, CF *cf)
 	error_e("Could not read %s", file_name);
 	return 1;
     }
+
+    /* check if this file is owned by root : otherwise, all runas fields
+     * of this field should be set to the owner */
+    if ( fstat(fileno(ff), &file_stat) != 0 ) {
+	error_e("Could not stat %s", file_name);
+	return 1;
+    }
+    (file_stat.st_uid != 0) ? runas = file_stat.st_uid : 0;
+    /* */
+    debug("runas : %d", runas);
+    /* */
 
     debug("User %s Entry", file_name);
     bzero(buf, sizeof(buf));
@@ -449,6 +461,10 @@ read_file(const char *file_name, CF *cf)
 	    error("Line is not valid (empty shell command) : ignored");
 	    continue;
 	}
+
+	/* set runas field if necessary */
+	if (runas > 0)
+	    cl->cl_runas = runas;
 
 	if ( is_td(cl->cl_option) ) {
     
@@ -708,6 +724,11 @@ save_file(CF *file, char *path)
 	else
 	    if ( (f = fopen(path, "w")) == NULL )
 		error_e("save");
+
+	/* chown the file to root:root : this file should only be read and
+	 * modified by fcron (not fcrontab) */
+	if (fchown(fileno(f), 0, 0) != 0)
+	    error_e("Could not fchown '%s'", (path) ? path : file->cf_user);
 
 	/* save file : */
 
