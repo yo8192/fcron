@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.63 2002-03-31 17:20:35 thib Exp $ */
+ /* $Id: fcron.c,v 1.64 2002-07-19 19:36:10 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.63 2002-03-31 17:20:35 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.64 2002-07-19 19:36:10 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -508,13 +508,15 @@ main(int argc, char **argv)
 	die_e("Could not change dir to %s", fcrontabs);
     
 
+    freopen("/dev/null", "r", stdin);
+
     if (foreground == 0) {
 
-	/* close stdin, stdout and stderr.
+	/* close stdout and stderr.
 	 * close unused descriptors
 	 * optional detach from controlling terminal */
 
-	int fd, i;
+	int fd;
 	pid_t pid;
 
 	switch ( pid = fork() ) {
@@ -537,12 +539,9 @@ main(int argc, char **argv)
 	    ioctl(fd, TIOCNOTTY, 0);
 	    close(fd);
 	}
-
-	if ( (i = open("/dev/null", O_RDWR)) < 0)
-	    die_e("open: /dev/null:");
- 	close(0); dup2(i, 0);
-	close(1); dup2(i, 1);
-	close(2); dup2(i, 2);
+	
+	freopen("/dev/null", "w", stdout);
+	freopen("/dev/null", "w", stderr);
 
 	/* close most other open fds */
 	xcloselog();

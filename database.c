@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.62 2002-02-25 18:43:54 thib Exp $ */
+ /* $Id: database.c,v 1.63 2002-07-19 19:38:56 thib Exp $ */
 
 #include "fcron.h"
 
@@ -1047,9 +1047,8 @@ mail_notrun(CL *line, char context, struct tm *since)
     /* send a mail to tell user a job has not run (and why) */
 {
     int pid = 0;
-    int fd = 0;
+    FILE *mailf = 0;
     struct tm *time2 = NULL, time;
-    char buf[LINE_LEN];
 
     switch ( pid = fork() ) {
     case -1:
@@ -1083,46 +1082,38 @@ mail_notrun(CL *line, char context, struct tm *since)
     memcpy(&time, time2, sizeof(time));
 
     /* create a temp file, and write in it the message to send */
-    fd = create_mail(line, "Non-execution of fcron job");
+    mailf = create_mail(line, "Non-execution of fcron job");
 
     switch ( context ) {
     case SYSDOWN:
-	snprintf(buf, sizeof(buf), "Line %s has not run since and including "
+	fprintf(mailf, "Line %s has not run since and including "
 		 "%d/%d/%d wday:%d %02d:%02d\ndue to system's down state.\n",
 		 line->cl_shell, (since->tm_mon + 1), since->tm_mday,
 		 (since->tm_year + 1900), since->tm_wday, since->tm_hour,
 		 since->tm_min);
-	xwrite(fd, buf);
-	snprintf(buf,sizeof(buf),"It will be next executed at %d/%d/%d wday:"
+	fprintf(mailf, "It will be next executed at %d/%d/%d wday:"
 		 "%d %02d:%02d\n", (time.tm_mon + 1), time.tm_mday,
 		 (time.tm_year+1900), time.tm_wday, time.tm_hour, time.tm_min);
-	xwrite(fd, buf);
 	break;
     case LAVG:
-	snprintf(buf, sizeof(buf), "Line %s has not run since and including "
+	fprintf(mailf, "Line %s has not run since and including "
 		 "%d/%d/%d wday:%d %02d:%02d\n", line->cl_shell,
 		 (since->tm_mon + 1), since->tm_mday, (since->tm_year + 1900),
 		 since->tm_wday, since->tm_hour, since->tm_min);
-	xwrite(fd, buf);
-	snprintf(buf, sizeof(buf), "due to a too high system load average or "
+	fprintf(mailf, "due to a too high system load average or "
 		 "too many lavg-serial jobs.\n");
-	xwrite(fd, buf);	
-	snprintf(buf, sizeof(buf), "It will be next executed at %d/%d/%d "
+	fprintf(mailf, "It will be next executed at %d/%d/%d "
 		 "wday:%d %02d:%02d\n", (time.tm_mon + 1), time.tm_mday,
 		 (time.tm_year+1900), time.tm_wday, time.tm_hour, time.tm_min);
-	xwrite(fd, buf);
 	break;
     case QUEUE_FULL:
-	snprintf(buf, sizeof(buf), "Line %s could be added to lavg or serial queue which"
+	fprintf(mailf, "Line %s could be added to lavg or serial queue which"
 		 " is full ( %d/%d/%d wday:%d %02d:%02d ).\n", line->cl_shell,
 		 (time.tm_mon + 1), time.tm_mday, (time.tm_year + 1900),
 		 time.tm_wday, time.tm_hour, time.tm_min);
-	xwrite(fd, buf);
-	snprintf(buf, sizeof(buf), "Consider using options lavgonce, until, strict, "
+	fprintf(mailf, "Consider using options lavgonce, until, strict, "
 		 "serialonce and/or fcron's option -m.\n");
-	xwrite(fd, buf);
-	snprintf(buf, sizeof(buf), "Note that job %s has not run.\n", line->cl_shell);
-	xwrite(fd, buf);
+	fprintf(mailf, "Note that job %s has not run.\n", line->cl_shell);
 	break;
     }
     
@@ -1131,7 +1122,7 @@ mail_notrun(CL *line, char context, struct tm *since)
 	return ;
 
     /* then, send mail */
-    launch_mailer(line, fd);
+    launch_mailer(line, mailf);
     
     /* we should not come here : launch_mailer does not return */
     error("mail_notrun : launch_mailer failed");
