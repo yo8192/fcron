@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.2 2002-03-31 15:06:19 thib Exp $ */
+ /* $Id: socket.c,v 1.3 2002-07-19 19:40:57 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -64,7 +64,8 @@ init_socket(void)
 	error("Error : fifo file path too long (max is %d)", sizeof(addr.sun_path));
 	goto err;
     }
-    strncpy(addr.sun_path, fifofile, sizeof(addr.sun_path));
+    strncpy(addr.sun_path, fifofile, sizeof(addr.sun_path) - 1);
+    addr.sun_path[sizeof(addr.sun_path) -1 ] = '\0';
 
     unlink(fifofile);
     if (bind(listen_fd, (struct sockaddr *) &addr,  sizeof(addr.sun_family)+len) != 0) {

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.3 2002-03-31 15:03:46 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.4 2002-07-19 19:32:53 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.3 2002-03-31 15:03:46 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.4 2002-07-19 19:32:53 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -386,7 +386,8 @@ connect_fcron(void)
     addr.sun_family = AF_UNIX;
     if ( (len = strlen(fifofile)) > sizeof(addr.sun_path) )
 	die("Error : fifo file path too long (max is %d)", sizeof(addr.sun_path));
-    strncpy(addr.sun_path, fifofile, sizeof(addr.sun_path));
+    strncpy(addr.sun_path, fifofile, sizeof(addr.sun_path) - 1);
+    addr.sun_path[sizeof(addr.sun_path)-1] = '\0';
 
     if ( connect(fd, (struct sockaddr *) &addr, sizeof(addr.sun_family) + len) < 0 )
 	die_e("Cannot connect() to fcron (check if fcron is running)");
