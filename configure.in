@@ -502,141 +502,6 @@ fi
 
 
 dnl ---------------------------------------------------------------------
-dnl Misc ...
-
-AC_ARG_WITH(debug,
-[  --with-debug=CFLAGS	Use default debug flags or CFLAGS if given to compile fcron in debug mode.],
-[ case "$withval" in
-  no)
-    cflags="-O2 -Wall"
-    debug="0"
-    ;;
-  yes)
-    cflags="-DDEBUG -g -Wall -DFOREGROUND -DMALLOC_CHECK_=2 -Wpointer-arith -Wstrict-prototypes"
-    bootinstall=0
-    debug="1"
-    ;;
-  *)
-    cflags="$withval"
-    debug="1"
-    ;;
-  esac ],
-    cflags="-O2 -Wall"
-    debug="0"
-)
-DEBUG=$debug
-AC_SUBST(DEBUG)
-
-
-AC_ARG_WITH(cflags,
-[  --with-cflags=CFLAGS	Use CFLAGS flags to compile fcron.],
-[ case "$withval" in
-  no)
-    AC_MSG_ERROR(Need an explicit value for --with-cflags.)
-    ;;
-  yes)
-    AC_MSG_ERROR(Need an explicit value for --with-cflags.)
-    ;;
-  *)
-    cflags="$withval"
-    ;;
-  esac ],
-)
-CFLAGS=$cflags
-AC_DEFINE_UNQUOTED(CFLAGS, "$cflags")
-
-
-AC_MSG_CHECKING(automatic answer to make install's questions)
-AC_ARG_WITH(answer-all,
-[  --with-answer-all=[yes|no]	Answer the argument to every make install's questions.],
-[ case "$withval" in
-  no)
-    answerall=0
-    AC_MSG_RESULT(yes (answer "no"))
-    ;;
-  yes)
-    answerall=1
-    AC_MSG_RESULT(yes (answer "yes"))
-    ;;
-  *)
-    AC_MSG_ERROR(Must be set to either "yes" or "no".)
-    ;;
-  esac ],
-    answerall=2
-    AC_MSG_RESULT(no)
-)
-ANSWERALL="$answerall"
-AC_DEFINE_UNQUOTED(ANSWERALL, "$answerall")
-AC_SUBST(ANSWERALL)
-
-
-AC_MSG_CHECKING(if pam should be used if available)
-AC_ARG_WITH(pam,
-[ --with-pam=[yes|no]	Use (or not) PAM if available (default: yes).],
-[ case "$withval" in
-  no)
-    usepam=0
-    AC_MSG_RESULT(no)
-    ;;
-  yes)
-    AC_MSG_RESULT(yes)
-    AC_CHECK_LIB(pam, pam_acct_mgmt)
-    ;;
-  *)
-    AC_MSG_ERROR(Must be set to either "yes" or "no".)
-    ;;
-  esac ],
-  AC_MSG_RESULT(yes)
-  AC_CHECK_LIB(pam, pam_acct_mgmt)
-)
-if echo "$LIBS" | grep -e "-lpam" > /dev/null ; then
-  usepam=1
-else
-  usepam=0
-fi
-USEPAM="$usepam"
-AC_SUBST(USEPAM)
-
-
-AC_MSG_CHECKING(if SELinux should be used)
-AC_ARG_WITH(selinux,
-[ --with-selinux=[yes|no]	Use (or not) SELinux (default: yes).],
-[ case "$withval" in
-  no)
-    useselinux=0
-    AC_MSG_RESULT(no)
-    ;;
-  yes)
-    if test "$flaskavail" -eq 1; then
-	useselinux=1
-	AC_MSG_RESULT(yes)
-    else
-	AC_MSG_RESULT(not available)
-        AC_MSG_ERROR([
-  You requested the use of SELinux, but SELinux is considered 
-  as not available by configure script.
-])
-    fi
-    ;;
-  *)
-    AC_MSG_ERROR(Must be set to either "yes" or "no".)
-    ;;
-  esac ],
-  if test "$flaskavail" -eq 1; then
-    useselinux=1
-    AC_MSG_RESULT(yes)
-  else
-    useselinux=0
-    AC_MSG_RESULT(not available)
-  fi
-)
-if test "$useselinux" -eq 1; then
-  LIBS="$LIBS -lsecure"
-  AC_DEFINE(CONFIG_FLASK)
-fi
-
-
-dnl ---------------------------------------------------------------------
 dnl Users and groups ...
 
 AC_MSG_CHECKING(run non-privileged)
@@ -667,6 +532,8 @@ WARNING :
     AC_SUBST(RUN_NON_PRIVILEGED)
     bootinstall=0
     fcrondyn=0
+    usepam=0
+    useselinux=0
     ;;
   *)
     AC_MSG_ERROR(Invalid argument : please use 'yes' or 'no'.)
@@ -938,6 +805,152 @@ if test "$use_sysfcrontab" -eq 1 ; then
   AC_DEFINE_UNQUOTED(SYSFCRONTAB, "$sysfcrontab")
   SYSFCRONTAB="$sysfcrontab"
   AC_SUBST(SYSFCRONTAB)
+fi
+
+
+dnl ---------------------------------------------------------------------
+dnl Misc ...
+
+AC_ARG_WITH(debug,
+[  --with-debug=CFLAGS	Use default debug flags or CFLAGS if given to compile fcron in debug mode.],
+[ case "$withval" in
+  no)
+    cflags="-O2 -Wall"
+    debug="0"
+    ;;
+  yes)
+    cflags="-DDEBUG -g -Wall -DFOREGROUND -DMALLOC_CHECK_=2 -Wpointer-arith -Wstrict-prototypes"
+    bootinstall=0
+    debug="1"
+    ;;
+  *)
+    cflags="$withval"
+    debug="1"
+    ;;
+  esac ],
+    cflags="-O2 -Wall"
+    debug="0"
+)
+DEBUG=$debug
+AC_SUBST(DEBUG)
+
+
+AC_ARG_WITH(cflags,
+[  --with-cflags=CFLAGS	Use CFLAGS flags to compile fcron.],
+[ case "$withval" in
+  no)
+    AC_MSG_ERROR(Need an explicit value for --with-cflags.)
+    ;;
+  yes)
+    AC_MSG_ERROR(Need an explicit value for --with-cflags.)
+    ;;
+  *)
+    cflags="$withval"
+    ;;
+  esac ],
+)
+CFLAGS=$cflags
+AC_DEFINE_UNQUOTED(CFLAGS, "$cflags")
+
+
+AC_MSG_CHECKING(automatic answer to make install's questions)
+AC_ARG_WITH(answer-all,
+[  --with-answer-all=[yes|no]	Answer the argument to every make install's questions.],
+[ case "$withval" in
+  no)
+    answerall=0
+    AC_MSG_RESULT(yes (answer "no"))
+    ;;
+  yes)
+    answerall=1
+    AC_MSG_RESULT(yes (answer "yes"))
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+    answerall=2
+    AC_MSG_RESULT(no)
+)
+ANSWERALL="$answerall"
+AC_DEFINE_UNQUOTED(ANSWERALL, "$answerall")
+AC_SUBST(ANSWERALL)
+
+
+if test "$usepam" = ""; then
+  usepam=1
+fi
+AC_MSG_CHECKING(if pam should be used if available)
+AC_ARG_WITH(pam,
+[ --with-pam=[yes|no]	Use (or not) PAM if available (default: yes).],
+[ case "$withval" in
+  no)
+    usepam=0
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    AC_MSG_RESULT(yes)
+    AC_CHECK_LIB(pam, pam_acct_mgmt)
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+  if test "$usepam" = "1"; then 
+    AC_MSG_RESULT(yes)
+    AC_CHECK_LIB(pam, pam_acct_mgmt)
+  else
+    usepam=0
+    AC_MSG_RESULT(no)
+  fi    
+)
+if test "$usepam" != "0" && echo "$LIBS" | grep -e "-lpam" > /dev/null ; then
+  usepam=1
+else
+  usepam=0
+fi
+USEPAM="$usepam"
+AC_SUBST(USEPAM)
+
+
+if test "$useselinux" = ""; then
+  useselinux=1
+fi
+AC_MSG_CHECKING(if SELinux should be used)
+AC_ARG_WITH(selinux,
+[ --with-selinux=[yes|no]	Use (or not) SELinux (default: yes).],
+[ case "$withval" in
+  no)
+    useselinux=0
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    if test "$flaskavail" -eq 1; then
+	useselinux=1
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(not available)
+        AC_MSG_ERROR([
+  You requested the use of SELinux, but SELinux is considered 
+  as not available by configure script.
+])
+    fi
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+  if test "$useselinux" != "0" && test "$flaskavail" -eq 1; then
+    useselinux=1
+    AC_MSG_RESULT(yes)
+  else
+    useselinux=0
+    AC_MSG_RESULT(not available)
+  fi
+)
+if test "$useselinux" -eq 1; then
+  LIBS="$LIBS -lsecure"
+  AC_DEFINE(CONFIG_FLASK)
 fi
 
 
