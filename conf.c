@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
-/* CONF.C */
+ /* $Id: conf.c,v 1.2 2000-05-15 18:28:33 thib Exp $ */
 
 #include "fcron.h"
 

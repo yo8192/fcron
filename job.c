@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
-/* JOB.C */
+ /* $Id: job.c,v 1.2 2000-05-15 18:28:55 thib Exp $ */
 
 #include "fcron.h"
 

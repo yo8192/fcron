@@ -21,9 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* fcron.c */
+ /* $Id: fcron.c,v 1.2 2000-05-15 18:28:38 thib Exp $ */
 
 #include "fcron.h"
+
+char rcs_info[] = "$Id: fcron.c,v 1.2 2000-05-15 18:28:38 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -56,12 +58,12 @@ info(void)
      * version, license */
 {
     fprintf(stderr,
+	    "$Id: fcron.c,v 1.2 2000-05-15 18:28:38 thib Exp $\n"
 	    "fcron " VERSION " - periodic command scheduler\n"
 	    "Copyright 2000 Thibault Godouet <sphawk@free.fr>\n"
-	    "This program is free software; you can redistribute it\n"
-	    " and/or modify it under the terms of the GNU General Public\n"
-	    " License. See file LICENSE distributed with this program\n"
-	    " for more informations\n"
+	    "This program is free software distributed\n"
+	    "WITHOUT ANY WARRANTY.\n"
+            "See the GNU General Public License for more details.\n"
 	);
 
     exit(EXIT_OK);

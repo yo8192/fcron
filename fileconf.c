@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
-/* FILECONF.C */
+ /* $Id: fileconf.c,v 1.2 2000-05-15 18:28:44 thib Exp $ */
 
 #include "fcrontab.h"
 

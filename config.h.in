@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
-/* config.h */
+ /* $Id: config.h.in,v 1.2 2000-05-15 18:28:34 thib Exp $ */
 
 
 /* *********************************************************** */

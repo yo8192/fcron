@@ -2,6 +2,8 @@
 # Install fcron under SysV system.
 #
 
+# $Id: boot-install,v 1.2 2000-05-15 18:28:24 thib Exp $
+
 # take two arguments : first is the compilation line arguments, in order
 #    to determine if fcron should be installed with debugs options,
 #    and the second is the name of the BSD-like install program
@@ -21,9 +23,9 @@ if test -f /etc/rc.d/rc.M; then
 else
 
     if echo $1 > grep "-DDEBUG"; then
-      $2 -m 755 -o root sysVinit-launcher-debug /etc/rc.d/init.d/fcron
+      $2 -m 755 -o root script/sysVinit-launcher-debug /etc/rc.d/init.d/fcron
     else
-      $2 -m 755 -o root sysVinit-launcher /etc/rc.d/init.d/fcron
+      $2 -m 755 -o root script/sysVinit-launcher /etc/rc.d/init.d/fcron
     fi
     
     cd /etc/rc.d/rc3.d/

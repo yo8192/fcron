@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
-/* log.c */
+ /* $Id: log.c,v 1.2 2000-05-15 18:28:56 thib Exp $ */
 
 /* This code is inspired by Anacron's sources of
    Itai Tzur <itzur@actcom.co.il> ( thanks to him ) */

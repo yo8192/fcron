@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
-/* fcron.h */
+ /* $Id: fcron.h,v 1.2 2000-05-15 18:28:39 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__

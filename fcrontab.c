@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
-/* FCRONTAB.C */
+ /* $Id: fcrontab.c,v 1.2 2000-05-15 18:28:41 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,6 +42,7 @@
 
 #include "fcrontab.h"
 
+char rcs_info[] = "$Id: fcrontab.c,v 1.2 2000-05-15 18:28:41 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -78,12 +79,12 @@ info(void)
      * version, license */
 {
     fprintf(stderr,
+	    "$Id: fcrontab.c,v 1.2 2000-05-15 18:28:41 thib Exp $\n"
 	    "fcrontab " VERSION " - user interface to daemon fcron\n"
 	    "Copyright 2000 Thibault Godouet <sphawk@free.fr>\n"
-	    "This program is free software; you can redistribute it\n"
-	    " and/or modify it under the terms of the GNU General Public\n"
-	    " License. See file LICENSE distributed with this program\n"
-	    " for more informations\n"
+	    "This program is free software distributed\n"
+	    "WITHOUT ANY WARRANTY.\n"
+            "See the GNU General Public License for more details.\n"
 	);
 
     exit(EXIT_OK);

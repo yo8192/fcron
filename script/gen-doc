@@ -1,23 +1,49 @@
 #!/bin/sh
 
+# $Id: gen-doc,v 1.2 2000-05-15 18:28:22 thib Exp $
+
+if test $UID -eq 0; then
+  su $USER
+fi
+
+PREVIOUS=`cat ./VERSION`
+
+
+if test $PREVIOUS != $1; then
+    cd man
+    for i in *
+    do
+    if test $i != RCS; then
+	echo $i
+	sed -e "s:fcron version .* :fcron version $1 :" < $i > tmp
+	mv -f tmp $i
+	rm -f tmp
+    fi
+    done
+    
+
+    cd ../doc
+    for i in *
+    do
+    if test $i != RCS; then
+	echo $i
+	sed -e "s:fcron version .* :fcron version $1 :" < $i > tmp
+	mv -f tmp $i
+	rm -f tmp
+    fi
+    done
+fi
+
+
 cd man
 for i in *
 do
-  echo $i
-  sed -e "s:\"fcron version .* - .*\":\"fcron version $1 - `date +%D`\":" < $i > tmp
-  mv -f tmp $i
-  chown $USER $i
-  rm -f tmp
-  groff -Thtml -mandoc $i > ../doc/$i.html  
-done
-
-cd ../doc
-for i in *
-do
-  echo $i
-  sed -e "s:<-- fcron version .* - .* -->:<-- fcron version $1 - `date +%D` -->:" < $i > tmp
-  mv -f tmp $i
-  chown $USER $i
-  rm -f tmp
+    if test $i != RCS; then
+	echo $i
+	groff -Thtml -mandoc $i > ./tmp
+	sed "s:<body>:<body BGCOLOR="\#000000" TEXT="\#FFFFFF">\
+	    <h1>$i</h1><br>:I" < ./tmp > ../doc/$i.html
+	rm -f ./tmp
+    fi
 done
 

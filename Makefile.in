@@ -2,6 +2,8 @@
 # fcron's Makefile  ########
 ############################
 
+# $Id: Makefile.in,v 1.2 2000-05-15 18:28:58 thib Exp $
+
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
 
@@ -83,6 +85,9 @@ allow.o:  allow.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $<
 
 install: all
+
+	@echo -e "\ninstalling ...\n"
+
 	$(INSTALL) -m 111 -o root -s fcron $(DESTSBIN)/
 	$(INSTALL) -m 4111 -o root -s fcrontab $(DESTBIN)/
 	$(INSTALL) -m 700 -o root files/fcron.allow $(ETC)/
@@ -91,40 +96,60 @@ install: all
 	$(INSTALL) -m 644 -o root man/fcrontab.1 $(DESTMAN)/man1/
 	$(INSTALL) -m 644 -o root man/fcrontab.5 $(DESTMAN)/man5/
 	$(INSTALL) -m 644 -o root man/bitstring.3 $(DESTMAN)/man3/
-	./sysVinit-install "$(CFLAGS)" $(INSTALL)
+	script/sysVinit-install "$(CFLAGS)" $(INSTALL)
 	mkdir -p /usr/doc/fcron-$(VERSION)
-	$(INSTALL) -m 644 -o root doc/* /usr/doc/fcron-$(VERSION)/
+	cd doc; $(INSTALL) -m 644 -o root README LICENSE CHANGES *.html \
+		 /usr/doc/fcron-$(VERSION)/
 	mkdir -p $(FCRONTABS)
 	chmod 700 $(FCRONTABS)
 
+	@echo -e "\n...done\n"
+
+
 uninstall:
 	rm -f $(DESTSBIN)/fcron
-	./sysVinit-uninstall
+	script/sysVinit-uninstall
 
 clean:
+	@echo -e "\ncleaning up ...\n"
+
 	rm -f *.o
 	rm -f fcron fcrontab
+
+	@echo -e "\n...done\n"
 
 vclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
 	rm -f fcron*tar.gz
 
-doc-changes: doc/ man/
-	touch doc-changes
+need_make_doc:
+# force to do a part each time it is called if placed in its depencies.
 
-doc: doc-changes
-	./gen-doc $(VERSION)
-	touch doc-changes
+doc: need_make_doc
+	@echo -e "\nupdating docs ...\n"
+
+	./script/gen-doc $(VERSION)
+
+	@echo -e "\n...done\n"
+
 
 tar: vclean doc
 
-	@(find ./ -type f | sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
+	@echo -e "\ncreating archive ...\n"
+
+	echo $(VERSION) > ./VERSION
+
+	@(find ./ -type f ! -regex '.*RCS.*' -exec ci -l {} \;)
+
+	@(find ./ -type f ! -regex '.*RCS.*' | sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
 	@(cd ..; ln -s fcron fcron-$(VERSION))
 	(cd ..; tar -czvf fcron-$(VERSION).src.tar.gz `cat fcron/MANIFEST`)
 	@(cd ..; rm -f fcron-$(VERSION))
 
 	@(cd ..; cp -f fcron-$(VERSION).src.tar.gz old-fcron-pkg/)
-	@(cd ..; mv -f fcron-$(VERSION).src.tar.gz fcron/)
+
+	@echo -e "\n...done\n"
+
 
 
 

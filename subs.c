@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
-/* SUBS.C */
+ /* $Id: subs.c,v 1.2 2000-05-15 18:28:59 thib Exp $ */
 
 #include "global.h"
 

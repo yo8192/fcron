@@ -5,6 +5,8 @@
 # processname: fcron
 # config: /var/spool/fcron/*
 
+# $Id: sysVinit-launcher,v 1.2 2000-05-15 18:28:27 thib Exp $
+
 FUNCTION=0
 
 # Source function library.
