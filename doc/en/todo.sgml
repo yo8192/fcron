@@ -1,0 +1,46 @@
+<!-- 
+Fcron documentation
+Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+Permission is granted to copy, distribute and/or modify this
+document under the terms of the GNU Free Documentation License,
+Version 1.1 or any later version published by the Free Software
+Foundation.
+A copy of the license is included in gfdl.sgml.
+-->
+
+<!-- $Id: todo.sgml,v 1.1 2002-01-03 14:27:12 thib Exp $ -->
+
+<sect1 id="todo">
+    <title>Todo</title>
+    <para>Here are some things that should be done ...</para>
+    <para>If you plan to help me, please send a mail at &email; to prevent two people from doing the same thing. You can send me some propositions as well.</para>
+    <itemizedlist>
+	<listitem>
+	    <para>PAM support (ongoing)</para>
+	</listitem>
+	<listitem>
+	    <para>convert the doc into DocBook(ongoing), and make it easier to read and understand</para>
+	</listitem>
+	<listitem>
+	    <para>allow a non-privileged user to run fcron</para>
+	</listitem>
+	<listitem>
+	    <para>possibility to display a list of jobs including their options, time and date of next execution, status, of only the running jobs, all the jobs, in order of execution or classified by user, etc.</para>
+	</listitem>
+	<listitem>
+	    <para>run one of this job, change its nice value, stop it...</para>
+	</listitem>
+	<listitem>
+	    <para>add a system of data flow</para>
+	</listitem>
+    </itemizedlist>
+</sect1>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
+sgml-default-dtd-file: "fcron-doc.ced"
+End:
+-->

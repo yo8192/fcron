@@ -1,0 +1,134 @@
+############################
+# fcron-doc's Makefile  ####
+############################
+
+# @configure_input@
+
+# $Id: Makefile.in,v 1.1 2002-01-03 14:27:07 thib Exp $
+
+# The following should not be edited manually (use configure options)
+# If you must do it, BEWARE : some of the following is also defined
+# in config.h, so you must modify config.h AND Makefile in order
+# to set the same values in the two files.
+
+
+SRCDIR		= @srcdir@
+
+prefix		= @prefix@
+DESTMAN		= @mandir@
+DESTDOC		= @DOCDIR@
+
+INSTALL		= @INSTALL@
+JADE 		= @JADE@
+ROOTNAME	= @ROOTNAME@
+ROOTGROUP	= @ROOTGROUP@
+ANSWERALL	= @ANSWERALL@
+
+####################################
+# Should not be changed under this #
+####################################
+STYLESHEET = stylesheets/fcron-doc.dsl
+MODFILE = fcron-doc.mod
+VERSION = @VERSION@
+SGMLFILES = faq.sgml fcron-doc.sgml fdl.sgml thanks.sgml gpl.sgml todo.sgml fcron.8.sgml fcrontab.1.sgml install.sgml fcron.conf.5.sgml fcrontab.5.sgml readme.sgml
+TXTFILES = readme install thanks faq gpl todo
+MANPAGES = fcron.8 fcron.conf.5 fcrontab.1 fcrontab.5
+
+# this is a regular expression :
+# do not ci these files
+RCSNOCI=.*\(bitstring.3\|fcron-doc.ced\|HTML.*\|txt.*\|man.*\)
+
+all: doc
+
+doc: HTML/index.html mandoc txtdoc
+
+mandoc: HTML/index.html
+	@(echo ; echo "Building man pages ..."; echo )
+	cp -f bitstring.3 man/
+	@(for i in $(MANPAGES); do \
+	  echo "  $$i ..."; \
+	  echo '<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [ \
+                  <!ENTITY % decl SYSTEM "fcron-doc.mod"> \
+                  %decl;]>' > _tmp_ ; \
+          echo "&$$i;" >> _tmp_ ; \
+          jw -f docbook -b man -o man _tmp_ 2> /dev/null; \
+	  rm -f _tmp_ ; \
+          done)
+
+
+txtdoc: HTML/index.html
+	@(echo ; echo "Building txt files ..."; echo )
+	@(for i in $(TXTFILES); do \
+	  echo "  $$i ..."; \
+	  lynx -dump -nolist HTML/$$i.html > txt/$$i.txt; done )
+
+fcron-doc.mod: fcron-doc.mod.in
+	@(echo ; echo "Building fcron-doc.mod"; echo)
+	../script/gen-in.pl fcron-doc.mod.in fcron-doc.mod ../
+
+HTML/index.html: $(SGMLFILES) fcron-doc.mod.in stylesheets/fcron-doc.dsl.in
+	@(echo ; echo "Building index.html"; echo)
+	rm -fR HTML/*
+	$(JADE) -t sgml -i html -d stylesheets/fcron-doc.dsl\#html fcron-doc.sgml
+
+install: clean
+	if test ! -d $(DESTMAN)/man1; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man1 ; fi
+	if test ! -d $(DESTMAN)/man3; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man3 ; fi
+	if test ! -d $(DESTMAN)/man5; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man5 ; fi
+	if test ! -d $(DESTMAN)/man8; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man8 ; fi
+	if test ! -d $(DESTDOC)/fcron-$(VERSION); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION) ; fi
+	if test ! -d $(DESTDOC)/fcron-$(VERSION)/txt; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 \
+	                                                  -d $(DESTDOC)/fcron-$(VERSION)/txt/ ; fi
+	if test ! -d $(DESTDOC)/fcron-$(VERSION)/HTML; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 \
+	                                                  -d $(DESTDOC)/fcron-$(VERSION)/HTML/ ; fi
+
+# We need to 'cd ..' because SRCDIR may be set to '.', and we are in a sub directory
+	cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcron.8 $(DESTMAN)/man8
+	cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcrontab.1 $(DESTMAN)/man1
+	cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcrontab.5 $(DESTMAN)/man5
+	cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcron.conf.5 $(DESTMAN)/man5
+	cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/bitstring.3 $(DESTMAN)/man3
+	cd .. ; for i in $(SRCDIR)/doc/txt/*; do \
+	          echo "$$i" ; \
+	          $(INSTALL) -m 644 -o $(ROOTNAME) $$i \
+	                     $(DESTDOC)/fcron-$(VERSION)/txt/ ;\
+	          done
+	cd .. ; for i in $(SRCDIR)/doc/HTML/*; do \
+	          $(INSTALL) -m 644 -o $(ROOTNAME) $$i \
+	                     $(DESTDOC)/fcron-$(VERSION)/HTML/ ;\
+	          done
+
+uninstall:
+	rm -fR $(DESTDOC)/fcron-$(VERSION)
+	rm -f $(DESTMAN)/man1/fcrontab.1
+	rm -f $(DESTMAN)/man3/bitstring.3
+	rm -f $(DESTMAN)/man5/fcrontab.5
+	rm -f $(DESTMAN)/man5/fcron.conf.5
+	rm -f $(DESTMAN)/man8/fcron.8
+
+
+htmltar: HTML/index.html clean
+
+	@(ln -s HTML fcron-doc-html-$(VERSION))
+	(tar -czvf fcron-doc-html-$(VERSION).tar.gz fcron-doc-html-$(VERSION)/*)
+	@(rm -f fcron-doc-html-$(VERSION))
+
+
+clean:
+	(for i in man txt stylesheets . ; do \
+	  cd $$i ; \
+	  echo "Cleaning : `pwd`"; \
+          rm -f *~ *.html *.htm *.texi *.info *.refs manpage.links manpage.refs *.tar.gz ; \
+          cd .. ;  \
+          done)
+
+tarclean: clean
+	rm -f Makefile stylesheets/fcron-doc.dsl fcron-doc.mod
+
+vclean: clean
+	rm -f HTML/* man/* txt/*
+
+tar: doc tarclean
+	@(find ./ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
+             -exec ci -l {} \;)
+

@@ -1,0 +1,79 @@
+<!ENTITY % devrelease "INCLUDE">
+
+<!ENTITY date "@@Date@">
+<!ENTITY version "@@VERSION@">
+<!ENTITY copyrightdate "2000-2002">
+<!ENTITY emailadr "fcron@free.fr">
+<!ENTITY email "<email>&emailadr;</email>">
+<!ENTITY webpageadr "http://fcron.free.fr">
+<!ENTITY webpage '<ulink url="&webpageadr;">&webpageadr;</ulink>'>
+<!ENTITY docurl '<ulink url="&webpageadr/fcron-doc.tar.gz">&webpageadr/fcron-doc.tar.gz</ulink>'>
+
+<!ENTITY editor "@@EDITOR@">
+<!ENTITY etc "@@ETC@">
+<!ENTITY exiterr "@@EXIT_ERR@">
+<!ENTITY exitok "@@EXIT_OK@">
+<!ENTITY fcron.allow "@@FCRON_ALLOW@">
+<!ENTITY fcron.conf.location "@@FCRON_CONF@">
+<!ENTITY fcron.deny "@@FCRON_DENY@">
+<!ENTITY fcron.pid "@@PIDFILE@">
+<!ENTITY fcrontabsdir "@@FCRONTABS@">
+<!ENTITY firstsleep "@@FIRST_SLEEP@">
+<!ENTITY lavgoncedef "@@LAVG_ONCE@">
+<!ENTITY lavgqueuemax "@@LAVG_QUEUE_MAX@">
+<!ENTITY save "@@SAVE@">
+<!ENTITY sendmail "@@SENDMAIL@">
+<!ENTITY serialmaxrunning "@@SERIAL_MAX_RUNNING@">
+<!ENTITY serialoncedef "@@SERIAL_ONCE@">
+<!ENTITY serialqueuemax "@@SERIAL_QUEUE_MAX@">
+<!ENTITY shell "@@SHELL@">
+
+
+<!ENTITY seealso "<emphasis>see also</emphasis> :">
+<!ENTITY fcron "<application>fcron</application>">
+<!ENTITY Fcron "<application>Fcron</application>">
+<!ENTITY fcrontab "<application>fcrontab</application>">
+<!ENTITY Fcrontab "<application>Fcrontab</application>">
+<!ENTITY fcrontabf "<systemitem>fcrontab</systemitem>">
+<!ENTITY fcron.conf "<systemitem>fcron.conf</systemitem>">
+
+
+<!ENTITY about SYSTEM "readme.sgml">
+<!ENTITY install SYSTEM "install.sgml">
+<!ENTITY todo SYSTEM "todo.sgml">
+<!ENTITY thanks SYSTEM "thanks.sgml">
+<!ENTITY changes SYSTEM "changes.sgml">
+<!ENTITY fcron.8 SYSTEM "fcron.8.sgml">
+<!ENTITY fcron.conf.5 SYSTEM "fcron.conf.5.sgml">
+<!ENTITY fcrontab.1 SYSTEM "fcrontab.1.sgml">
+<!ENTITY fcrontab.5 SYSTEM "fcrontab.5.sgml">
+<!ENTITY faq SYSTEM "faq.sgml">
+<!ENTITY fdl SYSTEM "fdl.sgml">
+<!ENTITY gpl SYSTEM "gpl.sgml">
+
+
+<!ENTITY optbootrun '<link linkend="fcrontab.5.bootrun"><varname>bootrun</varname></link>'>
+<!ENTITY optdayand '<link linkend="fcrontab.5.dayand"><varname>dayand</varname></link>'>
+<!ENTITY optdayor '<link linkend="fcrontab.5.dayor"><varname>dayor</varname></link>'>
+<!ENTITY optexesev '<link linkend="fcrontab.5.exesev"><varname>exesev</varname></link>'>
+<!ENTITY optfirst '<link linkend="fcrontab.5.first"><varname>first</varname></link>'>
+<!ENTITY optforcemail '<link linkend="fcrontab.5.forcemail"><varname>forcemail</varname></link>'>
+<!ENTITY optlavg '<link linkend="fcrontab.5.lavg"><varname>lavg</varname></link>'>
+<!ENTITY optlavg1 '<link linkend="fcrontab.5.lavgX"><varname>lavg1</varname></link>'>
+<!ENTITY optlavg5 '<link linkend="fcrontab.5.lavgX"><varname>lavg5</varname></link>'>
+<!ENTITY optlavg15 '<link linkend="fcrontab.5.lavgX"><varname>lavg15</varname></link>'>
+<!ENTITY optlavgand '<link linkend="fcrontab.5.lavgand"><varname>lavgand</varname></link>'>
+<!ENTITY optlavgonce '<link linkend="fcrontab.5.lavgonce"><varname>lavgonce</varname></link>'>
+<!ENTITY optlavgor '<link linkend="fcrontab.5.lavgor"><varname>lavgor</varname></link>'>
+<!ENTITY optmail '<link linkend="fcrontab.5.mail"><varname>mail</varname></link>'>
+<!ENTITY optmailto '<link linkend="fcrontab.5.mailto"><varname>mailto</varname></link>'>
+<!ENTITY optnice '<link linkend="fcrontab.5.nice"><varname>nice</varname></link>'>
+<!ENTITY optnolog '<link linkend="fcrontab.5.nolog"><varname>nolog</varname></link>'>
+<!ENTITY optnoticenotrun '<link linkend="fcrontab.5.noticenotrun"><varname>noticenotrun</varname></link>'>
+<!ENTITY optreset '<link linkend="fcrontab.5.reset"><varname>reset</varname></link>'>
+<!ENTITY optrunas '<link linkend="fcrontab.5.runas"><varname>runas</varname></link>'>
+<!ENTITY optrunfreq '<link linkend="fcrontab.5.runfreq"><varname>runfreq</varname></link>'>
+<!ENTITY optserial '<link linkend="fcrontab.5.serial"><varname>serial</varname></link>'>
+<!ENTITY optserialonce '<link linkend="fcrontab.5.serialonce"><varname>serialonce</varname></link>'>
+<!ENTITY optstrict '<link linkend="fcrontab.5.strict"><varname>strict</varname></link>'>
+<!ENTITY optuntil '<link linkend="fcrontab.5.until"><varname>until</varname></link>'>

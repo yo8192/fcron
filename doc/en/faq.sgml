@@ -1,0 +1,72 @@
+<!-- 
+Fcron documentation
+Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+Permission is granted to copy, distribute and/or modify this
+document under the terms of the GNU Free Documentation License,
+Version 1.1 or any later version published by the Free Software
+Foundation.
+A copy of the license is included in gfdl.sgml.
+-->
+
+<!-- $Id: faq.sgml,v 1.1 2002-01-03 14:26:53 thib Exp $ -->
+
+<sect1 id="faq">
+    <title>Frequently Asked Questions</title>
+    <para>This FAQ intends to complete the man pages by providing a more practical approach.</para>
+    <para>If you think a QA should be added, please mail me it !</para>
+    <qandaset>
+	<qandaentry>
+	    <question>
+		<para>How does fcron handle system clock adjusts (daylight savings, etc) ?</para>
+	    </question>
+	    <answer>
+		<para>First, you must know that fcron determines for each job the next time and date of execution, and then, sleep until a job should be run. In other words, fcron doesn't wake up like Vixie cron each minute to check all job in case one should be run ... and it avoids some problems concerning the clock adjusts.</para>
+		<para>That means that if the new time value is in the past, fcron won't run jobs twice. For instance it is 3:00, so the next job cannot be schedule before 3:00 (it would already has been run and re-scheduled), and you put your clock at 2:00 : fcron will just sleep until the next job should be executed, so after (and including) 3:01.</para>
+		<para>Now if you set the new time value in the future, fcron will run every jobs between the old and the new time value once. When fcron wakes up to run a job after the time value has changed, it runs all the jobs which  should have run during the interval because they are scheduled to run in a past time.</para>
+		<para>You must also know that the @-jobs will run at "adjust-interval" too early or too late depending of the nature of the adjust.</para>
+		<para>To conclude, fcron behaves quite well for small clock adjusts : each job which should have run do run once, but not exactly at the correct time if the job was scheduled in the interval of the adjust. But if you have to make a big change in the time and date, you should probably reset all the scheduled "nextexe" by running "fcrontab -z" on all the fcrontabs.</para>
+	    </answer>
+	</qandaentry>
+	<qandaentry>
+	    <question>
+		<para>How can I use fcrontab in scripts ?</para>
+	    </question>
+	    <answer>
+		<para>You can use pipes with "<command>fcrontab -l</command>" (list the fcrontab) and "<command>fcrontab -</command>" (read the new fcrontab from input). For example : </para>
+		<screen><command>echo -e "`fcrontab -l | grep -v exim`\n0 * * * *	/usr/sbin/exim -q" | fcrontab -</command></screen>
+		<para>
+		    can be used to add a line. Another way to do it would be to  list the fcrontab to a tmp file ("<command>fcrontab -l > tmpfile</command>"), then modify that file ("<command>echo $LINE >> tmpfile</command>") and finally replace the existing fcrontab by that one and remove the tmp file ("<command>fcrontab tmpfile ; rm -f tmpfile</command>").
+		</para>
+	    </answer>
+	</qandaentry>
+	<qandaentry>
+	    <question>
+		<para>How can I prevent fcrontab from considering the first word of my command line as "runas(word)" ?</para>
+	    </question>
+	    <answer>
+		<para>Suppose you have an user called "echo" (weird idea ... :)) ). If you use the line '* * * * * echo "Hello !"' in root's fcrontab,
+      "echo" will be interpreted as "runas(echo)".</para>
+		<para>To avoid that, put your command in quotes :
+		    <programlisting>* * * * * 'echo "Hello !"'</programlisting>
+      will work as expected (quotes are allowed for the shell command but not  for the user name).</para>
+	    </answer>
+	</qandaentry>
+	<qandaentry>
+	    <question>
+		<para>I have a job which usually terminates with a non-zero status, and I receive a mail with the exit status even if the command had no output : how can I avoid that ?</para>
+	    </question>
+	    <answer>
+		<para>The easiest way is sure to set the option "mail" to "no". But if you still want to receive the output if there is one, you can add a command like "/bin/true" after your job to force the status to be 0, without affecting your job nor creating an output. For instance :</para>
+		<programlisting>* * * * * /a/non/zero/status/job ; /bin/true</programlisting>
+	    </answer>
+	</qandaentry>
+    </qandaset>
+</sect1>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
+sgml-default-dtd-file: "fcron-doc.ced"
+End:
+-->

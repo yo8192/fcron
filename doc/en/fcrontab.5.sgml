@@ -1,0 +1,567 @@
+<!-- 
+Fcron documentation
+Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+Permission is granted to copy, distribute and/or modify this
+document under the terms of the GNU Free Documentation License,
+Version 1.1 or any later version published by the Free Software
+Foundation.
+A copy of the license is included in gfdl.sgml.
+-->
+
+<!-- $Id: fcrontab.5.sgml,v 1.1 2002-01-03 14:29:25 thib Exp $ -->
+
+<refentry id="fcrontab.5">
+    <refmeta>
+	<refentrytitle>fcrontab</refentrytitle>
+	<manvolnum>5</manvolnum>
+	<refmiscinfo>Fcron &version; <![%devrelease; [ (<emphasis>development</emphasis> release)]]></refmiscinfo>
+	<refmiscinfo>&date;</refmiscinfo>
+    </refmeta>
+    <refnamediv>
+	<refname>fcrontab</refname>
+	<refpurpose>tables for driving fcron</refpurpose>
+    </refnamediv>
+
+    <refsect1>
+	<title>Description</title>
+	<para>A &fcrontabf; is a file containing all tables used by the &fcron;(8) daemon. In other words, it is the means for a user to tell the daemon "execute this command at this moment". Each user has his own &fcrontabf;, whose commands are executed as his owner (only root can run a job as another using the option &optrunas; (see below)).</para>
+	<para>Blank lines, line beginning by a pound-sign (#) (which are considered comments), leading blanks and tabs are ignored. Each line in a fcrontab file can be either</para>
+	<itemizedlist>
+	    <listitem>
+		<para>an environment setting,</para>
+	    </listitem>
+	    <listitem>
+		<para>an option setting,</para>
+	    </listitem>
+	    <listitem>
+		<para>entries based on elapsed system up time,</para>
+	    </listitem>
+	    <listitem>
+		<para>entries based on absolut time (like normal crontab entries), or</para>
+	    </listitem>
+	    <listitem>
+		<para>entries run periodically.</para>
+	    </listitem>
+	</itemizedlist>
+	<para>Any logical line (an entry or an assignment) can be divided into several real lines (the lines which end by a newline character) by placing a backslash (\) before the newline character (\n).</para>
+
+	<refsect2>
+	    <title>The environment settings</title>
+	    <para>The environment settings are of the form</para>
+	    <blockquote>
+		<para>name = value</para>
+	    </blockquote>
+	    <para>where the blanks around equal-sign (=) are ignored and optional. Trailing blanks are also ignored, but you can place the value in quotes (simple or double, but matching) to preserve any blanks in the value.</para>
+	    <para>When &fcron; executes a command, it always sets <envar>USER</envar>, <envar>HOME</envar>, and <envar>SHELL</envar> as defined in <filename>/etc/passwd</filename> for the owner of the &fcrontabf; from which the command is extracted. <envar>HOME</envar> and <envar>SHELL</envar> may be overridden by settings in the &fcrontabf;, but <envar>USER</envar> may not. Every other environment assignments defined in the user &fcrontabf; are then made, and the command is executed.</para>
+	    <para>Plus, the special variable <varname>MAILTO</varname> allows you to tell &fcron; to whom it has to mail the command's output. Note that <varname>MAILTO</varname> is in fact equivalent to a global declaration of the option &optmailto; (see below). It is only used for backward compatibility, so you should use the option &optmailto; directly.
+</para>
+	</refsect2>
+
+	<refsect2 id="uptent">
+	    <title>Entries based on elapsed system up time</title>
+	    <para>The entries of commands which have to be run once every m minutes of &fcron;'s execution (which is normally the same as m minutes of system's execution) are of the form</para>
+	    <programlisting>@options frequency command</programlisting>
+	    <para>where frequency is a time value of the form value*multiplier+value*multiplier+...+value-in-minutes as "12h02" or "3w2d5h1". The first means "12 hours and 2 minutes of fcron execution" while the second means "3 weeks, 2 days, 5 hours and 1 minute of fcron execution". The only valid multipliers are:</para>
+	    <table>
+		<title>Valid time multipliers</title>
+		<tgroup cols="2">
+		    <thead>
+			<row>
+			    <entry>meaning : </entry>
+			    <entry>multipliers :      </entry>
+			</row>
+		    </thead>
+		    <tbody>
+			<row>
+			    <entry>months (4 weeks) : </entry>
+			    <entry>m      </entry>
+			</row>
+			<row>
+			    <entry>weeks (7 days) : </entry>
+			    <entry>w      </entry>
+			</row>
+			<row>
+			    <entry>days (24 hours) : </entry>
+			    <entry>d      </entry>
+			</row>
+			<row>
+			    <entry>hours (60 minutes) : </entry>
+			    <entry>h  </entry>
+			</row>
+		    </tbody>
+		</tgroup>
+	    </table>
+
+	    <para>In place of <replaceable>options</replaceable>, user can put a time value : it will be interpreted as <token>@first(<replaceable>time</replaceable>)</token>. If &optfirst; option is not set, the value of "<varname>frequency</varname>" is used.</para>
+	    <para>This kind of entry does not guarantee a time and date of execution (as the job is delayed at each startup by the time elapsed since the shutdown), but should be useful for jobs depending on the number of things done by the users (for instance, the filesystem should better be checked after a certain amount of use by the users rather than every x days, as the system may run from 1 day to x days during that x days interval).</para>
+	    <para>The time remaining before next execution is saved every &save; seconds (to limit damages caused by a crash) and when &fcron; exits after having received a <constant>SIGTERM</constant> signal, i.e. when systems go down. Thus, this kind of entries is particularly useful for systems that don't run regularly. The syntax being very simple, it may also useful for tasks which don't need to be run at a specific time and date.</para>
+	    <para>&seealso; options &optfirst;, &optmail;, &optnolog;, &optserial;, &optlavg;, &optnice;, &optrunas; (see below).</para>
+	</refsect2>
+
+	<refsect2 id="fcrontab.5.tadent">
+	    <title>Entries based on time and date</title>
+	    <para>The second type of &fcrontabf;'s entries begins by an optional "&", which can be immediately followed by an optional number defining the frequency of execution (this is equivalent to option &optrunfreq;) or a declaration of options; it has five time and date fields, and a shell command. Note that the shell command may be preceded by a user name, which is equivalent to <token>runas(<replaceable>user</replaceable>)</token>: as it is only here for backward compatibility you should use option &optrunas; (see below) instead. The frequency is interpreted as: "run this command after x matches of time and date fields". The time and date fields are:</para>
+	    <table>
+		<title>Time and date fields</title>
+		<tgroup cols="2">
+		    <thead>
+			<row>
+			    <entry>field : </entry>
+			    <entry>allowed values :      </entry>
+			</row>
+		    </thead>
+		    <tbody>
+			<row>
+			    <entry>minute : </entry>
+			    <entry>0-59      </entry>
+			</row>
+			<row>
+			    <entry>hour : </entry>
+			    <entry>0-23      </entry>
+			</row>
+			<row>
+			    <entry>day of month : </entry>
+			    <entry>1-31      </entry>
+			</row>
+			<row>
+			    <entry>month : </entry>
+			    <entry>1-12 (or names, see below)      </entry>
+			</row>
+			<row>
+			    <entry>day of week : </entry>
+			    <entry>0-7 (0 and 7 are both Sunday, or names)      </entry>
+			</row>
+		    </tbody>
+		</tgroup>
+	    </table>
+	    <para>A field is always filled by either an asterisk (*), which acts as "<token>first-last</token>" range, a single number or a list.</para>
+	    <para>List are numbers or range separated with commas (,). For instance: "2,5,15,23".</para>
+	    <para>Ranges of number are of the form "<token><replaceable>begin</replaceable>-<replaceable>end</replaceable></token>", where "<replaceable>begin</replaceable>" and "<replaceable>end</replaceable>" are included. For example, "3-5" specifies the values 3, 4 and 5. You can also add an optional "/<replaceable>number</replaceable>" to a range, where the <replaceable>number</replaceable> specifies skips of the <replaceable>number</replaceable>'s value through the range. For example, "0-23/2" can be used in the hours field to specify command execution every other hour. Finally, one or several "~<replaceable>number</replaceable>" can be added to turn off some values in a range. For example, "5-8~6~7" is equivalent to "5,8". The final form of a field is:</para>
+	    <blockquote>
+		<para>a[-b[/c][~d][~e][...]][,f[-g[/h][~i][~j][...]]][,...]</para>
+	    </blockquote>
+	    <para>where the letters are integers.</para>
+	    <para>You can also use an asterisk (*) in a field. It acts for "<token>first-last</token>". For example, a "*" in the field minute means all minutes from minute 0 down to minute 59.</para>
+	    <para>Ranges can be included in a list as a single number. For instance: "2,5-10/2~6,15,20-25,30".</para>
+	    <para>Names can also be used for the "month" and "day of week" fields. To do so, use the first three letters of the particular day or month (case doesn't matter). Please note that names are used exactly as numbers: you can use them in a list or a range.</para>
+	    <para>If a day of month and a day of week are given, the command will execute only when <emphasis>both</emphasis> match with the current time and date unless option &optdayor; is set. For example, with the line <programlisting>5 10 31 * 7 echo ''</programlisting> echo will be executed only days which are a Sunday AND a 31th.</para>
+
+	    <para>&seealso; options &optdayor;, &optbootrun;, &optrunfreq;, &optmail;, &optnolog;, &optserial;, &optlavg;, &optnice;, &optrunas; (see below).</para>
+	</refsect2>
+
+	<refsect2>
+	    <title>Entries run periodically</title>
+	    <para>The third type of &fcrontabf;'s entries begin by a "%", followed by one of the keywords :</para>
+	    <para><simplelist type="inline">
+		    <member><parameter>hourly </parameter></member>
+		    <member><parameter>daily </parameter></member>
+		    <member><parameter>monthly </parameter></member>
+		    <member><parameter>weekly </parameter></member>
+		</simplelist></para>
+	    <para><simplelist type="inline">
+		    <member><parameter>midhourly </parameter></member>
+		    <member><parameter>middaily </parameter></member>
+		    <member><parameter>nightly </parameter></member>
+		    <member><parameter>midmonthly </parameter></member>
+		    <member><parameter>midweekly </parameter></member>
+		</simplelist></para>
+	    <para><simplelist type="inline">
+		    <member><parameter>mins </parameter></member>
+		    <member><parameter>hours </parameter></member>
+		    <member><parameter>days </parameter></member>
+		    <member><parameter>mons </parameter></member>
+		    <member><parameter>dow </parameter></member>
+		</simplelist></para>
+	    <para>and optional options.</para>
+	    <para>The keywords of the first line tell &fcron; to run the command once from the beginning of the corresponding interval to the end of that interval : for instance, the keyword <parameter>weekly</parameter> tells &fcron; to run a command once between Monday and Sunday each week. On top of that, the second list acts similarly but from middle to middle of the corresponding interval : <parameter>midweekly</parameter> will run a command once from Thursday to Wednesday. Note that <parameter>nightly</parameter> is equivalent to <parameter>middaily</parameter>.</para>
+	    <para>With this two kind of keywords, user must give the needed time fields (as defined in "<link linkend="fcrontab.5.tadent">Entries based on time and date</link>" (see above)) to specify when the command should be run during each interval :</para>
+	    <table>
+		<title>Needed time fields for each keyword</title>
+		<tgroup cols="2">
+		    <thead>
+			<row>
+			    <entry>Keywords : </entry>
+			    <entry>must be followed by the fields : </entry>
+			</row>
+		    </thead>
+		    <tbody>
+			<row>
+			    <entry><parameter> hourly</parameter>, <parameter>midhourly</parameter> : </entry>
+			    <entry> minutes.</entry>
+			</row>
+			<row>
+			    <entry><parameter> daily</parameter>, <parameter>middaily</parameter>, <parameter>nightly</parameter>, <parameter>weekly</parameter>, <parameter>midweekly</parameter> : </entry>
+			    <entry> minutes and hours.</entry>
+			</row>
+			<row>
+			    <entry><parameter> monthly</parameter>, <parameter>midmonthly</parameter> : </entry>
+			    <entry> minutes, hours and days.</entry>
+			</row>
+		    </tbody>
+		</tgroup>
+	    </table>
+	    <para>For example :</para>
+	    <informalexample>
+		<para>%nightly * 21-23,3-5 echo "a monthly entry"</para>
+	    </informalexample>
+	    <para>will run the command once each night either between 21:00 and 23:59, or between 3:00 and 5:59.</para>
+	    <para>&seealso; options &optlavg;, &optnoticenotrun;, &optstrict;, &optmail;, &optnolog;, &optserial;, &optnice;, &optrunas; (see below).</para>
+
+	    <para>The keywords of the third list act differently, as follows:</para>
+	    <para>run this command once during EACH interval specified, ignoring the fields below the keyword in the interval definition (a <parameter>hours</parameter> prevents the mins field to be considered as an interval, but it will be used to determine when the line should be run during an interval : see the note below) (<parameter>dow</parameter> means "day of week").</para>
+	    <para>Such a keyword is followed by 5 time and date fields (the same fields used for a <link linkend="fcrontab.5.tadent">line based on absolut time</link> (see above)). Furthermore, there must be some non-matching time and dates in the lines with that kind of keyword (i.e. the following is not allowed : <programlisting>%hours * 0-23 * * * echo</programlisting> but <programlisting>%hours * 0-22 * * * echo</programlisting> is allowed).</para>
+	    <note>
+		<para>a single number in a field is considered as an interval : <programlisting>%mins 15 2-4 * * * echo</programlisting> will run at 2:15, 3:15 AND 4:15 every day.</para>
+		<para>But every fields below the keywords are ignored in interval definition : <programlisting>%hours 15 2-4 * * * echo</programlisting> will run only ONCE either at 2:15, 3:15 OR 4:15.</para>
+	    </note>
+	</refsect2>
+
+	<refsect2>
+	    <title>Options</title>
+	    <para>The options can be set either for every line below the declaration or for an individual line. In the first case, the setting is done on a whole line immediately after an exclamation mark (!), while it is done after a "&", a "%" or a "@" depending on the type of scheduling in the second case. Note that an option declaration in a schedule overrides the global declaration of that same option.</para>
+	    <para>Options are separated by comas (,) and their arguments, if any, are placed between brackets ("(" and ")") and separated by comas. No spaces are allowed. A declaration of options is of the form</para>
+	    <blockquote>
+		<para><replaceable>option</replaceable>[(<replaceable>arg1</replaceable>[,<replaceable>arg2</replaceable>][...])][,<replaceable>option</replaceable>[(<replaceable>arg1</replaceable>[...])]][...]</para>
+	    </blockquote>
+	    <para>where option is either the name of an option or its abbreviation. The options are (default value between brackets) :</para>
+	    <variablelist>
+		<title>Valid options in a &fcrontabf;</title>
+		<varlistentry id="fcrontab.5.reset">
+		    <term>reset</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis></para>
+			<para>Reset options to default.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.exesev">
+		    <term>exesev</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>Can a job be executed several times simultaneously ?</para>
+			<para>&seealso; options &optserialonce;, &optlavgonce;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.serialonce">
+		    <term>serialonce</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>&serialoncedef;</constant>)</para>
+			<para>Can a job be queued several times in serial queue simultaneously ?</para>
+			<para>&seealso; options &optexesev;, &optlavgonce;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.serial">
+		    <term>serial</term>
+		    <term>s</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>&Fcron; runs at most &serialmaxrunning; serial jobs (and the same number of lavg serial jobs) simultaneously (but this value may be modified by &fcron;'s option <option>-m</option>).</para>
+			<para>&seealso; options &optserialonce;, &optlavg;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.bootrun">
+		    <term>bootrun</term>
+		    <term>b</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>Run a &-line at &fcron;'s startup if it should have be run during system down time.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.first">
+		    <term>first</term>
+		    <term>f</term>
+		    <listitem>
+			<para><emphasis><type>time-value</type></emphasis></para>
+			<para>Delay before first execution of a job based on system up time ("@"-lines).</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.runfreq">
+		    <term>runfreq</term>
+		    <term>r</term>
+		    <listitem>
+			<para><emphasis><type>integer</type></emphasis></para>
+			<para>Run every "<replaceable>runfreq</replaceable>" matches of time and date. (this option is ignored for <link linkend="uptent">lines based on elapsed system up time</link>).</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.mailto">
+		    <term>mailto</term>
+		    <listitem>
+			<para><emphasis><type>user-name</type></emphasis>(<constant>name of file's owner</constant>)</para>
+			<para>Mail output (if needed) to "<replaceable>mailto</replaceable>". A &optmailto; declared and empty (string "") is equivalent to "<token>mail(false)</token>".</para>
+			<para>&seealso; options &optmail;, &optforcemail;, &optnolog;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.mail">
+		    <term>mail</term>
+		    <term>m</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>true</constant>)</para>
+			<para>Mail output (if any) or not.</para>
+			<para>&seealso; options &optmailto;, &optforcemail;, &optnolog;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.forcemail">
+		    <term>forcemail</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>Mail output even if zero-length.</para>
+			<para>&seealso; options &optmail;, &optmailto;, &optnolog;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.nolog">
+		    <term>nolog</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>If set to true, log only errors for the corresponding job(s). May be useful for jobs running very often, and/or to reduce disk access on a laptop.</para>
+			<para>&seealso; options &optmail;, &optmailto;, &optforcemail;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.dayand">
+		    <term>dayand</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>true</constant>)</para>
+			<para>Perform a logic AND between week and month day.</para>
+			<para>&seealso; options &optdayor;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.dayor">
+		    <term>dayor</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>Perform a logic OR between week and month day.</para>
+			<para>&seealso; options &optdayand;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.nice">
+		    <term>nice</term>
+		    <term>n</term>
+		    <listitem>
+			<para><emphasis><type>nice-value</type></emphasis></para>
+			<para>Change job priority. A <emphasis><type>nice-value</type></emphasis> is an integer from -20 (highest priority) to 19 (lowest) (only root is allowed to use a negative value with this option).</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.runas">
+		    <term>runas</term>
+		    <listitem>
+			<para><emphasis><type>user-name</type></emphasis></para>
+			<para>Run with "<replaceable>user-name</replaceable>" permissions and environment (only root is allowed to use this option).</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.lavg">
+		    <term>lavg</term>
+		    <listitem>
+			<para><emphasis><type>real</type></emphasis>(<constant>0</constant>) <emphasis><type>real</type></emphasis>(<constant>0</constant>) <emphasis><type>real</type></emphasis>(<constant>0</constant>)</para>
+			<para>Set the values of the 1, 5 and 15 minutes (in this order) system load average values below which the job should run. The values have a maximum of 1 decimal (i.e. "2.3"), any other decimals are only used to round off. Set a value to 0 to ignore the corresponding load average (or all of the values to run the job regardless of the load average).</para>
+			<para>&seealso; options &optlavg1;, &optlavg5;, &optlavg15;, &optuntil;, &optlavgonce;, &optlavgor;, &optlavgand;, &optstrict;, &optnoticenotrun;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.lavgX">
+		    <term>lavg1</term>
+		    <term>lavg5</term>
+		    <term>lavg15</term>
+		    <listitem>
+			<para><emphasis><type>real</type></emphasis>(<constant>0</constant>)</para>
+			<para>Set the threshold of, respectively, the 1, 5 or 15 minutes system load average value. Set one of them to 0 to ignore the corresponding load average.</para>
+			<para>&seealso; options &optlavg;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.until">
+		    <term>until</term>
+		    <listitem>
+			<para><emphasis><type>time-value</type></emphasis>(<constant>0</constant>)</para>
+			<para>Set the timeout of the waiting of the wanted system load average values. If the timeout is exceeded, the job runs no matter the load average. Set until to 0 to remove the timeout.</para>
+			<para>&seealso; options &optlavg;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.lavgonce">
+		    <term>lavgonce</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>&lavgoncedef;</constant>)</para>
+			<para>Can a job be queued several times in lavg queue simultaneously ?</para>
+			<para>&seealso; options &optlavg;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.lavgand">
+		    <term>lavgand</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>true</constant>)</para>
+			<para>Perform a logic AND between the 1, 5 and 15 minutes system load average values.</para>
+			<para>&seealso; options &optlavg;, &optlavgor;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.lavgor">
+		    <term>lavgor</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>Perform a logic OR between the 1, 5 and 15 minutes system load average values.</para>
+			<para>&seealso; options &optlavg;, &optlavgand;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.strict">
+		    <term>strict</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>true</constant>)</para>
+			<para>When a lavg %-job is at the end of an interval of execution, should it be removed from the lavg queue (strict(true), so the job is not run) or be let there until the system load average allows its execution (strict(false)) ?</para>
+			<para>&seealso; options &optlavg;, &optnoticenotrun;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.noticenotrun">
+		    <term>noticenotrun</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>no</constant>)</para>
+			<para>Should &fcron; mail user to report the non-execution of a %-job or a &-job (because of system down state for both or a too high system load average for the latter).</para>
+			<para>&seealso; options &optlavg;, &optstrict;.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.tzdiff">
+		    <term>tzdiff</term>
+		    <listitem>
+			<para><emphasis><type>integer</type></emphasis>(<constant>0</constant>)</para>
+			<para>Time zone difference (in hours, between -24 and 24) between the system time, and the local real time. This option allows a user to define its & and %-lines in the local time. Note that this value is set for a whole fcrontab file, and only the last definition is taken into account.</para>
+			<para>&seealso; options &optlavg;, &optstrict;.</para>
+		    </listitem>
+		</varlistentry>
+	    </variablelist>
+	    <para>A <type>boolean</type> argument can be inexistent, in which case brackets are not used and it means <constant>true</constant>; the string "true", "yes" or 1 to mean <constant>true</constant>; and the string "false", "no" or 0 to mean <constant>false</constant>. See above for explanations about time value (section <link linkend="uptent">"entries based on elapsed system up time"</link>).</para>
+	    <para>Note that <varname>dayand</varname> and <varname>dayor</varname> are in fact the same option : a false value to <varname>dayand</varname> is equivalent to a true to <varname>dayor</varname>, and reciprocally a false value to <varname>dayor</varname> is equivalent a true value to <varname>dayand</varname>. It is the same for <varname>lavgand</varname> and <varname>lavgor</varname>.</para>
+	    <para>Note a special case to be handled :
+A job should be entered into the serial queue, *but* the previous entry for this job has not been completed yet, because of high system load or some external event. Option <varname>serialonce</varname> answers the question : should the new entry of the job be ignored ? This way one can distinguish between jobs required to run a certain number of times, preferably at specified times, and tasks to be performed irrespective of their number (-> serialonce(true)), which make the system respond faster.</para>
+	    <para>The same considerations apply for the load average queue, and can be expressed with option <varname>lavgonce</varname>.</para>
+	    <para>Moreover, if the serial or the lavg queue contains respectively more than &serialqueuemax; and &lavgqueuemax; jobs, the next job in the serial queue or the job nearest to the until timeout in the lavg queue will be executed before adding a new job.</para>
+	    <para>Finally, if jobs remain in the lavg or serial queues when fcron stops, they will be put once in the corresponding queue on startup (their order may not be conserved).</para>
+	    <para><example>
+		    <title>An example of an option declaration :</title>
+		    <programlisting>!reset,serial(true),dayor,bootrun(0),mailto(root),lavg(.5,2,1.5)</programlisting>
+		</example></para>
+	</refsect2>
+
+    </refsect1>
+
+    <refsect1>
+	<title>Examples</title>
+	<para><example>
+		<title>An example of a user fcrontab</title>
+		<programlisting>
+# use /bin/bash to run commands, ignoring what /etc/passwd says
+SHELL=/bin/bash
+
+# mail output to thib, no matter whose fcrontab this is
+!mailto(thib)
+
+# define a variable which is equivalent to " Hello thib and paul ! "
+# here the newline characters are escaped by a backslash (\)
+# and quotes are used to force to keep leading and trailing blanks
+TEXT= " Hello\
+
+
+thib and\
+
+
+paul ! "
+
+# we want to use serial but not bootrun:
+!serial(true),b(0)
+
+# run after five minutes of execution the first time,
+# then run every hours
+@first(5) 1h   echo "Run every hours"
+
+# run every days
+@ 1d echo "fcron daily"
+
+# run once between in the morning and once in the afternoon
+#  if systems is running at any moment of these intervals
+&amp;hours * 8-12,14-18 * * * echo "Hey boss, I'm working today !"
+
+# run once a week during our lunch
+%weekly * 12-13 echo "I left my system on at least once \
+ at lunch time this week."
+
+# run every Sunday and Saturday at 9:05
+5 9 * * sat,sun echo "Good morning Thibault !"
+
+# run every peer days of march at 18:00, except on 16th
+0 18 2-30/2~16 Mar * echo "It's time to go back home !"
+
+# the line above is equivalent to 
+& 0 18 2-30/2~16 Mar * echo "It's time to go back home !"
+
+# reset options to default and set runfreq for lines below
+!reset,runfreq(7)
+
+# run once every 7 matches (thanks to the declaration above),
+# so if system is running every day at 10:00, this will be
+# run once a week
+& 0 10 * * * echo "if you got this message last time 7 days ago,\
+ this computer has been running every day at 10:00 last week.\
+ If you got the message 8 days ago, then the system has been down \
+ one day at 10:00 since you got it, etc"
+
+# wait every hour for a 5 minutes load average under 0.9
+@lavg5(0.9) 1h echo "The system load average is low"
+
+# wait a maximum of 5 hours every day for a fall of the load average
+@lavgand,lavg(1,2.0,3.0),until(5h) 1d echo "Load average is going down"
+
+# wait for the best moment to run a heavy job
+@lavgor,lavg(0.8,1.2,1.5),nice(10) 1w echo "This is a heavy job"
+
+# run once every night between either 21:00 and 23:00 or 
+#   between 3:00 and 6:00
+%nightly,lavg(1.5,2,2) * 21-23,3-6 echo "It's time to retrieve \
+the last release of Mozilla !"</programlisting>
+	    </example></para>
+    </refsect1>
+
+    <refsect1>
+	<title>Files</title>
+	<variablelist>
+	    <varlistentry>
+		<term><filename>&etc;/&fcron.conf.location;</filename></term>
+		<listitem>
+		    <para>Configuration file for &fcron; and &fcrontab; : contains paths (spool dir, pid file) and default programs to use (editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf(5)</link> for more details.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><filename>&etc;/&fcron.allow;</filename></term>
+		<listitem>
+		    <para>Users allowed to use &fcrontab; (one name per line, special name "all" acts for everyone)</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><filename>&etc;/&fcron.deny;</filename></term>
+		<listitem>
+		    <para>Users who are not allowed to use &fcrontab; (same format as allow file)</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><filename>&etc;/pam.d/fcron</filename> (or <filename>&etc;/pam.conf</filename>)</term>
+		<listitem>
+		    <para><productname>PAM</productname> configuration file for &fcron;. Take a look at pam(8) for more details.</para>
+		</listitem>
+	    </varlistentry>
+	</variablelist>
+    </refsect1>
+
+    <refsect1>
+	<title>See also</title>
+	<simplelist>
+	    <member><link linkend="fcron.8">&fcron;(8)</link></member>
+	    <member><link linkend="fcrontab.1">&fcrontab;(1)</link></member>
+	    <member><link linkend="fcrontab.5">&fcron.conf;(5)</link></member>
+	</simplelist>
+    </refsect1>
+
+    <refsect1>
+	<title>Author</title>
+	<para>Thibault Godouet &email;</para>
+    </refsect1>
+
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
+sgml-default-dtd-file: "fcron-doc.ced"
+End:
+-->
