@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.50 2001-07-04 17:29:48 thib Exp $ */
+ /* $Id: fcron.c,v 1.51 2001-07-04 17:45:39 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.50 2001-07-04 17:29:48 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.51 2001-07-04 17:45:39 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -325,8 +325,9 @@ create_spooldir(char *dir)
     /* create a new spool dir for fcron : set correctly its mode and owner */
 {
     int dir_fd = -1;
-    struct passwd *pass;
-    struct group *grp;
+    struct passwd *pass = NULL;
+    struct group *grp = NULL;
+    struct stat st;
 
     if ( mkdir(dir, 0) != 0 && errno != EEXIST )
 	die_e("Cannot create dir %s", dir);
@@ -334,17 +335,31 @@ create_spooldir(char *dir)
     if ( (dir_fd = open(dir, 0)) < 0 )
 	die_e("Cannot open dir %s", dir);
 
+    if ( fstat(dir_fd, &st) != 0 ) {
+	close(dir_fd);
+	die_e("Cannot fstat %s", dir);
+    }
+
+    if ( ! S_ISDIR(st.st_mode) ) {
+	close(dir_fd);
+	die("%s exists and is not a directory", dir);
+    }
+
     if ( (pass = getpwnam(USERNAME)) == NULL )
 	die_e("Cannot getpwnam(%s)", USERNAME);
 
     if ( (grp = getgrnam(GROUPNAME)) == NULL )
 	die_e("Cannot getgrnam(%s)", GROUPNAME);
 
-    if ( fchown(dir_fd, pass->pw_uid, grp->gr_gid) != 0 )
+    if ( fchown(dir_fd, pass->pw_uid, grp->gr_gid) != 0 ) {
+	close(dir_fd);
 	die_e("Cannot fchown dir %s to %s:%s", dir, USERNAME, GROUPNAME);
+    }
 
-    if ( fchmod(dir_fd, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP) != 0)
+    if (fchmod(dir_fd, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP) != 0) {
+	close(dir_fd);
 	die_e("Cannot change dir %s's mode to 770", dir);
+    }
 
     close(dir_fd);
 
