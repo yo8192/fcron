@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.85 2002-03-31 17:26:47 thib Exp $
+# $Id: Makefile.in,v 1.86 2002-07-19 19:37:01 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -12,18 +12,21 @@
 # to set the same values in the two files.
 
 SRCDIR		= @srcdir@
+# Useful to build packages
+# you may want to use this var with a : 'make DESTDIR=dir install'
+DESTDIR		=
 
 # Where should we install it ?
-prefix		= @prefix@
+prefix		= $(DESTDIR)@prefix@
 # We set exec_prefix to $prefix (if you change this, you should also change
 #  it in configure.in)
-exec_prefix	= @exec_prefix@
+exec_prefix	= $(DESTDIR)@exec_prefix@
 DESTSBIN	= @sbindir@
 DESTBIN		= @bindir@
-DESTMAN		= @mandir@
-DESTDOC		= @DOCDIR@
-FCRONTABS	= @FCRONTABS@
-ETC		= @ETC@
+DESTMAN		= $(DESTDIR)@mandir@
+DESTDOC		= $(DESTDIR)@DOCDIR@
+FCRONTABS	= $(DESTDIR)@FCRONTABS@
+ETC		= $(DESTDIR)@ETC@
 OPTIM		= @CFLAGS@
 LDFLAGS		= @LDFLAGS@
 CPPFLAGS	= @CPPFLAGS@ -I. -I${SRCDIR}
@@ -37,6 +40,7 @@ ROOTGROUP	= @ROOTGROUP@
 USERNAME 	= @USERNAME@
 GROUPNAME	= @GROUPNAME@
 DEBUG		= @DEBUG@
+BOOTINSTALL	= @BOOTINSTALL@
 ANSWERALL	= @ANSWERALL@
 USEPAM		= @USEPAM@
 FCRONDYN	= @FCRONDYN@
@@ -56,7 +60,7 @@ OPTION =
 ####################################
 
 VERSION = @VERSION@
-CFLAGS = $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
+CFLAGS += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
 ifeq ($(FCRONDYN), 1)
 LIBOBJS := socket.o $(LIBOBJS)
 endif
@@ -112,10 +116,14 @@ install: all
 	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 110 -s fcron $(DESTSBIN)
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrontab $(DESTBIN)
 	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 6111 -s fcronsighup $(DESTBIN)
-	if test "$(FCRONDYN)" =  "1"; then $(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrondyn $(DESTBIN) ; fi
+ifeq ($(FCRONDYN), 1)
+	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrondyn $(DESTBIN)
+endif
 	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.allow $(SRCDIR)/files/fcron.deny $(ETC)
 	test -f $(ETC)/fcron.conf || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.conf $(ETC)
-	test "${USEPAM}" = "0" || $(SRCDIR)/script/install-pam-conf $(SRCDIR) $(ETC) $(ROOTNAME) $(ROOTGROUP) "$(INSTALL)"
+ifeq ($(USEPAM), 1)
+	$(SRCDIR)/script/install-pam-conf $(SRCDIR) $(ETC) $(ROOTNAME) $(ROOTGROUP) "$(INSTALL)"
+endif
 
 	@(cd doc && make install)
 
@@ -126,18 +134,18 @@ install: all
 	if test -f $(ETC)/fcron.deny; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.deny ; fi
 	if test -f $(ETC)/fcron.allow; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.allow ; fi
 
+ifeq ($(BOOTINSTALL), 1)
 	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS) $(ANSWERALL) $(SRCDIR)
+endif
 
 install-boot: install
-	if test "$(DEBUG)" = "1"; then \
-	  $(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) 0 $(FCRONTABS)  $(ANSWERALL) $(SRCDIR);\
-	fi
+	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS)  $(ANSWERALL) $(SRCDIR)
 
 install-restart: install
-	if test "$(DEBUG)" = "1"; then \
-	  kill -TERM `pidof fcron` ; \
-	  /etc/rc.d/init.d/fcron start ;\
-	fi
+ifeq ($(DEBUG), 1)
+	kill -TERM `pidof fcron`
+	/etc/rc.d/init.d/fcron start
+endif
 
 uninstall:
 	rm -f $(DESTSBIN)/fcron
