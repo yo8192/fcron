@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.47 2001-05-29 19:10:10 thib Exp $ */
+ /* $Id: fcron.c,v 1.48 2001-06-05 10:17:56 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.47 2001-05-29 19:10:10 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.48 2001-06-05 10:17:56 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -208,7 +208,7 @@ get_lock()
     foreground = foreopt;
 
     rewind(daemon_lockfp);
-    fprintf(daemon_lockfp, "%d\n", daemon_pid);
+    fprintf(daemon_lockfp, "%d\n", (int) daemon_pid);
     fflush(daemon_lockfp);
     ftruncate(fileno(daemon_lockfp), ftell(daemon_lockfp));
 
