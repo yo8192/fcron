@@ -5,7 +5,7 @@ SBIN=@@DESTSBIN@
 
 case "$1" in
   start)
-    $SBIN/fcron -b && echo -n "fcron"
+    $SBIN/fcron -b && echo -n " fcron"
     ;;
   *)
     echo "Usage: fcron start"
