@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.16 2004-08-17 12:53:46 thib Exp $ */
+ /* $Id: socket.c,v 1.17 2004-09-02 22:07:18 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -57,7 +57,7 @@ time_t auth_nofail_since = 0;       /* we refuse auth since x due to too many fa
 /* some error messages ... */
 char err_no_err_str[] = "Command successfully completed.\n";
 char err_unknown_str[] = "Fcron has encountered an error : command not completed.\n";
-char err_cmd_unknown_str[] = "Not yet implemented or erroneous command.\n";
+char err_cmd_unknown_str[] = "Unknown command.\n";
 char err_job_nfound_str[] = "No corresponding job found.\n";
 char err_rjob_nfound_str[] = "No corresponding running job found.\n (The job may have "
 "just finished its execution.)\n";
