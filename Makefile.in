@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.20 2000-06-22 15:35:59 thib Exp $
+# $Id: Makefile.in,v 1.21 2000-06-22 15:50:09 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -76,7 +76,7 @@ HEADERS = fcrontab.h config.h global.h
 RCSNOLOG=.*\(.html\|VERSION\|MANIFEST\)
 REXP_MANPAGES=.*[158]
 
-all: fcron fcrontab
+all: fcron fcrontab updatedoc
 
 fcron: $(OBJSD)
 	$(CC) $(CFLAGS) -o $@ $(OBJSD)
