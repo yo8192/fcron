@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.70 2004-04-29 19:28:38 thib Exp $ */
+ /* $Id: fcron.c,v 1.71 2004-04-29 20:50:47 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.70 2004-04-29 19:28:38 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.71 2004-04-29 20:50:47 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -443,8 +443,6 @@ RETSIGTYPE
 sighup_handler(int x)
   /* update configuration */
 {
-    signal(SIGHUP, sighup_handler);
-    siginterrupt(SIGHUP, 0);
     /* we don't call the synchronize_dir() function directly,
        because it may cause some problems if this signal
        is not received during the sleep
@@ -459,8 +457,6 @@ sigchild_handler(int x)
     
     sig_chld = 1;
 
-    (void)signal(SIGCHLD, sigchild_handler);
-    siginterrupt(SIGCHLD, 0);
 }
 
 
@@ -468,8 +464,6 @@ RETSIGTYPE
 sigusr1_handler(int x)
   /* reload all configurations */
 {
-    signal(SIGUSR1, sigusr1_handler);
-    siginterrupt(SIGUSR1, 0);
     /* we don't call the synchronize_dir() function directly,
        because it may cause some problems if this signal
        is not received during the sleep
@@ -482,8 +476,6 @@ RETSIGTYPE
 sigusr2_handler(int x)
   /* print schedule and switch on/off debug mode */
 {
-    signal(SIGUSR2, sigusr2_handler);
-    siginterrupt(SIGUSR2, 0);
     sig_debug = 1;
 }
 
@@ -634,26 +626,40 @@ check_signal()
     /* check if a signal has been received and handle it */
 {
 
+    /* we reinstall the signal handler functions here and not directly in the handlers,
+     * as it is not supported on some systems (HP-UX) and makes fcron crash */
+
     if (sig_chld > 0) {
 	wait_chld();
 	sig_chld = 0;
+	(void)signal(SIGCHLD, sigchild_handler);
+	siginterrupt(SIGCHLD, 0);
     }
     if (sig_conf > 0) {
 
-	if (sig_conf == 1)
+	if (sig_conf == 1) {
 	    /* update configuration */
 	    synchronize_dir(".");
-	else
+	    sig_conf = 0;
+	    signal(SIGHUP, sighup_handler);
+	    siginterrupt(SIGHUP, 0);
+	}
+	else {
 	    /* reload all configuration */
 	    reload_all(".");
+	    sig_conf = 0;
+	    signal(SIGUSR1, sigusr1_handler);
+	    siginterrupt(SIGUSR1, 0);
+	}
 
-	sig_conf = 0;
     }
     if (sig_debug > 0) {
 	print_schedule();
 	debug_opt = (debug_opt > 0)? 0 : 1;
 	explain("debug_opt = %d", debug_opt);
 	sig_debug = 0;
+	signal(SIGUSR2, sigusr2_handler);
+	siginterrupt(SIGUSR2, 0);
     }
 
 }
