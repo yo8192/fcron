@@ -21,16 +21,15 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.8 2000-05-30 19:26:28 thib Exp $ */
+ /* $Id: fcron.c,v 1.9 2000-05-31 19:11:40 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.8 2000-05-30 19:26:28 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.9 2000-05-31 19:11:40 thib Exp $";
 
 void main_loop(void);
 void info(void);
 void usage(void);
-void xexit(int exit_value);
 void sighup_handler(int x);
 void sigterm_handler(int x);
 void sigchild_handler(int x);
@@ -39,15 +38,27 @@ int parseopt(int argc, char *argv[]);
 void get_lock(void);
 
 
+/* command line options */
 char debug_opt = DEBUG;       /* set to 1 if we are in debug mode */
 char foreground = FOREGROUND; /* set to 1 when we are on foreground, else 0 */
-char  *cdir = FCRONTABS;       /* the dir where are stored users' fcrontabs */
+char  *cdir = FCRONTABS;      /* the dir where are stored users' fcrontabs */
+
+/* process identity */
 int daemon_uid;                 
 pid_t daemon_pid;               
 char *prog_name = NULL;         
-char sig_conf = 0;             /* is 1 when we got a SIGHUP */ 
+
+/* have we got a signal ? */
+char sig_conf = 0;            /* is 1 when we got a SIGHUP */ 
 char sig_chld = 0;            /* is 1 when we got a SIGCHLD */  
-CF *file_base;                /* point to the first file of the list */
+
+/* jobs database */
+struct CF *file_base;         /* point to the first file of the list */
+struct job *queue_base;       /* ordered list of normal jobs to be run */
+struct job *serial_base;      /* ordered list of job to be run one by one */
+struct job *freq_base;        /* ordered list of jobs based on frequency */
+struct job *exe_base;         /* jobs which are executed */
+
 time_t t1;                    /* the time at which sleep began */
 
 
@@ -494,11 +505,10 @@ void main_loop()
 		if (sig_conf == 1)
 		    /* update configuration */
 		    synchronize_dir(".");
-		else {
+		else
 		    /* reload all configuration */
-		    update_time_remaining(dt);		    
 		    reload_all(".");
-		}		
+
 		sig_conf = 0;
 	    }
 

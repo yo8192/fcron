@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.3 2000-05-30 19:25:41 thib Exp $ */
+ /* $Id: conf.c,v 1.4 2000-05-31 19:11:15 thib Exp $ */
 
 #include "fcron.h"
 
@@ -253,8 +253,10 @@ synchronize_file(char *file_name)
 			 memcmp(new_l->cl_mins, old_l->cl_mins, size) == 0
 			) {
 			
-			new_l->cl_remain = old_l->cl_remain; 
-			new_l->cl_nextexe = old_l->cl_nextexe; 
+			new_l->cl_remain = old_l->cl_remain;
+			if ( (new_l->cl_nextexe = old_l->cl_nextexe) > 0 )
+			    insert_nextexe(new_l);
+			else insert_freq(new_l);
 
 			if (debug_opt) {
 			    if (new_l->cl_nextexe > 0) {
@@ -443,7 +445,7 @@ read_file(const char *file_name, CF *cf)
 	    if ( cl->cl_nextexe <= ti )
 		set_next_exe(cl, 1);
 	} else {
-
+	    insert_freq(cl);
 	    debug("   remain: %ld  timefreq: %ld", cl->cl_remain,
 		  cl->cl_timefreq);
 	}	    
@@ -464,12 +466,14 @@ read_file(const char *file_name, CF *cf)
 		/* we don't set cl_nextexe to 0 because this value is 
 		 * reserved to the entries based on frequency */
 		cl->cl_nextexe = 1;
+		insert_nextexe(cl);
 		cl->cl_pid = cl->cl_mailfd = cl->cl_mailpid = 0;
 	    }
 	}
 	    
 	cl->cl_next = cf->cf_line_base;
 	cf->cf_line_base = cl;
+	cl->cl_file = cf;
 	Alloc(cl, CL);
     }
     /* free last calloc : unused */
@@ -493,6 +497,8 @@ delete_file(const char *user_name)
     CL *cur_line;
     env_t *env = NULL;
     env_t *cur_env = NULL;
+    struct job *j = NULL;
+    struct job *prev_j = NULL;
 
     file = file_base;
     while ( file != NULL) {
@@ -502,6 +508,25 @@ delete_file(const char *user_name)
 	    cur_line = file->cf_line_base;
 	    while ( (line = cur_line) != NULL) {
 		cur_line = line->cl_next;
+
+		/* remove line from the lists */
+		if( line->cl_runfreq != 0 ) {
+		    for ( j = freq_base; j != NULL; j = j->j_next )
+			if ( j->j_line == line ) {
+			    prev_j->j_next = j->j_next;
+			    free(j);
+			    break;
+			}
+		}
+		else
+		    for ( j = queue_base; j != NULL; j = j->j_next )
+			if ( j->j_line == line ) {
+			    prev_j->j_next = j->j_next;
+			    free(j);
+			    break;
+			}
+
+		/* free line itself */
 		free(line->cl_shell);
 		free(line);
 	    }
@@ -516,7 +541,7 @@ delete_file(const char *user_name)
 	/* file not in list */
 	return;
     
-    /* remove file from list */
+    /* remove file from file list */
     if (prev_file == NULL)
 	file_base = file->cf_next;
     else

@@ -22,13 +22,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.5 2000-05-30 19:27:30 thib Exp $ */
+ /* $Id: job.c,v 1.6 2000-05-31 19:11:47 thib Exp $ */
 
 #include "fcron.h"
 
 int temp_file(void);
 void xwrite(int fd, char *string);
-void launch_mailer(CF *file, CL *line);
+void launch_mailer(CL *line);
 int change_user(const char *user, short dochdir);
 
 
@@ -72,7 +72,7 @@ change_user(const char *user, short dochdir)
 
 
 void 
-run_job(CF *file, CL *line)
+run_job(CL *line)
     /* fork(), redirect outputs to a temp file, and execl() the task */ 
 {
 
@@ -80,17 +80,27 @@ run_job(CF *file, CL *line)
     char *shell = NULL;
     char *home = NULL;
     env_t *env = NULL;
+    struct job *j = NULL;
 
     /* create temporary file for stdout and stderr of the job */
     line->cl_mailfd = temp_file();
 
     /* write mail header */
     xwrite(line->cl_mailfd,"To: ");
-    xwrite(line->cl_mailfd, file->cf_user);
+    xwrite(line->cl_mailfd, line->cl_file->cf_user);
     xwrite(line->cl_mailfd, "\nSubject: Output of fcron job: '");
     xwrite(line->cl_mailfd, line->cl_shell);
     xwrite(line->cl_mailfd,"'\n\n");
-    line->cl_mailpos = lseek(line->cl_mailfd, 0, SEEK_END);
+    if ( ! line->cl_file->cf_mailpos ) 
+	line->cl_file->cf_mailpos = ( lseek(line->cl_mailfd, 0, SEEK_END)
+	    - strlen(line->cl_shell) );
+
+
+    /* append job to the list of executed job */
+    Alloc(j, job);
+    j->j_line = line;
+    j->j_next = exe_base;
+    exe_base = j;
 
     switch ( pid = fork() ) {
 
@@ -98,7 +108,7 @@ run_job(CF *file, CL *line)
 	/* child */
 
 	foreground = 0;
-	if (change_user(file->cf_user, 1) < 0)
+	if (change_user(line->cl_file->cf_user, 1) < 0)
 	    return ;
 
 	/* stdin is already /dev/null, setup stdout and stderr */
@@ -107,11 +117,14 @@ run_job(CF *file, CL *line)
 	if ( close(2) != 0 )
 	    die_e("Can't close file descriptor %d",2);
 
-	if ( file->cf_mailto != NULL && strcmp(file->cf_mailto, "") == 0 ) {
+	if ( line->cl_file->cf_mailto != NULL &&
+	     strcmp(line->cl_file->cf_mailto, "") == 0 ) {
+
 	    if ( close(line->cl_mailfd) != 0 )
 		die_e("Can't close file descriptor %d", line->cl_mailfd);
 	    if ( (line->cl_mailfd = open("/dev/null", O_RDWR)) < 0 )
 		die_e("open: /dev/null:");
+
 	}
 
 	if (dup2(line->cl_mailfd, 1) != 1 || dup2(line->cl_mailfd, 2) != 2)
@@ -123,7 +136,7 @@ run_job(CF *file, CL *line)
 	xcloselog();
 
 	/* set env variables */
-	for ( env = file->cf_env_base; env; env = env->e_next)
+	for ( env = line->cl_file->cf_env_base; env; env = env->e_next)
 	    if ( setenv(env->e_name, env->e_val, 1) != 0 )
 		error("could not setenv()");
 
@@ -169,10 +182,10 @@ run_job(CF *file, CL *line)
 	line->cl_pid = pid;
 
 	////////////
-	debug("   cf_running: %d", file->cf_running);
+	debug("   cf_running: %d", line->cl_file->cf_running);
 	///////////
 
-	file->cf_running += 1;
+	line->cl_file->cf_running += 1;
 
 	explain("  Job `%s' started (pid %d)", line->cl_shell, line->cl_pid);
 
@@ -181,7 +194,7 @@ run_job(CF *file, CL *line)
 }
 
 void 
-end_job(CF *file, CL *line, int status)
+end_job(CL *line, int status)
     /* if task have made some output, mail it to user */
 {
 
@@ -192,8 +205,10 @@ end_job(CF *file, CL *line, int status)
     debug("   end_job");
 //////
 
-    if ( lseek(line->cl_mailfd, 0, SEEK_END) > line->cl_mailpos ) {
-	if ( file->cf_mailto != NULL && file->cf_mailto[0] == '\0' )
+    if ( ( lseek(line->cl_mailfd, 0, SEEK_END) - strlen (line->cl_shell) )
+	 > line->cl_file->cf_mailpos ) {
+	if ( line->cl_file->cf_mailto != NULL &&
+	     line->cl_file->cf_mailto[0] == '\0' )
 	    /* there is a mail output, but it will not be mail */
 	    mail_output = 2;
 	else
@@ -216,7 +231,7 @@ end_job(CF *file, CL *line, int status)
     else /* is this possible? */
 	error("Job `%s' terminated abnormally %s", line->cl_shell, m);
 
-    if (mail_output == 1) launch_mailer(file, line);
+    if (mail_output == 1) launch_mailer(line);
 
     /* if MAILTO is "", temp file is already closed */
     if ( mail_output != 2 && close(line->cl_mailfd) != 0 )
@@ -225,14 +240,14 @@ end_job(CF *file, CL *line, int status)
     line->cl_pid = 0;
 
     ////////////
-    debug("    cf_running: %d", file->cf_running);
+    debug("    cf_running: %d", line->cl_file->cf_running);
 
-    file->cf_running -= 1;
+    line->cl_file->cf_running -= 1;
 
 }
 
 void
-launch_mailer(CF *file, CL *line)
+launch_mailer(CL *line)
     /* mail the output of a job to user */
 {
     char *mailto = NULL;
@@ -257,11 +272,11 @@ launch_mailer(CF *file, CL *line)
 	xcloselog();
 
 	/* determine which will be the mail receiver */
-	if ( (mailto = file->cf_mailto) == NULL )
-	    mailto = file->cf_user;
+	if ( (mailto = line->cl_file->cf_mailto) == NULL )
+	    mailto = line->cl_file->cf_user;
 
 	/* change permissions */
-	if (change_user(file->cf_user, 1) < 0)
+	if (change_user(line->cl_file->cf_user, 1) < 0)
 	    return ;
 
 	/* run sendmail with mail file as standard input */

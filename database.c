@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.5 2000-05-30 19:26:21 thib Exp $ */
+ /* $Id: database.c,v 1.6 2000-05-31 19:11:35 thib Exp $ */
 
 #include "fcron.h"
 
@@ -36,60 +36,42 @@ void
 test_jobs(time_t t2)
   /* determine which jobs need to be run, and run them. */
 {
-    CF *file;
-    CL *line;
+    struct job *j = NULL;
 
     debug("Looking for jobs to execute ...");
 
-    for (file = file_base; file; file = file->cf_next) {
-	debug("FILE %s:", file->cf_user);
-
-	for (line = file->cf_line_base; line; line = line->cl_next) {
-
-	    if ( (line->cl_nextexe <= t2) && (line->cl_nextexe != 0) ) {
-
-		set_next_exe(line, 0);
-
-		if (--(line->cl_remain) > 0) {
-		    debug("    cl_Remain: %d", line->cl_remain);
-		    continue ;
-		}
-
-		if (line->cl_pid > 0) {
-		    warn("    process already running: %s '%s'", 
-			 file->cf_user,
-			 line->cl_shell
-			);
-		    line->cl_remain = line->cl_runfreq;
-		} 
-		else {
-		    line->cl_remain = line->cl_runfreq;
-		    
-		    run_job(file, line);
-		    
-		}
-	    }
-
-	    /* jobs based on timefreq */
-	    else if (line->cl_timefreq > 0 && line->cl_remain <= 0 ) {
-
-		line->cl_remain = line->cl_timefreq;
-
-		if (line->cl_pid > 0) {
-		    warn("    process already running: %s '%s'", 
-			 file->cf_user,
-			 line->cl_shell
-			);
-		} else {
-
-		    run_job(file, line);
-		    
-		}
-	    }
-			    
-
+    /* job based on date & time */
+    for (j=queue_base; (j!=NULL)&&(j->j_line->cl_nextexe <= t2); j=j->j_next){
+	set_next_exe(j->j_line, 0);
+	if (--(j->j_line->cl_remain) > 0) {
+	    debug("    cl_Remain: %d", j->j_line->cl_remain);
+	    continue ;
 	}
-	
+	if (j->j_line->cl_pid > 0) {
+	    warn("    process already running: %s '%s'", 
+		 j->j_line->cl_file->cf_user,
+		 j->j_line->cl_shell
+		);
+	    j->j_line->cl_remain = j->j_line->cl_runfreq;
+	} 
+	else {
+	    j->j_line->cl_remain = j->j_line->cl_runfreq;
+	    run_job(j->j_line);
+	}
+    }
+
+    /* job based on frequency */
+    for (j=freq_base; (j!=NULL)&&(j->j_line->cl_remain <= 0); j=j->j_next){
+	j->j_line->cl_remain = j->j_line->cl_timefreq;
+	insert_freq(j->j_line);
+	if (j->j_line->cl_pid > 0) {
+	    warn("    process already running: %s '%s'", 
+		 j->j_line->cl_file->cf_user,
+		 j->j_line->cl_shell
+		);
+	} else {
+	    run_job(j->j_line);
+	}
     }
 
 }
@@ -99,8 +81,7 @@ void
 wait_chld(void)
   /* wait_chld() - check for job completion */
 {
-    CF *file;
-    CL *line;
+    struct job *j = NULL;
     int pid;
     int status;
 
@@ -108,26 +89,17 @@ wait_chld(void)
     debug("wait_chld");
     ///////
 
-    while ( (pid=wait3(&status, WNOHANG, NULL)) > 0 ) {
-
-	for (file = file_base; file; file = file->cf_next) {
-
-	    for (line = file->cf_line_base; line && file->cf_running;
-		 line = line->cl_next) {
-
-		if (pid < 0 || pid == line->cl_pid) {
-		    end_job(file, line, status);
-		    goto nextloop;
-		}
-		else if ( pid == line->cl_mailpid ) {
-		    end_mailer(line, status);
-		    goto nextloop;
-		}
-
+    while ( (pid = wait3(&status, WNOHANG, NULL)) > 0 ) {
+	for (j = exe_base; j != NULL ; j = j->j_next) {
+	    if (pid < 0 || pid == j->j_line->cl_pid) {
+		end_job(j->j_line, status);
+		goto nextloop;
 	    }
-
-	}
-
+	    else if ( pid == j->j_line->cl_mailpid ) {
+		end_mailer(j->j_line, status);
+		goto nextloop;
+	    }
+	}	
       nextloop:
     }
 
@@ -138,28 +110,20 @@ void
 wait_all(int *counter)
    /* return after all jobs completion. */
 {
-    CF *file;
-    CL *line;
-    pid_t pid;
+    struct job *j = NULL;
+    int pid;
     int status;
 
     debug("Waiting for all jobs");
 
-    while ( (*counter > 0) && (pid=wait3(&status, 0, NULL)) > 0 ) {
+    while ( (*counter > 0) && (pid = wait3(&status, 0, NULL)) > 0 ) {
 
-	for (file = file_base; file; file = file->cf_next) {
+	for (j = exe_base; j != NULL ; j = j->j_next) {
 
-	    if (file->cf_running) {
-
-		for (line = file->cf_line_base; line; line = line->cl_next) {
-
-		    if (pid < 0 || pid == line->cl_pid)
-			end_job(file, line, status);
-		    else if ( pid == line->cl_mailpid )
-			end_mailer(line, status);
-
-		}
-	    }
+	    if (pid < 0 || pid == j->j_line->cl_pid)
+		end_job(j->j_line, status);
+	    else if ( pid == j->j_line->cl_mailpid )
+		end_mailer(j->j_line, status);
 	}
     }    
 
@@ -285,7 +249,7 @@ goto_non_matching(CL *line, struct tm *ftime)
 
 void 
 set_next_exe(CL *line, char is_new_line)
-  /* set the cl_nextexe of a given CL */
+  /* set the cl_nextexe of a given CL and insert it in the queue */
 {
 
     if (line->cl_timefreq == 0) {
@@ -295,7 +259,6 @@ set_next_exe(CL *line, char is_new_line)
 	time_t now;
 	register int i;
 	int max;
-
 
 	now = time(NULL);
 	ft = localtime(&now);
@@ -385,6 +348,8 @@ set_next_exe(CL *line, char is_new_line)
     
 	line->cl_nextexe = mktime(&ftime);
 
+	insert_nextexe(line);
+
 	debug("   cmd: '%s' next exec %d/%d/%d wday:%d %02d:%02d",
 	      line->cl_shell, (ftime.tm_mon + 1), ftime.tm_mday,
 	      (ftime.tm_year + 1900), ftime.tm_wday,
@@ -395,41 +360,129 @@ set_next_exe(CL *line, char is_new_line)
 
 }
 
+void
+insert_nextexe(CL *line)
+    /* insert a job based on time and date in the corresponding queue list */
+{
+	struct job *newjob = NULL;
+
+	if (queue_base != NULL) {
+	    struct job *j = NULL;
+	    struct job *jprev = NULL;
+	    struct job *old_entry = NULL;
+
+	    j = queue_base;
+	    while (j != NULL && (line->cl_nextexe > j->j_line->cl_nextexe)) {
+		if ( j->j_line == line ) {
+		    old_entry = j;
+		    jprev->j_next = j->j_next;
+		    j = jprev;
+		}
+		jprev = j;
+		j = j->j_next;
+	    }
+	    if (old_entry == NULL) {
+		/* this job wasn't in the queue : we append it */
+		Alloc(newjob, job);
+		newjob->j_line = line;
+	    }
+	    else
+		/* this job was already in the queue : we move it */
+		newjob = old_entry;
+
+	    newjob->j_next = j;
+
+	    if (jprev == NULL)
+		queue_base = newjob;
+	    else
+		jprev->j_next = newjob;
+
+	}
+	else {
+	    /* no job in queue */
+	    Alloc(newjob, job);
+	    newjob->j_line = line;	    
+	    queue_base = newjob;
+	}
+
+}
+
+void
+insert_freq(CL *line)
+    /* insert a job based on frequency in the corresponding queue list */
+{
+    struct job *newjob = NULL;
+
+    /* insert job in the queue */
+    if (freq_base != NULL) {
+	struct job *j = NULL;
+	struct job *jprev = NULL;
+	struct job *old_entry = NULL;
+
+	j = freq_base;
+	while (j != NULL && (line->cl_remain > j->j_line->cl_remain)) {
+	    if ( j->j_line == line ) {
+		old_entry = j;
+		jprev->j_next = j->j_next;
+		j = jprev;
+	    }
+	    jprev = j;
+	    j = j->j_next;
+	}
+	if (old_entry == NULL) {
+	    /* this job wasn't in the queue : we append it */
+	    Alloc(newjob, job);
+	    newjob->j_line = line;
+	}
+	else
+	    /* this job was already in the queue : we move it */
+	    newjob = old_entry;
+
+	newjob->j_next = j;
+
+	if (jprev == NULL)
+	    freq_base = newjob;
+	else
+	    jprev->j_next = newjob;
+    }
+    else {
+	Alloc(newjob, job);
+	newjob->j_line = line;
+	freq_base = newjob;
+    }
+}
 
 long
 time_to_sleep(short lim)
   /* return the time to sleep until next task have to be executed. */
 {
-
-    CF *file;
-    CL *line;
     /* we set tts to a big value, unless some problems can occurs
      * with files without any line */
     time_t tts = lim;
-    time_t cur;
     time_t now;
 
     now = time(NULL);
 
-    for (file = file_base; file; file = file->cf_next) {
-
-	for (line = file->cf_line_base; line; line = line->cl_next) {
-
-	    if (line->cl_nextexe > 0)
-		cur = (line->cl_nextexe > now) ? (line->cl_nextexe - now) : 0;
-	    else
-		cur = line->cl_remain;
-
-	    if (cur < tts)
-		tts = cur;
-
-	    if (tts == 0)
-		return 0;
-
-	}
-
+    if (queue_base == NULL && freq_base == NULL)
+	/* no lines : we sleep as much as we can */
+	goto end;
+    else if (queue_base == NULL && freq_base != NULL) {
+	tts = freq_base->j_line->cl_remain;
+	goto end;
     }
+    else if (queue_base != NULL && freq_base == NULL) {
+	if ( (tts = queue_base->j_line->cl_nextexe - now) < 0 ) tts = 0;
+	goto end;
+    }
+	    
+    /* we have freq lines and normal lines */
+    if(queue_base->j_line->cl_nextexe - now < freq_base->j_line->cl_remain) {
+	if ( (tts = queue_base->j_line->cl_nextexe - now) < 0 ) tts = 0;
+    }
+    else
+	tts = freq_base->j_line->cl_remain;
 
+  end:
     debug("Time to sleep: %lds", tts);
 
     return tts;
@@ -441,27 +494,20 @@ void
 update_time_remaining(long dt)
   /* update the remaining time of tasks run at a certain frequency */
 {
-    CF *file;
-    CL *line;
+
+    struct job *j = freq_base;
 
     debug("Updating time remaining ...");
     
-    for (file = file_base; file; file = file->cf_next) {
+    for (j=freq_base; j != NULL; j = j->j_next ) {
 
-	debug("File %s", file->cf_user);
-    
-	for (line = file->cf_line_base; line; line = line->cl_next) {
-	    if (line->cl_timefreq > 0) {
+	if ( (j->j_line->cl_remain - dt) >= 0 )
+	    j->j_line->cl_remain -= dt;
+	else
+	    j->j_line->cl_remain = 0;
 
-		if ( (line->cl_remain - dt) >= 0 )
-		    line->cl_remain -= dt;
-		else
-		    line->cl_remain = 0;
-
-		debug("  '%s' cl_remain = %d", line->cl_shell,
-		      line->cl_remain);
-	    }
-	}
+	debug("  '%s' cl_remain = %d", j->j_line->cl_shell,
+	      j->j_line->cl_remain);
 
     }
   
