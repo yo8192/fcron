@@ -424,42 +424,42 @@ else
 
 AC_MSG_CHECKING(username to run under)
 AC_ARG_WITH(username,
-[ --with-username=USERNAME	Username to run under (default daemon) ],
+[ --with-username=USERNAME	Username to run under (default fcron) ],
 [ case "$withval" in
   no)
     AC_MSG_ERROR(Need USERNAME.)
     ;;
   yes)
-    username=daemon
-    AC_MSG_RESULT(daemon)
+    username=fcron
+    AC_MSG_RESULT(fcron)
     ;;
   *)
     username="$withval";
     AC_MSG_RESULT($withval)
     ;;
     esac ],
-    username=daemon
-    AC_MSG_RESULT(daemon)
+    username=fcron
+    AC_MSG_RESULT(fcron)
 )
 
 AC_MSG_CHECKING(groupname to run under)
 AC_ARG_WITH(groupname,
-[ --with-groupname=GROUPNAME	Groupname to run under (default daemon) ],
+[ --with-groupname=GROUPNAME	Groupname to run under (default fcron) ],
 [ case "$withval" in
   no)
     AC_MSG_ERROR(Need GROUPNAME.)
     ;;
   yes)
-    groupname=daemon
-    AC_MSG_RESULT(daemon)
+    groupname=fcron
+    AC_MSG_RESULT(fcron)
     ;;
   *)
     groupname="$withval";
     AC_MSG_RESULT($withval)
     ;;
     esac ],
-    groupname=daemon
-    AC_MSG_RESULT(daemon)
+    groupname=fcron
+    AC_MSG_RESULT(fcron)
 )
 
 fi
