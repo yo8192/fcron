@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.17 2000-06-30 09:49:07 thib Exp $ */
+ /* $Id: database.c,v 1.18 2000-08-22 21:19:41 thib Exp $ */
 
 #include "fcron.h"
 
@@ -77,33 +77,42 @@ add_serial_job(CL *line)
     debug("inserting in serial queue %s", line->cl_shell);
     //
 
-    /* check if the line is already in the queue */
+#if SERIAL_ONCE
+    /* check if the line is already in the serial queue */
     if ( line->cl_pid != -1 ) {
+#endif /* SERIAL_ONCE */
 
 	line->cl_pid = -1;
 
-	if ( serial_num > serial_array_size ) {
-	    CL **ptr = NULL;
-	    short int old_size = serial_array_size;
+	if ( serial_num > serial_array_size )
+	    if ( serial_num >= SERIAL_QUEUE_MAX )
+		/* run next job in the queue before adding the new one */
+		run_serial_job(void);
+	    else {
+		CL **ptr = NULL;
+		short int old_size = serial_array_size;
 
-	    debug("Resizing serial_array");
-	    serial_array_size = (serial_array_size + SERIAL_GROW_SIZE);
+		debug("Resizing serial_array");
+		serial_array_size = (serial_array_size + SERIAL_GROW_SIZE);
 	
-	    if ( (ptr = calloc(serial_array_size, sizeof(CL *))) == NULL )
-		die_e("could not calloc serial_array");
+		if ( (ptr = calloc(serial_array_size, sizeof(CL *))) == NULL )
+		    die_e("could not calloc serial_array");
 
-	    memcpy(ptr, serial_array, (sizeof(CL *) * old_size));
-	    free(serial_array);
-	    serial_array = ptr;
-	}
-	    
-	if ( (i = serial_array_index + serial_num) >= serial_array_size )
-	    i -= serial_array_size;
-	serial_array[i] = line;
-
-	serial_num++;
-
+		memcpy(ptr, serial_array, (sizeof(CL *) * old_size));
+		free(serial_array);
+		serial_array = ptr;
+	    }
     }
+	    
+    if ( (i = serial_array_index + serial_num) >= serial_array_size )
+	i -= serial_array_size;
+    serial_array[i] = line;
+
+    serial_num++;
+
+#if SERIAL_ONCE
+}
+#endif /* SERIAL_ONCE */
 
 }
 
