@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.26 2001-02-11 21:37:41 thib Exp $
+# $Id: boot-install,v 1.27 2001-02-14 13:49:36 thib Exp $
 
 # take 5 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -57,7 +57,8 @@ if test $IS_FREEBSD -eq 1; then
       while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
       do
         echo "Would you like to add fcron.sh script in the directory /usr/local/etc/rc.d/ ?"
-        read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+        echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+        read INSTALL NOTHING
       done
     # automatic answer given by configure script (option --with-answer-all)
     elif test $ANSWER -eq 1; then
@@ -95,7 +96,8 @@ if test -f /etc/rc.d/rc.M; then
         while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
         do
           echo "Would you like to add $STARTCMD in the file /etc/rc.d/rc.local ?"
-          read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+          echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+          read INSTALL NOTHING
         done
       # automatic answer given by configure script (option --with-answer-all)
       elif test $ANSWER -eq 1; then
@@ -130,7 +132,8 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
     do
       echo "Would you like to add fcron in the directory $ROOTDIR/init.d/ and in runlevel 2, 3, 4 and 5"
       echo "(directories $ROOTDIR/rc{2,3,4,5}.d/) ?"
-      read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+      echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+      read INSTALL NOTHING
     done
   # automatic answer given by configure script (option --with-answer-all)
   elif test $ANSWER -eq 1; then
@@ -179,7 +182,8 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc \) ; then
         while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
         do
           echo "Would you like to add $STARTCMD in the file /etc/rc.local ?"
-          read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+          echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+          read INSTALL NOTHING
         done
       # automatic answer given by configure script (option --with-answer-all)
       elif test $ANSWER -eq 1; then
@@ -238,7 +242,8 @@ else
       echo "Would you like to do it with a '"$KILLSTR"'"
       echo $COMMENT
       echo "followed by a '"$CMD"' ?"
-      read -p "Please answer with 'y' or 'n' (default: 'y'): " RESTART NOTHING
+      echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+      read RESTART NOTHING
     done
     # automatic answer given by configure script (option --with-answer-all)
   elif test $ANSWER -eq 1; then
@@ -275,7 +280,8 @@ if test "$RESTARTED" -eq 1; then
     while test \( ! -z "$REINSTALL" \) -a \( "$REINSTALL" != "y" \) -a \( "$REINSTALL" != "n" \);
     do
       echo "Would you like to do it now ?"
-      read -p "Please answer with 'y' or 'n' (default: 'y'): " REINSTALL NOTHING
+      echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+      read REINSTALL NOTHING
     done
   elif test $ANSWER -eq 1; then
     REINSTALL="y"

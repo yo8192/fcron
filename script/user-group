@@ -4,7 +4,7 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.5 2001-02-11 21:16:08 thib Exp $
+# $Id: user-group,v 1.6 2001-02-14 13:48:30 thib Exp $
 
 # take 3 arguments : 	username
 # 			groupname
@@ -54,7 +54,8 @@ else
     do
       echo "Would you like to add $USERNAME in /etc/passwd with the following command ?"
       echo "    $CMD"
-      read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+      echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+      read INSTALL NOTHING
     done
     if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
       if $CMD; then
@@ -103,7 +104,8 @@ else
     do
       echo "Would you like to add $GROUPNAME in /etc/passwd with the following command ?"
       echo "    $CMD"
-      read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+      echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+      read INSTALL NOTHING
     done
     if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
       if $CMD; then
