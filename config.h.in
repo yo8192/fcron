@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.52 2004-01-29 10:34:46 thib Exp $ */
+ /* $Id: config.h.in,v 1.53 2004-08-17 12:53:14 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -104,7 +104,7 @@
  *           etc ... */
 #define TERM_LEN 196         /* max nb of char in a term line */
 
-#define MAX_MSG 150          /* max length of a log message */
+#define MAX_MSG 175          /* max length of a log message */
 
 #define WRITE_BUF_LEN 1024   /* length of the buffer used for saving files to disk */
 
