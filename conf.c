@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.67 2004-01-29 10:33:19 thib Exp $ */
+ /* $Id: conf.c,v 1.68 2004-08-12 09:43:41 thib Exp $ */
 
 #include "fcron.h"
 
@@ -779,18 +779,18 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 	cl->cl_numexe = 0;
 	if ( is_lavg(cl->cl_option) ) {
 	    if ( ! is_strict(cl->cl_option) )
-		add_lavg_job(cl);
+		add_lavg_job(cl, -1);
 	}
 	else if ( is_serial(cl->cl_option) 
 		  || is_serial_once(cl->cl_option) )
-	    add_serial_job(cl);
+	    add_serial_job(cl, -1);
 	else {
 	    /* job has been stopped during execution :
 	     * launch it again */
 	    warn("job %s did not finish : running it again.",
 		 cl->cl_shell);
 	    set_serial_once(cl->cl_option);
-	    add_serial_job(cl);
+	    add_serial_job(cl, -1);
 	}
     }
 
@@ -800,7 +800,7 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 	if ( cl->cl_nextexe <= now ) {
 	    if ( cl->cl_nextexe == 0 )
 		/* the is a line from a new file */
-		set_next_exe(cl, NO_GOTO);		    
+		set_next_exe(cl, NO_GOTO, -1);
 	    else if (cl->cl_runfreq == 1 &&
 		     is_notice_notrun(cl->cl_option))
 		set_next_exe_notrun(cl, SYSDOWN);
@@ -815,12 +815,12 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 		    debug("   boot-run %s", cl->cl_shell);
 		    if ( ! is_lavg(cl->cl_option) ) {
 			set_serial_once(cl->cl_option);
-			add_serial_job(cl);
+			add_serial_job(cl, -1);
 		    }
 		    else
-			add_lavg_job(cl);			    
+			add_lavg_job(cl, -1);
 		}
-		set_next_exe(cl, STD);
+		set_next_exe(cl, STD, -1);
 	    }
 	    else {
 		if ( is_notice_notrun(cl->cl_option) ) {
@@ -828,11 +828,11 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 		    struct tm *since2 = localtime(&cl->cl_nextexe);
 		    struct tm since;
 		    memcpy(&since, since2, sizeof(since));
-		    set_next_exe(cl, NO_GOTO);
+		    set_next_exe(cl, NO_GOTO, -1);
 		    mail_notrun(cl, SYSDOWN, &since);
 		} 
 		else
-		    set_next_exe(cl, NO_GOTO);
+		    set_next_exe(cl, NO_GOTO, -1);
 	    }
 	}
 	else
