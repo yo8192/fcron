@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.80 2002-01-03 14:19:46 thib Exp $
+# $Id: Makefile.in,v 1.81 2002-01-03 14:35:17 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -138,7 +138,7 @@ uninstall:
 	$(SRCDIR)/script/boot-uninstall
 
 clean:
-	rm -f *.o
+	rm -f *.o core
 	rm -f fcron fcrontab fcronsighup convert-fcrontab files/fcron.conf
 
 vclean: clean
