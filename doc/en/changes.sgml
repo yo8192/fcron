@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.27 2003-12-29 14:00:52 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.28 2003-12-29 20:07:29 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -51,6 +51,10 @@ A copy of the license is included in gfdl.sgml.
 	 <listitem>
 	    <para>fixed a little typo in an error message
 	    (could->couldn't)</para>
+	 </listitem>
+	 <listitem>
+	    <para>bug fix : do not ignore the last line of a fcrontab if there is no
+	    \n before the end of file.</para>
 	 </listitem>
 	 <listitem>
 	    <para>fixed compile on SunOS 5.9 .</para>
