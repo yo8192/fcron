@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.35 2001-01-15 18:57:38 thib Exp $ */
+ /* $Id: fileconf.c,v 1.36 2001-01-30 15:49:26 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -31,7 +31,6 @@ int get_line(char *str, size_t size, FILE *file);
 char *get_time(char *ptr, time_t *time);
 char *get_num(char *ptr, int *num, int max, short int decimal,
 	      const char **names);
-char *get_runas(char *ptr, uid_t *uid);
 char *get_nice(char *ptr, int *nice);
 char *get_bool(char *ptr, int *i);
 char *read_field(char *ptr, bitstr_t *ary, int max, const char **names);
@@ -178,9 +177,10 @@ read_file(char *filename, char *user)
     }
 
     Alloc(cf, CF);
+    cf->cf_user = strdup2(user);
     default_line.cl_file = cf;
-    default_line.cl_runas = asuid;
-    default_line.cl_mailto = asuid;
+    default_line.cl_runas = strdup2(user);
+    default_line.cl_mailto = strdup2(user);
 
     if ( debug_opt )
 	fprintf(stderr, "FILE %s\n", file_name);
@@ -256,12 +256,14 @@ read_file(char *filename, char *user)
 	error("%s:%d: maximum number of lines (%d) has been reached by %s",
 	      file_name, line, user);
 
-    cf->cf_user = strdup2(user);
     cf->cf_next = file_base;
     file_base = cf;
 
     fclose(file);
     
+    free(default_line.cl_runas);
+    free(default_line.cl_mailto);
+
     if ( ! need_correction )
 	return OK;
     else
@@ -332,7 +334,8 @@ read_env(char *ptr, CF *cf)
 			" ignored\n", file_name, line, val);	
 		need_correction = 1;
 	    } else {
-		default_line.cl_mailto = pass->pw_uid;
+		free(default_line.cl_mailto);
+		default_line.cl_mailto = strdup2(val);
 		set_mail(default_line.cl_option);
 	    }
 	}
@@ -355,32 +358,6 @@ read_env(char *ptr, CF *cf)
 		file_name, line);
 	need_correction = 1;
 	return;
-
-}
-
-
-char *
-get_runas(char *ptr, uid_t *uid)
-    /* read a user name and put his uid in variable uid */
-{
-    char name[USER_NAME_LEN];
-    struct passwd *pas;
-    int i = 0;
-
-    bzero(name, sizeof(name));
-
-    while ( *ptr != ')' && i < sizeof(name))
-	name[i++] = *ptr++;
-    
-    if ((pas = getpwnam(name)) == NULL) {
-        fprintf(stderr, "runas: \"%s\" is not in passwd file : ignored", name);
-	need_correction = 1;
-	return NULL;
-    }
-    
-    *uid = pas->pw_uid;
-
-    return ptr;
 
 }
 
@@ -542,8 +519,10 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 	    if ( i == 1 ) {
 		bzero(cl, sizeof(CL));
-		cl->cl_runas = asuid;
-		cl->cl_mailto = asuid;
+		free(cl->cl_runas);
+		cl->cl_runas = strdup2(user);
+		free(cl->cl_mailto);
+		cl->cl_mailto = strdup2(user);
 	    }
 	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
@@ -820,8 +799,9 @@ read_opt(char *ptr, CL *cl)
 			    " ignored\n", file_name, line, buf);	
 		    need_correction = 1;
 		} else {
-		    cl->cl_mailto = pass->pw_uid;
-		    set_mail(default_line.cl_option);
+		    free(cl->cl_mailto);
+		    cl->cl_mailto = strdup2(buf);
+		    set_mail(cl->cl_option);
 		}
 	    }
  	    if (debug_opt)
@@ -870,11 +850,30 @@ read_opt(char *ptr, CL *cl)
 		    ptr++;
 	    }
 	    else {
-		if( ! in_brackets || (ptr = get_runas(ptr, &uid)) == NULL )
+		char name[USER_NAME_LEN];
+		struct passwd *pas;
+		int i = 0;
+
+		if( ! in_brackets )
 		    Handle_err;
-		cl->cl_runas = uid;
-		if (debug_opt)
-		    fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, uid);
+
+		bzero(name, sizeof(name));
+
+		while ( *ptr != ')' && i < sizeof(name))
+		    name[i++] = *ptr++;
+    
+		if ((pas = getpwnam(name)) == NULL) {
+		    fprintf(stderr, "runas: \"%s\" is not in passwd file : "
+			    "ignored", name);
+		    need_correction = 1;
+		} 
+		else {
+		    free(cl->cl_runas);
+		    cl->cl_runas = strdup2(name);
+		    if (debug_opt)
+			fprintf(stderr, "  Opt : \"%s\" %s\n", opt_name, name);
+		}
+
 	    }
 	}
 
@@ -962,6 +961,8 @@ read_freq(char *ptr, CF *cf)
     
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
+    cl->cl_runas = strdup2(default_line.cl_runas);
+    cl->cl_mailto = strdup2(default_line.cl_mailto);
 
     /* skip the @ */
     ptr++;
@@ -1055,6 +1056,8 @@ read_arys(char *ptr, CF *cf)
 
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
+    cl->cl_runas = strdup2(default_line.cl_runas);
+    cl->cl_mailto = strdup2(default_line.cl_mailto);
 
     /* set cl_remain if not specified */
     if ( *ptr == '&' ) {
@@ -1136,6 +1139,8 @@ read_period(char *ptr, CF *cf)
 
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
+    cl->cl_runas = strdup2(default_line.cl_runas);
+    cl->cl_mailto = strdup2(default_line.cl_mailto);
 
     /* skip the % */
     ptr++;
@@ -1467,6 +1472,8 @@ delete_file(const char *user_name)
 	    while ( (line = cur_line) != NULL) {
 		cur_line = line->cl_next;
 		free(line->cl_shell);
+		free(line->cl_mailto);
+		free(line->cl_runas);
 		free(line);
 	    }
 	    break ;
@@ -1547,6 +1554,8 @@ save_file(char *path)
 	    if ( fwrite(line, sizeof(CL), 1, f) != 1 )
 		perror("save");
 	    fprintf(f, "%s%c", line->cl_shell, '\0');
+	    fprintf(f, "%s%c", line->cl_runas, '\0');
+	    fprintf(f, "%s%c", line->cl_mailto, '\0');
 	}
 
 	fclose(f);
