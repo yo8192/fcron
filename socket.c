@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.10 2002-10-28 17:56:53 thib Exp $ */
+ /* $Id: socket.c,v 1.11 2002-11-17 13:14:06 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -301,7 +301,7 @@ print_line(int fd, struct cl_t *line,  unsigned char *details, pid_t pid, int in
 	len += snprintf(buf+len, sizeof(buf)-len, " %-9s", opt);
     }
     if ( bit_test(details, FIELD_LAVG) ) {
-	len += snprintf(buf+len, sizeof(buf)-len, " %.1lf,%.1lf,%.1lf",
+	len += snprintf(buf+len, sizeof(buf)-len, " %.1f,%.1f,%.1f",
 			((double)((line->cl_lavg)[0]))/10,
 			((double)((line->cl_lavg)[1]))/10,
 			((double)((line->cl_lavg)[2]))/10);
@@ -379,7 +379,7 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 	    char lavg_str[TERM_LEN];
 	    getloadavg(lavg, 3);
 	    i = snprintf(lavg_str, sizeof(lavg_str), "Current load average : "
-			 "%.1lf, %.1lf, %.1lf\n", lavg[0], lavg[1], lavg[2]);
+			 "%.1f, %.1f, %.1f\n", lavg[0], lavg[1], lavg[2]);
 	    send(fd, lavg_str, i, 0);
 
 	    bit_set(fields, FIELD_LAVG);
