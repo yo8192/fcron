@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.29 2002-10-28 17:53:21 thib Exp $ */
+ /* $Id: fcron.h,v 1.30 2003-09-12 20:54:53 thib Exp $ */
 
 #ifndef __FCRON_H__
 #define __FCRON_H__
@@ -56,10 +56,6 @@
 
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
-
-#ifndef HAVE_GETLOADAVG
-#include "getloadavg.h"
 #endif
 
 /* global variables */
