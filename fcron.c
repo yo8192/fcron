@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.65 2002-08-25 17:11:52 thib Exp $ */
+ /* $Id: fcron.c,v 1.66 2002-08-29 17:33:19 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.65 2002-08-25 17:11:52 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.66 2002-08-29 17:33:19 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -678,14 +678,8 @@ main_loop()
 
     for (;;) {
 	
-	/* */
- 	debug("sleep %ld seconds", stime);
-	/* */
 #ifdef HAVE_GETTIMEOFDAY
 #ifdef FCRONDYN
-	/* */
-	debug("using select()");
-	/* */
 	gettimeofday(&tv, NULL);
 	tv.tv_sec = (stime > 1) ? stime - 1 : 0;
 	tv.tv_usec = 1000000 - tv.tv_usec;
@@ -712,8 +706,8 @@ main_loop()
      	    run_serial_job();
 
  	if ( once ) {
-	    explain("Running with option once : exiting ... (SIGTERM raise()d)");
-	    raise(SIGTERM);
+	    explain("Running with option once : exiting ... ");
+	    xexit(EXIT_OK);
 	}
 
 	if ( save <= now ) {
