@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.55 2001-01-30 15:50:55 thib Exp $
+# $Id: Makefile.in,v 1.56 2001-02-01 20:51:03 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -91,14 +91,14 @@ install: all
 
 	script/user-group $(USERNAME) $(GROUPNAME) $(ANSWERALL)
 
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTSBIN)
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTBIN)
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(ETC)
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man1
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man3
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man5
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man8
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION)
+	if test ! -d $(DESTSBIN); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTSBIN) ; fi
+	if test ! -d $(DESTBIN); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTBIN) ; fi
+	if test ! -d $(ETC); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(ETC) ; fi
+	if test ! -d $(DESTMAN)/man1; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man1 ; fi
+	if test ! -d $(DESTMAN)/man3; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man3 ; fi
+	if test ! -d $(DESTMAN)/man5; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man5 ; fi
+	if test ! -d $(DESTMAN)/man8; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man8 ; fi
+	if test ! -d $(DESTDOC)/fcron-$(VERSION); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION) ; fi
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 770 -d $(FCRONTABS)
 
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 110 -s fcron $(DESTSBIN)
