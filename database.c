@@ -22,9 +22,10 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.56 2001-08-20 11:00:01 thib Exp $ */
+ /* $Id: database.c,v 1.57 2001-09-12 13:48:07 thib Exp $ */
 
 #include "fcron.h"
+
 #include "database.h"
 
 int is_leap_year(int year);
@@ -36,7 +37,7 @@ void run_normal_job(CL *line);
 void run_serial_job(void);
 void run_lavg_job(int i);
 void run_queue_job(CL *line);
-
+void resize_exe_array(void);
 
 void
 test_jobs(void)
@@ -130,6 +131,25 @@ run_serial_job(void)
 }
 		    
 
+void 
+resize_exe_array(void)
+    /* make exe_array bigger */
+{
+    struct exe *ptr = NULL;
+    short int old_size = exe_array_size;
+
+    debug("Resizing exe_array");
+    exe_array_size = (exe_array_size + EXE_GROW_SIZE);
+	
+    if ( (ptr = calloc(exe_array_size, sizeof(struct exe))) == NULL )
+	die_e("could not calloc exe_array");
+
+    memcpy(ptr, exe_array, (sizeof(struct exe) * old_size));
+    free(exe_array);
+    exe_array = ptr;
+}
+
+
 void
 run_queue_job(CL *line)
     /* run a job */
@@ -140,20 +160,9 @@ run_queue_job(CL *line)
 /*      // */
 
     /* append job to the list of executed job */
-    if ( exe_num >= exe_array_size ) {
-	struct exe *ptr = NULL;
-	short int old_size = exe_array_size;
+    if ( exe_num >= exe_array_size )
+	resize_exe_array();
 
-	debug("Resizing exe_array");
-	exe_array_size = (exe_array_size + EXE_GROW_SIZE);
-	
-	if ( (ptr = calloc(exe_array_size, sizeof(struct exe))) == NULL )
-	    die_e("could not calloc exe_array");
-
-	memcpy(ptr, exe_array, (sizeof(struct exe) * old_size));
-	free(exe_array);
-	exe_array = ptr;
-    }
     exe_array[exe_num].e_line = line;
 
     run_job(&exe_array[exe_num++]);
@@ -246,6 +255,8 @@ add_serial_job(CL *line)
   	    error("Could not add %s to serial queue: queue is full (%d jobs). "
 		  "Consider using option serialonce, and/or fcron's option -m",
   		 line->cl_shell, SERIAL_QUEUE_MAX);
+	    if ( is_notice_notrun(line->cl_option) )
+		mail_notrun(line, QUEUE_FULL, NULL);
 	    return;
 	}
 	else {
@@ -309,6 +320,8 @@ add_lavg_job(CL *line)
   	    error("Could not add %s to lavg queue: queue is full (%d jobs). "
 		  "Consider using options lavgonce, until and strict.",
   		 line->cl_shell, LAVG_QUEUE_MAX);
+	    if ( is_notice_notrun(line->cl_option) )
+		mail_notrun(line, QUEUE_FULL, NULL);
 	    return;
 	}
 	else {
@@ -999,11 +1012,11 @@ set_next_exe_notrun(CL *line, char context)
 
 void
 mail_notrun(CL *line, char context, struct tm *since)
-    /* send a mail to tell user a %-job has not run (and why) */
+    /* send a mail to tell user a job has not run (and why) */
 {
     int pid = 0;
     int fd = 0;
-    struct tm *next2 = NULL, next;
+    struct tm *time2 = NULL, time;
     char buf[LINE_LEN];
 
     switch ( pid = fork() ) {
@@ -1021,21 +1034,9 @@ mail_notrun(CL *line, char context, struct tm *since)
 	      line->cl_shell, pid);
 /*  // */
 
-	/* create a entry in exe_array */
-	if ( exe_num >= exe_array_size ) {
-	    struct exe *ptr = NULL;
-	    short int old_size = exe_array_size;
-	    
-	    debug("Resizing exe_array");
-	    exe_array_size = (exe_array_size + EXE_GROW_SIZE);
-	    
-	    if ( (ptr = calloc(exe_array_size, sizeof(struct exe))) == NULL )
-		die_e("could not calloc exe_array");
-	    
-	    memcpy(ptr, exe_array, (sizeof(struct exe) * old_size));
-	    free(exe_array);
-	    exe_array = ptr;
-	}
+	/* create an entry in exe_array */
+	if ( exe_num >= exe_array_size )
+	    resize_exe_array();
 	/* set line to NULL as this is not a line ... */
 	exe_array[exe_num].e_line = NULL;
 	exe_array[exe_num].e_pid = pid;
@@ -1043,13 +1044,17 @@ mail_notrun(CL *line, char context, struct tm *since)
 	return;
     }
 
-    next2 = localtime(&line->cl_nextexe);
-    memcpy(&next, next2, sizeof(next));
+    if ( context == QUEUE_FULL )
+	time2 = localtime(&now);
+    else
+	time2 = localtime(&line->cl_nextexe);
+    memcpy(&time, time2, sizeof(time));
 
     /* create a temp file, and write in it the message to send */
     fd = create_mail(line, "Non-execution of fcron job");
 
-    if (context == SYSDOWN) {
+    switch ( context ) {
+    case SYSDOWN:
 	snprintf(buf, sizeof(buf), "Line %s has not run since and including "
 		 "%d/%d/%d wday:%d %02d:%02d\ndue to system's down state.\n",
 		 line->cl_shell, (since->tm_mon + 1), since->tm_mday,
@@ -1057,11 +1062,11 @@ mail_notrun(CL *line, char context, struct tm *since)
 		 since->tm_min);
 	xwrite(fd, buf);
 	snprintf(buf,sizeof(buf),"It will be next executed at %d/%d/%d wday:"
-		 "%d %02d:%02d\n", (next.tm_mon + 1), next.tm_mday,
-		 (next.tm_year+1900), next.tm_wday, next.tm_hour, next.tm_min);
+		 "%d %02d:%02d\n", (time.tm_mon + 1), time.tm_mday,
+		 (time.tm_year+1900), time.tm_wday, time.tm_hour, time.tm_min);
 	xwrite(fd, buf);
-    }
-    else if (context == LAVG) {
+	break;
+    case LAVG:
 	snprintf(buf, sizeof(buf), "Line %s has not run since and including "
 		 "%d/%d/%d wday:%d %02d:%02d\n", line->cl_shell,
 		 (since->tm_mon + 1), since->tm_mday, (since->tm_year + 1900),
@@ -1071,13 +1076,26 @@ mail_notrun(CL *line, char context, struct tm *since)
 		 "too many lavg-serial jobs.\n");
 	xwrite(fd, buf);	
 	snprintf(buf, sizeof(buf), "It will be next executed at %d/%d/%d "
-		 "wday:%d %02d:%02d\n", (next.tm_mon + 1), next.tm_mday,
-		 (next.tm_year+1900), next.tm_wday, next.tm_hour, next.tm_min);
+		 "wday:%d %02d:%02d\n", (time.tm_mon + 1), time.tm_mday,
+		 (time.tm_year+1900), time.tm_wday, time.tm_hour, time.tm_min);
 	xwrite(fd, buf);
+	break;
+    case QUEUE_FULL:
+	snprintf(buf, sizeof(buf), "Line %s could be added to lavg or serial queue which"
+		 " is full ( %d/%d/%d wday:%d %02d:%02d ).\n", line->cl_shell,
+		 (time.tm_mon + 1), time.tm_mday, (time.tm_year + 1900),
+		 time.tm_wday, time.tm_hour, time.tm_min);
+	xwrite(fd, buf);
+	snprintf(buf, sizeof(buf), "Consider using options lavgonce, until, strict, "
+		 "serialonce and/or fcron's option -m.\n");
+	xwrite(fd, buf);
+	snprintf(buf, sizeof(buf), "Note that job %s has not run.\n", line->cl_shell);
+	xwrite(fd, buf);
+	break;
     }
     
     /* become user (for security reasons) */
-    if (change_user(line->cl_runas) < 0)
+    if (change_user(line) < 0)
 	return ;
 
     /* then, send mail */
