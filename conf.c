@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.22 2000-09-17 19:59:54 thib Exp $ */
+ /* $Id: conf.c,v 1.23 2000-09-30 11:58:01 thib Exp $ */
 
 #include "fcron.h"
 
@@ -447,13 +447,13 @@ read_file(const char *file_name, CF *cf)
 	    /* set the time and date of the next execution  */
 	    if ( cl->cl_nextexe <= now ) {
 		if ( is_bootrun(cl->cl_option) && t_save != 0) {
-		    if ( --cl->cl_remain > 0 ) {
+		    if ( cl->cl_remain > 0 && --cl->cl_remain > 0 ) {
 			debug("    cl_remain: %d", cl->cl_remain);
 		    }
 		    else {
 			cl->cl_remain = cl->cl_runfreq;
 			debug("   boot-run %s", cl->cl_shell);
-			cl->cl_pid = -1;
+			cl->cl_numexe = 1;
 			if ( ! is_lavg(cl->cl_option) )
 			    set_serial_once(cl->cl_option);
 		    }
@@ -469,26 +469,24 @@ read_file(const char *file_name, CF *cf)
 	    insert_nextexe(cl);
 	}	    
 
-	/* insert in lavg or serial queues the jobs which was in one
+	/* check if the task has not been stopped during execution and
+	 * insert in lavg or serial queues the jobs which was in one
 	 * at fcron's stop and the bootrun jobs */
-	if ( cl->cl_pid == -1 ) {
-	    cl->cl_pid = 0;
+	if (cl->cl_numexe > 0) {
+	    cl->cl_numexe = 0;
 	    if ( is_lavg(cl->cl_option) )
 		add_lavg_job(cl);
-	    else
+	    else if (is_serial(cl->cl_option) || is_serial_once(cl->cl_option))
 		add_serial_job(cl);
+	    else {
+		/* job has been stopped during execution :
+		 * launch it again */
+		warn("job '%s' has not terminated : executed again now.",
+		     cl->cl_shell);
+		set_serial_once(cl->cl_option);
+		add_serial_job(cl);
+	    }
 	}
-
-	/* check if the task has not been stopped during execution */
-	if (cl->cl_pid > 0) {
-	    /* job has been stopped during execution :
-	     * launch it again */
-	    warn("job '%s' has not terminated : executed again now.",
-		 cl->cl_shell);
-	    cl->cl_pid = 0;
-	    add_serial_job(cl);
-	}
-	    
 
 	if (debug_opt) {
 	    struct tm *ftime;
@@ -547,56 +545,63 @@ delete_file(const char *user_name)
 	    continue;
 	}
 
+	wait_all(&file->cf_running);
+
+	/* free lavg queue entries */
+	for ( i = 0; i < lavg_num; i++ )
+	    if ( lavg_array[i].l_line->cl_file == file ) {
+		debug("removing '%s' from lavg queue",
+		      lavg_array[i].l_line->cl_shell);
+		lavg_array[i].l_line->cl_numexe--;
+		if (i < --lavg_num) {
+		    lavg_array[i] = lavg_array[lavg_num];
+		    lavg_array[lavg_num].l_line = NULL;
+		}
+		else
+		    lavg_array[i].l_line = NULL;
+	    }
+
+	/* free serial queue entries */
+	for ( i = 0; i < serial_array_size; i++)
+	    if (serial_array[i] != NULL && serial_array[i]->cl_file == file ) {
+		if ( ! s_a )
+		    s_a = calloc(serial_array_size, sizeof(CL *));
+		debug("removing '%s' from serial queue",
+		      serial_array[i]->cl_shell);
+		serial_num--;
+		serial_array[i]->cl_numexe--;
+		serial_array[i] = NULL;
+	    }
+	/* remove from queue and move the rest of the jobs to get
+	 * a queue in order without empty entries */
+	if ( ! s_a )
+	    goto end_of_serial_recomputing;
+
+	if ( (k = serial_array_index + serial_num) >= serial_array_size )
+	    k -= serial_array_size;
+	for ( i = k = 0; i < serial_array_size; i++) {
+	    if ( serial_array_index + i < serial_array_size ) {
+		if ( (s_a[k] = serial_array[serial_array_index + i]) != NULL)
+		    k++;
+	    }
+	    else
+		if( (s_a[k] = 
+		     serial_array[serial_array_index + i - serial_array_size])
+		    != NULL)
+		    k++;
+	}
+	free(serial_array);
+	serial_array = s_a;
+	serial_array_index = 0;
+
+      end_of_serial_recomputing:
+	
 	/* free lines */
 	cur_line = file->cf_line_base;
 	while ( (line = cur_line) != NULL) {
 	    cur_line = line->cl_next;
 
-	    /* remove line from the lists */
-	    if ( line->cl_pid == -1 ) {
-		if ( is_lavg(line->cl_option) ) {
-		    for ( i = 0; i < lavg_num; i++ )
-			if ( lavg_array[i].l_line == line ) {
-			    debug("removing '%s' from lavg queue",
-				  lavg_array[i].l_line->cl_shell);
-			    if (i < --lavg_num) {
-				lavg_array[i] = lavg_array[lavg_num];
-				lavg_array[lavg_num].l_line = NULL;
-			    }
-			    else
-				lavg_array[i].l_line = NULL;	
-			    break;
-			}
-		}
-		else if ( is_serial(line->cl_option) 
-			  || is_serial_once(line->cl_option) ) {
-
-		    /* there is somewhere a bug ...
-		     * don't be too much frightened, this is temporary */
-		    while ( serial_num > 0 )
-			run_serial_job();
-		    goto endofserial;
-
-		    if ( ! s_a )
-			s_a = calloc(serial_array_size, sizeof(CL *));
-		    i = serial_array_index;
-		    if ( (k = serial_array_index + serial_num)
-			 >= serial_array_size )
-			k -= serial_array_size;
-		    while (i != k) {
-			if ( serial_array[i] == line ) {
-			    debug("removing '%s' from serial queue",
-				  serial_array[i]->cl_shell);
-			    serial_array[i] = NULL;
-			    break;
-			}
-			if ( ++i >= serial_array_size )
-			    i -= serial_array_size;
-		    }
-		    serial_num--;
-		}
-	    }
-	  endofserial:
+	    /* remove from the main queue */
 	    prev_j = NULL;
 	    for ( j = queue_base; j != NULL; j = j->j_next )
 		if ( j->j_line == line ) {
@@ -617,24 +622,6 @@ delete_file(const char *user_name)
 	/* delete_file() MUST remove only the first occurrence :
 	 * this is needed by synchronize_file() */
 	break ;
-    }
-    /* remove from queue and move the rest of the jobs to get
-     * a queue in order without empty entries */
-    if ( s_a ) {
-	for ( i = k = 0; i < serial_array_size; i++) {
-	    if ( serial_array_index + i < serial_array_size ) {
-		if ( (s_a[k] = serial_array[serial_array_index + i]) != NULL)
-		    k++;
-	    }
-	    else
-		if( (s_a[k] = 
-		     serial_array[serial_array_index + i - serial_array_size])
-		    != NULL)
-		    k++;
-	}
-	memcpy(serial_array, s_a, serial_array_size * sizeof(CL *));
-	free(s_a);
-	serial_array_index = 0;
     }
 
     if (file == NULL)
