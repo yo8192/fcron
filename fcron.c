@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.18 2000-06-21 09:48:56 thib Exp $ */
+ /* $Id: fcron.c,v 1.19 2000-06-21 10:44:15 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.18 2000-06-21 09:48:56 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.19 2000-06-21 10:44:15 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -381,35 +381,6 @@ main(int argc, char **argv)
  	close(0); dup2(i, 0);
 	close(1); dup2(i, 1);
 	close(2); dup2(i, 2);
-
-	if(debug_opt) {
-	    /* wait until child death and log his return value
-	     * on error */
-	    int status;
-		
-	    switch ( pid = fork() ) {
-	    case -1:
-		die_e("fork");
-		break;
-	    case 0:
-		/* child */
-		daemon_pid = getpid();
-		break;
-	    default:
-		/* parent */
-		while ( wait4(pid, &status, 0, NULL) != pid ) ;
-		if ( ! WIFEXITED(status) )
-		    error("fcron[%d] has exited with status %d",
-			  pid, WEXITSTATUS(status));
-		if ( WIFSIGNALED(status) )
-		    error("fcron[%d] has exited due to signal %d",
-			  pid, WTERMSIG(status));
-
-		exit(0);
-
-	    }
-	}
-
 
     }
 
