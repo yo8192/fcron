@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.10 2001-06-22 21:10:18 thib Exp $ */
+ /* $Id: subs.c,v 1.11 2001-06-24 13:23:40 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -34,13 +34,13 @@ extern char debug_opt;
 
 /* fcron.conf parameters */
 char *fcronconf = NULL;
-char *fcronallow = NULL;
-char *fcrondeny = NULL;
 char *fcrontabs = NULL;
 char *pidfile = NULL;
-char *editor = NULL;
+char *fcronallow = NULL;
+char *fcrondeny = NULL;
 char *shell = NULL;
 char *sendmail = NULL;
+char *editor = NULL;
 
 int
 remove_blanks(char *str)
@@ -140,13 +140,13 @@ init_conf(void)
     /* set fcronconf if cmd line option -c has not been used */
     if (fcronconf == NULL)
 	fcronconf = strdup2(ETC "/" FCRON_CONF);
-    fcronallow = strdup2(ETC "/" FCRON_ALLOW);
-    fcrondeny = strdup2(ETC "/" FCRON_DENY);
     fcrontabs = strdup2(FCRONTABS);
     pidfile = strdup2(PIDFILE);
-    editor = strdup2(EDITOR);
+    fcronallow = strdup2(ETC "/" FCRON_ALLOW);
+    fcrondeny = strdup2(ETC "/" FCRON_DENY);
     shell = strdup2(SHELL);
     sendmail = strdup2(SENDMAIL);
+    editor = strdup2(EDITOR);
 }
 
 
@@ -217,20 +217,20 @@ read_conf(void)
 	while ( isspace( (int) *ptr2 ) ) ptr2++;
 
 	/* find which var the line refers to and update it */
-	if ( strncmp(ptr1, "fcronallow", 10) == 0 )
-	    fcronallow = strdup2(ptr2);
-	else if ( strncmp(ptr1, "fcrondeny", 9) == 0 )
-	    fcrondeny = strdup2(ptr2);
-	else if ( strncmp(ptr1, "fcrontabs", 9) == 0 )
+	if ( strncmp(ptr1, "fcrontabs", 9) == 0 )
 	    fcrontabs = strdup2(ptr2);
 	else if ( strncmp(ptr1, "pidfile", 7) == 0 )
 	    pidfile = strdup2(ptr2);
-	else if ( strncmp(ptr1, "editor", 6) == 0 )
-	    editor = strdup2(ptr2);
+	else if ( strncmp(ptr1, "fcronallow", 10) == 0 )
+	    fcronallow = strdup2(ptr2);
+	else if ( strncmp(ptr1, "fcrondeny", 9) == 0 )
+	    fcrondeny = strdup2(ptr2);
 	else if ( strncmp(ptr1, "shell", 5) == 0 )
 	    shell = strdup2(ptr2);
 	else if ( strncmp(ptr1, "sendmail", 8) == 0 )
 	    sendmail = strdup2(ptr2);
+	else if ( strncmp(ptr1, "editor", 6) == 0 )
+	    editor = strdup2(ptr2);
 	else
 	    error("Unknown var name at line %s : line ignored", buf);
 
