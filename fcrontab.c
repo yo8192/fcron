@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.5 2000-06-11 20:30:37 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.6 2000-06-15 20:17:06 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.5 2000-06-11 20:30:37 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.6 2000-06-15 20:17:06 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -284,15 +284,11 @@ remove_fcrontab(char rm_orig)
 
 }
 
+
 void
-make_file(char *file, char *user)
+write_file(char *file)
 {
 
-    explain("installing file '%s' for user %s", file, user);
-
-    /* read file and create a list in memory */
-    if ( read_file(file, user) != ERR ) {
-	
 	if ( file_base->cf_line_base == NULL ) {
 	    /* no entries */
 	    explain("%s's fcrontab contains no entries", user);
@@ -315,14 +311,33 @@ make_file(char *file, char *user)
 
 	} 
 
+}
+
+int
+make_file(char *file)
+{
+
+    explain("installing file '%s' for user %s", file, user);
+
+    /* read file and create a list in memory */
+    switch ( read_file(file, user) ) {
+    case 2:
+    case OK:
+
+	write_file(file);
+
 	/* free memory used to store the list */
 	delete_file(user);
 
 	/* tell daemon to update the conf */
 	need_sig = 1;
+	break;
 
-    } else
-	xexit(EXIT_ERR);
+    case ERR:
+	return ERR;
+    }
+
+    return OK;
     
 }
 
@@ -368,6 +383,7 @@ edit_file(char *buf)
     FILE *f, *fi;
     int file = 0;
     char c;
+    char correction = 0;
 
     explain("fcrontabs : editing %s's fcrontab", user);	
 
@@ -403,51 +419,89 @@ edit_file(char *buf)
     fclose(fi);
     close(file);
 
-    if ( stat(tmp, &st) == 0 )
-	mtime = st.st_mtime;
-    else
-	die_e("could not stat '%s'", buf);
+    do {
+
+	if ( stat(tmp, &st) == 0 )
+	    mtime = st.st_mtime;
+	else
+	    die_e("could not stat '%s'", buf);
     
 
-    switch ( pid = fork() ) {
-    case 0:
-	/* child */
-	if (setuid(getuid()) < 0) {
-	    perror("setuid(getuid())");
+	switch ( pid = fork() ) {
+	case 0:
+	    /* child */
+	    if (setuid(getuid()) < 0) {
+		perror("setuid(getuid())");
+		xexit(EXIT_ERR);
+	    }
+	    execlp(editor, editor, tmp, NULL);
+	    perror(editor);
+	    xexit(EXIT_ERR);
+
+	case -1:
+	    perror("fork");
+	    xexit(EXIT_ERR);
+
+	default:
+	    /* parent */
+	    break ;
+	}
+	    
+	/* only reached by parent */
+	wait4(pid, &status, 0, NULL);
+	if ( ! WIFEXITED(status) ) {
+	    fprintf(stderr, "Editor exited abnormally:"
+		    " fcrontab is unchanged.\n");
 	    xexit(EXIT_ERR);
 	}
-	execlp(editor, editor, tmp, NULL);
-	perror(editor);
-	xexit(EXIT_ERR);
 
-    case -1:
-	perror("fork");
-	xexit(EXIT_ERR);
-
-    default:
-	/* parent */
-	break ;
-    }
-	    
-    /* only reached by parent */
-    wait4(pid, &status, 0, NULL);
-    if ( ! WIFEXITED(status) ) {
-	fprintf(stderr, "Editor exited abnormally:"
-		" fcrontab is unchanged.\n");
-	xexit(EXIT_ERR);
-    }
-
-    /* check if file has been modified */
-    if ( stat(tmp, &st) != 0 )
-	die_e("could not stat %s", tmp);
+	/* check if file has been modified */
+	if ( stat(tmp, &st) != 0 )
+	    die_e("could not stat %s", tmp);
     
-    else if ( st.st_mtime > mtime )
-	make_file(tmp, user);
+	else if ( st.st_mtime > mtime || correction == 1) {
 
-    else
-	fprintf(stderr, "Fcrontab is unchanged :"
-		" no need to install it.\n"); 
+	    correction = 0;
 
+	    switch ( read_file(tmp, user) ) {
+	    case ERR:
+		if ( remove(tmp) != 0 )
+		    error("could not remove %s", tmp);
+		xexit (EXIT_ERR);
+	    case 2:
+		fprintf(stderr, "\nFile contains some errors. "
+			"Ignore [i] or Correct [c] ? ");
+		/* the 2nd getchar() is for the newline char (\n) */
+		while ( (c = getchar()) && getchar() && c != 'i' && c != 'c' )
+		    fprintf(stderr, "Please press c to correct, "
+			    "or i to ignore: ");
+		if ( c == 'c' ) {
+		    /* free memory used to store the list */
+		    delete_file(user);
+		    correction = 1;
+		}
+		break;
+	    default:
+		break;
+	    }
+
+	}
+	else {
+	    fprintf(stderr, "Fcrontab is unchanged :"
+		    " no need to install it.\n"); 
+	    xexit(EXIT_OK);
+	}
+
+    } while ( correction == 1);
+
+    write_file(tmp);
+    
+    /* free memory used to store the list */
+    delete_file(user);
+    
+    /* tell daemon to update the conf */
+    need_sig = 1;
+    
     if ( remove(tmp) != 0 )
 	error("could not remove %s", tmp);
 	    
@@ -603,11 +657,14 @@ main(int argc, char **argv)
 	    if ( chown(tmp, getuid(), getgid()) != 0 )
 		die_e("could not chown %s", tmp);
 
-	    make_file(tmp, user);
-	
-	    remove(tmp);
-
-	    xexit ( EXIT_OK );
+	    if ( make_file(tmp) == ERR ) {
+		remove(tmp);
+		xexit ( EXIT_ERR );
+	    }
+	    else {
+		remove(tmp);
+		xexit ( EXIT_OK );
+	    }
 
 	}
 
@@ -619,9 +676,10 @@ main(int argc, char **argv)
 	    else
 		strncpy(file, argv[file_opt], sizeof(file));
 
-	    make_file(file, user);
-	
-	    xexit ( EXIT_OK );
+	    if (make_file(file) == OK)
+		xexit ( EXIT_OK );
+	    else
+		xexit ( EXIT_ERR );
 
 	}
 
@@ -639,7 +697,6 @@ main(int argc, char **argv)
     }
 
 
-
     /* list user's entries */
     if ( list_opt == 1 ) {
 
@@ -648,7 +705,6 @@ main(int argc, char **argv)
 	xexit(EXIT_OK);
 
     }
-
 
 
     /* edit user's entries */

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.4 2000-06-10 22:16:44 thib Exp $ */
+ /* $Id: fileconf.c,v 1.5 2000-06-15 20:17:46 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -33,9 +33,11 @@ void read_freq(char *ptr, CF *cf, int line, char *file_name);
 void read_arys(char *ptr, CF *cf, int line, char *file_name);
 char *read_field(char *ptr, bitstr_t *ary, int max, const char **names,
 	       int line, char *file_name);
-void read_env(char *ptr, CF *cf, int line);
+void read_env(char *ptr, CF *cf, int line, char *file_name);
 char *get_string(char *ptr);
 
+
+char need_correction;
 
 /* warning : all names must have the same length */
 const char *dows_ary[] = {
@@ -70,9 +72,11 @@ get_string(char *ptr)
     if ( quote != 0 ) {
 	if ( *(ptr + length - 1) == quote )
 	    *(ptr + length - 1) = '\0';
-	else
+	else {
 	    /* mismatched quotes */
+	    need_correction = 1;
 	    return NULL;
+	}
     }
     
 
@@ -125,6 +129,7 @@ get_line(char *str, size_t size, FILE *file, int *line)
     while ((*str = getc(file)) != '\n' && *str != EOF )
 	;
     (*line)++;
+    need_correction = 1;
     return ERR;
 
 }
@@ -144,6 +149,7 @@ read_file(char *file_name, char *user)
     int ret;
     
     bzero(buf, sizeof(buf));
+    need_correction = 0;
 
     /* open file */
 
@@ -172,8 +178,8 @@ read_file(char *file_name, char *user)
 	if ( (ret = get_line(buf, sizeof(buf), file, &line)) == OK)
 	    ;
 	else if ( ret == ERR ) {
-	    fprintf(stderr, "Line %d of %s is too long (more than %d):"
-		    " skipping line.\n",line, file_name, sizeof(buf));
+	    fprintf(stderr, "%s:%d: Line is too long (more than %d):"
+		    " skipping line.\n", file_name, line, sizeof(buf));
 	    continue;
 	} else
 	    /* EOF : no more lines */
@@ -207,7 +213,7 @@ read_file(char *file_name, char *user)
 		read_arys(ptr, cf, line, file_name);
 		entries++;
 	    } else
-		read_env(ptr, cf, line);
+		read_env(ptr, cf, line, file_name);
 	}
 
 	line++;	
@@ -220,12 +226,15 @@ read_file(char *file_name, char *user)
 
     fclose(file);
     
-    return OK;
+    if ( ! need_correction )
+	return OK;
+    else
+	return 2;
 
 }
 
 void
-read_env(char *ptr, CF *cf, int line)
+read_env(char *ptr, CF *cf, int line, char *file_name)
     /* append env variable list.
      * (remove blanks) */
 {
@@ -243,14 +252,21 @@ read_env(char *ptr, CF *cf, int line)
     }
     name[j] = '\0';
 
+    if ( name == '\0' )
+	goto error;
+
     /* skip '=' and spaces around */
-    while ( isspace(*ptr) || *ptr == '=' )
+    while ( isspace(*ptr) )
 	ptr++;
+
+    /* if j == 0 name is a zero length string */
+    if ( *ptr++ != '=' || j == 0 )
+	goto error;
 
     /* get value */
     if ( ( val = get_string(ptr)) == NULL ) {
-	fprintf(stderr, "Error at line %d (mismatched"
-		" quotes): skipping line.\n", line);
+	fprintf(stderr, "%s:%d: Mismatched  quotes: skipping line.\n",
+		file_name, line);
 	return;
     }
 
@@ -258,8 +274,11 @@ read_env(char *ptr, CF *cf, int line)
 	fprintf(stderr, "  Env : '%s=%s'\n", name, val);
 
     /* we ignore USER's assignment */
-    if ( strcmp(name, "USER") == 0 )
+    if ( strcmp(name, "USER") == 0 ) {
+	fprintf(stderr, "%s:%d: USER assignement is not allowed: ignored.\n",
+		file_name, line);	
 	return;
+    }
 
     /* the MAILTO assignment is, in fact, an fcron option :
      *  we don't store it in the same way. */
@@ -277,6 +296,11 @@ read_env(char *ptr, CF *cf, int line)
     }
     
     return;
+
+  error:
+	fprintf(stderr, "%s:%d: Syntax error: skipping line.\n",
+		file_name, line);
+	return;
 
 }
 
@@ -306,10 +330,14 @@ get_time(char *ptr, time_t *time, int line, char *file_name )
 	case 'd':               /* days */
 	    sum *= 24;
 	case 'h':               /* hours */
-	    sum *= 60;
+	    sum *= 3600;
 	    ptr++;
+	    break;
 	default:                /* minutes */
-	    sum *= 60;
+	    if ( (*ptr != ' ') && (*ptr != '\t') ) {
+		need_correction = 1;
+		return NULL;
+	    }
 	    
 	}
 
@@ -333,15 +361,25 @@ read_freq(char *ptr, CF *cf, int line, char *file_name)
 
     ptr++;
     /* get the time before first execution */
-    ptr = get_time(ptr, &(cl->cl_nextexe), line, file_name);
+    if ( (ptr = get_time(ptr, &(cl->cl_nextexe), line, file_name)) == NULL ) {
+	fprintf(stderr, "%s:%d: Error while reading first delay:"
+		" skipping line.\n", file_name, line);
+	return;
+    }
 
     Skip_blanks(ptr);
 
     /* then cl_timefreq */
-    ptr = get_time(ptr, &(cl->cl_timefreq), line, file_name);
+    if ( (ptr = get_time(ptr, &(cl->cl_timefreq), line, file_name)) == NULL) {
+	fprintf(stderr, "%s:%d: Error while reading frequency:"
+		" skipping line.\n", file_name, line);
+	return;
+    }
+	
     if ( cl->cl_timefreq == 0) {
-	fprintf(stderr, "Error at line %d of file %s (no freq"
-		" specified): skipping line.\n", line, file_name);
+	fprintf(stderr, "%s:%d: no freq specified: skipping line.\n",
+		file_name, line);
+	need_correction = 1;
 	free(cl);
 	return;
     }
@@ -354,8 +392,8 @@ read_freq(char *ptr, CF *cf, int line, char *file_name)
 
     /* get cl_shell field ( remove trailing blanks ) */
     if ( (cl->cl_shell = get_string(ptr)) == NULL ) {
-	fprintf(stderr, "Error at line %d of file %s (mismatched"
-		" quotes): skipping line.\n", line, file_name);
+	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
+		file_name, line);
 	free(cl);
 	return;
     }
@@ -375,8 +413,8 @@ read_freq(char *ptr, CF *cf, int line, char *file_name)
   if((ptr = read_field(ptr, ary, max, aryconst, line, file_name)) == NULL) { \
       if (debug_opt) \
           fprintf(stderr, "\n"); \
-      fprintf(stderr, "Error while reading " descrp " field line %d" \
-             " of file %s: ignoring line.\n", line, file_name); \
+      fprintf(stderr, "%s:%d: Error while reading " descrp " field: " \
+             "skipping line.\n", file_name, line); \
       free(cl); \
       return; \
   }
@@ -426,8 +464,8 @@ read_arys(char *ptr, CF *cf, int line, char *file_name)
 
     /* get the shell command (remove trailing blanks) */
     if ( (cl->cl_shell = get_string(ptr)) == NULL ) {
-	fprintf(stderr, "Error at line %d of file %s (mismatched"
-		" quotes): skipping line.\n", line, file_name);
+	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
+		file_name, line);
 	free(cl);
 	return;
     }
@@ -451,8 +489,10 @@ read_num(char *ptr, int *num, int max, const char **names)
     if ( isalpha(*ptr) ) {
 	int i;
 
-	if ( names == NULL )
+	if ( names == NULL ) {
+	    need_correction = 1;
 	    return NULL;
+	}
 
 	/* set string to lower case */
 	for ( i = 0; i < strlen(names[0]); i++ )
@@ -467,6 +507,7 @@ read_num(char *ptr, int *num, int max, const char **names)
 	    }
 
 	/* string is not in name list */
+	need_correction = 1;
 	return NULL;
 
     } else {
@@ -479,8 +520,10 @@ read_num(char *ptr, int *num, int max, const char **names)
 	    *num *= 10; 
 	    *num += *ptr - 48; 
 
-	    if (*num >= max) 
+	    if (*num >= max) {
+		need_correction = 1;
 		return NULL;
+	    }
 
 	    ptr++; 
 
@@ -540,10 +583,11 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names,
 		ptr++;
 		if ( (ptr = read_num(ptr, &stop, max, names)) == NULL )
 		    return NULL;
-	    } else
+	    } else {
 		/* syntax error */
+		need_correction = 1;
 		return NULL;
-
+	    }
 	}
 
 	/* check for step size */
