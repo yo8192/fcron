@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.81 2002-01-03 14:35:17 thib Exp $
+# $Id: Makefile.in,v 1.82 2002-02-25 18:43:05 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -39,6 +39,7 @@ GROUPNAME	= @GROUPNAME@
 DEBUG		= @DEBUG@
 ANSWERALL	= @ANSWERALL@
 USEPAM		= @USEPAM@
+FCRONDYN	= @FCRONDYN@
 
 # Options
 #	-DDEBUG		even more verbose
@@ -56,32 +57,36 @@ OPTION =
 
 VERSION = @VERSION@
 CFLAGS = $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
-OBJSD = fcron.o subs.o log.o database.o job.o conf.o $(LIBOBJS)
-OBJS = fcrontab.o subs.o log.o fileconf.o allow.o
-OBJCONV = convert-fcrontab.o subs.o log.o
+OBJSD = fcron.o subs.o save.o temp_file.o log.o database.o job.o conf.o $(LIBOBJS)
+OBJSTAB = fcrontab.o subs.o save.o temp_file.o  log.o fileconf.o allow.o
+OBJSDYN = fcrondyn.o subs.o log.o
+OBJCONV = convert-fcrontab.o subs.o save.o log.o
 OBJSIG = fcronsighup.o subs.o log.o allow.o
 HEADERSALL = config.h $(SRCDIR)/global.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/save.h $(SRCDIR)/option.h 
-HEADERSD = $(HEADERSALL) $(SRCDIR)/fcron.h $(SRCDIR)/getloadavg.h $(SRCDIR)/database.h $(SRCDIR)/conf.h $(SRCDIR)/job.h
-HEADERS = $(HEADERSALL) $(SRCDIR)/fcrontab.h $(SRCDIR)/allow.h $(SRCDIR)/fileconf.h
-HEADERSCONV = $(HEADERSALL)
-HEADERSSIG = $(HEADERSALL) $(SRCDIR)/allow.h
 
 # this is a regular expression :
 # do not ci automaticaly generated files and doc (done by doc's Makefile)
 RCSNOCI=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|doc.*\)
 
+ifeq ($(FCRONDYN), 1)
+all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf
+else
 all: fcron fcrontab convert-fcrontab files/fcron.conf
+endif
 
-fcron: $(OBJSD) $(HEADERSD)
+fcron: $(OBJSD)
 	$(CC) $(CFLAGS) -o $@ $(OBJSD) $(LIBS)
 
-fcrontab: fcronsighup $(OBJS) $(HEADERS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+fcrontab: fcronsighup $(OBJSTAB)
+	$(CC) $(CFLAGS) -o $@ $(OBJSTAB) $(LIBS)
 
-fcronsighup: $(OBJSIG) $(HEADERSSIG)
+fcrondyn: $(OBJSDYN)
+	$(CC) $(CFLAGS) -o $@ $(OBJSDYN) $(LIBS)
+
+fcronsighup: $(OBJSIG)
 	$(CC) $(CFLAGS) -o $@ $(OBJSIG) $(LIBS)
 
-convert-fcrontab: $(OBJCONV) $(HEADERSCONV) 
+convert-fcrontab: $(OBJCONV)
 	$(CC) $(CFLAGS) -o $@ $(OBJCONV) $(LIBS)
 
 %.o: $(SRCDIR)/%.c $(HEADERSALL) $(SRCDIR)/%.h
@@ -139,7 +144,7 @@ uninstall:
 
 clean:
 	rm -f *.o core
-	rm -f fcron fcrontab fcronsighup convert-fcrontab files/fcron.conf
+	rm -f fcron fcrontab fcrondyn fcronsighup convert-fcrontab files/fcron.conf
 
 vclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
