@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.55 2002-02-25 18:40:40 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.56 2002-03-02 17:25:32 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -45,8 +45,9 @@
 #include "allow.h"
 #include "fileconf.h"
 #include "temp_file.h"
+#include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.55 2002-02-25 18:40:40 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.56 2002-03-02 17:25:32 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -130,6 +131,7 @@ usage(void)
 	    "  -c f       make fcrontab use config file f.\n"
 	    "  -d         set up debug mode.\n"
 	    "  -h         display this help message.\n"
+	    "  -V         display version & infos about fcrontab.\n"
 	    "\n"
 	);
     
@@ -612,90 +614,10 @@ reinstall(char *buf)
 
 
 #ifdef HAVE_LIBPAM
-/* Derived from Andrew Morgan <morgan@linux.kernel.org> work in Linux PAM misc lib. */
-
-#define CONV_ECHO_ON  1                            /* types of echo state */
-#define CONV_ECHO_OFF 0
-
-#define _pam_overwrite(x)        \
-do {                             \
-     register char *__xx__;      \
-     if ((__xx__=(x)))           \
-          while (*__xx__)        \
-               *__xx__++ = '\0'; \
-} while (0)
-
-
-static char *read_string(int echo, const char *prompt)
-/* read a line of input string, giving prompt when appropriate */
-{
-    struct termios term_before, term_tmp;
-    char line[PAM_MAX_MSG_SIZE];
-    int nc, have_term=0;
-
-    debug("called with echo='%s', prompt='%s'.", echo ? "ON":"OFF" , prompt);
-
-    if (isatty(STDIN_FILENO)) {                      /* terminal state */
-
-	/* is a terminal so record settings and flush it */
-	if ( tcgetattr(STDIN_FILENO, &term_before) != 0 ) {
-	    debug("error: failed to get terminal settings");
-	    return NULL;
-	}
-	memcpy(&term_tmp, &term_before, sizeof(term_tmp));
-	if (!echo) 
-	    term_tmp.c_lflag &= ~(ECHO);
-	have_term = 1;
-
-    } 
-    else if (!echo)
-	debug("warning: cannot turn echo off");
-
-    /* reading the line */
-    while (1) {
-
-	fprintf(stderr, "%s", prompt);
-	/* this may, or may not set echo off -- drop pending input */
-	if (have_term)
-	    (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term_tmp);
-
-	nc = read(STDIN_FILENO, line, PAM_MAX_MSG_SIZE-1);
-	if (have_term) {
-	    (void) tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
-	    if (!echo)             /* do we need a newline? */
-		fprintf(stderr,"\n");
-	}
-	if (nc > 0) {                 /* we got some user input */
-	    char *input;
-
-	    if (nc > 0 && line[nc-1] == '\n') {     /* <NUL> terminate */
-		line[--nc] = '\0';
-	    } else {
-		line[nc] = '\0';
-	    }
-	    input = ( (line) ? strdup(line):NULL );
-	    _pam_overwrite(line);
-
-	    return input;                  /* return malloc()ed string */
-	} else if (nc == 0) {                                /* Ctrl-D */
-	    debug("user did not want to type anything");
-	    fprintf(stderr, "\n");
-	    break;
-	}
-    }
-
-    if (have_term)
-	(void) tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
-
-    memset(line, 0, PAM_MAX_MSG_SIZE);                      /* clean up */
-    return NULL;
-}
-
-
 int
 conv_pam(int num_msg, const struct pam_message **msgm, struct pam_response **response,
 	 void *appdata_ptr)
-/* text based conversation for pam. */
+    /* text based conversation for pam. */
 {
     int count = 0;
     struct pam_response *reply;
@@ -767,7 +689,7 @@ failed_conversation:
 	    switch (msgm[count]->msg_style) {
 	    case PAM_PROMPT_ECHO_ON:
 	    case PAM_PROMPT_ECHO_OFF:
-		_pam_overwrite(reply[count].resp);
+		Overwrite(reply[count].resp);
 		free(reply[count].resp);
 		break;
 	    case PAM_ERROR_MSG:
@@ -870,14 +792,14 @@ parseopt(int argc, char *argv[])
 	    break;
 
 	case ':':
-	    fprintf(stderr, "(setopt) Missing parameter");
+	    fprintf(stderr, "(setopt) Missing parameter.\n");
 	    usage();
 
 	case '?':
 	    usage();
 
 	default:
-	    fprintf(stderr, "(setopt) Warning: getopt returned %c", c);
+	    fprintf(stderr, "(setopt) Warning: getopt returned %c.\n", c);
 	}
     }
 
