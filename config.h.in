@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.15 2000-09-04 13:08:15 thib Exp $ */
+ /* $Id: config.h.in,v 1.16 2000-09-12 16:42:28 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -33,67 +33,12 @@
 /* beginning of configurable stuff ********************************** */
 
 
-/* *** options which can be set in Makefile *** */
-/* (they are overridden by Makefile's value ) */
-
-#ifndef VERSION
-#define VERSION	"1.0.0" /* default version if not defined in Makefile */
-#endif
-
-#ifndef SENDMAIL        /* mail command location */ 
-#define SENDMAIL	"/usr/lib/sendmail"
-#endif
-
-#ifndef FCRONTABS        /* directory where is stored users' fcrontabs */
-#define FCRONTABS	"/var/spool/fcron/"
-#endif
-
-#ifndef ETC             /* directory where are stored fcrontab.allow/deny */
-#define ETC             "/etc/"
-#endif
-
-#ifndef PROC_LOADAVG    /* do we have a mounted procfs with loadavg file on
-			 * this system ? */
-#define PROC_LOADAVG    1
-#endif
-
-#ifndef PROC            /* directory where is mounted the procfs */
-#define PROC            "/proc/"
-#endif
-
-#ifndef DEBUG
-#define DEBUG           0  /* 1 if you want debug mode */
-#endif
-
-#ifndef FOREGROUND
-#define FOREGROUND      0  /* 1 if you want foreground mode by default */
-#endif
-
-#ifndef SAVE
-#define SAVE            1800  /* save every n seconds */
-#endif
-
-
-
-/* *** system dependent *** */
-#define EXIT_ERR   1         /* code returned by fcron/fcrontab on error */
-#define EXIT_OK    0         /* code returned  on normal exit */
-
-
-/* *** paths *** */
-
 /* fcron allow and deny file are located in directory ETC (see below) */
 #define FCRON_ALLOW      "fcron.allow"
 
 #define FCRON_DENY       "fcron.deny"
 
 #define SENDMAIL_ARGS	"-Ffcron", "-odi"   /* args of mail command */
-
-#define EDITOR          "/usr/bin/vi"       /* default editor */
-
-#define SHELL           "/bin/sh"           /* default shell */
-
-#define PIDFILE		"/var/run/fcron.pid" /* where is located pid file ? */
 
 
 /* *** memory *** */
@@ -142,6 +87,7 @@
 
 #define LAVG_SLEEP 30 /* the time we sleep when some jobs are in lavg queue */
 
+#define SAVE            1800  /* save every n seconds */
 
 /* *** behavior *** */
 #define SERIAL_ONCE 0 /* can a job be several times in the serial queue at
@@ -149,6 +95,11 @@
 
 #define LAVG_ONCE 1 /* can a job be several times in the lavg queue at
 		     * the same moment ? */
+
+/* *** system dependent *** */
+#define EXIT_ERR   1         /* code returned by fcron/fcrontab on error */
+#define EXIT_OK    0         /* code returned  on normal exit */
+
 
 /* Syslog facility and priorities messages will be logged to (see syslog(3)) */
 
@@ -166,3 +117,140 @@
 /* end of configurable stuff **************************************** */
 /* ****************************************************************** */
 
+
+/* ****************************************************************** */
+/* *** options which are set by configure script ******************** */
+
+#undef VERSION
+
+/* *** paths *** */
+#undef ETC
+#undef FCRONTABS
+#undef SENDMAIL
+#undef PROC
+/* default editor */
+#undef EDITOR
+/* default shell */
+#undef SHELL
+/* where is located pid file ? */
+#undef PIDFILE
+
+#undef PROC_LOADAVG    1
+#undef DEBUG           0  /* 1 if you want debug mode */
+#undef FOREGROUND      0  /* 1 if you want foreground mode by default */
+
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define for DGUX with <sys/dg_sys_info.h>.  */
+#undef DGUX
+
+/* Define if the `getloadavg' function needs to be run setuid or setgid.  */
+#undef GETLOADAVG_PRIVILEGED
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef gid_t
+
+/* Define if your system has its own `getloadavg' function.  */
+#undef HAVE_GETLOADAVG
+
+/* Define if you have the strftime function.  */
+#undef HAVE_STRFTIME
+
+/* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
+#undef HAVE_SYS_WAIT_H
+
+/* Define if you have the wait3 system call.  */
+#undef HAVE_WAIT3
+
+/* Define if your struct nlist has an n_un member.  */
+#undef NLIST_NAME_UNION
+
+/* Define if you have <nlist.h>.  */
+#undef NLIST_STRUCT
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef pid_t
+
+/* Define as the return type of signal handlers (int or void).  */
+#undef RETSIGTYPE
+
+/* Define to `unsigned' if <sys/types.h> doesn't define.  */
+#undef size_t
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define on System V Release 4.  */
+#undef SVR4
+
+/* Define if you can safely include both <sys/time.h> and <time.h>.  */
+#undef TIME_WITH_SYS_TIME
+
+/* Define if your <sys/time.h> declares struct tm.  */
+#undef TM_IN_SYS_TIME
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef uid_t
+
+/* Define for Encore UMAX.  */
+#undef UMAX
+
+/* Define for Encore UMAX 4.3 that has <inq_status/cpustats.h>
+   instead of <sys/cpustats.h>.  */
+#undef UMAX4_3
+
+/* Define if you have the getcwd function.  */
+#undef HAVE_GETCWD
+
+/* Define if you have the getloadavg function.  */
+#undef HAVE_GETLOADAVG
+
+/* Define if you have the gettimeofday function.  */
+#undef HAVE_GETTIMEOFDAY
+
+/* Define if you have the mktime function.  */
+#undef HAVE_MKTIME
+
+/* Define if you have the putenv function.  */
+#undef HAVE_PUTENV
+
+/* Define if you have the strerror function.  */
+#undef HAVE_STRERROR
+
+/* Define if you have the <dirent.h> header file.  */
+#undef HAVE_DIRENT_H
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <mach/mach.h> header file.  */
+#undef HAVE_MACH_MACH_H
+
+/* Define if you have the <ndir.h> header file.  */
+#undef HAVE_NDIR_H
+
+/* Define if you have the <sys/dir.h> header file.  */
+#undef HAVE_SYS_DIR_H
+
+/* Define if you have the <sys/file.h> header file.  */
+#undef HAVE_SYS_FILE_H
+
+/* Define if you have the <sys/ioctl.h> header file.  */
+#undef HAVE_SYS_IOCTL_H
+
+/* Define if you have the <sys/ndir.h> header file.  */
+#undef HAVE_SYS_NDIR_H
+
+/* Define if you have the <sys/time.h> header file.  */
+#undef HAVE_SYS_TIME_H
+
+/* Define if you have the <syslog.h> header file.  */
+#undef HAVE_SYSLOG_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Define if you have the dgc library (-ldgc).  */
+#undef HAVE_LIBDGC
