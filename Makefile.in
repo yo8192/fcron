@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.32 2000-09-13 06:01:51 thib Exp $
+# $Id: Makefile.in,v 1.33 2000-09-13 15:10:02 thib Exp $
 
 # Where should we install it ?
 prefix		= @prefix@
@@ -46,7 +46,7 @@ OPTION =
 ####################################
 
 VERSION= @VERSION@
-CFLAGS= $(INCLUDE) $(OPTIM) $(OTHERFLAGS) $(OPTION) $(DEFS) $(LIBS)
+CFLAGS= $(INCLUDE) $(OPTIM) $(OPTION) $(DEFS) $(LIBS)
 OBJSD = fcron.o subs.o database.o job.o log.o conf.o $(LIBOBJS)
 OBJS= fcrontab.o fileconf.o subs.o log.o allow.o
 HEADERSD = fcron.h config.h global.h option.h getloadavg.h
