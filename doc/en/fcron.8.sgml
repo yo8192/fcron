@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron.8.sgml,v 1.3 2002-03-02 17:31:39 thib Exp $ -->
+<!-- $Id: fcron.8.sgml,v 1.4 2002-03-31 15:08:46 thib Exp $ -->
 
 <refentry id="fcron.8">
     <refmeta>
@@ -25,12 +25,20 @@ A copy of the license is included in gfdl.sgml.
     <refsynopsisdiv>
 	<cmdsynopsis>
 	    <command>fcron</command>
+	    <arg>-c <replaceable>file</replaceable></arg> 
 	    <arg>-d</arg>
-	    <arg>-f</arg> 
 	    <arg>-b</arg> 
 	    <arg>-s <replaceable>time</replaceable></arg> 
 	    <arg>-m <replaceable>num</replaceable></arg> 
+	</cmdsynopsis>
+	<cmdsynopsis>
+	    <command>fcron</command>
 	    <arg>-c <replaceable>file</replaceable></arg> 
+	    <arg>-d</arg>
+	    <arg>-f</arg> 
+	    <arg>-o</arg>
+	    <arg>-y</arg>
+	    <arg>-l <replaceable>time</replaceable></arg>
 	</cmdsynopsis>
 	<cmdsynopsis>
 	    <command>fcron</command>
@@ -124,6 +132,28 @@ defined by &fcrontab;'s option <option>-c</option>). That way, several
 &fcron; processes can run simultaneously on an only system (but each
 &fcron; process *must* have a different spool dir and pid file from the
 other processes).</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-o</option></term>
+		<term><option>--once</option></term>
+		<listitem>
+		    <para>Execute all jobs that need to be run at the time fcron was started, wait for them, then return. Sets <option>firstsleep</option> to 0. May be especially useful when used with options <option>-y</option> and <option>-f</option> in a script run, for instance, at dialup connection.</para>
+		    <para>&seealso; fcrontab's options &optvolatile;, &optstdout;.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-y</option></term>
+		<term><option>--nosyslog</option></term>
+		<listitem>
+		    <para>Don't log to syslog at all. May be useful when running in foreground.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-l</option> <replaceable>time</replaceable></term>
+		<term><option>--firstsleep</option> <replaceable>time</replaceable></term>
+		<listitem>
+		    <para>Sets the initial delay (in seconds) before any job is executed, default to &firstsleep; seconds.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
