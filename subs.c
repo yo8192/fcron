@@ -22,9 +22,10 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.6 2001-04-21 08:55:55 thib Exp $ */
+ /* $Id: subs.c,v 1.7 2001-05-15 00:50:24 thib Exp $ */
 
 #include "global.h"
+#include "subs.h"
 
 extern void die_e(char *fmt, ...);
 
@@ -67,6 +68,53 @@ strdup2(const char *str)
 
     strcpy(ptr, str);
     return(ptr);
+}
+
+
+int
+temp_file(char **name)
+    /* Open a temporary file and return its file descriptor */
+{
+    int fd;
+#ifdef HAVE_MKSTEMP
+    char name_local[PATH_LEN] = "/tmp/fcr-XXXXXX";
+    if ( (fd = mkstemp(name_local)) == -1 )
+	die_e("Can't find a unique temporary filename");
+    /* we must set the file mode to 600 (some version of mkstemp may set it
+     * incorrectly) */
+    if ( fchmod(fd, S_IWUSR | S_IRUSR) != 0 )
+	die_e("Can't fchmod temp file");
+#else
+    const int max_retries = 50;
+    char *name_local = NULL;
+    int i;
+
+    i = 0;
+    do {
+	i++;
+	free(name_local);
+	name_local = tempnam(NULL, NULL);
+	if ( name_local == NULL )
+	    die("Can't find a unique temporary filename");
+	fd = open(name_local, O_RDWR|O_CREAT|O_EXCL|O_APPEND, S_IRUSR|S_IWUSR);
+	/* I'm not sure we actually need to be so persistent here */
+    } while (fd == -1 && errno == EEXIST && i < max_retries);
+    if (fd == -1)
+	die_e("Can't open temporary file");
+#endif
+    if ( name == NULL && unlink(name_local) != 0 )
+	die_e("Can't unlink temporary file %s", name_local);
+
+    fcntl(fd, F_SETFD, 1);   /* set close-on-exec flag */
+    
+    /* give the name of the temp file if necessary */
+    if (name != NULL)
+	*name = strdup2(name_local);
+#ifndef HAVE_MKSTEMP
+    free(name_local);
+#endif
+
+    return fd;
 }
 
 
