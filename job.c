@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.20 2000-08-28 17:59:54 thib Exp $ */
+ /* $Id: job.c,v 1.21 2000-09-04 13:09:31 thib Exp $ */
 
 #include "fcron.h"
 
@@ -50,7 +50,7 @@ change_user(uid_t uid)
     setenv("USER", pas->pw_name, 1);
     setenv("HOME", pas->pw_dir, 1);
     setenv("SHELL", pas->pw_shell, 1);
-#elif
+#else
     {
 	char buf[PATH_LEN + 5];
 	strcat( strcpy(buf, "USER"), "=");
@@ -280,6 +280,8 @@ launch_mailer(CL *line, int mailfd)
     
     /* run sendmail with mail file as standard input */
     execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, pass->pw_name, NULL);
+    error_e("Can't find sendmail. Trying a execlp(\"sendmail\")");
+    execlp("sendmail", "sendmail", SENDMAIL_ARGS, pass->pw_name, NULL);
     die_e("Can't exec " SENDMAIL);
 
 }
