@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.20 2003-12-25 22:52:48 thib Exp $ */
+ /* $Id: subs.c,v 1.21 2004-04-29 19:34:45 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -118,6 +118,22 @@ init_conf(void)
 #endif
     editor = strdup2(EDITOR);
 }
+
+void
+free_conf(void)
+/* free() the memory allocated in init_conf() */
+{
+    free(fcronconf);
+    free(fcrontabs);
+    free(pidfile);
+    free(fifofile);
+    free(fcronallow);
+    free(fcrondeny);
+    free(shell);
+    free(sendmail);
+    free(editor);
+}
+
 
 
 void
