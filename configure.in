@@ -8,7 +8,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.7)
 
-vers="2.1.0"
+vers="2.1.1"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -680,6 +680,34 @@ USEPAM="$usepam"
 AC_SUBST(USEPAM)
 
 
+dnl DocBook
+
+AC_PATH_PROG(JADE,openjade)
+
+if test -z "$JADE"; then
+	AC_PATH_PROG(JADE,jade)
+fi
+
+DSSSL_DIR="/usr/share/sgml/docbook/dsssl-stylesheets-1.72/"
+
+AC_MSG_CHECKING(Looking for dsssl stylsheets)
+AC_ARG_WITH(dsssl-dir,
+[ --with-dsssl-dir=DIR	change the default location of DSSSL stylesheets.],
+[ case "$withval" in
+  no) 
+    DSSSL_DIR=""
+    ;;
+  yes)
+    AC_MSG_ERROR(Must be set to DIR or "no".)
+    ;;
+  *)
+    DSSSL_DIR="$withval"
+    ;;
+  esac ],
+)
+AC_SUBST(DSSSL_DIR)
+
+
 dnl We set exec_prefix to $prefix (also done in Makefile)
 exec_prefix=$prefix
 BINDIREX=`eval echo $bindir`
@@ -689,6 +717,6 @@ AC_DEFINE_UNQUOTED(SBINDIREX, "$SBINDIREX")
 AC_SUBST(BINDIREX)
 AC_SUBST(SBINDIREX)
 
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile doc/Makefile doc/stylesheets/fcron-doc.dsl)
 
 

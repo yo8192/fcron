@@ -15,7 +15,7 @@
 
 
 
-open(CONFIG, "./config.h") or print "error while opening config.h\n" and exit;
+open(CONFIG, "$ARGV[2]/config.h") or print "error while opening config.h\n" and exit;
 
 while ( <CONFIG> ) {
     if ( /^\#define\s+(\w+?)\s+([\w\/-]+?)\s/ ) {
@@ -27,7 +27,7 @@ while ( <CONFIG> ) {
     
 }
 
-open(MAKEFILE, "./Makefile") or print "error while opening Makefile\n" and exit;
+open(MAKEFILE, "$ARGV[2]/Makefile") or print "error while opening Makefile\n" and exit;
 
 while ( <MAKEFILE> ) {
     if ( /^\s*?(\w+?)\s*?=\s*?([\w\.\/-]+)\s/ ) {
