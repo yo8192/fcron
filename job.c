@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.62 2005-02-26 15:09:25 thib Exp $ */
+ /* $Id: job.c,v 1.63 2005-03-12 12:37:30 thib Exp $ */
 
 #include "fcron.h"
 
@@ -95,9 +95,6 @@ change_user(struct cl_t *cl)
     int    retcode = 0;
     const char * const * env;
 #endif
-
-    /* First, restore umask to default */
-    umask (saved_umask);
 
     /* Obtain password entry and change privileges */
 
@@ -292,6 +289,9 @@ run_job(struct exe_t *exeent)
 	    if (pipe(pipe_fd) != 0) 
 		die_e("could not pipe()");
 	}
+
+	/* First, restore umask to default */
+	umask (saved_umask);
 
 #ifndef RUN_NON_PRIVILEGED
 	if (change_user(line) < 0)
