@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.26 2000-09-03 14:31:27 thib Exp $
+# $Id: Makefile.in,v 1.27 2000-09-03 19:03:08 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -26,10 +26,10 @@ ETC=/etc/
 #	-DDEBUG		even more verbose
 #	-DCHECKJOBS     send a mail containing the exact shell command
 #			for each execution of each job.
-OPTIM=	-DDEBUG -g -DFOREGROUND -DMALLOC_CHECK_=2
+#OPTIM=	-DDEBUG -g -DFOREGROUND -DMALLOC_CHECK_=2
 #OPTIM=	-DDEBUG -g -DCHECKJOBS -Wall -Wpointer-arith -Wstrict-prototypes
 #OPTIM=	-DDEBUG -Wall -Wpointer-arith -Wstrict-prototypes
-#OPTIM=	-O2 -Wall
+OPTIM=	-O2 -Wall
 #OPTIM=	-O3 -mcpu=i686 -Wall
 
 
