@@ -22,13 +22,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: allow.c,v 1.3 2000-05-30 19:24:44 thib Exp $ */
+ /* $Id: allow.c,v 1.4 2000-12-15 17:48:24 thib Exp $ */
 
 #include "fcrontab.h"
 
 int
 in_file(char *str, char *file)
-    /* return -1 if file can't be opened
+    /* return -1 if file doesn't exist
      *        0 if string is not in file,
      *        1 if it is in file
      *   and  2 if file contains "all" string */
@@ -42,8 +42,10 @@ in_file(char *str, char *file)
 	return -1;
 
     if ( (f = fopen(file, "r")) == NULL ) {
-	die_e("could not open %s", file);
-	return -1;
+	if (errno == ENOENT)
+	    return -1;
+	else
+	    die_e("could not open %s", file);
     }
 
     while ( fgets(buf, sizeof(buf), f) != NULL ) {
@@ -85,7 +87,7 @@ is_allowed(char *user)
     deny = in_file(user, ETC "/" FCRON_DENY);
 
     if ( allow == -1 && deny == -1 )
-	/* neither fcron.allow nor fcron.deny exist ( or can be opened ) :
+	/* neither fcron.allow nor fcron.deny exist :
 	 * we consider that user is allowed */
 	return 1;
 
