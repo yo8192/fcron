@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.30 2001-06-22 21:08:43 thib Exp $ */
+ /* $Id: global.h,v 1.31 2001-08-17 19:43:53 thib Exp $ */
 
 
 /* 
@@ -159,18 +159,18 @@ typedef struct CF {
 typedef struct CL {
     struct CL     *cl_next;
     struct CF     *cl_file;       /* the file in which the line is           */
-    unsigned char  cl_option[OPTION_SIZE]; /* line's option (see option.h)   */
     char	  *cl_shell;      /* shell command			     */
-    unsigned char  cl_numexe;     /* num of entries in lavg/serial queue     */
-    unsigned char  cl_lavg[LAVG_SIZE];/*load averages needed (1,5,15 mins)   */
-    time_t         cl_until;      /* timeout of the wait for a lavg value    */
-    char           cl_nice;       /* nice value to control priority          */
     char          *cl_runas;      /* determine permissions of the job        */
     char          *cl_mailto;     /* mail output to cl_mailto                */
+    time_t         cl_until;      /* timeout of the wait for a lavg value    */
     time_t         cl_nextexe;    /* time and date of the next execution     */
-    unsigned short cl_remain;     /* remaining until next execution          */
     long int       cl_timefreq;   /* Run every n seconds                     */
+    unsigned short cl_remain;     /* remaining until next execution          */
     unsigned short cl_runfreq;    /* Run once every n matches                */
+    unsigned char  cl_option[OPTION_SIZE]; /* line's option (see option.h)   */
+    unsigned char  cl_lavg[LAVG_SIZE];/*load averages needed (1,5,15 mins)   */
+    unsigned char  cl_numexe;     /* num of entries in lavg/serial queue     */
+    char           cl_nice;       /* nice value to control priority          */
     /* see bitstring(3) man page for more details */
     bitstr_t	   bit_decl(cl_mins, 60); /* 0-59		             */
     bitstr_t	   bit_decl(cl_hrs, 24);  /* 0-23			     */
