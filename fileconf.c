@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.33 2001-01-12 21:42:18 thib Exp $ */
+ /* $Id: fileconf.c,v 1.34 2001-01-15 18:46:13 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -660,6 +660,28 @@ read_opt(char *ptr, CL *cl)
 	    set_freq_mid(cl->cl_option);
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
+	}
+
+	if ( strcmp(opt_name, "strict") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if (i == 0 )
+		clear_strict(cl->cl_option);
+	    else
+		set_strict(cl->cl_option);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+	}
+
+	if ( strcmp(opt_name, "noticenotrun") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if (i == 0 )
+		clear_notice_notrun(cl->cl_option);
+	    else
+		set_notice_notrun(cl->cl_option);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if ( strcmp(opt_name, "lavg") == 0 ) {

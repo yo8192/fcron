@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.13 2001-01-12 21:44:50 thib Exp $ */
+ /* $Id: option.h,v 1.14 2001-01-15 18:46:39 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -75,6 +75,8 @@
   17     should dow field be ignored in goto_non_matching() ?
   18     First freq is the freq (*ly) or the first field to take into account ?
   19     Freq (ie daily) is from middle to middle of interval (ie nightly) ?
+  20     Should we remove a %-job from lavg queue if the interval is exceeded ?
+  21     Should user be mailed if a %-job has not run during a period ?
 
 */
 
@@ -366,6 +368,30 @@
 	(_bit_set(opt, 19))
 #define clear_freq_mid(opt) \
 	(_bit_clear(opt, 19))
+
+
+/*
+  bit 20 : set to 1 : remove %-job from lavg queue if interval is exceeded
+           set to 0 : let the job in the %-queue if interval is exceeded
+*/
+#define	is_strict(opt) \
+	(_bit_test(opt, 20))
+#define	set_strict(opt) \
+	(_bit_set(opt, 20))
+#define clear_strict(opt) \
+	(_bit_clear(opt, 20))
+
+
+/*
+  bit 21 : set to 1 : mail user if a job has not run during a period
+           set to 0 : do not mail user if a job has not run during a period
+*/
+#define	is_notice_notrun(opt) \
+	(_bit_test(opt, 21))
+#define	set_notice_notrun(opt) \
+	(_bit_set(opt, 21))
+#define clear_notice_notrun(opt) \
+	(_bit_clear(opt, 21))
 
 
 #endif /* __OPTIONH__ */
