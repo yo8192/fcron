@@ -22,12 +22,12 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.7 2001-05-15 00:50:24 thib Exp $ */
+ /* $Id: subs.c,v 1.8 2001-05-17 00:53:55 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
 
-extern void die_e(char *fmt, ...);
+extern char *tmp_path;
 
 int
 remove_blanks(char *str)
@@ -77,7 +77,9 @@ temp_file(char **name)
 {
     int fd;
 #ifdef HAVE_MKSTEMP
-    char name_local[PATH_LEN] = "/tmp/fcr-XXXXXX";
+    char name_local[PATH_LEN] = "";
+    strcpy(name_local, tmp_path);
+    strcat(name_local, "fcr-XXXXXX");
     if ( (fd = mkstemp(name_local)) == -1 )
 	die_e("Can't find a unique temporary filename");
     /* we must set the file mode to 600 (some version of mkstemp may set it

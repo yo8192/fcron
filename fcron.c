@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.44 2001-05-15 00:45:09 thib Exp $ */
+ /* $Id: fcron.c,v 1.45 2001-05-17 00:53:02 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.44 2001-05-15 00:45:09 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.45 2001-05-17 00:53:02 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -53,6 +53,9 @@ char foreground = 0; /* set to 1 when we are on foreground, else 0 */
 #endif
 
 time_t save_time = SAVE;
+
+/* used in temp_file() : create it in current dir (normally spool dir) */
+char *tmp_path = "";
 
 /* process identity */
 pid_t daemon_pid;

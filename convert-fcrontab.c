@@ -22,12 +22,12 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.c,v 1.3 2001-05-05 19:08:51 thib Exp $ */
+ /* $Id: convert-fcrontab.c,v 1.4 2001-05-17 00:53:41 thib Exp $ */
 
 
 #include "convert-fcrontab.h"
 
-char rcs_info[] = "$Id: convert-fcrontab.c,v 1.3 2001-05-05 19:08:51 thib Exp $";
+char rcs_info[] = "$Id: convert-fcrontab.c,v 1.4 2001-05-17 00:53:41 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -42,6 +42,8 @@ char *prog_name = NULL;
 char foreground = 1;
 pid_t daemon_pid = 0;
 
+/* used in temp_file() (so needed by subs.c)  */
+char *tmp_path = "/tmp/";
 
 void
 info(void)
