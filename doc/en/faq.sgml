@@ -8,101 +8,91 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.3 2002-03-31 15:07:22 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.4 2002-07-19 19:42:53 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
-    <para>This FAQ intends to complement the man pages by following
-          a more practical approach.</para>
+    <para>This FAQ intends to complement the man pages by following a more
+practical approach.</para>
     <para>If you think a QA should be added, please mail me it !</para>
     <qandaset>
 	<qandaentry>
 	    <question>
-		<para>How does fcron handle system clock adjustments (daylight savings, etc) ?</para>
+		<para>How does fcron handle system clock adjustments (daylight
+savings, etc) ?</para>
 	    </question>
 	    <answer>
 		<para>
-       First, you must understand that fcron determines, for each job,
-       its next time and date of execution.
-       It then determines which of those jobs would be the next to 
-       run and then, sleeps until that job should be run.
-       In other words, fcron doesn't wake up like Vixie cron each
-       minute to check all job in case one should be run ... 
-       and it avoids some problems associated with clock adjusts.</para>
+       First, you must understand that fcron determines, for each job, its next
+time and date of execution. It then determines which of those jobs would be the
+next to run and then, sleeps until that job should be run. In other words, fcron
+doesn't wake up like Vixie cron each minute to check all job in case one should
+be run ... and it avoids some problems associated with clock adjusts.</para>
 		<para>
-       This means that if the new time value is set into the past,
-       fcron won't run a particular job again.
-       For instance, suppose the real time and system clock are
-       3:00, so the next job cannot be scheduled to run before 3:00,
-       as it would have already been run and re-scheduled.</para>
-    <para>
+       This means that if the new time value is set into the past, fcron won't
+run a particular job again. For instance, suppose the real time and system clock
+are 3:00, so the next job cannot be scheduled to run before 3:00, as it would
+have already been run and re-scheduled.</para>
+		<para>
        First, suppose you set your system clock into the past, say to 2:00,
-       Presuming that the last run was shortly before 3:00.
-       then fcron will sleep until the next job should be executed.
-       The execution time for a job is determined by identifying the 
-       last time that the job ran and computing the next scheduled time.
-       This means that the next scheduled time must be
-       on or after 3:01.
-       Therefore, in this example, fcron will not run a job for at
-       least one hour.</para>
+Presuming that the last run was shortly before 3:00. then fcron will sleep until
+the next job should be executed. The execution time for a job is determined by
+identifying the last time that the job ran and computing the next scheduled
+time. This means that the next scheduled time must be on or after 3:01.
+Therefore, in this example, fcron will not run a job for at least one
+hour.</para>
 		<para>
        Next, if you set the system time into the future, say to 4:00, fcron will
-       run every job scheduled between the old and the new time value once,
-       regardless of how many times it would have been scheduled.
-       When fcron wakes up to run a job after the time value has changed,
-       it runs all the jobs which should have run during the interval
-       because they are scheduled to run in a past time.</para>
+run every job scheduled between the old and the new time value once, regardless
+of how many times it would have been scheduled. When fcron wakes up to run a job
+after the time value has changed, it runs all the jobs which should have run
+during the interval because they are scheduled to run in a past time.</para>
 		<para>
-       As special case is when "@xxx" style scheduling rules are involved,
-       you must consider the "adjustment-interval".
-       The "adjustment-interval" is the time difference between the
-       original system time and the new system time.
-       If the ... <!-- I need some help here.  What would happen? -->
-       run at "adjust-interval" too early or too late depending
-       of the nature of the adjust.</para>
+       As special case is when "@xxx" style scheduling rules are involved, you
+must consider the "adjustment-interval". The "adjustment-interval" is the time
+difference between the original system time and the new system time. If the ...
+<!-- I need some help here.  What would happen? --> run at "adjust-interval" too
+early or too late depending of the nature of the adjust.</para>
 		<para>
-       To conclude, fcron behaves quite well for small clock adjusts.
-       Each job which should have run does so once, but not exactly
-       at the correct time as if the job were scheduled within the 
-       adjustment interval.
-       But, if you have to make a big change in the time and date,
-       you should probably reset all the scheduled "nextexe"
-       by running "fcrontab -z" on all the fcrontabs.</para>
+       To conclude, fcron behaves quite well for small clock adjusts. Each job
+which should have run does so once, but not exactly at the correct time as if
+the job were scheduled within the adjustment interval. But, if you have to make
+a big change in the time and date, you should probably reset all the scheduled
+"nextexe" by running "fcrontab -z" on all the fcrontabs.</para>
 	    </answer>
 	</qandaentry>
 	<qandaentry>
 	    <question>
-		<para>How can I prevent fcrontab from considering the first "word"
-      of my command line as a user name i.e. "runas(word)" ?</para>
+		<para>How can I prevent fcrontab from considering the first
+"word" of my command line as a user name i.e. "runas(word)" ?</para>
 	    </question>
 	    <answer>
 		<para>
-      Suppose you have an user called "echo" (weird idea ... :)) ).
-      If you use the line '* * * * * echo "Hello !"' in root's fcrontab,
-      "echo" will be interpreted as "runas(echo)".</para>
+      Suppose you have an user called "echo" (weird idea ... :)) ). If you use
+the line '* * * * * echo "Hello !"' in root's fcrontab, "echo" will be
+interpreted as "runas(echo)".</para>
 		<para>To suppress that, put your command in quotes :
-		    <programlisting>* * * * * 'echo "Hello !"'</programlisting>
-      will work as expected as quotes are allowed for the shell command
-      but not for the user name.</para>
+<programlisting>* * * * * 'echo "Hello !"'</programlisting> will work as
+expected as quotes are allowed for the shell command but not for the user
+name.</para>
 	    </answer>
 	</qandaentry>
 
 	<qandaentry>
 	    <question>
 		<para>
-       I have a job which usually terminates with a non-zero status.
-       When it does, I receive a mail with the exit status even if the command had no output.
-       How can I avoid the mail?</para>
+       I have a job which usually terminates with a non-zero status. When it
+does, I receive a mail with the exit status even if the command had no output.
+How can I avoid the mail?</para>
 	    </question>
 	    <answer>
 		<para>
-      You could disable mail entirely by setting the "mail" option to "no".
-      But, if you still want to receive the standard output as mail,
-      you can add an command which always evaluates to 0, like "/bin/true",
-      after your primary command.
-      This will not affect your job nor create additional output.
-      For example:</para>
-		<programlisting>* * * * * /a/non/zero/status/job ; /bin/true</programlisting>
+      You could disable mail entirely by setting the "mail" option to "no". But,
+if you still want to receive the standard output as mail, you can add an command
+which always evaluates to 0, like "/bin/true", after your primary command. This
+will not affect your job nor create additional output. For example:</para>
+		<programlisting>* * * * * /a/non/zero/status/job ;
+/bin/true</programlisting>
 	    </answer>
 	</qandaentry>
 
@@ -112,29 +102,22 @@ A copy of the license is included in gfdl.sgml.
 	    </question>
 	    <answer>
 		<para>
-      The "/proc/loadavg" file provides loadavg values.
-      These values are (in order):
-      the system load averages for the past 1, 5, and 15 minutes;
-      a count of the (active tasks/active processes);
-      the pid of last process run;
+      The "/proc/loadavg" file provides loadavg values. These values are (in
+order): the system load averages for the past 1, 5, and 15 minutes; a count of
+the (active tasks/active processes); the pid of last process run;
 		</para>
 		<para>
-      The active task count includes those processes marked
-      as running or uninterruptable.
-      A load average is an estimate of the average number of
-      processes running within a specified period.
-      The load averages are computed from active task count.
-      They are updated each time active task counts are taken.
+      The active task count includes those processes marked as running or
+uninterruptable. A load average is an estimate of the average number of
+processes running within a specified period. The load averages are computed from
+active task count. They are updated each time active task counts are taken.
 		</para>
 		<para>
-<!-- It sure would be nice for some MathML here. -->
-		<programlisting>
-      The load average formula is:
-      loadavg(d,n) = active_task_cnt - (active_task_cnt - old_loadavg)*(1/exp(d/n);
-      where:
-       d is the time interval between active task count readings, typically every 5 seconds.
-       n is the time over which the readings are averaged.
-		</programlisting>
+<!-- It sure would be nice for some MathML here. --> <programlisting> The load
+average formula is: loadavg(d,n) = active_task_cnt - (active_task_cnt -
+old_loadavg)*(1/exp(d/n); where: d is the time interval between active task
+count readings, typically every 5 seconds. n is the time over which the readings
+are averaged. </programlisting>
 		</para>
 	    </answer>
 	</qandaentry>
@@ -145,69 +128,78 @@ A copy of the license is included in gfdl.sgml.
 	    </question>
 	    <answer>
 		<para>
-      You can use pipes with "<command>fcrontab -l</command>" 
-      (list the fcrontab) and "<command>fcrontab -</command>"
-      (read the new fcrontab from input).
-      For example : </para>
-		<screen><command>echo -e "`fcrontab -l | grep -v exim`\n0 * * * *	/usr/sbin/exim -q" | fcrontab -</command></screen>
+      You can use pipes with "<command>fcrontab -l</command>" (list the
+fcrontab) and "<command>fcrontab -</command>" (read the new fcrontab from
+input). For example : </para>
+		<screen><command>echo -e "`fcrontab -l | grep -v exim`\n0 * * *
+*	/usr/sbin/exim -q" | fcrontab -</command></screen>
 		<para>
-		  can be used to add a line.
-      Another way to do it would be to:
-      list the fcrontab settings into a temporary file 
-      ("<command>fcrontab -l > tmpfile</command>");
-      modify the temporary file ("<command>echo $LINE >> tmpfile</command>");
-      replace the original fcrontab by the temporary; and finally,
-      remove the temporary file ("<command>fcrontab tmpfile ; rm -f tmpfile</command>").
+		  can be used to add a line. Another way to do it would be to:
+list the fcrontab settings into a temporary file ("<command>fcrontab -l >
+tmpfile</command>"); modify the temporary file ("<command>echo $LINE >>
+tmpfile</command>"); replace the original fcrontab by the temporary; and
+finally, remove the temporary file ("<command>fcrontab tmpfile ; rm -f
+tmpfile</command>").
 		</para>
 	    </answer>
 	</qandaentry>
 
 	<qandaentry>
 	    <question>
-		<para>Can I use fcron from time to time, for instance in a script ?</para>
+		<para>Can I use fcron from time to time, for instance in a
+script ?</para>
 	    </question>
 	    <answer>
-		<para>Let's suppose you use fcron in your ppp-up script. Fcron can permit you to run some jobs at connection startup, but not at each connection, like it would be if the job was run directly by the ppp-up script : for instance, only once every week.</para>
+		<para>Let's suppose you use fcron in your ppp-up script. Fcron
+can permit you to run some jobs at connection startup, but not at each
+connection, like it would be if the job was run directly by the ppp-up script :
+for instance, only once every week.</para>
 		<para><example>
-			<title>Using fcron in a script : running a job once every day, week, etc, at dialup connection</title>
+			<title>Using fcron in a script : running a job once
+every day, week, etc, at dialup connection</title>
 			<para>You can use a script like :</para>
 			<programlisting>
-# A ppp-up script ...
-# run the jobs pending, then returns :
-fcron -f -y -o
+# A ppp-up script ... # run the jobs pending, then returns : fcron -f -y -o
 </programlisting>
 			<para>in conjunction with a fcrontab file like :</para>
-<programlisting>
-# a fcrontab file ...
-%random(no),weekly,stdout * * /a/command/to/download/latest/mozilla/release
-%monthly,stdout * * * /update/junkbuster/config/files
+			<programlisting>
+# a fcrontab file ... %random(no),weekly,stdout * *
+/a/command/to/download/latest/mozilla/release %monthly,stdout * * *
+/update/junkbuster/config/files
 </programlisting>
 		    </example></para>
-		<para>You can also use fcron to run some jobs until the end of the connection. For instance, you can make fetchmail retrieve mails more often during connection : we suppose that it is configured to retrieve mails every hours, which launches a dialup connection if necessary, and we want it to check for mails every 5 minutes while connected.</para>
+		<para>You can also use fcron to run some jobs until the end of
+the connection. For instance, you can make fetchmail retrieve mails more often
+during connection : we suppose that it is configured to retrieve mails every
+hours, which launches a dialup connection if necessary, and we want it to check
+for mails every 5 minutes while connected.</para>
 		<para><example>
-			<title>Using fcron in a script : running a job until the end of the connection</title>
+			<title>Using fcron in a script : running a job until the
+end of the connection</title>
 			<para>ppp-up script :</para>
 			<programlisting>
-# A ppp-up script ...
-# run fcron at the beginning of the connection :
-fcron -b
+# A ppp-up script ... # run fcron at the beginning of the connection : fcron -b
 </programlisting>
 			<para>ppp-down script :</para>
 			<programlisting>
-# A ppp-down script ...
-# stop fcron at the end of the connection :
-# -- Warning : killall may have unwanted effect on non linux systems --
-killall -TERM fcron
+# A ppp-down script ... # stop fcron at the end of the connection : # -- Warning
+: killall may have unwanted effect on non linux systems -- killall -TERM fcron
 </programlisting>
 			<para>the fcrontab :</para>
 			<programlisting>
-# a fcrontab file ...
-@volatile,first(0) 5 fetchmail
+# a fcrontab file ... @volatile,first(0) 5 fetchmail
 </programlisting>
 		    </example></para>
 
-		<para>If you run fcron in several scripts, or if you run fcron as a daemon and want also to run fcron in scripts, then you should use fcron, fcrontab and fcrondyn's <option>--configfile</option>.</para>
-		<para>For more details, see fcron's options <option>--once</option>, <option>--nosyslog</option>, <option>--firstsleep</option> and <option>--configfile</option> in <link linkend="fcron.8">&fcron;(8)</link>, and fcrontab's options &optvolatile;, &optstdout;, &optfirst; in <link linkend="fcrontab.5">&fcrontab;(5)</link></para>
+		<para>If you run fcron in several scripts, or if you run fcron
+as a daemon and want also to run fcron in scripts, then you should use fcron,
+fcrontab and fcrondyn's <option>--configfile</option>.</para>
+		<para>For more details, see fcron's options
+<option>--once</option>, <option>--nosyslog</option>,
+<option>--firstsleep</option> and <option>--configfile</option> in <link
+linkend="fcron.8">&fcron;(8)</link>, and fcrontab's options &optvolatile;,
+&optstdout;, &optfirst; in <link
+linkend="fcrontab.5">&fcrontab;(5)</link></para>
 	    </answer>
 	</qandaentry>
     </qandaset>

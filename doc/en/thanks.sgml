@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: thanks.sgml,v 1.2 2002-03-02 17:30:59 thib Exp $ -->
+<!-- $Id: thanks.sgml,v 1.3 2002-07-19 19:41:54 thib Exp $ -->
 
 <sect1 id="thanks">
     <title>Thanks</title>
@@ -16,7 +16,8 @@ A copy of the license is included in gfdl.sgml.
 	<varlistentry>
 	    <term>Uwe Ohse <email>uwe@ohse.de</email></term>
 	    <listitem>
-		<para>Corrected a bug concerning the signals, has reported security issues.</para>
+		<para>Corrected a bug concerning the signals, has reported
+security issues.</para>
 	    </listitem>
 	</varlistentry>
 	<varlistentry>
@@ -28,37 +29,45 @@ A copy of the license is included in gfdl.sgml.
 	<varlistentry>
 	    <term>Gabor Z. Papp <email>gzp@papp.hu</email></term>
 	    <listitem>
-		<para>Helped to correct some bugs in installation process and reported various bugs.</para>
+		<para>Helped to correct some bugs in installation process and
+reported various bugs.</para>
 	    </listitem>
 	</varlistentry>
 	<varlistentry>
 	    <term>Clemens Fischer <email>rabat@web.de</email></term>
 	    <listitem>
-		<para>Proofread docs, reported bugs, and made some propositions.</para>
+		<para>Proofread docs, reported bugs, and made some
+propositions.</para>
 	    </listitem>
 	</varlistentry>
 	<varlistentry>
-	    <term>Henrique de Moraes Holschuh <email>hmh@debian.org</email></term>
+	    <term>Henrique de Moraes Holschuh
+<email>hmh@debian.org</email></term>
 	    <listitem>
-		<para>Has worked on fcron's integration in Linux Debian system, reported bugs and corrected some of them, made some propositions.</para>
+		<para>Has worked on fcron's integration in Linux Debian system,
+reported bugs and corrected some of them, made some propositions.</para>
 	    </listitem>
 	</varlistentry>
 	<varlistentry>
 	    <term>Thomas Whateley <email>thomas@whateley.net</email></term>
 	    <listitem>
-		<para>Has done a big part of Solaris port, implemented the fcron.conf file, and Vixie crontab format support.</para>
+		<para>Has done a big part of Solaris port, implemented the
+fcron.conf file, and Vixie crontab format support.</para>
 	    </listitem>
 	</varlistentry>
 	<varlistentry>
 	    <term>Guy Geens <email>ggeens@iname.com</email></term>
 	    <listitem>
-		<para>Fixed a nasty bug in goto_non_matching() which caused an endless loop (midmonthly jobs executed after the 15th of the month).</para>
+		<para>Fixed a nasty bug in goto_non_matching() which caused an
+endless loop (midmonthly jobs executed after the 15th of the month).</para>
 	    </listitem>
 	</varlistentry>
 	<varlistentry>
 	    <term>Patrick Ohly <email>Patrick.Ohly@gmx.de</email></term>
 	    <listitem>
-		<para>Added fcron's option -y, -o and -l, and fcrontab's stdout and volatile, in order to run fcron from time to time in foreground, for instance in a ppp-up script.</para>
+		<para>Added fcron's option -y, -o and -l, and fcrontab's stdout
+and volatile, in order to run fcron from time to time in foreground, for
+instance in a ppp-up script.</para>
 	    </listitem>
 	</varlistentry>
     </variablelist>

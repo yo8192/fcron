@@ -8,24 +8,31 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.7 2002-03-31 15:08:10 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.8 2002-07-19 19:43:47 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
-    <para>Here are some things that should be done ...</para>
-    <para>If you plan to help me, please send a mail at &email; to prevent two people from doing the same thing. You can send me some propositions as well.</para>
+    <para>Here are some things that should be done ... Note that some of these entries
+ are just some ideas, which <emphasis>may</emphasis> be done in the long run.</para>
+    <para>If you plan to help me, please send a mail at &email; to prevent two
+people from doing the same thing. You can send me some propositions as
+well.</para>
     <itemizedlist>
 	<listitem>
-	    <para>PAM support (included in fcron, but need more tests by people using PAM - not implemented in fcrondyn)</para>
+	    <para>bug fix : makewhatis does not work correctly with fcron 2.9.0</para>
 	</listitem>
 	<listitem>
-	    <para>allow a non-privileged user to run fcron</para>
+	    <para>bug fix (?) : "already running" bug (? - unconfirmed) </para>
 	</listitem>
 	<listitem>
-	    <para>add a return code for jobs which would mean that they should not be run again (in case of an error, etc...).</para>
+	    <para>PAM support (included in fcron, but need more tests by people
+using PAM - not implemented in fcrondyn)</para>
 	</listitem>
 	<listitem>
-	    <para>fcrondyn : possibility to display a list of jobs including their options, time and date of next execution, status, of only the running jobs, all the jobs, in order of execution or classified by user, etc. (some of these functions or not implemented yet)</para>
+	    <para>fcrondyn : possibility to display a list of jobs including
+their options, time and date of next execution, status, of only the running
+jobs, all the jobs, in order of execution or classified by user, etc. (some of
+these functions or not implemented yet)</para>
 	</listitem>
 	<listitem>
 	    <para>run one of this job, change its nice value, stop it...</para>
@@ -34,10 +41,17 @@ A copy of the license is included in gfdl.sgml.
 	    <para>make fcrondyn more secure and reliable</para>
 	</listitem>
 	<listitem>
+	    <para>allow a non-privileged user to run fcron</para>
+	</listitem>
+	<listitem>
+	    <para>add a return code for jobs which would mean that they should
+not be run again (in case of an error, etc...).</para>
+	</listitem>
+	<listitem>
 	    <para>add a system of modules : at startup, fcron loads some modules
-                  (.so files). Then, when fcron should run the job, it calls a function
-                  of the module, and let it manage the job (threads ?). (do linux
-                  dlopen(), etc exist on other systems ?).</para>
+(.so files). Then, when fcron should run the job, it calls a function of the
+module, and let it manage the job (threads ?). (do linux dlopen(), etc exist on
+other systems ?).</para>
 	</listitem>
 	<listitem>
 	    <para>add a system of data flow</para>

@@ -2,9 +2,9 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.35 2001-07-10 10:54:09 thib Exp $
+# $Id: boot-install,v 1.36 2002-07-19 19:40:32 thib Exp $
 
-# take 6 arguments : the name of the BSD-like install program (with "-o" and the correct username)
+# takes 6 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
 #                    the value of DEBUG
 #                    the value of FCRONTABS
@@ -20,10 +20,6 @@ startdir=$PWD
 if test $# -ne 6; then
     echo "Too few/many arguments"
     exit 1
-fi
-
-if test $3 -eq 1; then
-    exit
 fi
 
 # The program we use to install a file. This may be the script install.sh.
