@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.5 2000-05-31 19:11:44 thib Exp $ */
+ /* $Id: global.h,v 1.6 2000-06-11 13:19:01 thib Exp $ */
 
 
 /* 
@@ -57,7 +57,7 @@
 #include "option.h"
 
 
-#define FILEVERSION "002"  /* syntax's version of fcrontabs : 
+#define FILEVERSION "003"  /* syntax's version of fcrontabs : 
 			    * must have a length of 3 characters */
 
 
@@ -100,16 +100,16 @@ typedef struct CL {
     pid_t	 cl_pid;	/* running pid, 0, or armed (-1)        */
     pid_t	 cl_mailpid;	/* mailer pid or 0                  	*/
     int		 cl_mailfd;	/* running pid is for mail		*/
+    time_t       cl_nextexe;     /* time and date of the next execution */
+    short int    cl_remain;      /* remaining until next execution      */
+    time_t       cl_timefreq;    /* Run every n seconds                 */
+    short int    cl_runfreq;     /* Run once every n matches            */
     /* see bitstring(3) man page for more details */
     bitstr_t	 bit_decl(cl_mins, 60);  /* 0-59			*/
     bitstr_t	 bit_decl(cl_hrs, 24);	/* 0-23				*/
     bitstr_t	 bit_decl(cl_days, 32);	/* 1-31				*/
     bitstr_t	 bit_decl(cl_mons, 12);	/* 0-11                 	*/
     bitstr_t	 bit_decl(cl_dow, 8);	/* 0-7, 0 and 7 are both Sunday	*/
-    time_t       cl_timefreq;    /* Run every n min                     */
-    short int    cl_runfreq;     /* Run once every n matches            */
-    time_t       cl_remain;      /* remaining until next execution      */
-    time_t       cl_nextexe;     /* time and date of the next execution */
 } CL;
 
 typedef struct job {

@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.10 2000-06-04 12:07:50 thib Exp $ */
+ /* $Id: fcron.c,v 1.11 2000-06-11 13:18:55 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.10 2000-06-04 12:07:50 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.11 2000-06-11 13:18:55 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -49,17 +49,17 @@ pid_t daemon_pid;
 char *prog_name = NULL;         
 
 /* have we got a signal ? */
-char sig_conf = 0;            /* is 1 when we got a SIGHUP */ 
+char sig_conf = 0;            /* is 1 when we got a SIGHUP, 2 for a SIGUSR1 */ 
 char sig_chld = 0;            /* is 1 when we got a SIGCHLD */  
 
 /* jobs database */
 struct CF *file_base;         /* point to the first file of the list */
 struct job *queue_base;       /* ordered list of normal jobs to be run */
 struct job *serial_base;      /* ordered list of job to be run one by one */
-struct job *freq_base;        /* ordered list of jobs based on frequency */
 struct job *exe_base;         /* jobs which are executed */
 
-time_t t1;                    /* the time at which sleep began */
+time_t begin_sleep;           /* the time at which sleep began */
+time_t now;                   /* the current time */
 
 
 void
@@ -102,18 +102,6 @@ xexit(int exit_value)
     /* exit after having freed memory and removed lock file */
 {
     CF *f = NULL;
-    extern time_t t1;
-    time_t t2 = time(NULL);
-    time_t dt = 0;
-    
-    dt = t2 - t1;
-
-    if (dt > 0) {
-
-	debug("slept: %lds", dt);
-	
-	update_time_remaining(dt);
-    }
 
     /* we save all files now and after having waiting for all
      * job being executed because we might get a SIGKILL
@@ -275,6 +263,7 @@ sighup_handler(int x)
   /* update configuration */
 {
     signal(SIGHUP, sighup_handler);
+    siginterrupt(SIGHUP, 0);
     debug("");
     explain("SIGHUP signal received");
     /* we don't call the synchronize_dir() function directly,
@@ -294,6 +283,7 @@ sigchild_handler(int x)
     sig_chld = 1;
 
     (void)signal(SIGCHLD, sigchild_handler);
+    siginterrupt(SIGCHLD, 0);
 }
 
 
@@ -302,6 +292,7 @@ sigusr1_handler(int x)
   /* reload all configurations */
 {
     signal(SIGUSR1, sigusr1_handler);
+    siginterrupt(SIGUSR1, 0);
     debug("");
     explain("SIGUSR1 signal received");
     /* we don't call the synchronize_dir() function directly,
@@ -424,8 +415,11 @@ main(int argc, char **argv)
 
     (void)signal(SIGTERM, sigterm_handler);
     (void)signal(SIGHUP, sighup_handler);
+    siginterrupt(SIGHUP, 0);
     (void)signal(SIGCHLD, sigchild_handler);
+    siginterrupt(SIGCHLD, 0);
     (void)signal(SIGUSR1, sigusr1_handler);
+    siginterrupt(SIGUSR1, 0);
 
     main_loop();
 
@@ -438,31 +432,30 @@ void main_loop()
   /* main loop - get the time to sleep until next job execution,
    *             sleep, and then test all jobs and execute if needed. */
 {
-    extern time_t t1;     /* time at the beginning of sleeping */
-    time_t t2 = 0;        /* time at the end of sleeping */
-    time_t t3 = 0;        /* time at the previous reception of SIGCHLD */
-    long int dt = 0;      /* time we slept */
-    time_t save = SAVE;   /* time remaining until next save */
-    struct timeval tv;    /* we use usec field to get more precision */
-    time_t stime = 0;     /* time to sleep until next job
-		           * execution */
+    extern time_t begin_sleep; /* time at the beginning of sleeping */
+    time_t save;               /* time remaining until next save */
+    struct timeval tv;         /* we use usec field to get more precision */
+    time_t stime = 0;          /* time to sleep until next job
+		                * execution */
 
     debug("Entering main loop");
 
-    t1 = time(NULL);
+    now = begin_sleep = time(NULL);
 
     synchronize_dir(".");
 
     /* synchronize save with jobs execution */
-    save += (60 - (t1 % 60));
+    save = now + SAVE;
+
     stime = time_to_sleep(save);
 
     for (;;) {
 
-      sleep:
 	sleep(stime - 1);
 	gettimeofday(&tv, NULL);
 	usleep( 1000000 - tv.tv_usec );
+
+	now = time(NULL);
 
 	if (sig_chld > 0) {
 
@@ -471,51 +464,27 @@ void main_loop()
 	    wait_chld();
 	    sig_chld = 0;
 
-	    if ( t3 < t1 ) t3 = t1;
-	    dt = time(NULL) - t3;
-
-	    if ( dt > 0 ) {
-		/* update stime value */
-		dt = stime - dt;
-		debug("remain %d s of sleeping", dt);
-		stime = dt;
-		t3 = time(NULL);
-
-	    } else
-		/* we have slept less than 1 second : old stime
-		 * is still valid */
-		;
-
-	    goto sleep;
-
 	}
+	else if (sig_conf > 0) {
 
-	t2 = time(NULL);
-	dt = t2 - t1;
+	    if (sig_conf == 1)
+		/* update configuration */
+		synchronize_dir(".");
+	    else
+		/* reload all configuration */
+		reload_all(".");
 
-	if (dt > 0) {
+	    sig_conf = 0;
+	}
+	else {
 
 	    debug("\n");
-	    debug("slept: %lds", dt);
+	    debug("slept: %lds", now - begin_sleep);
 
-	    update_time_remaining(dt);
+	    test_jobs(now);
 
-	    if (sig_conf > 0) {
-
-		if (sig_conf == 1)
-		    /* update configuration */
-		    synchronize_dir(".");
-		else
-		    /* reload all configuration */
-		    reload_all(".");
-
-		sig_conf = 0;
-	    }
-
-	    test_jobs(t2);
-
-	    if ( (save = ( (save-dt) >= 0 ) ? save-dt : 0) <= 60) {
-		save = SAVE;
+	    if ( save - now <= 60 ) {
+		save = now + SAVE;
 		/* save all files */
 		save_file(NULL, NULL);
 	    }
@@ -524,7 +493,7 @@ void main_loop()
 
 	stime = time_to_sleep(save);
 
-	t1 = t2;
+	begin_sleep = now;
 
 	if ( sig_chld == 1 ) {
 	    wait_chld();

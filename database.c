@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.7 2000-06-03 20:28:34 thib Exp $ */
+ /* $Id: database.c,v 1.8 2000-06-11 13:18:35 thib Exp $ */
 
 #include "fcron.h"
 
@@ -40,38 +40,23 @@ test_jobs(time_t t2)
 
     debug("Looking for jobs to execute ...");
 
-    /* job based on date & time */
     while ( (j=queue_base) && j->j_line->cl_nextexe <= t2 ){
 	set_next_exe(j->j_line, 0);
 	if (--(j->j_line->cl_remain) > 0) {
-	    debug("    cl_Remain: %d", j->j_line->cl_remain);
+	    debug("    cl_remain: %d", j->j_line->cl_remain);
 	    continue ;
 	}
-	if (j->j_line->cl_pid > 0) {
-	    warn("    process already running: %s '%s'", 
-		 j->j_line->cl_file->cf_user,
-		 j->j_line->cl_shell
-		);
-	    j->j_line->cl_remain = j->j_line->cl_runfreq;
-	} 
-	else {
-	    j->j_line->cl_remain = j->j_line->cl_runfreq;
-	    run_job(j->j_line);
-	}
-    }
 
-    /* job based on frequency */
-    while ( (j=freq_base) && j->j_line->cl_remain <= 0 ){
-	j->j_line->cl_remain = j->j_line->cl_timefreq;
-	insert_freq(j->j_line);
+	j->j_line->cl_remain = j->j_line->cl_runfreq;
+
 	if (j->j_line->cl_pid > 0) {
 	    warn("    process already running: %s '%s'", 
 		 j->j_line->cl_file->cf_user,
 		 j->j_line->cl_shell
 		);
-	} else {
+	} 
+	else
 	    run_job(j->j_line);
-	}
     }
 
 }
@@ -279,11 +264,9 @@ set_next_exe(CL *line, char is_new_line)
 
 	struct tm *ft;
 	struct tm ftime;
-	time_t now;
 	register int i;
 	int max;
 
-	now = time(NULL);
 	ft = localtime(&now);
 
 	/* localtime() function seem to return every time the same pointer :
@@ -371,21 +354,30 @@ set_next_exe(CL *line, char is_new_line)
     
 	line->cl_nextexe = mktime(&ftime);
 
-	insert_nextexe(line);
-
-	debug("   cmd: '%s' next exec %d/%d/%d wday:%d %02d:%02d",
-	      line->cl_shell, (ftime.tm_mon + 1), ftime.tm_mday,
-	      (ftime.tm_year + 1900), ftime.tm_wday,
-	      ftime.tm_hour, ftime.tm_min);
+	if ( ! is_new_line )
+	    debug("   cmd: '%s' next exec %d/%d/%d wday:%d %02d:%02d",
+		  line->cl_shell, (ftime.tm_mon + 1), ftime.tm_mday,
+		  (ftime.tm_year + 1900), ftime.tm_wday,
+		  ftime.tm_hour, ftime.tm_min);
 	
-
     }
+    else {
+	/* this is a job based on system up time */
+	line->cl_nextexe = now + line->cl_timefreq;
+	debug("   cmd: '%s' next exec in %lds", line->cl_shell,
+	      line->cl_timefreq);
+    }
+    
+
+    insert_nextexe(line);
+
+	
 
 }
 
 void
 insert_nextexe(CL *line)
-    /* insert a job based on time and date in the corresponding queue list */
+    /* insert a job the queue list */
 {
     struct job *newjob = NULL;
 
@@ -443,126 +435,24 @@ insert_nextexe(CL *line)
 
 }
 
-void
-insert_freq(CL *line)
-    /* insert a job based on frequency in the corresponding queue list *
-     * if the job was already in the queue list, move it to the right rank. */
-{
-    struct job *newjob = NULL;
-
-    /* insert job in the queue */
-    if (freq_base != NULL) {
-	struct job *j = NULL;
-	struct job *jprev = NULL;
-	struct job *old_entry = NULL;
-
-	/* find the job in the list */
-	for (j = freq_base; j != NULL ; j = j->j_next)
-	    if ( j->j_line == line ) {
-		old_entry = j;
-		/* remove it from the list */
-		if (jprev != NULL) {
-		    jprev->j_next = j->j_next;
-		    j = jprev;
-		}
-		else
-		    /* first element of the list */
-		    j = freq_base = j->j_next;
-		
-		break;
-	    }
-
-	if ( j == NULL || line->cl_remain < j->j_line->cl_remain)
-	    j = freq_base;
-	while (j != NULL && (line->cl_remain >= j->j_line->cl_remain)) {
-	    jprev = j;
-	    j = j->j_next;
-	}	    
-
-	if (old_entry == NULL) {
-	    /* this job wasn't in the queue : we append it */
-	    Alloc(newjob, job);
-	    newjob->j_line = line;
-	}
-	else
-	    /* this job was already in the queue : we move it */
-	    newjob = old_entry;
-
-	newjob->j_next = j;
-
-	if (jprev == NULL)
-	    freq_base = newjob;
-	else
-	    jprev->j_next = newjob;
-    }
-    else {
-	Alloc(newjob, job);
-	newjob->j_line = line;
-	freq_base = newjob;
-    }
-}
-
 long
-time_to_sleep(short lim)
+time_to_sleep(time_t lim)
   /* return the time to sleep until next task have to be executed. */
 {
     /* we set tts to a big value, unless some problems can occurs
      * with files without any line */
     time_t tts = lim;
-    time_t now;
 
-    now = time(NULL);
-
-    if (queue_base == NULL && freq_base == NULL)
-	/* no lines : we sleep as much as we can, so how much lim permits us */
-	goto end;
-    else if (queue_base == NULL && freq_base != NULL) {
-	tts = freq_base->j_line->cl_remain;
-	goto end;
-    }
-    else if (queue_base != NULL && freq_base == NULL) {
-	if ( (tts = queue_base->j_line->cl_nextexe - now) < 0 ) tts = 0;
-	goto end;
+    if ( queue_base != NULL ) {
+	if ( queue_base->j_line->cl_nextexe < lim )
+	    tts = queue_base->j_line->cl_nextexe;
     }
 	    
-    /* we have freq lines and normal lines */
-    if(queue_base->j_line->cl_nextexe - now < freq_base->j_line->cl_remain) {
-	if ( (tts = queue_base->j_line->cl_nextexe - now) < 0 ) tts = 0;
-    }
-    else
-	tts = freq_base->j_line->cl_remain;
-
-  end:
-    if (tts > lim)
-	tts = lim;
+    if ( (tts = tts - now) < 0)
+	tts = 0;
 
     debug("Time to sleep: %lds", tts);
 
     return tts;
-}
-
-
-
-void
-update_time_remaining(long dt)
-  /* update the remaining time of tasks run at a certain frequency */
-{
-
-    struct job *j = freq_base;
-
-    debug("Updating time remaining ...");
-    
-    for (j=freq_base; j != NULL; j = j->j_next ) {
-
-	if ( (j->j_line->cl_remain - dt) >= 0 )
-	    j->j_line->cl_remain -= dt;
-	else
-	    j->j_line->cl_remain = 0;
-
-	debug("  '%s' cl_remain = %d", j->j_line->cl_shell,
-	      j->j_line->cl_remain);
-
-    }
-  
 }
 

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.6 2000-05-31 19:11:47 thib Exp $ */
+ /* $Id: job.c,v 1.7 2000-06-11 13:19:17 thib Exp $ */
 
 #include "fcron.h"
 
@@ -323,25 +323,25 @@ int
 temp_file(void)
     /* Open a temporary file and return its file descriptor */
 {
-   const int max_retries=50;
-   char *name;
-   int fd,i;
+    const int max_retries=50;
+    char *name;
+    int fd,i;
 
-   i=0;
-   name=NULL;
-   do {
-      i++;
-      free(name);
-      name=tempnam(NULL,NULL);
-      if (name==NULL) die("Can't find a unique temporary filename");
-      fd=open(name,O_RDWR|O_CREAT|O_EXCL|O_APPEND,S_IRUSR|S_IWUSR);
-      /* I'm not sure we actually need to be so persistent here */
-   } while (fd==-1 && errno==EEXIST && i<max_retries);
-   if (fd==-1) die_e("Can't open temporary file");
-   if (unlink(name)) die_e("Can't unlink temporary file");
-   free(name);
-   fcntl(fd,F_SETFD,1);   /* set close-on-exec flag */
-   return fd;
+    i = 0;
+    name = NULL;
+    do {
+	i++;
+	free(name);
+	name = tempnam(NULL, NULL);
+	if (name == NULL) die("Can't find a unique temporary filename");
+	fd = open(name, O_RDWR|O_CREAT|O_EXCL|O_APPEND,S_IRUSR|S_IWUSR);
+	/* I'm not sure we actually need to be so persistent here */
+    } while (fd == -1 && errno == EEXIST && i < max_retries);
+    if (fd == -1) die_e("Can't open temporary file");
+    if (unlink(name)) die_e("Can't unlink temporary file");
+    free(name);
+    fcntl(fd, F_SETFD,1);   /* set close-on-exec flag */
+    return fd;
 }
 
 
@@ -350,7 +350,7 @@ xwrite(int fd, char *string)
   /* Write (using write()) the string "string" to temporary file "fd".
    * Don't return on failure */
 {
-   if (write(fd,string,strlen(string))==-1)
-      die_e("Can't write to temporary file");
+    if ( write(fd, string, strlen(string)) == -1 )
+	die_e("Can't write to temporary file");
 }
 

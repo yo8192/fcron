@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.5 2000-05-31 19:11:42 thib Exp $ */
+ /* $Id: fcron.h,v 1.6 2000-06-11 13:18:58 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -46,8 +46,8 @@ extern char sig_hup;
 extern CF *file_base;
 extern struct job *queue_base;
 extern struct job *serial_base;
-extern struct job *freq_base;
 extern struct job *exe_base;
+extern time_t now;
 /* end of global variables */
 
 
@@ -80,11 +80,9 @@ extern char *strdup2(const char *);
 extern void test_jobs(time_t t2);
 extern void wait_chld(void);
 extern void wait_all(int *counter);
-extern time_t time_to_sleep(short lim);
+extern time_t time_to_sleep(time_t lim);
 extern void set_next_exe(CL *line, char is_new_line);
 extern void insert_nextexe(CL *line);
-extern void insert_freq(CL *line);
-extern void update_time_remaining(long dt);
 /* end of database.c */
 
 /* conf.c */
