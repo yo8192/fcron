@@ -8,10 +8,30 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.19 2002-10-05 14:28:58 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.20 2002-10-06 17:13:10 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
+
+    <itemizedlist>
+	<title>From version 2.9.2 to 2.9.3</title>
+	<listitem>
+	    <para>security issue : fcron used not to check the fcrontabs installed by
+root for a standard user. This could make an inattentive superuser install a user job
+runas(root) involontary.</para>
+	</listitem>
+	<listitem>
+	    <para>Perf improvement : we use now a buffer in fcrontab while copying
+an orig file (became necessary due to the use of O_SYNC)</para>
+	</listitem>
+	<listitem>
+	    <para>bug fix : in 2.9.2, fcrontab and fcron did not set correctly some
+file modes.</para>
+	</listitem>
+	<listitem>
+	    <para>code clean : use the same scheme for all struct types.</para>
+	</listitem>
+    </itemizedlist>
 
     <itemizedlist>
 	<title>From version 2.9.1 to 2.9.2</title>
