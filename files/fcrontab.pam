@@ -1,0 +1,21 @@
+#
+# The PAM configuration file for fcrontab
+#
+
+### WARNING : you cannot use every modules here, as some (such as pam_unix_acct.so)
+###           require the program to be run by root or suid root, and fcrontab is *not*
+###           suid root.
+
+
+### By default we do not ask user for a password
+auth       required   pam_nologin.so
+#auth       required   pam_unix.so nullok
+auth       required   pam_env.so
+
+### Do not limit access to the authentificated user
+account    required   pam_permit.so
+### or limit him :
+#account    required   pam_time.so
+
+session    required   pam_unix.so
+
