@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.18 2000-09-16 12:34:42 thib Exp $ */
+ /* $Id: fileconf.c,v 1.19 2000-09-17 20:07:44 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -298,6 +298,7 @@ read_env(char *ptr, CF *cf)
     if ( ( val = get_string(ptr)) == NULL ) {
 	fprintf(stderr, "%s:%d: Mismatched  quotes: skipping line.\n",
 		file_name, line);
+	need_correction = 1;
 	return;
     }
 
@@ -319,8 +320,8 @@ read_env(char *ptr, CF *cf)
 	else {
 	    struct passwd *pass = NULL;
 	    if ( (pass = getpwnam(val)) == 0 ) {
-		fprintf(stderr, "%s:%d: '%s' is not in passwd.\n",
-			file_name, line, val);	
+		fprintf(stderr, "%s:%d:MAILTO: '%s' is not in passwd :"
+			" ignored\n", file_name, line, val);	
 		need_correction = 1;
 	    } else
 		default_line.cl_mailto = pass->pw_uid;
@@ -342,6 +343,7 @@ read_env(char *ptr, CF *cf)
   error:
 	fprintf(stderr, "%s:%d: Syntax error: skipping line.\n",
 		file_name, line);
+	need_correction = 1;
 	return;
 
 }
@@ -361,7 +363,8 @@ get_runas(char *ptr, uid_t *uid)
 	name[i++] = *ptr++;
     
     if ((pas = getpwnam(name)) == NULL) {
-        fprintf(stderr, "%s is not in passwd file", name);
+        fprintf(stderr, "runas: '%s' is not in passwd file : ignored", name);
+	need_correction = 1;
 	return NULL;
     }
     
@@ -650,8 +653,8 @@ read_opt(char *ptr, CL *cl)
 		clear_mail(cl->cl_option);
 	    else {
 		if ( (pass = getpwnam(buf)) == NULL ) {
-		    fprintf(stderr, "%s:%d: '%s' is not in passwd.\n",
-			    file_name, line, buf);	
+		    fprintf(stderr, "%s:%d:mailto: '%s' is not in passwd :"
+			    " ignored\n", file_name, line, buf);	
 		    need_correction = 1;
 		} else
 		    cl->cl_mailto = pass->pw_uid;
@@ -802,6 +805,7 @@ read_freq(char *ptr, CF *cf)
 	if ( (ptr = get_time(ptr, &(cl->cl_nextexe))) == NULL ) {
 	    fprintf(stderr, "%s:%d: Error while reading first delay:"
 		    " skipping line.\n", file_name, line);
+	    need_correction = 1;
 	    return;
 	}
 	
@@ -818,6 +822,7 @@ read_freq(char *ptr, CF *cf)
     if ( (ptr = get_time(ptr, &(cl->cl_timefreq))) == NULL) {
 	fprintf(stderr, "%s:%d: Error while reading frequency:"
 		" skipping line.\n", file_name, line);
+	need_correction = 1;
 	return;
     }
 	
@@ -840,6 +845,7 @@ read_freq(char *ptr, CF *cf)
 	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
 		file_name, line);
 	free(cl);
+	need_correction = 1;
 	return;
     }
 
@@ -917,6 +923,7 @@ read_arys(char *ptr, CF *cf)
     if ( (cl->cl_shell = get_string(ptr)) == NULL ) {
 	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
 		file_name, line);
+	need_correction = 1;
 	free(cl);
 	return;
     }
