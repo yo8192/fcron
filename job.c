@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.58 2004-01-29 10:26:49 thib Exp $ */
+ /* $Id: job.c,v 1.59 2004-04-29 19:24:59 thib Exp $ */
 
 #include "fcron.h"
 
@@ -208,7 +208,7 @@ create_mail(cl_t *line, char *subject)
 
 	/* check if mailto is a complete mail address */
 	for ( i = 0 ; line->cl_mailto[i] != '\0' ; i++ ) {
-	    if ( line->cl_mailto[i] == '\@' ) {
+	    if ( line->cl_mailto[i] == '@' ) {
 		complete_adr = 1;
 		break;
 	    }
@@ -459,7 +459,7 @@ end_job(cl_t *line, int status, FILE *mailf, short mailpos)
     m = (mail_output == 1) ? " (mailing output)" : "";
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
 	if ( ! is_nolog(line->cl_option) )
-	    explain("Job %s terminated%s", line->cl_shell, m);
+	    explain("Job %s completed%s", line->cl_shell, m);
     }
     else if (WIFEXITED(status)) {
 	warn("Job %s terminated (exit status: %d)%s",
