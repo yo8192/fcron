@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.61 2002-03-02 17:26:47 thib Exp $ */
+ /* $Id: fcron.c,v 1.62 2002-03-31 15:05:49 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.61 2002-03-02 17:26:47 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.62 2002-03-31 15:05:49 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -144,13 +144,13 @@ usage(void)
 	    "  -m n   --maxserial n    Set to n the max number of running serial jobs.\n"
 	    "  -c f   --configfile f   Make fcron use config file f.\n"
 	    "  -n d   --newspooldir d  Create d as a new spool directory.\n"
-	    "  -d     --debug          Set Debug mode.\n"
 	    "  -f     --foreground     Stay in foreground.\n"
 	    "  -b     --background     Go to background.\n"
 	    "  -y     --nosyslog       Don't log to syslog at all.\n"
 	    "  -o     --once           Execute all jobs that need to be run, wait for "
 	    "them,\n                          then return. Sets firstsleep to 0.\n"
 	    "                          Especially useful with -f and -y.\n"
+	    "  -d     --debug          Set Debug mode.\n"
 	    "  -h     --help           Show this help message.\n"
 	    "  -V     --version        Display version & infos about fcron.\n",
 	    FIRST_SLEEP

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrondyn.1.sgml,v 1.2 2002-03-02 17:32:45 thib Exp $ -->
+<!-- $Id: fcrondyn.1.sgml,v 1.3 2002-03-31 15:08:26 thib Exp $ -->
 
 <refentry id="fcrondyn.1">
     <refmeta>
@@ -22,10 +22,210 @@ A copy of the license is included in gfdl.sgml.
 	<refpurpose>dialog dyn-amically with a running fcron daemon</refpurpose>
     </refnamediv>
 
+    <refsynopsisdiv id="fcrondyn.1.synopsis">
+	<cmdsynopsis>
+	    <command>fcrondyn</command>
+	    <arg>-c <replaceable>file</replaceable></arg>
+	    <arg>-i</arg>
+	</cmdsynopsis>
+	<cmdsynopsis>
+	    <command>fcrondyn</command>
+	    <arg>-c <replaceable>file</replaceable></arg>
+	    <arg choice="plain">-x <replaceable>command</replaceable></arg>
+	</cmdsynopsis>
+	<cmdsynopsis>
+	    <command>fcrondyn</command>
+	    <arg>-h</arg>
+	</cmdsynopsis>
+    </refsynopsisdiv>
 
-<!-- ---------------------------------------------------------
-     TEXT HERE
-     --------------------------------------------------------- -->
+    <refsect1>
+	<title>Description</title>
+	<para>&Fcrondyn; is a user tool intended to interact with a running fcron daemon. It can, for instance, list user's jobs loaded by fcron, run one of them, renice a running job, send a signal to a running job, etc.</para>
+    </refsect1>
+
+    <refsect1>
+	<title>Options</title>
+	<variablelist>
+	    <varlistentry>
+		<term><option>-i</option></term>
+		<listitem>
+		    <para>Run &fcrondyn; in interactive mode.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-x</option> <replaceable>command</replaceable></term>
+		<listitem>
+		    <para>Run <replaceable>command</replaceable> and returns immediately. <link linkend="fcrondyn.1.cmd.descp">See below</link> for syntax and a list of commands.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-c</option> <replaceable>file</replaceable></term>
+		<listitem>
+		    <para>Make &fcrontab; use config file <replaceable>file</replaceable> instead of default config file <filename>&etc;/&fcron.conf.location;</filename>. To interact with a running &fcron; process, &fcrontab; must use the same config file as the process. That way, several &fcron; processes can run simultaneously on an only system.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-d</option></term>
+		<listitem>
+		    <para>Run in debug mode. In this mode, many informational messages will be output in order to check if anything went wrong.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-h</option></term>
+		<listitem>
+		    <para>Display a brief description of the options.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-V</option></term>
+		<listitem>
+		    <para>Display an informational message about &fcrontab;, including its version and the license under which it is distributed.</para>
+		</listitem>
+	    </varlistentry>
+	</variablelist>
+    </refsect1>
+
+    <refsect1 id="fcrondyn.1.cmd.descp">
+	<title>Command description</title>
+	<para>&Fcrondyn;'s command syntax is the following : </para>
+	<blockquote>
+	    <para><command>command</command> <replaceable>arg1</replaceable> <replaceable>arg2</replaceable> [...]</para>
+	</blockquote>
+	<para>An argument of a &fcrondyn; command is of one of the following type :</para>
+	<variablelist>
+	    <title>Argument types of &fcrondyn;'s commands</title>
+	    <varlistentry>
+		<term><emphasis><type>user</type></emphasis></term>
+		<listitem>
+		    <para>A valid user name.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><emphasis><type>jobid</type></emphasis></term>
+		<listitem>
+		    <para>A job id given by one of &fcrondyn;'s <command>ls*</command> commands (i.e. an integer).</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><emphasis><type>sig</type></emphasis></term>
+		<listitem>
+		    <para>A signal number, or its name (case does not matter). For instance, "term" or "15".</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><emphasis><type>niceval</type></emphasis></term>
+		<listitem>
+		    <para>A job priority value. A <emphasis><type>niceval</type></emphasis> is an integer from -20 (highest priority) to 19 (lowest) (only root is allowed to use a negative value with this option).</para>
+		</listitem>
+	    </varlistentry>
+	</variablelist>
+	<para>Last, but not least, the following commands are recognized (optional arguments are between []) :</para>
+	<variablelist>
+	    <title>Valid &fcrondyn;'s commands</title>
+	    <varlistentry>
+		<term><command>help</command></term>
+		<term><command>h</command></term>
+		<listitem>
+		    <para>Print an help message about fcrondyn's commands.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>quit</command></term>
+		<term><command>q</command></term>
+		<listitem>
+		    <para>In interactive mode, quit fcrondyn.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>ls</command> [<emphasis><type>user</type></emphasis>]</term>
+		<listitem>
+		    <para>List all jobs of user. When <command>ls</command> is run by root, all users are listed unless a user name is given as argument. <link linkend="fcrondyn.1.ls.fields">See below</link> for some explanations about the fields used by <command>ls*</command> commands.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>ls_lavgq</command> [<emphasis><type>user</type></emphasis>]</term>
+		<listitem>
+		    <para></para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>ls_serialq</command> [<emphasis><type>user</type></emphasis>]</term>
+		<listitem>
+		    <para></para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>ls_exeq</command> [<emphasis><type>user</type></emphasis>]</term>
+		<listitem>
+		    <para></para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>detail</command> <emphasis><type>jobid</type></emphasis></term>
+		<listitem>
+		    <para>Print details about a job. jobid is the one given by <command>ls</command></para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>runnow</command> <emphasis><type>jobid</type></emphasis></term>
+		<listitem>
+		    <para></para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>run</command> <emphasis><type>jobid</type></emphasis></term>
+		<listitem>
+		    <para></para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>kill</command> <emphasis><type>sig</type></emphasis> <emphasis><type>jobid</type></emphasis></term>
+		<listitem>
+		    <para></para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><command>renice</command> <emphasis><type>niceval</type></emphasis> <emphasis><type>jobid</type></emphasis></term>
+		<listitem>
+		    <para></para>
+		</listitem>
+	    </varlistentry>
+	</variablelist>
+	<variablelist id="fcrondyn.1.ls.fields">
+	    <title>Fields used by <command>ls*</command> commands</title>
+	    <varlistentry>
+		<term>USER</term>
+		<listitem>
+		    <para>user who owns this job.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>ID</term>
+		<listitem>
+		    <para>job's unique identification number.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>R&amp;Q</term>
+		<listitem>
+		    <para>The job has this number instances running or queued in serial or lavg queue.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>SCHEDULE</term>
+		<listitem>
+		    <para>next run is scheduled at this time and date.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term>CMD</term>
+		<listitem>
+		    <para>the command that will be executed.</para>
+		</listitem>
+	    </varlistentry>
+	</variablelist>
+    </refsect1>
 
 
     <refsect1>
