@@ -22,11 +22,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.37 2001-04-21 08:39:22 thib Exp $ */
+ /* $Id: job.c,v 1.38 2001-05-15 00:37:54 thib Exp $ */
 
 #include "fcron.h"
+#include "job.h"
 
-int temp_file(void);
 void sig_dfl(void);
 void end_job(CL *line, int status, int mailfd, short mailpos);
 void end_mailer(CL *line, int status);
@@ -110,7 +110,7 @@ create_mail(CL *line, char *subject)
     /* create a temp file and write in it a mail header */
 {
     /* create temporary file for stdout and stderr of the job */
-    int mailfd = temp_file();
+    int mailfd = temp_file(NULL);
     
     /* write mail header */
     xwrite(mailfd,"To: ");
@@ -242,7 +242,7 @@ run_job(struct exe *exeent)
 
 	default:
 	    /* parent */
-	    /* we use a while because an possible interruption by a signal */
+	    /* we use a while because of a possible interruption by a signal */
 	    while ( (pid = wait3(&status, 0, NULL)) > 0) {
 		end_job(line, status, mailfd, mailpos);
 
@@ -328,36 +328,6 @@ launch_mailer(CL *line, int mailfd)
 #else /* defined(SENDMAIL) */
     exit(EXIT_OK);
 #endif
-}
-
-int
-temp_file(void)
-    /* Open a temporary file and return its file descriptor */
-{
-    int fd;
-#ifdef HAVE_MKSTEMP
-    char name[PATH_LEN] = "fcrjob-XXXXXX";
-    if ( (fd = mkstemp(name)) == -1 )
-	die_e("Can't find a unique temporary filename");
-#else
-    const int max_retries = 50;
-    char *name = NULL;
-    int i;
-
-    i = 0;
-    do {
-	i++;
-	name = tempnam(NULL, NULL);
-	if (name == NULL) die("Can't find a unique temporary filename");
-	fd = open(name, O_RDWR|O_CREAT|O_EXCL|O_APPEND,S_IRUSR|S_IWUSR);
-	free(name);
-	/* I'm not sure we actually need to be so persistent here */
-    } while (fd == -1 && errno == EEXIST && i < max_retries);
-    if (fd == -1) die_e("Can't open temporary file");
-#endif
-    if (unlink(name)) die_e("Can't unlink temporary file");
-    fcntl(fd, F_SETFD,1);   /* set close-on-exec flag */
-    return fd;
 }
 
 
