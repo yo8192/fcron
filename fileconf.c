@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.67 2002-11-01 18:08:30 thib Exp $ */
+ /* $Id: fileconf.c,v 1.68 2002-11-02 19:33:25 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -1122,9 +1122,11 @@ read_freq(char *ptr, cf_t *cf)
 	goto exiterr;
     }
 
-    if ( cl->cl_first == -1 )
+    if ( is_volatile(cl->cl_option) && cl->cl_first == -1 )
 	/* time before first execution is not specified */
 	cl->cl_first = cl->cl_timefreq;
+    else
+	cl->cl_nextexe = cl->cl_timefreq;
 
     /* check for inline runas */
     ptr = check_username(ptr, cf, cl);

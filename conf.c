@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.62 2002-11-01 18:13:49 thib Exp $ */
+ /* $Id: conf.c,v 1.63 2002-11-02 19:34:55 thib Exp $ */
 
 #include "fcron.h"
 
@@ -794,7 +794,7 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 	    insert_nextexe(cl);
     } else {  /* is_td(cl->cl_option) */
 	/* standard @-lines */
-	if ( is_volatile(cl->cl_option) || cl->cl_first > 0 ) {
+	if ( is_volatile(cl->cl_option) ) {
 	    /* cl_first is always saved for a volatile line */
  	    cl->cl_nextexe = now + cl->cl_first;
  	} else
