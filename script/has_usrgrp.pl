@@ -4,25 +4,26 @@
 #   on the system (getpwnam() and getgrnam() use nsswitch.conf, so it works
 #   even if NYS (or similar) is used)
 
-if ( $#ARGV < 1 || $#ARGV > 2) {
-    print "usage:\n  has_usrgrp.pl [-user user|-group group] [-printgid]\n";
-    exit 1;
+sub usage {
+    return "usage:\n  has_usrgrp.pl [-user user|-group group] [-printgid]\n";
+}
+
+if ( @ARGV < 2 || @ARGV > 3) {
+    die usage();
 }
 
 if ( $ARGV[0] eq "-user" ) {
-    ($name, $passwd, $uid, $gid, $quota, $comment,
-     $gcos, $dir, $shell, $expire) = getpwnam($ARGV[1]);
+    ($name, $passwd, $uid, $gid) = getpwnam($ARGV[1]);
 }
 elsif ( $ARGV[0] eq "-group" ) {
-    ($name, $passwd, $gid, $members) = getgrnam($ARGV[1]);
+    ($name, $passwd, $gid) = getgrnam($ARGV[1]);
 }
 else {
-    print "usage:\n  has_usrgrp.pl [-user user|-group group] [-printgid]\n";
-    exit 1;
+    die usage();
 }
 
 if ($name) {
-    if ( $#ARGV == 2 && $ARGV[2] eq "-printgid" ) {
+    if ( @ARGV == 3 && $ARGV[2] eq "-printgid" ) {
 	print $gid, "\n";
     }
     exit 0;
