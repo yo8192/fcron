@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.4 2000-05-16 19:53:59 thib Exp $
+# $Id: Makefile.in,v 1.5 2000-05-16 19:59:26 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -114,12 +114,8 @@ uninstall:
 	script/sysVinit-uninstall
 
 clean:
-	@echo -e "\ncleaning up ...\n"
-
 	rm -f *.o
 	rm -f fcron fcrontab
-
-	@echo -e "\n...done\n"
 
 vclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
@@ -130,13 +126,12 @@ vclean: clean
 	    <h1>$(*F)</h1><br>:I" < ./tmp > $@
 	rm -f ./tmp
 
-updatedoc: doc/*.html
+updatedoc:
+	$(MAKE) doc/*.html
 	script/gen-doc $(VERSION)
 
 
 tar: vclean updatedoc
-
-	@echo -e "\ncreating archive ...\n"
 
 	echo $(VERSION) > ./VERSION
 
@@ -150,8 +145,6 @@ tar: vclean updatedoc
 	@(cd ..; rm -f fcron-$(VERSION))
 
 	@(cd ..; mv -f fcron-$(VERSION).src.tar.gz old-fcron-pkg/)
-
-	@echo -e "\n...done\n"
 
 
 
