@@ -2,7 +2,7 @@
 # Install fcron and fcrontab's pam conf files.
 #
 
-# $Id: install-pam-conf,v 1.1 2001-11-02 13:40:13 thib Exp $
+# $Id: install-pam-conf,v 1.2 2001-11-04 19:00:52 thib Exp $
 
 if test $# -ne 5; then
   echo "Too few/many arguments"
@@ -23,6 +23,7 @@ for i in fcron fcrontab; do
     if test -d $ETC/pam.d; then
       $INSTALL -m 644 -o $ROOTNAME -g $ROOTGROUP $SRCDIR/files/$i.pam $ETC/pam.d/$i || exit 1
     else
+      echo "" >> $ETC/pam.conf || exit 1
       cat $SRCDIR/files/$i.pam | sed "s/account/$i account/" \
                                | sed "s/auth/$i auth/" \
                                | sed "s/session/$i account/" \
