@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.44 2001-10-29 13:20:13 thib Exp $ */
+ /* $Id: job.c,v 1.45 2001-11-02 13:37:58 thib Exp $ */
 
 #include "fcron.h"
 
@@ -31,9 +31,11 @@
 void sig_dfl(void);
 void end_job(CL *line, int status, int mailfd, short mailpos);
 void end_mailer(CL *line, int status);
+#ifdef HAVE_LIBPAM
 void die_mail_pame(CL *cl, int pamerrno, struct passwd *pas, char *str);
+#endif
 
-
+#ifdef HAVE_LIBPAM
 void
 die_mail_pame(CL *cl, int pamerrno, struct passwd *pas, char *str)
 /* log an error in syslog, mail user if necessary, and die */
@@ -72,7 +74,7 @@ die_mail_pame(CL *cl, int pamerrno, struct passwd *pas, char *str)
     else
 	die_pame(pamh, pamerrno, buf, cl->cl_shell);
 }
-
+#endif
 
 int
 change_user(struct CL *cl)
@@ -115,7 +117,7 @@ change_user(struct CL *cl)
     retcode = pam_start("fcron", pas->pw_name, &apamconv, &pamh);
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM for %s",
 					 cl->cl_shell);
-    retcode = pam_acct_mgmt(pamh, PAM_SILENT);
+    retcode = pam_acct_mgmt(pamh, PAM_SILENT); /* permitted access? */
     if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas,
 					      "Could not init PAM account management");
     retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED | PAM_SILENT);
