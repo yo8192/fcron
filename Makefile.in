@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.58 2001-02-11 21:16:59 thib Exp $
+# $Id: Makefile.in,v 1.59 2001-02-25 14:45:32 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -101,7 +101,7 @@ install: all
 	if test ! -d $(DESTDOC)/fcron-$(VERSION); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION) ; fi
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 770 -d $(FCRONTABS)
 
-	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 110 -s fcron $(DESTSBIN)
+	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 110 -s fcron $(DESTSBIN)
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrontab $(DESTBIN)
 	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) files/fcron.allow files/fcron.deny $(ETC)
 	$(INSTALL) -m 644 -o $(ROOTNAME) doc/fcron.8 $(DESTMAN)/man8
