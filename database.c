@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.47 2001-02-01 20:52:14 thib Exp $ */
+ /* $Id: database.c,v 1.48 2001-02-14 13:53:17 thib Exp $ */
 
 #include "fcron.h"
 
@@ -1047,7 +1047,7 @@ mail_notrun(CL *line, char context, struct tm *since)
 		 (since->tm_year + 1900), since->tm_wday, since->tm_hour,
 		 since->tm_min);
 	xwrite(fd, buf);
-	snprintf(buf, sizeof(buf), "It will be next executed at %d/%d/%d wday:"
+	snprintf(buf,sizeof(buf),"It will be next executed at %d/%d/%d wday:"
 		 "%d %02d:%02d\n", (next.tm_mon + 1), next.tm_mday,
 		 (next.tm_year+1900), next.tm_wday, next.tm_hour, next.tm_min);
 	xwrite(fd, buf);
@@ -1061,8 +1061,8 @@ mail_notrun(CL *line, char context, struct tm *since)
 	snprintf(buf, sizeof(buf), "due to a too high system load average or "
 		 "too many lavg-serial jobs.\n");
 	xwrite(fd, buf);	
-	snprintf(buf, sizeof(buf), "It will be next executed at %d/%d/%d wday:"
-		 "%d %02d:%02d\n", (next.tm_mon + 1), next.tm_mday,
+	snprintf(buf, sizeof(buf), "It will be next executed at %d/%d/%d "
+		 "wday:%d %02d:%02d\n", (next.tm_mon + 1), next.tm_mday,
 		 (next.tm_year+1900), next.tm_wday, next.tm_hour, next.tm_min);
 	xwrite(fd, buf);
     }

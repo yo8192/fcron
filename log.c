@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: log.c,v 1.4 2001-01-12 21:42:44 thib Exp $ */
+ /* $Id: log.c,v 1.5 2001-02-14 13:52:09 thib Exp $ */
 
 /* This code is inspired by Anacron's sources of
    Itai Tzur <itzur@actcom.co.il> ( thanks to him ) */
@@ -32,7 +32,7 @@
 
 static void xopenlog(void);
 
-static char truncated[]=" (truncated)";
+static char truncated[] = " (truncated)";
 static int log_open=0;
 
 
@@ -50,7 +50,7 @@ void
 xcloselog()
 {
     if (log_open) closelog();
-    log_open=0;
+    log_open = 0;
 }
 
 
@@ -65,9 +65,9 @@ make_msg(char *fmt, va_list args)
 	return NULL;
     /* There's some confusion in the documentation about what vsnprintf
      * returns when the buffer overflows.  Hmmm... */
-    len=vsnprintf(msg, MAX_MSG + 1, fmt, args);
-    if (len>=MAX_MSG)
-	strcpy(msg+sizeof(msg)-sizeof(truncated), truncated);
+    len = vsnprintf(msg, MAX_MSG + 1, fmt, args);
+    if (len >= MAX_MSG)
+	strcpy(msg + sizeof(msg) - sizeof(truncated), truncated);
 
     return msg;
 }

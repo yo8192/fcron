@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.40 2001-02-10 12:56:02 thib Exp $ */
+ /* $Id: fcron.c,v 1.41 2001-02-14 13:52:38 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.40 2001-02-10 12:56:02 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.41 2001-02-14 13:52:38 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -437,9 +437,9 @@ main(int argc, char **argv)
 	if ( ! (pass = getpwnam(USERNAME)) )
 	    die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
 	if (setregid(pass->pw_gid, 0) != 0 )
-	    die_e("Could not set gid to " GROUPNAME);
+	    die_e("Could not setregid to " GROUPNAME);
 	if (setreuid(pass->pw_uid, 0) != 0 )
-	    die_e("Could not set uid to " USERNAME);
+	    die_e("Could not setreuid to " USERNAME);
     }
 #endif
 
