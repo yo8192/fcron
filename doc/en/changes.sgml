@@ -8,10 +8,32 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.22 2002-11-01 18:18:46 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.23 2003-07-14 10:58:36 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
+
+    <itemizedlist>
+	<title>From version 2.9.3 to 2.9.4</title>
+	    <listitem>
+		<para>Merged support for SE Linux (patch from Russell Coker : thanks !)</para>
+	    </listitem>
+	    <listitem>
+		<para>Work on the documentation (fixed spelling mistakes, tried to make things clearer in fcrontab.5) (thanks Bill Wohler for your help !)</para>
+	    </listitem>
+	    <listitem>
+		<para>Changed the subject line of mail reports : it now contains the subject line, and is very similar to vixie cron's one.</para>
+	    </listitem>
+	<listitem>
+	    <para>bug fix : possible crash of fcron when trying to save a file if there was no space left on device.</para>
+	</listitem>
+	<listitem>
+	    <para>bug fix : we don't consider '-' and '_' as word delimiters for a username before the command anymore, since many programs have one of these characters in their name.</para>
+	</listitem>
+	    <listitem>
+		<para>fixed a little typo in an error message (could->couldn't)</para>
+	    </listitem>
+    </itemizedlist>
 
     <itemizedlist>
 	<title>From version 2.9.2 to 2.9.3</title>
@@ -785,6 +807,5 @@ input.</para>
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
-sgml-default-dtd-file: "fcron-doc.ced"
 End:
 -->

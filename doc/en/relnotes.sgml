@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: relnotes.sgml,v 1.4 2002-10-28 17:59:28 thib Exp $ -->
+<!-- $Id: relnotes.sgml,v 1.5 2003-07-14 10:56:26 thib Exp $ -->
 
 <sect1 id="relnotes">
     <title>Release notes : &fcron; &version;</title>
@@ -34,6 +34,5 @@ particular, fcrondyn does not use PAM yet.</para>
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
-sgml-default-dtd-file: "fcron-doc.ced"
 End:
 -->

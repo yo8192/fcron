@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: thanks.sgml,v 1.4 2002-10-05 14:28:06 thib Exp $ -->
+<!-- $Id: thanks.sgml,v 1.5 2003-07-14 10:55:30 thib Exp $ -->
 
 <sect1 id="thanks">
     <title>Thanks</title>
@@ -73,7 +73,8 @@ instance in a ppp-up script.</para>
 	<varlistentry>
 	    <term>Russell Coker <email>russell@coker.com.au</email></term>
 	    <listitem>
-		<para>Helped me to secure fcron and make code clearer.</para>
+		<para>Helped me to secure fcron, make code clearer,
+and he wrote the patch for SE Linux support.</para>
 	    </listitem>
 	</varlistentry>
     </variablelist>
@@ -83,6 +84,5 @@ instance in a ppp-up script.</para>
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
-sgml-default-dtd-file: "fcron-doc.ced"
 End:
 -->

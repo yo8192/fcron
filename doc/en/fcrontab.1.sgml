@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.1.sgml,v 1.6 2002-10-05 14:29:00 thib Exp $ -->
+<!-- $Id: fcrontab.1.sgml,v 1.7 2003-07-14 10:58:39 thib Exp $ -->
 
 <refentry id="fcrontab.1">
     <refmeta>
@@ -76,7 +76,7 @@ following.</para>
 listed in <filename>&etc;/&fcron.deny;</filename> (see section "<link
 linkend="fcrontab.1.files">files</link>" below). If neither
 <filename>fcron.allow</filename> nor <filename>fcron.deny</filename> exist,
-every users are allowed. None of these files have to exist, but if they do, the
+all users are allowed. None of these files have to exist, but if they do, the
 deny file takes precedence.</para>
 	<para>The first form of the command is used to install a new &fcrontabf;
 file, from any named file or from standard input if the pseudo-filename "-" is
@@ -237,6 +237,5 @@ name per line, special name "all" acts for everyone)</para>
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
-sgml-default-dtd-file: "fcron-doc.ced"
 End:
 -->

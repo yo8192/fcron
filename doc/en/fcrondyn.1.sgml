@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrondyn.1.sgml,v 1.8 2002-11-01 18:18:11 thib Exp $ -->
+<!-- $Id: fcrondyn.1.sgml,v 1.9 2003-07-14 10:57:43 thib Exp $ -->
 
 <refentry id="fcrondyn.1">
     <refmeta>
@@ -370,7 +370,6 @@ name per line, special name "all" acts for everyone)</para>
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
-sgml-default-dtd-file: "fcron-doc.ced"
 End:
 -->
 

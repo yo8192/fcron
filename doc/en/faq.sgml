@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.7 2002-09-07 13:12:16 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.8 2003-07-14 10:56:10 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
@@ -173,7 +173,7 @@ fcron -f -y -o
 		<para>You can also use fcron to run some jobs until the end of
 the connection. For instance, you can make fetchmail retrieve mails more often
 during connection : we suppose that it is configured to retrieve mails every
-hours, which launches a dialup connection if necessary, and we want it to check
+hour, which launches a dialup connection if necessary, and we want it to check
 for mails every 5 minutes while connected.</para>
 		<para><example>
 			<title>Using fcron in a script : running a job until the
@@ -257,6 +257,5 @@ and set appropriately the paths :</para>
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
-sgml-default-dtd-file: "fcron-doc.ced"
 End:
 -->

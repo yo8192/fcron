@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: install.sgml,v 1.6 2002-09-07 13:12:31 thib Exp $ -->
+<!-- $Id: install.sgml,v 1.7 2003-07-14 10:56:38 thib Exp $ -->
 
 <sect1 id="install">
     <title>How to install fcron</title>
@@ -51,9 +51,9 @@ prefix=/usr)
 			<listitem>
 			    <para>
 				To disable the use of
-<productname>PAM</productname> or &fcrondyn;, use <command>configure</command>'s
-option <option>--with-pam=no</option> and/or
-<option>--with-fcrondyn=no</option>.</para>
+<productname>PAM</productname>, <productname>SE Linux</productname> or &fcrondyn;, use <command>configure</command>'s
+option <option>--with-pam=no</option>, <option>--with-selinux=no</option> 
+and/or <option>--with-fcrondyn=no</option>.</para>
 			</listitem>
 			<listitem>
 			    <para>To debug &fcron;, you should use
@@ -146,6 +146,5 @@ send me any modifications at &email; in order to include it in future releases.
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
-sgml-default-dtd-file: "fcron-doc.ced"
 End:
 -->

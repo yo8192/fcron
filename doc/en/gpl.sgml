@@ -335,6 +335,5 @@ License instead of this License.</para>
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "appendix" "")
-sgml-default-dtd-file: "fcron-doc.ced"
 End:
 -->

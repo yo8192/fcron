@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: readme.sgml,v 1.3 2002-10-28 18:00:32 thib Exp $ -->
+<!-- $Id: readme.sgml,v 1.4 2003-07-14 10:59:20 thib Exp $ -->
 
 <sect1 id="readme">
     <title>About fcron</title>
@@ -111,6 +111,7 @@ example) (or users will not able to read their jobs output)
 		    </para></listitem>
 	    <listitem><para>(optional) a <productname>PAM</productname>
 library.</para></listitem>
+	    <listitem><para>(optional) a system with a working <productname>SE Linux</productname> environment.</para></listitem>
 	</itemizedlist>
     </sect2>
 
@@ -132,6 +133,7 @@ linkend="fcrontab.1">&fcrontab;(1)</link> manpages.</para>
 	<para>Please send me the description of any bug you happen to encounter
 (with, even better, the corresponding patch -:) and any propositions,
 congratulations or flames at &email;</para>
+	    <para>Please contact Russell Coker directly for problems about SE Linux support at &selinuxemail;, since he maintains this part of the code.</para>
     </sect2>
 </sect1>
 
@@ -139,6 +141,5 @@ congratulations or flames at &email;</para>
 Local variables:
 mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
-sgml-default-dtd-file: "fcron-doc.ced"
 End:
 -->

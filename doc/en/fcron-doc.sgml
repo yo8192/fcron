@@ -15,7 +15,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron-doc.sgml,v 1.5 2002-10-28 17:57:28 thib Exp $ -->
+<!-- $Id: fcron-doc.sgml,v 1.6 2003-07-14 10:54:54 thib Exp $ -->
 
 <book lang="en" id="fcron-doc">
     <bookinfo id="bookinfo">
@@ -99,3 +99,11 @@ it, and how to install it.</para>
     &gpl;
     &fdl;
 </book>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-indent-data:nil
+sgml-local-ecat-files:("psgml-ecat.file")
+End:
+-->
