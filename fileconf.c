@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.7 2000-06-19 12:42:49 thib Exp $ */
+ /* $Id: fileconf.c,v 1.8 2000-06-21 15:00:07 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -471,9 +471,11 @@ read_opt(char *ptr, CL *cl)
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' '%s'\n", opt_name, buf);
 	}
-	else
+	else {
 	    fprintf(stderr, "%s:%d: Option '%s' unknown: "
 		    "skipping option.\n", file_name, line, opt_name);  
+	    need_correction = 1;
+	}
 	
 	if ( in_brackets ) {
 	    if ( *ptr != ')' )
