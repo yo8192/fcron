@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.34 2000-10-07 14:15:13 thib Exp $ */
+ /* $Id: database.c,v 1.35 2000-11-02 10:58:03 thib Exp $ */
 
 #include "fcron.h"
 
@@ -530,12 +530,14 @@ goto_non_matching(CL *line, struct tm *ftime)
 	return;
     
 
+  start:
     for(i=ftime->tm_min; bit_test(line->cl_mins, i) && (i<60); i++);
     ftime->tm_min = i;
     if (i == 60) {
 	ftime->tm_min = 0;
 	if (++ftime->tm_hour == 24) {
 	    ftime->tm_hour = 0;
+	    set_wday(ftime);
 	    if(++ftime->tm_mday == 
 	       get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
 		ftime->tm_mday = 0;
@@ -545,8 +547,6 @@ goto_non_matching(CL *line, struct tm *ftime)
 		}
 	    }
 	}
-
-	set_wday(ftime);
 
 	if( ! ( bit_test(line->cl_mins, ftime->tm_min) &&
 		bit_test(line->cl_hrs, ftime->tm_hour) &&
@@ -563,6 +563,7 @@ goto_non_matching(CL *line, struct tm *ftime)
 	    ) )
 	    goto exit_fct;
 
+	goto start;
     }
 	  
   exit_fct:
