@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.17 2000-09-14 19:01:42 thib Exp $ */
+ /* $Id: fileconf.c,v 1.18 2000-09-16 12:34:42 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -847,7 +847,7 @@ read_freq(char *ptr, CF *cf)
     cf->cf_line_base = cl;
 
     if ( debug_opt )
-	fprintf(stderr, "  Cmd '%s', timefreq %ld, remain %ld\n",
+	fprintf(stderr, "  Cmd '%s', timefreq %ld, first %ld\n",
 		cl->cl_shell, cl->cl_timefreq, cl->cl_nextexe);
 
 }
@@ -875,12 +875,9 @@ read_arys(char *ptr, CF *cf)
     memcpy(cl, &default_line, sizeof(CL));
     set_td(cl->cl_option);
 
-    /* set cl_remain if not specified or 
-     * if set to 1 to skip unnecessary tests */
-    if ( *ptr != '&' )
-	/* cl_remain not specified : set it to 0 */
-	i = 0;
-    else {
+    i = 0;
+    /* set cl_remain if not specified */
+    if ( *ptr == '&' ) {
 	ptr++;
 	if ( isdigit(*ptr) ) {
 	    if ( (ptr = get_num(ptr, &i, 65535, 0, NULL)) == NULL ) {
@@ -898,10 +895,7 @@ read_arys(char *ptr, CF *cf)
 
     }
 
-    if ( i != 0 )
-	cl->cl_remain = cl->cl_runfreq = i;
-    else
-	cl->cl_remain = cl->cl_runfreq;
+    cl->cl_remain = cl->cl_runfreq = i;
 
     if (debug_opt)
 	fprintf(stderr, "     ");
