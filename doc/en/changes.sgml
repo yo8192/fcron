@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.21 2002-10-28 18:00:29 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.22 2002-11-01 18:18:46 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
@@ -25,6 +25,11 @@ runas(root) involontary.</para>
  (became necessary due to the use of O_SYNC).</para>
 	</listitem>
 	<listitem>
+	    <para>To avoid loss of data in case of an hardware failure or a system
+crash, fcron now saves files to a temporary name, and then renames them to their
+definitive filename if everything's ok.</para>
+	</listitem>
+	<listitem>
 	    <para>The PID indicated by fcrondyn is now the pid of the job itself
 (up to now, it was the one of the fcron process controlling the job).</para>
 	</listitem>
@@ -38,6 +43,10 @@ and renice (change the priority of a running job) in fcrondyn.</para>
 	</listitem>
 	<listitem>
 	    <para>Added some timeouts in fcron for fcrondyn clients.</para>
+	</listitem>
+	<listitem>
+	    <para>Fcron is less restrictive concerning mailto addresses. In particular,
+you can now use address like user@host.</para>
 	</listitem>
 	<listitem>
 	    <para>bug fix : in 2.9.2, fcrontab and fcron did not set correctly some
