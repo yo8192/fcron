@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.19 2000-09-12 19:53:10 thib Exp $ */
+ /* $Id: global.h,v 1.20 2000-09-30 11:57:16 thib Exp $ */
 
 
 /* 
@@ -88,11 +88,15 @@
 #include <sys/fcntl.h>
 #endif
 
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
+
 #include "bitstring.h"         
 #include "option.h"
 
 
-#define FILEVERSION "012"  /* syntax's version of fcrontabs : 
+#define FILEVERSION "014"  /* syntax's version of fcrontabs : 
 			    * must have a length of 3 characters */
 
 /* you should not change this (nor need to do it) */
@@ -127,16 +131,16 @@ typedef struct CL {
     struct CF     *cl_file;       /* the file in which the line is        */
     unsigned short cl_option;     /* options for that line (see option.h) */
     char	  *cl_shell;      /* shell command			  */
-    char           cl_lavg[3];    /* load averages needed (1, 5, 15 mins) */
+    unsigned char  cl_numexe;     /* num of entries in lavg/serial queue  */
+    unsigned char  cl_lavg[3];    /* load averages needed (1, 5, 15 mins) */
     time_t         cl_until;      /* timeout of the wait for a lavg value */
     char           cl_nice;       /* nice value to control priority       */
     uid_t          cl_runas;      /* determine permissions of the job     */
     uid_t          cl_mailto;     /* mail output to cl_mailto             */
-    pid_t	   cl_pid;	  /* running pid, 0, or armed (-1)        */
     time_t         cl_nextexe;    /* time and date of the next execution  */
-    short int      cl_remain;     /* remaining until next execution       */
+    unsigned short cl_remain;     /* remaining until next execution       */
     time_t         cl_timefreq;   /* Run every n seconds                  */
-    short int      cl_runfreq;    /* Run once every n matches             */
+    unsigned short cl_runfreq;    /* Run once every n matches             */
     /* see bitstring(3) man page for more details */
     bitstr_t	   bit_decl(cl_mins, 60); /* 0-59		          */
     bitstr_t	   bit_decl(cl_hrs, 24);  /* 0-23			  */
@@ -154,6 +158,11 @@ typedef struct lavg {
     struct CL  *l_line;  
     time_t      l_until;   /* the timeout of the wait for load averages */
 } lavg;
+
+typedef struct exe {
+    struct CL  *e_line;
+    pid_t       e_pid;
+} exe;
 
 #endif /* __GLOBALH__ */
 
