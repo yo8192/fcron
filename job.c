@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.50 2002-07-19 19:30:34 thib Exp $ */
+ /* $Id: job.c,v 1.51 2002-08-10 20:37:06 thib Exp $ */
 
 #include "fcron.h"
 
@@ -244,8 +244,10 @@ run_job(struct exe *exeent)
 		die_e("could not pipe()");
 	}
 
+#ifndef RUN_NON_PRIVILEGED
 	if (change_user(line) < 0)
 	    return ;
+#endif
 
 	sig_dfl();
 

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.4 2002-07-19 19:42:53 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.5 2002-08-10 20:41:52 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
@@ -200,6 +200,39 @@ fcrontab and fcrondyn's <option>--configfile</option>.</para>
 linkend="fcron.8">&fcron;(8)</link>, and fcrontab's options &optvolatile;,
 &optstdout;, &optfirst; in <link
 linkend="fcrontab.5">&fcrontab;(5)</link></para>
+	    </answer>
+	</qandaentry>
+	
+	<qandaentry>
+	    <question>
+		<para>Can I run fcron without root privileges ?</para>
+	    </question>
+	    <answer>
+		<para>Yes, you can. To do that, see the following instructions, but
+please note that fcrondyn currently does *not* work without root privileges.</para>
+		<orderedlist>
+		    <listitem>
+			<para>First, create a directory where you'll install fcron,
+ and some subdirectories :</para>
+			<screen><prompt>bash$
+</prompt> <command>mkdir /home/thib/fcron</command>
+<prompt>bash$</prompt> <command>cd /home/thib/fcron</command>
+<prompt>bash$</prompt> <command>mkdir doc man spool</command></screen>
+		    </listitem>
+		    <listitem>
+			<para>Then, run configure with option 
+<option>--with-run-non-privileged</option>, set all user names and groups to yours,
+and set appropriately the paths :</para>
+			<screen><prompt>bash$
+</prompt> <command>./configure --with-run-non-privileged --with-rootname=thib
+--with-rootgroup=thib --with-username=thib --with-groupname=thib
+--with-etcdir=/home/thib/fcron --with-piddir=/home/thib/fcron
+--with-fifodir=/home/thib/fcron --with-spooldir=/home/thib/fcron/spool
+--with-docdir=/home/thib/fcron/doc --prefix=/home/thib/fcron</command></screen>
+		    </listitem>
+		</orderedlist>
+		<para>The rest of the installation is described in the
+<link linkend="install">install file</link>.</para>
 	    </answer>
 	</qandaentry>
     </qandaset>
