@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.54 2001-01-12 21:42:57 thib Exp $
+# $Id: Makefile.in,v 1.55 2001-01-30 15:50:55 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -112,7 +112,7 @@ install: all
 		 $(DESTDOC)/fcron-$(VERSION)/
 
 # in order to get correct rights when upgrading :
-	find $(FCRONTABS) -type f -name "*.orig" -exec chown $(USERNAME):$(GROUPNAME) {} \; -exec chmod 640 {} \;
+	find $(FCRONTABS) -type f \( -name "*.orig" -a ! -name "root.orig" \) -exec chown $(USERNAME):$(GROUPNAME) {} \; -exec chmod 640 {} \;
 	if test -f $(ETC)/fcron.deny; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.deny ; fi
 	if test -f $(ETC)/fcron.allow; then chown $(ROOTNAME):$(GROUPNAME) $(ETC)/fcron.allow ; fi
 
