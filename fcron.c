@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.31 2000-10-05 14:59:49 thib Exp $ */
+ /* $Id: fcron.c,v 1.32 2000-10-08 10:09:50 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.31 2000-10-05 14:59:49 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.32 2000-10-08 10:09:50 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -389,7 +389,7 @@ main(int argc, char **argv)
 	    break;
 	default:
 	    /* parent */
-	    printf("\n%s[%d] " VERSION_QUOTED " : started.\n\n",
+	    printf("%s[%d] " VERSION_QUOTED " : started.\n",
 		   prog_name, pid);
 
 	    exit(0);
