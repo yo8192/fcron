@@ -18,7 +18,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _POSIX_SOURCE	/* Don't redefine is already exists */
+#ifndef _POSIX_SOURCE	/* Don't redefine if already exists */
 #define _POSIX_SOURCE 1
 #endif
 
