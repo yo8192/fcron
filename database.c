@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.26 2000-09-12 19:53:20 thib Exp $ */
+ /* $Id: database.c,v 1.27 2000-09-14 19:02:10 thib Exp $ */
 
 #include "fcron.h"
 
@@ -726,6 +726,10 @@ check_lavg(time_t lim)
     register int i = 0;
     double l_avg[3];
 
+    l_avg[0] = 0;
+    l_avg[1] = 0;
+    l_avg[2] = 0;
+
     /* first, check if some lines must be executed because of until */
     while ( i < lavg_num )
 	if ( lavg_array[i].l_line->cl_until && lavg_array[i].l_until < now ) {
@@ -739,13 +743,12 @@ check_lavg(time_t lim)
 	return tts;
 	
     if ( (i = getloadavg(l_avg, 3)) != 3 )
-	while ( i++ < 3 )
-	    l_avg[i] = 0;
+	debug("got only %d lavg values", i);
+    debug("get_lavg: %f, %f, %f", l_avg[0], l_avg[1], l_avg[2]);
     /* the 3 values stored in the fcron lines are the real value *= 10 */
     l_avg[0] *= 10;
     l_avg[1] *= 10;
     l_avg[2] *= 10;
-    debug("get_lavg: %d, %d, %d", l_avg[0], l_avg[1], l_avg[2]);
     i = 0;
     while ( i < lavg_num ) {
 	/* check if the line should be executed */
@@ -764,7 +767,7 @@ check_lavg(time_t lim)
 		     || l_avg[2] < lavg_array[i].l_line->cl_lavg[2] )
 		 )
 	    ) {
-	    debug("lavg '%s' %s %d:%d %d:%d %d:%d",
+	    debug("lavg '%s' %s %2f:%d %2f:%d %2f:%d",
 		  lavg_array[i].l_line->cl_shell,
 		  (is_lor(lavg_array[i].l_line->cl_option)) ? "or" : "and",
 		  l_avg[0], lavg_array[i].l_line->cl_lavg[0],
