@@ -329,50 +329,6 @@ CFLAGS=$cflags
 AC_DEFINE_UNQUOTED(CFLAGS, "$cflags")
 
 
-AC_MSG_CHECKING(location of man directory)
-AC_ARG_WITH(mandir,
-[  --with-mandir=PATH	Root directory for manual pages.],
-[ case "$withval" in
-  no)
-    AC_MSG_ERROR(Need MANDIR.)
-    ;;
-  yes)
-    if test -d "$prefix/man" ; then
-        mandir="$prefix/man"
-        AC_MSG_RESULT($prefix/man)
-    elif  test -d "$prefix/share/man" ; then
-       mandir="$prefix/share/man"
-       AC_MSG_RESULT($prefix/share/man)
-    elif  test -d "$prefix/local/share/man" ; then
-       mandir="$prefix/local/share/man"
-       AC_MSG_RESULT($prefix/local/share/man)
-    else
-       AC_MSG_ERROR(Cannot determine value for man directory: try option --with-mandir=PATH)
-    fi
-    ;;
-  *)
-    mandir="$withval"
-    AC_MSG_RESULT($withval)
-    ;;
-  esac ],
-  if test -d "$prefix/man" ; then
-      mandir="$prefix/man"
-      AC_MSG_RESULT($prefix/man)
-  elif  test -d "$prefix/share/man" ; then
-     mandir="$prefix/share/man"
-     AC_MSG_RESULT($prefix/share/man)
-  elif  test -d "$prefix/local/share/man" ; then
-     mandir="$prefix/local/share/man"
-     AC_MSG_RESULT($prefix/local/share/man)
-  else
-     AC_MSG_ERROR(Cannot determine value for man directory: try option --with-mandir=PATH)
-  fi
-)
-MANDIR="$mandir"
-AC_DEFINE_UNQUOTED(MANDIR, "$mandir")
-AC_SUBST(MANDIR)
-
-
 AC_MSG_CHECKING(location of doc directory)
 AC_ARG_WITH(docdir,
 [  --with-docdir=PATH	Directory containing documentation.],
@@ -450,7 +406,7 @@ AC_ARG_WITH(rootname,
   yes)
     if cat /etc/passwd | grep "^root:" > /dev/null; then
 	rootname=root
-        AC_MSG_RESULT(root)
+        AC_MSG_RESULT($rootname)
     else
 	AC_MSG_ERROR(Cannot determine root's username: try option --with-rootname=USERNAME)
     fi
@@ -458,7 +414,7 @@ AC_ARG_WITH(rootname,
   *)
     if cat /etc/passwd | grep "^$withval:" > /dev/null ; then
 	rootname=$withval
-        AC_MSG_RESULT(root)
+        AC_MSG_RESULT($rootname)
     else
 	AC_MSG_ERROR(Invalid root's username : not in /etc/passwd)
     fi
@@ -466,7 +422,7 @@ AC_ARG_WITH(rootname,
     esac ],
     if cat /etc/passwd | grep "^root:" > /dev/null ; then
 	rootname=root
-        AC_MSG_RESULT(root)
+        AC_MSG_RESULT($rootname)
     else
 	AC_MSG_ERROR(Cannot determine root's username: try option --with-rootname=USERNAME)
     fi
@@ -482,7 +438,7 @@ AC_ARG_WITH(rootgroup,
   yes)
     if cat /etc/group | grep "^root:" > /dev/null ; then
 	rootgroup=root
-        AC_MSG_RESULT(root)
+        AC_MSG_RESULT($rootgroup)
     else
 	AC_MSG_ERROR(Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME)
     fi
@@ -490,7 +446,7 @@ AC_ARG_WITH(rootgroup,
   *)
     if cat /etc/group | grep "^$withval:" > /dev/null ; then
 	rootgroup=$withval
-        AC_MSG_RESULT(root)
+        AC_MSG_RESULT($rootgroup)
     else
 	AC_MSG_ERROR(Invalid root's groupname : not in /etc/group)
     fi
@@ -498,7 +454,7 @@ AC_ARG_WITH(rootgroup,
     esac ],
     if cat /etc/group | grep "^root:" > /dev/null ; then
 	rootgroup=root
-        AC_MSG_RESULT(root)
+        AC_MSG_RESULT($rootgroup)
     else
 	AC_MSG_ERROR(Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME)
     fi
