@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.30 2004-09-02 22:08:04 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.31 2004-11-13 19:45:19 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -27,6 +27,11 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>port to HP-UX : mails from Scott Tinsley : test in autoconf
 	       to remove call to "ioctl(fd, TIOCNOTTY, 0);"</para>
+	    </listitem>
+	 </itemizedlist>
+	 <itemizedlist>
+	    <listitem>
+	       <para>add something on fcron's incompatibility with Vixie cron @* syntax -- fix that.</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>

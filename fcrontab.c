@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.64 2003-12-25 22:42:45 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.65 2004-11-13 19:42:39 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -47,7 +47,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.64 2003-12-25 22:42:45 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.65 2004-11-13 19:42:39 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -944,11 +944,12 @@ main(int argc, char **argv)
     /* interpret command line options */
     parseopt(argc, argv);
 
-#ifdef USE_SETE_ID
     if ( ! (pass = getpwnam(USERNAME)) )
 	die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
     fcrontab_uid = pass->pw_uid;
     fcrontab_gid = pass->pw_gid;
+
+#ifdef USE_SETE_ID
 
 #ifdef HAVE_LIBPAM
     /* Open PAM session for the user and obtain any security

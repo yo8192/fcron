@@ -8,10 +8,19 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.33 2004-08-17 12:58:11 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.34 2004-11-13 19:47:02 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
+
+      <itemizedlist>
+	 <title>From version 2.9.5 to 2.9.5.1</title>
+	 <listitem>
+	    <para>Fixed serious security vulnerabilities in fcronsighup,
+	    and improved fcronsighup's overall security (drop privileges,
+	    better check user inputs, etc).</para>
+	 </listitem>
+      </itemizedlist>
 
       <itemizedlist>
 	 <title>From version 2.9.4 to 2.9.5</title>

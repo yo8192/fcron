@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.73 2004-08-12 09:45:30 thib Exp $ */
+ /* $Id: database.c,v 1.74 2004-11-13 19:43:15 thib Exp $ */
 
 #include "fcron.h"
 
@@ -955,6 +955,13 @@ set_next_exe(cl_t *line, char option, int info_fd)
    
       set_cl_nextexe:
 	/* set cl_nextexe (handle the timezone differences) */
+
+	/* TODO : save the ftime.tm_isdst before mktime(), compare the saved value
+	 * to ftime.tm_isdst after mktime() : if it is different, then mktime
+	 * has added or removed one hour because of the daylight saving change :
+	 * then, check it has done what we want or not, and fix nextexe and ftime
+	 * if necessary */
+
 	nextexe = mktime(&ftime);
 
 	if ( is_random(line->cl_option) ) {
