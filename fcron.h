@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.22 2001-05-17 00:57:25 thib Exp $ */
+ /* $Id: fcron.h,v 1.23 2001-05-29 19:27:55 thib Exp $ */
 
 #ifndef __FCRON_H__
 #define __FCRON_H__
@@ -70,6 +70,7 @@ extern short int serial_array_size;
 extern short int serial_array_index;
 extern short int serial_num;
 extern short int serial_running;
+extern short int serial_max_running; 
 extern struct exe *exe_array;
 extern short int exe_array_size;
 extern short int exe_num;

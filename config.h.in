@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.28 2001-05-28 18:51:24 thib Exp $ */
+ /* $Id: config.h.in,v 1.29 2001-05-29 19:32:45 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -58,6 +58,10 @@
 #define SERIAL_GROW_SIZE 10 /* this is the number of entries that will be
 			     * added to serial queue each time it has to grow
 			     * up */
+
+#define SERIAL_MAX_RUNNING 1 /* fcron will run (by default) no more than this
+			      * number of serial job simultaneously.
+			      * (this may be overridden by fcron option -m */
 
 #define LAVG_QUEUE_MAX 30 /* if lavg queue contains this number of entries,
 			   * the next lavg job to be executed will be run

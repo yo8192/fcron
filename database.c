@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.52 2001-05-24 19:59:47 thib Exp $ */
+ /* $Id: database.c,v 1.53 2001-05-29 19:32:37 thib Exp $ */
 
 #include "fcron.h"
 #include "database.h"
@@ -80,7 +80,7 @@ run_normal_job(CL *line)
 	run_queue_job(line);
     }
     else {
-	warn("    process already running: %s %s", 
+	warn("    process already running: %s's %s", 
 	     line->cl_file->cf_user,
 	     line->cl_shell
 	    );
@@ -115,8 +115,8 @@ run_serial_job(void)
 /*      debug("running next serial job"); */
 /*      //     */
 
-/*      debug("num: %d running:%d  index:%d", serial_num, serial_running, */
-/*  	  serial_array_index); */
+    debug("num: %d running:%d  index:%d", serial_num, serial_running,
+  	  serial_array_index);
     if ( serial_num != 0 ) {
 	run_queue_job(serial_array[serial_array_index]);
 	serial_array[serial_array_index] = NULL;
@@ -238,7 +238,7 @@ add_serial_job(CL *line)
 	return;
     }
 
-/*      debug("inserting in serial queue %s", line->cl_shell); */
+    debug("inserting in serial queue %s", line->cl_shell);
 
     if ( serial_num >= serial_array_size ) {
 	if ( serial_num >= SERIAL_QUEUE_MAX )
@@ -393,12 +393,12 @@ wait_chld(void)
 		    
 		    if ( is_serial_once(line->cl_option) ) {
 			clear_serial_once(line->cl_option);
-			if ( --serial_running <= 0 )
+			if ( --serial_running < serial_max_running )
 			    run_serial_job();
 		    }
 		    else if ( is_serial(line->cl_option)
 			      && ! is_lavg(line->cl_option) ) {
-			if (--serial_running <= 0)
+			if (--serial_running < serial_max_running)
 			    run_serial_job();
 		    }
 		    else if ( is_lavg(line->cl_option) && 
@@ -1154,7 +1154,7 @@ check_lavg(time_t lim)
     i = 0;
     while ( i < lavg_num ) {
 	/* check if the line should be executed */
-	if ( lavg_serial_running > 0 && 
+	if ( lavg_serial_running >= serial_max_running && 
 	     is_serial(lavg_array[i].l_line->cl_option) ) {
 	    i++;
 	    continue;
