@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.5 2002-01-04 18:02:06 thib Exp $
+# $Id: Makefile.in,v 1.6 2002-01-04 19:11:52 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -20,9 +20,8 @@ DESTDOC		= @DOCDIR@
 
 INSTALL		= @INSTALL@
 JADE 		= @JADE@
-NSGMLS		= @NSGMLS@
-SGMLSPL		= @SGMLSPL@
-DB2MAN_SPEC	= @DB2MAN_SPEC@
+DB2MAN_BEFORE	= @DB2MAN_BEFORE@
+DB2MAN_AFTER	= @DB2MAN_AFTER@
 
 ROOTNAME	= @ROOTNAME@
 ROOTGROUP	= @ROOTGROUP@
@@ -48,10 +47,11 @@ all: doc
 doc: HTML/index.html
 
 mandoc:
-	@(if test \( ! -f $(DB2MAN_SPEC) \) -o \( ! -x $(NSGMLS) \) -o \( ! -x $(SGMLSPL) \); then \
+	@(if test -z "$(DB2MAN_BEFORE)"; then \
 	   echo "ERROR: cannot generate man pages." ; \
-	   echo "       Please check if nsgmls, sgmlspl are installed, and " ; \
-	   echo "       if configure's option --with-db2man-spec is correctly set." ; \
+	   echo "  Please check if a db2man converter is installed, or if" \
+	   echo "  nsgmls, sgmlspl are installed, and if configure's options" \
+	   echo "  --with-db2man and --with-db2man-spec are correctly set." ; \
 	   exit 1 ; \
 	fi)
 	@(echo ; echo "Building man pages ..."; echo )
@@ -62,7 +62,7 @@ mandoc:
                   <!ENTITY % decl SYSTEM "fcron-doc.mod"> \
                   %decl;]>' > _tmp_ ; \
           echo "&$$i;" >> _tmp_ ; \
-          $(NSGMLS) _tmp_ 2> /dev/null | $(SGMLSPL) $(DB2MAN_SPEC) 2>&1 > /dev/null ; \
+          $(DB2MAN_BEFORE) _tmp_ $(DB2MAN_AFTER) 2>&1 > /dev/null ; \
 	  rm -f _tmp_ ; \
 	  mv `basename $$i .sgml` man/ ; \
           done)

@@ -716,9 +716,35 @@ if test -z "$JADE"; then
 	AC_PATH_PROG(JADE,jade)
 fi
 
+AC_PATH_PROG(DB2MAN,docbook2man)
+if test -z "$DB2MAN"; then
+	AC_PATH_PROG(DB2MAN,db2man)
+fi
+AC_MSG_CHECKING(Looking for docbook2man converter)
+AC_ARG_WITH(db2man,
+[ --with-db2man-spec=PATH	set PATH to a docbook2man converter.],
+[ case "$withval" in
+  no) 
+    DB2MAN=""
+    AC_MSG_RESULT(none)
+    ;;
+  yes)
+    AC_MSG_ERROR(Must be set to PATH or "no".)
+    ;;
+  *)
+    if ! test -x "$withval"; then
+      AC_MSG_ERROR($withval is not an exe file.)
+    fi
+    DB2MAN="$withval"
+    AC_MSG_RESULT($withval)
+    ;;
+  esac ],
+  AC_MSG_RESULT(default: $DB2MAN)
+)
+AC_SUBST(DB2MAN)
+
 AC_PATH_PROG(NSGMLS, nsgmls)
 AC_PATH_PROG(SGMLSPL, sgmlspl)
-
 
 DB2MAN_SPEC="/usr/share/sgml/docbook/utils-0.6.9/helpers/docbook2man-spec.pl"
 
@@ -744,6 +770,22 @@ AC_ARG_WITH(db2man-spec,
   AC_MSG_RESULT(default)
 )
 AC_SUBST(DB2MAN_SPEC)
+
+if test -x "$DB2MAN"; then
+  DB2MAN_BEFORE="$DB2MAN"
+  DB2MAN_AFTER=""
+else
+  if test \( \( -f "$DB2MAN_SPEC" \) -a \( -x "$NSGMLS" \) \
+          -a \( -x "$SGMLSPL" \) \); then
+    DB2MAN_BEFORE="$NSGMLS"
+    DB2MAN_AFTER="2> /dev/null | $SGMLSPL $DB2MAN_SPEC"
+  else
+    DB2MAN_BEFORE=""
+    DB2MAN_AFTER=""
+  fi
+fi
+AC_SUBST(DB2MAN_BEFORE)
+AC_SUBST(DB2MAN_AFTER)
 
 
 DSSSL_DIR="/usr/share/sgml/docbook/dsssl-stylesheets-1.72/"
