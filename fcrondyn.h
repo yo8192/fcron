@@ -21,20 +21,29 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.h,v 1.1 2002-02-25 18:40:29 thib Exp $ */
+ /* $Id: fcrondyn.h,v 1.2 2002-03-02 17:24:22 thib Exp $ */
 
 #ifndef __FCRONDYN_H__
 #define __FCRONDYN_H__
 
 #include "global.h"
-#include "socket.h"
+#include "dyncom.h"
 
 /* global variables */
 extern char debug_opt;
 extern char dosyslog;
-extern char *user;
-extern uid_t uid;
-extern uid_t asuid;
-extern uid_t fcrondyn_uid;
+extern pid_t daemon_pid;
+
+
+/* types def */
+#define MAX_NUM_OPT 4
+typedef struct cmd_list_ent {
+    char *cmd_name;
+    char *cmd_desc;
+    int cmd_numopt;
+    int cmd_code;
+    int cmd_opt[MAX_NUM_OPT];
+    int cmd_default[MAX_NUM_OPT];
+} cmd_list_ent;
 
 #endif /* __FCRONDYN_H__ */
