@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.31 2001-04-21 08:53:40 thib Exp $
+# $Id: boot-install,v 1.32 2001-04-29 22:23:44 thib Exp $
 
 # take 6 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -13,7 +13,7 @@
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
-startdir=$pwd
+startdir=$PWD
 if test $# -ne 6; then
     echo "Too few/many arguments"
     exit 1
@@ -42,6 +42,24 @@ if test `uname -s` = "FreeBSD"; then
 else
   IS_FREEBSD=0
 fi
+
+# Check now if there is an old ( < 1.1.x ) version of fcrontab on the system.
+# We do that here because if user say "no" too early, the PREVIOUS_VERSION would
+# not be removed.
+if test -r "$SRCDIR/script/PREVIOUS_VERSION"; then
+  MAJOR=`cat $SRCDIR/script/PREVIOUS_VERSION | awk '{print $2}' | awk -F '.' '{print $1}'`
+  MINOR=`cat $SRCDIR/script/PREVIOUS_VERSION | awk '{print $2}' | awk -F '.' '{print $2}'`
+#  echo "MINOR $MINOR MAJOR $MAJOR"
+  if test \( "$MAJOR" -lt 1 \) -o \( \( "$MINOR" -lt 1 \) -a "$MAJOR" -eq 1 \); then
+    NEED_UPDATE=1
+  else
+    NEED_UPDATE=0
+  fi
+  rm -f $SRCDIR/script/PREVIOUS_VERSION
+else
+  NEED_UPDATE=1
+fi
+#echo "NEED_UPDATE : $NEED_UPDATE"
 
 echo
 echo "Fcron should be started by your init scripts."
@@ -76,7 +94,7 @@ echo
 
 INSTALL="nothing"
 SYSV=0
-RESTARTED=0
+STOPPED=0
 INSTALLED=0
 
 if test $IS_FREEBSD -eq 1; then 
@@ -244,26 +262,29 @@ echo "Installation process failed to install fcron in your init scripts :"
 echo "please do it manually."
 fi
 
-# we stop fcron like this (not using "fcron restart") because
-# an old version of fcron may not stop correctly otherwise.
-echo 
-echo "You should now restart fcron."
-RESTART="nothing"
-COMMENT=""
-if PID=`pidof fcron`; then
-  KILL="kill -TERM $PID"
-  KILLSTR="kill -TERM \`pidof fcron\`"
-else
-  KILL="killall -TERM fcron"
-  KILLSTR=$KILL
-  COMMENT="WARNING : this command may not have the desired effect on non-Linux systems.\n"
-  PID="test -z on PID is not need in this case"
-fi
-if test -z "$PID"; then
+
+# NEED_UPDATE is set at the beginning of this script
+if test $NEED_UPDATE -eq 0; then
+  # we stop fcron like this (not using "fcron restart") because
+  # an old version of fcron may not stop correctly otherwise.
+  echo 
+  echo "You should now stop the old version of fcron and start the new one."
+  RESTART="nothing"
+  COMMENT=""
+  if PID=`pidof fcron`; then
+    KILL="kill -TERM $PID"
+    KILLSTR="kill -TERM \`pidof fcron\`"
+  else
+    KILL="killall -TERM fcron"
+    KILLSTR=$KILL
+    COMMENT="WARNING : this command may not have the desired effect on non-Linux systems.\n"
+    PID="test -z on PID is not need in this case"
+  fi
+  if test -z "$PID"; then
     echo "Fcron is not running."
-    echo "You may start it after having reinstalled the fcrontabs."
-    RESTARTED=1    
-else
+    KILL=""
+    COMMENT=""
+  fi
   if test "$SYSV" -eq 1; then
     CMD="$ROOTDIR/init.d/fcron start"
   else
@@ -272,13 +293,17 @@ else
   if test $ANSWER -eq 2; then
     while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
     do
-      echo "Would you like to do it with a '"$KILLSTR"'"
-      echo -n $COMMENT
-      echo "followed by a '"$CMD"' ?"
-      echo -n "Please answer with 'y' or 'n' (default: 'y'): "
-      read RESTART NOTHING
+      if test ! -z "$KILL"; then
+        echo "Would you like to do it with a '"$KILLSTR"' ?"
+        echo -n $COMMENT
+        echo "followed by a '"$CMD"' ?"
+      else
+        echo "Would you like to start it by '"$CMD"' ?"
+      fi
+        echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+        read RESTART NOTHING
     done
-    # automatic answer given by configure script (option --with-answer-all)
+  # automatic answer given by configure script (option --with-answer-all)
   elif test $ANSWER -eq 1; then
     RESTART="y"
   else
@@ -288,49 +313,113 @@ else
     $KILL
     sleep 2   # wait for fcron to stop
     $CMD
-    RESTARTED=1
   fi
-fi
 
-echo
-if test "$RESTARTED" = "1"; then
-    echo "You should now reinstall the fcrontabs."
-else
-    echo "After having restarted fcron, you should reinstall the fcrontabs."
-fi
-echo "As a matter of fact, you must know that fcrontabs installed by an old"
-echo "version of fcrontab may not work with this version if you don't" 
-echo "reinstall them."
-echo "Warning : you may lose some informations if you do that (i.e. the last"
-echo "    execution's time and date (@-jobs) as if you run a 'fcrontab -e -n')"
+else # test $NEED_UPDATE -eq 0
 
-if test "$RESTARTED" -eq 1; then
-  REINSTALL="nothing"
+  echo 
+  echo "You should now stop the old version fcron."
+  STOP="nothing"
+  COMMENT=""
+  if PID=`pidof fcron`; then
+    KILL="kill -TERM $PID"
+    KILLSTR="kill -TERM \`pidof fcron\`"
+  else
+    KILL="killall -TERM fcron"
+    KILLSTR=$KILL
+    COMMENT="WARNING : this command may not have the desired effect on non-Linux systems.\n"
+    PID="test -z on PID is not need in this case"
+  fi
+  if test -z "$PID"; then
+    echo "Fcron is not running."
+    echo "You may start it after having updated the fcrontabs."
+    STOPPED=1
+  else
+    if test $ANSWER -eq 2; then
+      while test \( ! -z "$STOP" \) -a \( "$STOP" != "y" \) -a \( "$STOP" != "n" \);
+      do
+        echo "Would you like to do it with a '"$KILLSTR"'"
+        echo -n $COMMENT
+        echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+        read STOP NOTHING
+      done
+      # automatic answer given by configure script (option --with-answer-all)
+    elif test $ANSWER -eq 1; then
+      STOP="y"
+    else
+      STOP="n"
+    fi
+    if test \( -z "$STOP" \) -o \( "$STOP" = "y" \); then
+      $KILL
+      STOPPED=1
+    fi
+  fi
+
+  echo
+  if test "$STOPPED" = "1"; then
+    echo "You should now update the fcrontabs format using convert-fcrontab program."
+  else
+    echo "After having restarted fcron, you should update the fcrontabs format"
+    echo "using the convert-fcrontab program ($SRCDIR/convert-fcrontab)"
+    echo "(run \"convert-fcrontab -h\" to get help) and then start the new version"
+    echo "of fcron."
+    exit 0
+  fi
+  echo "As a matter of fact, you must know that fcrontabs installed by an old"
+  echo "version of fcrontab won't work anymore with this version if you don't"
+  echo "update their format."
+
+  UPDATE="nothing"
   # reinstall the fcrontabs
-  # to do that, the old (if any) version of fcron must not run
-  # (sysVinit-install normally start the last version)
   if test $ANSWER -eq 2; then
-    while test \( ! -z "$REINSTALL" \) -a \( "$REINSTALL" != "y" \) -a \( "$REINSTALL" != "n" \);
+    while test \( ! -z "$UPDATE" \) -a \( "$UPDATE" != "y" \) -a \( "$UPDATE" != "n" \);
     do
       echo "Would you like to do it now ?"
       echo -n "Please answer with 'y' or 'n' (default: 'y'): "
-      read REINSTALL NOTHING
+      read UPDATE NOTHING
     done
   elif test $ANSWER -eq 1; then
-    REINSTALL="y"
+    UPDATE="y"
   else
-    REINSTALL="n"
+    UPDATE="n"
   fi
-  if test \( -z "$REINSTALL" \) -o \( "$REINSTALL" = "y" \); then
+  if test \( -z "$UPDATE" \) -o \( "$UPDATE" = "y" \); then
     for FILE in $FCRONTABS/* ; do \
       if test "$FILE" != "$FCRONTABS/*"; then
         BASENAME=`basename $FILE` ; \
         FCRONTAB=`echo "$BASENAME" | \
         sed "s|.*orig|| ; s|new.*|| ; s|fcrontab.sig|| ; s|rm.*||"` ; \
-        ( test ! -z "$FCRONTAB" && fcrontab -u $FCRONTAB -z ) \
+        ( test ! -z "$FCRONTAB" && $SRCDIR/convert-fcrontab $FCRONTAB ) \
             || echo -n ""; \
       fi
     done
   fi
-fi
 
+  # start the new version of fcron
+  echo 
+  echo "You should now start the new version of fcron."
+  START="nothing"
+  COMMENT=""
+  if test "$SYSV" -eq 1; then
+    CMD="$ROOTDIR/init.d/fcron start"
+  else
+    CMD=$STARTCMD
+  fi
+  if test $ANSWER -eq 2; then
+    while test \( ! -z "$START" \) -a \( "$START" != "y" \) -a \( "$START" != "n" \);
+    do
+      echo "Would you like to do it with a '"$CMD"'"
+      echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+      read START NOTHING
+    done
+    # automatic answer given by configure script (option --with-answer-all)
+  elif test $ANSWER -eq 1; then
+    START="y"
+  else
+    START="n"
+  fi
+  if test \( -z "$START" \) -o \( "$START" = "y" \); then
+    $CMD
+  fi
+
+fi
