@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.9 2002-10-06 17:10:48 thib Exp $ */
+ /* $Id: socket.c,v 1.10 2002-10-28 17:56:53 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -29,11 +29,17 @@
 #include "fcron.h"
 #include "socket.h"
 
+void remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client);
 void exe_cmd(struct fcrondyn_cl *client);
 void auth_client(struct fcrondyn_cl *client);
+void cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root);
 void print_fields(int fd, unsigned char *details);
 void print_line(int fd, struct cl_t *line,  unsigned char *details, pid_t pid, int index,
 		time_t until);
+void cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root);
+void cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index,
+		int is_root);
+void cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index);
 
 fcrondyn_cl *fcrondyn_cl_base; /* list of connected fcrondyn clients */
 int fcrondyn_cl_num = 0;       /* number of fcrondyn clients currently connected */    
@@ -45,12 +51,33 @@ int auth_fail = 0;             /* number of auth failure */
 time_t auth_nofail_since = 0;       /* we refuse auth since x due to too many failures */
 
 /* some error messages ... */
-char err_cmd_unknown_str[] = "Not implemented yet or erroneous command.\n";
+char err_no_err_str[] = "Command successfully completed.\n";
+char err_unknown_str[] = "Fcron has encountered an error : command not completed.\n";
+char err_cmd_unknown_str[] = "Not yet implemented or erroneous command.\n";
 char err_job_nfound_str[] = "No corresponding job found.\n";
+char err_rjob_nfound_str[] = "No corresponding running job found.\n (The job may have "
+"just finished its execution.)\n";
 char err_invalid_user_str[] = "Invalid user : unable to find a passwd entry.\n";
+char err_invalid_args_str[] = "Invalid arguments.\n";
 char err_job_nallowed_str[] = "You are not allowed to see/change this line.\n";
 char err_all_nallowed_str[] = "You are not allowed to list all jobs.\n";
 char err_others_nallowed_str[] = "You are not allowed to list other users' jobs.\n";
+
+/* Send an error message to fcrondyn */
+#define Send_err_msg(FD, MSG) \
+          send(FD, MSG, sizeof(MSG), 0);
+
+/* to tell fcrondyn there's no more data to wait */
+#define Tell_no_more_data(FD) \
+	    send(FD, END_STR, sizeof(END_STR), 0);
+
+/* Send an error message to fcrondyn and return */
+#define Send_err_msg_end(FD, MSG) \
+        { \
+          send(FD, MSG, sizeof(MSG), 0); \
+          Tell_no_more_data(FD); \
+          return; \
+        }
 
 /* which bit corresponds to which field ? */
 #define FIELD_USER 0
@@ -336,7 +363,7 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 		    || is_root )
 		    print_line(fd, j->j_line, fields, 0, 0, 0);
 		else
-		    send(fd, err_job_nallowed_str,sizeof(err_job_nallowed_str), 0);
+		    Send_err_msg(fd, err_job_nallowed_str);
 		found = 1;
 		break;
 	    }
@@ -368,9 +395,7 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 
 	if ( all && ! is_root) {
 	    warn("User %s tried to list *all* jobs.", client->fcl_user);
-	    send(fd, err_all_nallowed_str, sizeof(err_all_nallowed_str), 0);
-	    send(fd, END_STR, sizeof(END_STR), 0);
-	    return;
+	    Send_err_msg_end(fd, err_all_nallowed_str);
 	}
 	if ( all )
 	    bit_set(fields, FIELD_USER);
@@ -386,16 +411,12 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 #endif
 		if ( (pass = getpwuid( (uid_t) cmd[1] )) == NULL ) {
 		    warn_e("Unable to find passwd entry for %ld", cmd[1]);
-		    send(fd, err_invalid_user_str, sizeof(err_invalid_user_str), 0);
-		    send(fd, END_STR, sizeof(END_STR), 0);
-		    return;
+		    Send_err_msg_end(fd, err_invalid_user_str);
 		}
 		if ( ! is_root && strcmp(pass->pw_name, client->fcl_user) != 0 ) {
 		    warn_e("%s is not allowed to see %s's jobs. %ld", client->fcl_user,
 			   pass->pw_name);
-		    send(fd, err_others_nallowed_str, sizeof(err_others_nallowed_str),0);
-		    send(fd, END_STR, sizeof(END_STR), 0);
-		    return;
+		    Send_err_msg_end(fd, err_others_nallowed_str);
 		}
 		user = pass->pw_name;
 #ifdef SYSFCRONTAB
@@ -438,10 +459,116 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
     }
 
     if ( ! found )
-	send(fd, err_job_nfound_str, sizeof(err_job_nfound_str), 0);
+	Send_err_msg(fd, err_job_nfound_str);
     /* to tell fcrondyn there's no more data to wait */
-    send(fd, END_STR, sizeof(END_STR), 0);
+    Tell_no_more_data(fd);
     
+}
+
+
+void 
+cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
+/* common code to all cmds working on jobs in the exeq */
+{
+    int exe_index;
+    int found = 0;
+    char *err_str = NULL;
+
+    /* find the corresponding job */
+    for ( exe_index = 0 ; exe_index < exe_num; exe_index++ )
+	if ( cmd[2] == exe_array[exe_index].e_line->cl_id ) {
+	    found = 1;
+	    break;
+	}
+    if ( ! found ) {
+
+	if ( cmd[0] == CMD_RENICE )
+	    err_str = "cannot renice job id %ld for %s : no corresponding running job.";
+	else if (cmd[0] == CMD_SEND_SIGNAL)
+	    err_str = "cannot send signal to job id %ld for %s :"
+		" no corresponding running job.";
+	else
+	    err_str = "cannot run unknown cmd on job id %ld for %s :"
+		" no corresponding running job.";
+
+	warn(err_str, cmd[2], client->fcl_user);
+	Send_err_msg_end(fd, err_rjob_nfound_str);
+    }
+    
+    /* check if the request is valid */
+    if ( ! is_root &&
+	 strcmp(client->fcl_user, exe_array[exe_index].e_line->cl_file->cf_user) != 0 ) {
+
+	if ( cmd[0] == CMD_RENICE )
+	    err_str = "%s tried to renice to %ld job id %ld for %s : not allowed.";
+	else if (cmd[0] == CMD_SEND_SIGNAL)
+	    err_str = "%s tried to send signal %ld to id %ld for %s : not allowed.";
+	else
+	    err_str = "cannot run unknown cmd with arg %ld on job id %ld for %s :"
+		" not allowed.";
+
+	warn(err_str, client->fcl_user, cmd[1], cmd[2], client->fcl_user);
+	Send_err_msg_end(fd, err_job_nallowed_str);
+    }
+
+    if ( cmd[0] == CMD_SEND_SIGNAL )
+	cmd_send_signal(client, cmd, fd, exe_index);
+    else if ( cmd[0] == CMD_RENICE )
+	cmd_renice(client, cmd, fd, exe_index, is_root);
+    else
+	Send_err_msg_end(fd, err_cmd_unknown_str);
+}
+
+
+void 
+cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index, int is_root)
+/* change nice value of a running job */
+{
+
+#ifdef HAVE_SETPRIORITY
+    /* check if arguments are valid */
+    if ( exe_array[exe_index].e_job_pid <= 0 || ( (int)cmd[1] < 0 && ! is_root )
+	|| (int)cmd[1] > 20 || (int)cmd[1] < -20 ) {
+	warn("renice: invalid args : pid: %d nice_value: %d user: %s.",
+	     exe_array[exe_index].e_job_pid, (int)cmd[1], client->fcl_user);	
+	Send_err_msg_end(fd, err_invalid_args_str);
+    }
+
+    /* ok, now setpriority() the job */
+    if ( setpriority(PRIO_PROCESS, exe_array[exe_index].e_job_pid, (int)cmd[1]) != 0) {
+	error_e("could not setpriority(PRIO_PROCESS, %d, %d)",
+		exe_array[exe_index].e_job_pid, (int)cmd[1]);
+	Send_err_msg_end(fd, err_unknown_str);
+    }
+    else
+	Send_err_msg_end(fd, err_no_err_str);
+
+#else /* HAVE_SETPRIORITY */
+    warn("System has no setpriority() : cannot renice. pid: %d nice_value: %d user: %s.",
+	 exe_array[exe_index].e_job_pid, (int)cmd[1], client->fcl_user);	
+    Send_err_msg_end(fd, err_cmd_unknown_str);    
+
+#endif /* HAVE_SETPRIORITY */
+}
+
+
+void
+cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index)
+/* send a signal to a running job */
+{
+    if ( exe_array[exe_index].e_job_pid <= 0 || (int)cmd[1] <= 0 ) {
+	warn("send_signal: invalid args : pid: %d signal: %d user: %s",
+	     exe_array[exe_index].e_job_pid, (int)cmd[1], client->fcl_user);	
+	Send_err_msg_end(fd, err_invalid_args_str);
+    }
+
+    /* ok, now kill() the job */
+    if ( kill(exe_array[exe_index].e_job_pid, (int)cmd[1]) != 0) {
+	error_e("could not kill(%d, %d)", exe_array[exe_index].e_job_pid, (int)cmd[1]);
+	Send_err_msg_end(fd, err_unknown_str);
+    }
+    else
+	Send_err_msg_end(fd, err_no_err_str);
 }
 
 
@@ -465,6 +592,11 @@ exe_cmd(struct fcrondyn_cl *client)
     
     switch ( cmd[0] ) {
 
+    case CMD_SEND_SIGNAL:
+    case CMD_RENICE:
+	cmd_on_exeq(client, cmd, fd, is_root);
+	break;
+
     case CMD_DETAILS:
     case CMD_LIST_JOBS:
     case CMD_LIST_LAVGQ:
@@ -474,13 +606,33 @@ exe_cmd(struct fcrondyn_cl *client)
 	break;
 
     default:
-	send(fd, err_cmd_unknown_str, sizeof(err_cmd_unknown_str), 0);
-	     
-	/* to tell fcrondyn there's no more data to wait */
-	send(fd, END_STR, sizeof(END_STR), 0);
+	Send_err_msg_end(fd, err_cmd_unknown_str);
     }
 }
 
+void 
+remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client)
+/* close the connection, remove it from the list 
+and make client points to the next entry */
+{
+    shutdown((*client)->fcl_sock_fd, SHUT_RDWR);
+    close((*client)->fcl_sock_fd);
+    FD_CLR((*client)->fcl_sock_fd, &master_set);
+    debug("connection closed : fd : %d", (*client)->fcl_sock_fd);
+    if (prev_client == NULL ) {
+	fcrondyn_cl_base = (*client)->fcl_next;
+	Flush((*client)->fcl_user);
+	Flush(*client);
+	*client = fcrondyn_cl_base;
+    }
+    else {
+	prev_client->fcl_next = (*client)->fcl_next;
+	Flush((*client)->fcl_user);
+	Flush(*client);
+	*client = prev_client->fcl_next;
+    }
+    fcrondyn_cl_num -= 1;
+}
 
 void
 check_socket(int num)
@@ -522,6 +674,7 @@ check_socket(int num)
 		/* include new entry in client list */
 		client->fcl_next = fcrondyn_cl_base;
 		fcrondyn_cl_base = client;
+		client->fcl_idle_since = now;
 		/* to avoid trying to read from it in this call */
 		avoid_fd = fd;
 		
@@ -538,27 +691,29 @@ check_socket(int num)
     client = fcrondyn_cl_base;
     while ( client != NULL ) {
 	if (! FD_ISSET(client->fcl_sock_fd, &read_set) || client->fcl_sock_fd==avoid_fd){
-	    /* nothing to do on this one ... check the next one */
-	    prev_client = client;
-	    client = client->fcl_next;
+	    /* check if the connection has not been idle for too long ... */
+	    if (client->fcl_user==NULL && now - client->fcl_idle_since > MAX_AUTH_TIME ){
+		warn("Connection with no auth for more than %ds : closing it.",
+		     MAX_AUTH_TIME);
+		remove_connection(&client, prev_client);
+	    }
+	    else if ( now - client->fcl_idle_since > MAX_IDLE_TIME ) {
+		warn("Connection of %s is idle for more than %ds : closing it.",
+		     client->fcl_user, MAX_IDLE_TIME);
+		remove_connection(&client, prev_client);
+	    }
+	    else {
+		/* nothing to do on this one ... check the next one */
+		prev_client = client;
+		client = client->fcl_next;
+	    }
 	    continue;
 	}
 
 	if ( (read_len = recv(client->fcl_sock_fd, buf_int, sizeof(buf_int), 0)) <= 0 ) {
 	    if (read_len == 0) {
 		/* connection closed by client */
-		shutdown(client->fcl_sock_fd, SHUT_RDWR);
-		close(client->fcl_sock_fd);
-		FD_CLR(client->fcl_sock_fd, &master_set);
-		debug("connection closed : fd : %d", client->fcl_sock_fd);
-		if (prev_client == NULL )
-		    client = fcrondyn_cl_base = client->fcl_next;
-		else {
-		    prev_client->fcl_next = client->fcl_next;
-		    Flush(client);
-		    client = prev_client->fcl_next;
-		}
-		fcrondyn_cl_num -= 1;
+		remove_connection(&client, prev_client);
 	    }
 	    else {
 		error_e("error recv() from sock fd %d", client->fcl_sock_fd);
