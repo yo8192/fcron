@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.54 2002-10-06 16:49:02 thib Exp $ */
+ /* $Id: job.c,v 1.55 2002-10-28 17:49:00 thib Exp $ */
 
 #include "fcron.h"
 
@@ -208,8 +208,14 @@ run_job(struct exe_t *exeent)
 
     pid_t pid;
     cl_t *line = exeent->e_line;
+    int pipe_pid_fd[2];
 
     /* prepare the job execution */
+    if ( pipe(pipe_pid_fd) != 0 ) {
+	error_e("pipe(pipe_pid_fd) : setting job_pid to -1");
+	exeent->e_job_pid = -1;
+    }
+
     switch ( pid = fork() ) {
     case -1:
 	error_e("Fork error : could not exec \"%s\"", line->cl_shell);
@@ -337,8 +343,14 @@ run_job(struct exe_t *exeent)
 	default:
 	    /* parent */
 
-	    /* close unneeded WRITE pipe */
+	    /* close unneeded WRITE pipe and READ pipe */
 	    close(pipe_fd[1]);
+	    close(pipe_pid_fd[0]);
+
+	    /* give the pid of the child to the parent (main) fcron process */
+	    if ( write(pipe_pid_fd[1], &pid, sizeof(pid)) < 0 )
+		error_e("could not write child pid to pipe_pid_fd[1]");
+	    close(pipe_pid_fd[1]);
 
 	    if ( ! is_nolog(line->cl_option) )
 		explain("Job %s started for user %s (pid %d)", line->cl_shell,
@@ -346,8 +358,8 @@ run_job(struct exe_t *exeent)
 
 	    if ( ! to_stdout && is_mail(line->cl_option ) ) {
 		/* user wants a mail : we use the pipe */
-		register int ch = 0;
-		register FILE *pipef = fdopen(pipe_fd[0], "r");
+		int ch = 0;
+		FILE *pipef = fdopen(pipe_fd[0], "r");
 
 		if ( pipef == NULL )
 		    die_e("Could not fdopen() pipe_fd[0]");
@@ -368,8 +380,18 @@ run_job(struct exe_t *exeent)
     default:
 	/* parent */
 
+	/* close unneeded WRITE fd */
+	close(pipe_pid_fd[1]);
+
 	exeent->e_ctrl_pid = pid;
 	line->cl_file->cf_running += 1;
+
+	/* read the pid of the job */
+	if (read(pipe_pid_fd[0], &(exeent->e_job_pid), sizeof(pid_t)) < sizeof(pid_t)) {
+	    error_e("Could not read job pid : setting it to -1");
+	    exeent->e_job_pid = -1;
+	}
+	close(pipe_pid_fd[0]);
     }
 
 }
@@ -398,14 +420,27 @@ end_job(cl_t *line, int status, FILE *mailf, short mailpos)
 	if ( ! is_nolog(line->cl_option) )
 	    explain("Job %s terminated%s", line->cl_shell, m);
     }
-    else if (WIFEXITED(status))
+    else if (WIFEXITED(status)) {
 	warn("Job %s terminated (exit status: %d)%s",
 	     line->cl_shell, WEXITSTATUS(status), m);
-    else if (WIFSIGNALED(status))
+	/* there was an error : in order to inform the user by mail, we need
+	 * to add some data to mailf */
+	if ( mailf != NULL )
+	    fprintf(mailf, "Job %s terminated (exit status: %d)%s",
+		    line->cl_shell, WEXITSTATUS(status), m);
+    }
+    else if (WIFSIGNALED(status)) {
 	error("Job %s terminated due to signal %d%s",
 	      line->cl_shell, WTERMSIG(status), m);
-    else /* is this possible? */
+	if ( mailf != NULL )
+	    fprintf(mailf, "Job %s terminated due to signal %d%s",
+		    line->cl_shell, WTERMSIG(status), m);
+    }
+    else { /* is this possible? */
 	error("Job %s terminated abnormally %s", line->cl_shell, m);
+	if ( mailf != NULL )
+	    fprintf(mailf, "Job %s terminated abnormally %s", line->cl_shell, m);
+    }
 
 #ifdef HAVE_LIBPAM
     /* we close the PAM session before running the mailer command :
