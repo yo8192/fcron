@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.32 2000-12-30 12:54:55 thib Exp $ */
+ /* $Id: fileconf.c,v 1.33 2001-01-12 21:42:18 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -48,6 +48,7 @@ char *file_name;
 int line;
 extern char *user;
 extern uid_t uid;
+extern uid_t asuid;
 extern uid_t fcrontab_uid;
 
 /* warning : all names must have the same length */
@@ -178,8 +179,8 @@ read_file(char *filename, char *user)
 
     Alloc(cf, CF);
     default_line.cl_file = cf;
-    default_line.cl_runas = uid;
-    default_line.cl_mailto = uid;
+    default_line.cl_runas = asuid;
+    default_line.cl_mailto = asuid;
 
     if ( debug_opt )
 	fprintf(stderr, "FILE %s\n", file_name);
@@ -541,8 +542,8 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 	    if ( i == 1 ) {
 		bzero(cl, sizeof(CL));
-		cl->cl_runas = uid;
-		cl->cl_mailto = uid;
+		cl->cl_runas = asuid;
+		cl->cl_mailto = asuid;
 	    }
 	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
@@ -850,7 +851,6 @@ read_opt(char *ptr, CL *cl)
 		if( ! in_brackets || (ptr = get_runas(ptr, &uid)) == NULL )
 		    Handle_err;
 		cl->cl_runas = uid;
-		set_runas(cl->cl_option);
 		if (debug_opt)
 		    fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, uid);
 	    }
