@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.11 2000-11-02 19:08:59 thib Exp $
+# $Id: boot-install,v 1.12 2000-11-03 13:22:00 thib Exp $
 
 # take 3 arguments : the name of the BSD-like install program
 #                    the DESTSBIN directory, and the value of DEBUG
@@ -10,7 +10,8 @@
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
 startdir=$pwd
-DEBUG=$3
+#DEBUG=$3
+DEBUG=1
 
 if test $# -ne 3; then
     echo "Too few/many arguments"
@@ -65,7 +66,9 @@ if test $ROOTDIR != ""; then
     cd $ROOTDIR/rc6.d/ ; ln -f -s ../init.d/fcron  K60fcron
     cd $startdir
 
+    # we stop fcron like this (not using "fcron restart") because
+    # an old version of fcron may not stop correctly otherwise.
     killall -TERM fcron
-    $ROOTDIR/init.d/fcron restart
+    $ROOTDIR/init.d/fcron start
 fi
 
