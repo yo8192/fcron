@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.54 2004-11-13 19:43:21 thib Exp $ */
+ /* $Id: config.h.in,v 1.55 2005-03-12 12:40:01 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -283,6 +283,18 @@
 
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
+
+/* Define if you have the setresgid function.  */
+#undef HAVE_SETRESGID
+
+/* Define if you have the setresuid function.  */
+#undef HAVE_SETRESUID
+
+/* Define if you have the signal function.  */
+#undef HAVE_SIGNAL
+
+/* Define if you have the sigset function.  */
+#undef HAVE_SIGSET
 
 /* Define if you have the strftime function.  */
 #undef HAVE_STRFTIME
