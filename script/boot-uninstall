@@ -2,17 +2,20 @@
 # Uninstall fcron under SysV system.
 #
 
-# $Id: boot-uninstall,v 1.4 2000-11-18 14:51:29 thib Exp $
+# $Id: boot-uninstall,v 1.5 2001-02-11 21:15:44 thib Exp $
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
-ROOTDIR=""
-if test -f /etc/rc.d/init.d/fcron; then
+if test `uname -s` = "FreeBSD"; then
+  rm -f /usr/local/etc/rc.d/fcron.sh
+else
+  ROOTDIR=""
+  if test -f /etc/rc.d/init.d/fcron; then
     ROOTDIR="/etc/rc.d"
-elif test -f /etc/init.d/fcron; then
+  elif test -f /etc/init.d/fcron; then
     ROOTDIR="/etc"
-fi
-if test $ROOTDIR != ""; then
+  fi
+  if test $ROOTDIR != ""; then
     rm -f $ROOTDIR/init.d/fcron
 
     rm -f $ROOTDIR/rc2.d/S40fcron
@@ -22,8 +25,9 @@ if test $ROOTDIR != ""; then
 
     rm -f $ROOTDIR/rc0.d/K60fcron
     rm -f $ROOTDIR/rc6.d/K60fcron
-else
+  else
     echo
     echo "You may delete fcron from your boot script manually"
     echo
+  fi
 fi

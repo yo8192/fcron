@@ -4,7 +4,7 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.4 2001-01-27 15:32:46 thib Exp $
+# $Id: user-group,v 1.5 2001-02-11 21:16:08 thib Exp $
 
 # take 3 arguments : 	username
 # 			groupname
@@ -23,6 +23,12 @@ ANSWER=$3
 INSTALL="nothing"
 INSTALLED=0
 
+if test `uname -s` = "FreeBSD"; then
+  IS_FREEBSD=1
+else
+  IS_FREEBSD=0
+fi
+
 echo -n "Checking if $USERNAME is in /etc/passwd ... "
 if grep "^$USERNAME:" /etc/passwd > /dev/null; then
   echo "yes."
@@ -34,6 +40,8 @@ else
     CMD="useradd -c '$USERNAME' $USERNAME"
   elif adduser -D 2> /dev/null; then
     CMD="adduser -c '$USERNAME' $USERNAME"
+  elif test $IS_FREEBSD -eq 1; then
+    CMD="pw useradd $USERNAME -c $USERNAME"
   fi
   if test -z "$CMD"; then
     echo "Could not determine the command to use to add a user."
@@ -71,7 +79,12 @@ fi
 
 INSTALL="nothing"
 INSTALLED=0
-CMD="groupadd $GROUPNAME"
+
+if test $IS_FREEBSD -eq 1; then
+  CMD="pw groupadd $GROUPNAME"
+else
+  CMD="groupadd $GROUPNAME"
+fi
 
 echo -n "Checking if $GROUPNAME is in /etc/group ... "
 if grep "^$GROUPNAME:" /etc/group > /dev/null; then
