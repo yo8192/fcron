@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.10 2002-07-19 19:43:25 thib Exp $
+# $Id: Makefile.in,v 1.11 2002-08-22 21:35:56 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -15,8 +15,8 @@
 SRCDIR		= @srcdir@
 
 prefix		= @prefix@
-DESTMAN		= @mandir@
-DESTDOC		= @DOCDIR@
+DESTMAN		= $(DESTDIR)@mandir@
+DESTDOC		= $(DESTDIR)@DOCDIR@
 
 INSTALL		= @INSTALL@
 JADE 		= @JADE@
