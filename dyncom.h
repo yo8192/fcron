@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: dyncom.h,v 1.1 2002-03-02 17:28:24 thib Exp $ */
+ /* $Id: dyncom.h,v 1.2 2002-08-22 21:33:20 thib Exp $ */
 
 /* This file describe the communication protocol between fcron and fcrondyn */
 
@@ -41,7 +41,9 @@
 #endif
 
 /* string which means : "No more data to read" */
-#define END_STR "\0\0"
+/* Warning : should be a 1-char string, otherwise we need more tests in talk_fcron()
+ * (because the string may be recv()ed in 2 pieces) */
+#define END_STR "\0"
 
 /* arg types */
 #define USER 1

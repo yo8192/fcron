@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.88 2002-08-11 20:25:57 thib Exp $
+# $Id: Makefile.in,v 1.89 2002-08-22 21:32:55 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -23,8 +23,6 @@ prefix		= $(DESTDIR)@prefix@
 exec_prefix	= $(DESTDIR)@exec_prefix@
 DESTSBIN	= @sbindir@
 DESTBIN		= @bindir@
-DESTMAN		= $(DESTDIR)@mandir@
-DESTDOC		= $(DESTDIR)@DOCDIR@
 FCRONTABS	= $(DESTDIR)@FCRONTABS@
 ETC		= $(DESTDIR)@ETC@
 OPTIM		= @CFLAGS@
@@ -150,7 +148,7 @@ install-boot: install
 
 install-restart: install
 ifeq ($(DEBUG), 1)
-	kill -TERM `pidof fcron`
+	kill -TERM `pidof fcron` || exit 0
 	/etc/rc.d/init.d/fcron start
 endif
 
