@@ -1,13 +1,13 @@
 #!/bin/sh
 
-# $Id: gen-doc,v 1.6 2000-05-30 19:23:22 thib Exp $
+# $Id: gen-doc,v 1.7 2000-06-22 15:33:14 thib Exp $
 
 PREVIOUS=`cat ./VERSION`
 
 
 if test $PREVIOUS != $1; then
     cd doc
-    for i in *
+    for i in [A-Z]*
     do
     if test $i != RCS; then
 	echo $i
