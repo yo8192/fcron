@@ -22,12 +22,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.29 2001-01-12 21:44:30 thib Exp $ */
+ /* $Id: job.c,v 1.30 2001-01-27 15:43:06 thib Exp $ */
 
 #include "fcron.h"
 
 int temp_file(void);
-void xwrite(int fd, char *string);
 void launch_mailer(CL *line, int mailfd);
 int change_user(uid_t uid);
 void sig_dfl(void);
@@ -105,6 +104,38 @@ sig_dfl(void)
 	signal(SIGUSR1, SIG_DFL);
 }
 
+
+int
+create_mail(CL *line, char *subject) 
+    /* create a temp file and write in it a mail header */
+{
+    /* create temporary file for stdout and stderr of the job */
+    int mailfd = temp_file();
+    
+    /* write mail header */
+    xwrite(mailfd,"To: ");
+    xwrite(mailfd, line->cl_file->cf_user);
+#ifdef HAVE_GETHOSTNAME
+    {
+	char hostname[USER_NAME_LEN];
+	memset(hostname, 0, sizeof(hostname));
+	if (gethostname(hostname, sizeof(hostname)) != 0)
+	    error_e("Could not get hostname");
+	else {
+	    xwrite(mailfd, "@");
+	    xwrite(mailfd, hostname);
+	}
+    }
+#endif /* HAVE_GETHOSTNAME */
+    xwrite(mailfd, "\nSubject: ");
+    xwrite(mailfd, subject);
+    xwrite(mailfd, ": '");
+    xwrite(mailfd, line->cl_shell);
+    xwrite(mailfd,"'\n\n");
+
+    return mailfd;
+}
+
 void 
 run_job(struct exe *exeent)
     /* fork(), redirect outputs to a temp file, and execl() the task */ 
@@ -142,28 +173,8 @@ run_job(struct exe *exeent)
 		die_e("open: /dev/null:");
 	}
 	else {
-	    /* create temporary file for stdout and stderr of the job */
-	    mailfd = temp_file();
-
-	    /* write mail header */
-	    xwrite(mailfd,"To: ");
-	    xwrite(mailfd, line->cl_file->cf_user);
-#ifdef HAVE_GETHOSTNAME
-	    {
-		char hostname[USER_NAME_LEN];
-		memset(hostname, 0, sizeof(hostname));
-		if (gethostname(hostname, sizeof(hostname)) != 0)
-		    error_e("Could not get hostname");
-		else {
-		    xwrite(mailfd, "@");
-		    xwrite(mailfd, hostname);
-		}
-	    }
-#endif /* HAVE_GETHOSTNAME */
-	    xwrite(mailfd, "\nSubject: Output of fcron job: '");
-	    xwrite(mailfd, line->cl_shell);
-	    xwrite(mailfd,"'\n\n");
-	    mailpos = ( lseek(mailfd, 0, SEEK_END) - strlen(line->cl_shell) );
+	    mailfd = create_mail(line, "Output of fcron job");
+	    mailpos = lseek(mailfd, 0, SEEK_END);
 	}
 
 	if (change_user(line->cl_runas) < 0)
@@ -263,8 +274,7 @@ end_job(CL *line, int status, int mailfd, short mailpos)
 
 
     if (is_mailzerolength(line->cl_option) || (
-	(is_mail(line->cl_option) &&
-	 (lseek(mailfd, 0, SEEK_END) - strlen (line->cl_shell) ) > mailpos)) )
+	(is_mail(line->cl_option) && lseek(mailfd, 0, SEEK_END) > mailpos)) )
 	/* an output exit : we will mail it */
 	mail_output = 1;
     else
@@ -304,19 +314,21 @@ launch_mailer(CL *line, int mailfd)
     foreground = 0;
 
     /* set stdin to the job's output */
-    if (dup2(mailfd,0)!=0) die_e("Can't dup2()");
-    if (lseek(0,0,SEEK_SET)!=0) die_e("Can't lseek()");
+    if ( dup2(mailfd, 0) != 0 ) die_e("Can't dup2()");
+    if ( lseek(0, 0, SEEK_SET ) != 0) die_e("Can't lseek()");
 
     xcloselog();
 
     /* determine which will be the mail receiver */
     if ( (pass = getpwuid(line->cl_mailto)) == NULL )
 	die("uid unknown: %d : no mail will be sent");
-    
+
     /* run sendmail with mail file as standard input */
     execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, pass->pw_name, NULL);
+    debug("launch_mailer4");
     error_e("Can't find \""SENDMAIL"\". Trying a execlp(\"sendmail\")");
     execlp("sendmail", "sendmail", SENDMAIL_ARGS, pass->pw_name, NULL);
+    debug("launch_mailer5");
     die_e("Can't exec " SENDMAIL);
 
 }
