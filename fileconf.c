@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.11 2000-06-28 14:01:05 thib Exp $ */
+ /* $Id: fileconf.c,v 1.12 2000-06-29 21:12:44 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -1145,10 +1145,10 @@ save_file(char *path)
 	    }
 	}
 
-	/* finally, write the number of lines to permit to check if the file
-	 * is complete (i.e. fcron may has been interrupted during
-	 * save process */
-	fprintf(f, "eof\n");
+//	/* finally, write the number of lines to permit to check if the file
+//	 * is complete (i.e. fcron may has been interrupted during
+//	 * save process */
+//	fprintf(f, "eof\n");
 	    
 	fclose(f);
 

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.16 2000-06-28 16:25:28 thib Exp $ */
+ /* $Id: conf.c,v 1.17 2000-06-29 21:12:22 thib Exp $ */
 
 #include "fcron.h"
 
@@ -539,9 +539,9 @@ read_file(const char *file_name, CF *cf)
     /* free last calloc : unused */
     free(cl);
     
-    if (fgets(buf, sizeof(buf), ff) == NULL ||
-	strncmp(buf, "eof\n", sizeof("eof\n")) != 0)
-	error("file '%s' is truncated : you should reinstall it", file_name);
+//    if (fgets(buf, sizeof(buf), ff) == NULL ||
+//	strncmp(buf, "eof\n", sizeof("eof\n")) != 0)
+//	error("file '%s' is truncated : you should reinstall it", file_name);
 
     fclose(ff);
 
@@ -700,10 +700,10 @@ save_file(CF *file, char *path)
 
 	}
     
-	/* then, write the number of lines to permit to check if the file
-	 * is complete (i.e. fcron may has been interrupted during
-	 * save process */
-	fprintf(f, "eof\n");
+//	/* then, write the number of lines to permit to check if the file
+//	 * is complete (i.e. fcron may has been interrupted during
+//	 * save process */
+//	fprintf(f, "eof\n");
 	
 	fclose(f);
 
