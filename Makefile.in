@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.5 2000-05-16 19:59:26 thib Exp $
+# $Id: Makefile.in,v 1.6 2000-05-16 20:03:26 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -126,8 +126,7 @@ vclean: clean
 	    <h1>$(*F)</h1><br>:I" < ./tmp > $@
 	rm -f ./tmp
 
-updatedoc:
-	$(MAKE) doc/*.html
+updatedoc: doc/*.html
 	script/gen-doc $(VERSION)
 
 
