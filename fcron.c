@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.2 2000-05-15 18:28:38 thib Exp $ */
+ /* $Id: fcron.c,v 1.3 2000-05-16 19:53:38 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.2 2000-05-15 18:28:38 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.3 2000-05-16 19:53:38 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -48,7 +48,6 @@ char *prog_name = NULL;
 char sig_conf = 0;             /* is 1 when we got a SIGHUP */ 
 char sig_chld = 0;            /* is 1 when we got a SIGCHLD */  
 CF *file_base;                /* point to the first file of the list */
-int jobs_running = 0;         /* number of jobs which are running */
 time_t t1;                    /* the time at which sleep began */
 
 
@@ -58,7 +57,7 @@ info(void)
      * version, license */
 {
     fprintf(stderr,
-	    "$Id: fcron.c,v 1.2 2000-05-15 18:28:38 thib Exp $\n"
+	    "$Id: fcron.c,v 1.3 2000-05-16 19:53:38 thib Exp $\n"
 	    "fcron " VERSION " - periodic command scheduler\n"
 	    "Copyright 2000 Thibault Godouet <sphawk@free.fr>\n"
 	    "This program is free software distributed\n"

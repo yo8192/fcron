@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.2 2000-05-15 18:28:39 thib Exp $ */
+ /* $Id: fcron.h,v 1.3 2000-05-16 19:53:42 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -44,7 +44,6 @@ extern pid_t daemon_pid;
 extern char *prog_name;
 extern char sig_hup;
 extern CF *file_base;
-extern int jobs_running;
 /* end of global variables */
 
 
