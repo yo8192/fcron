@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.41 2001-07-04 17:29:30 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.42 2001-07-07 17:30:32 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,12 +42,10 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.41 2001-07-04 17:29:30 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.42 2001-07-07 17:30:32 thib Exp $";
 
 void info(void);
 void usage(void);
-void sig_daemon(void);
-pid_t read_pid(void);
 
 
 /* used in temp_file() */
@@ -128,135 +126,30 @@ usage(void)
 }
 
 
-pid_t
-read_pid(void)
-    /* return fcron daemon's pid if running.
-     * otherwise return 0 */
-{
-    FILE *fp = NULL;
-    pid_t pid = 0;
-    
-    if ((fp = fopen(pidfile, "r")) != NULL) {
-	fscanf(fp, "%d", (int *) &pid);    
-	fclose(fp);
-    }
-
-    return pid;
-}
-
-
-void
-sig_daemon(void)
-    /* send SIGHUP to daemon to tell him configuration has changed */
-    /* SIGHUP is sent once 10s before the next minute to avoid
-     * some bad users to block daemon by sending it SIGHUP all the time */
-{
-    /* we don't need to make root wait */
-    if (uid != 0) {
-	time_t t = 0;
-	int sl = 0;
-	FILE *fp = NULL;
-	int	fd = 0;
-	struct tm *tm = NULL;
-	char sigfile[PATH_LEN];
-
-	t = time(NULL);
-	tm = localtime(&t);
-    
-	if ( (sl = 60 - (t % 60) - 10) < 0 ) {
-	    if ( (tm->tm_min = tm->tm_min + 2) >= 60 ) {
-		tm->tm_hour++;
-		tm->tm_min -= 60;
-	    }
-	    snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
-	    sl = 60 - (t % 60) + 50;
-	} else {
-	    if ( ++tm->tm_min >= 60 ) {
-		tm->tm_hour++;
-		tm->tm_min -= 60;
-	    }
-	    snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
-	}
-	fprintf(stderr, "Modifications will be taken into account"
-		" at %s.\n", buf);
-
-	snprintf(sigfile, sizeof(sigfile), "%s/fcrontab.sig", fcrontabs);
-
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-	if (seteuid(fcrontab_uid) != 0)
-	    die_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
-#endif
-
-	switch ( fork() ) {
-	case -1:
-	    remove(sigfile);
-	    die_e("could not fork : daemon has not been signaled");
-	    break;
-	case 0:
-	    /* child */
-	    break;
-	default:
-	    /* parent */
-	    return;
-	}
-
-	foreground = 0;
-
-	/* try to create a lock file */
-	if ((fd = open(sigfile, O_RDWR|O_CREAT, 0644)) == -1
-	    || ((fp = fdopen(fd, "r+")) == NULL) )
-	    die_e("can't open or create %s", sigfile);	
-    
-#ifdef HAVE_FLOCK
-	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
-	    debug("fcrontab is already waiting for signalling the daemon :"
-		  " exiting.");
-	    return;
-	}
-#else /* HAVE_FLOCK */
-	if ( lockf(fd, F_TLOCK, 0) != 0 ) {
-	    debug("fcrontab is already waiting for signalling the daemon :"
-		  " exiting.");
-	    return;
-	}
-#endif /* ! HAVE_FLOCK */
-
-	sleep(sl);
-    
-	fclose(fp);
-	close(fd);
-
-	remove(sigfile);
-    }
-    else
-	fprintf(stderr, "Modifications will be taken into account"
-		" right now.\n");
-
-    if ( (daemon_pid = read_pid()) == 0 )
-	/* daemon is not running any longer : we exit */
-	return ;
-
-    foreground = 1;
-
-    if ( kill(daemon_pid, SIGHUP) != 0)
-	die_e("could not send SIGHUP to daemon (pid %d)", daemon_pid);
-
-}
-
-
-
 void
 xexit(int exit_val)
     /* launch signal if needed and exit */
 {
+    pid_t pid = 0;
     if ( need_sig == 1 ) {
-	/* check if daemon is running */
-	if ( (daemon_pid = read_pid()) != 0 )
-	    /* warning : we change euid to fcrontab_iud in sig_daemon() */
-	    sig_daemon();
-	else
-	    fprintf(stderr, "fcron is not running :\n  modifications will"
-		    " be taken into account at its next execution.\n");
+	/* fork and exec fcronsighup */
+	switch ( pid = fork() ) {
+	case 0:
+	    /* child */
+	    execl(BINDIREX "/fcronsighup", BINDIREX "/fcronsighup",
+		  fcronconf, NULL);
+	    die_e("Could not exec " BINDIREX " fcronsighup");
+	    break;
+
+	case -1:
+	    die_e("Could not fork (fcron has not been signaled)");
+	    break;
+
+	default:
+	    /* parent */
+	    waitpid(pid, NULL, 0);
+	    break;
+	}
     }
 
     exit(exit_val);
@@ -876,7 +769,7 @@ main(int argc, char **argv)
 
     if (strrchr(argv[0],'/')==NULL) prog_name = argv[0];
     else prog_name = strrchr(argv[0],'/')+1;
-
+    
     uid = getuid();
 
     /* get current dir */
@@ -991,6 +884,6 @@ main(int argc, char **argv)
 
 
 
-    /* never reach */
+    /* never reached */
     return EXIT_OK;
 }

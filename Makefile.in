@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.72 2001-06-24 13:23:35 thib Exp $
+# $Id: Makefile.in,v 1.73 2001-07-07 17:32:49 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -15,6 +15,8 @@ SRCDIR		= @srcdir@
 
 # Where should we install it ?
 prefix		= @prefix@
+# We set exec_prefix to $prefix (if you change this, you should also change
+#  it in configure.in)
 exec_prefix	= @exec_prefix@
 DESTSBIN	= @sbindir@
 DESTBIN		= @bindir@
@@ -56,10 +58,12 @@ CFLAGS = $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
 OBJSD = fcron.o subs.o log.o database.o job.o conf.o $(LIBOBJS)
 OBJS = fcrontab.o subs.o log.o fileconf.o allow.o
 OBJCONV = convert-fcrontab.o subs.o log.o
+OBJSIG = fcronsighup.o subs.o log.o allow.o
 HEADERSALL = config.h $(SRCDIR)/global.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/save.h $(SRCDIR)/option.h 
 HEADERSD = $(HEADERSALL) $(SRCDIR)/fcron.h $(SRCDIR)/getloadavg.h $(SRCDIR)/database.h $(SRCDIR)/conf.h $(SRCDIR)/job.h
 HEADERS = $(HEADERSALL) $(SRCDIR)/fcrontab.h $(SRCDIR)/allow.h $(SRCDIR)/fileconf.h
 HEADERSCONV = $(HEADERSALL) $(SRCDIR)/convert-fcrontab.h
+HEADERSSIG = $(HEADERSALL) $(SRCDIR)/allow.h
 
 # this is two regular expressions
 RCSNOLOG=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\)
@@ -68,13 +72,16 @@ REXP_MANPAGES=.*[158]
 all: fcron fcrontab convert-fcrontab files/fcron.conf
 
 fcron: $(OBJSD) $(HEADERSD)
-	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJSD)
+	$(CC) $(CFLAGS) -o $@ $(OBJSD) $(LIBS)
 
-fcrontab: $(OBJS) $(HEADERS)
-	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJS)
+fcrontab: fcronsighup $(OBJS) $(HEADERS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+
+fcronsighup: $(OBJSIG) $(HEADERSSIG)
+	$(CC) $(CFLAGS) -o $@ $(OBJSIG) $(LIBS)
 
 convert-fcrontab: $(OBJCONV) $(HEADERSCONV) 
-	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJCONV)
+	$(CC) $(CFLAGS) -o $@ $(OBJCONV) $(LIBS)
 
 %.o: $(SRCDIR)/%.c $(HEADERSALL) $(SRCDIR)/%.h
 	$(CC) $(CFLAGS) -c $<
@@ -100,6 +107,7 @@ install: all
 
 	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 110 -s fcron $(DESTSBIN)
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrontab $(DESTBIN)
+	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 6111 -s fcronsighup $(DESTBIN)
 	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.allow $(SRCDIR)/files/fcron.deny $(ETC)
 	test -f $(ETC)/fcron.conf || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.conf $(ETC)
 	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcron.8 $(DESTMAN)/man8
@@ -142,7 +150,7 @@ uninstall:
 
 clean:
 	rm -f *.o
-	rm -f fcron fcrontab convert-fcrontab files/fcron.conf
+	rm -f fcron fcrontab fcronsighup convert-fcrontab files/fcron.conf
 
 vclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
