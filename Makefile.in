@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.46 2000-11-14 19:46:38 thib Exp $
+# $Id: Makefile.in,v 1.47 2000-11-14 21:39:07 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -111,19 +111,7 @@ install: all
 	if test -f $(ETC)/fcron.deny; then chown $(USERNAME):$(GROUPNAME) $(ETC)/fcron.deny ; fi
 	if test -f $(ETC)/fcron.allow; then chown $(USERNAME):$(GROUPNAME) $(ETC)/fcron.allow ; fi
 
-	(cd script ; ./sysVinit-install "$(INSTALL)" $(DESTSBIN) $(DEBUG))
-
-# reinstall the fcrontabs
-# to do that, the old (if any) version of fcron must not run
-# (sysVinit-install normally start the last version)
-#	for FILE in $(FCRONTABS)/* ; do \
-#		BASENAME=`basename $$FILE` ; \
-#		FCRONTAB=`echo "$$BASENAME" | \
-#		sed "s|.*orig|| ; s|new.*|| ; s|fcrontab.sig|| ; s|rm.*||"` ; \
-#		( test ! -z "$$FCRONTAB" && fcrontab -u $$FCRONTAB -z ) \
-#			|| echo -n ""; \
-#	done
-
+	(cd script ; ./sysVinit-install "$(INSTALL)" $(DESTSBIN) $(DEBUG) $(FCRONTABS))
 
 uninstall:
 	rm -f $(DESTSBIN)/fcron
