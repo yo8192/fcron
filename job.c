@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.43 2001-09-12 13:35:09 thib Exp $ */
+ /* $Id: job.c,v 1.44 2001-10-29 13:20:13 thib Exp $ */
 
 #include "fcron.h"
 
@@ -31,6 +31,47 @@
 void sig_dfl(void);
 void end_job(CL *line, int status, int mailfd, short mailpos);
 void end_mailer(CL *line, int status);
+void die_mail_pame(CL *cl, int pamerrno, struct passwd *pas, char *str);
+
+
+void
+die_mail_pame(CL *cl, int pamerrno, struct passwd *pas, char *str)
+/* log an error in syslog, mail user if necessary, and die */
+{
+    char buf[MAX_MSG];
+
+    strcpy(buf, str);
+    strcat(buf, " for '%s'");
+
+    if (is_mail(cl->cl_option)) {
+	int mailfd = create_mail(cl, "Could not run fcron job");
+
+	/* print the error in both syslog and a file, in order to mail it to user */
+	if (dup2(mailfd, 1) != 1 || dup2(1, 2) != 2)
+	    die_e("dup2() error");    /* dup2 also clears close-on-exec flag */
+
+	foreground = 1;
+	error_pame(pamh, pamerrno, buf, cl->cl_shell);
+	error("Job '%s' has *not* run.", cl->cl_shell);
+	foreground = 0;
+
+	pam_end(pamh, pamerrno);  
+
+	/* Change running state to the user in question : it's safer to run the mail 
+	 * as user, not root */
+	if (initgroups(pas->pw_name, pas->pw_gid) < 0)
+	    die_e("initgroups failed: %s", pas->pw_name);
+	if (setgid(pas->pw_gid) < 0) 
+	    die("setgid failed: %s %d", pas->pw_name, pas->pw_gid);
+	if (setuid(pas->pw_uid) < 0) 
+	    die("setuid failed: %s %d", pas->pw_name, pas->pw_uid);
+
+	launch_mailer(cl, mailfd);
+	/* launch_mailer() does not return : we never get here */
+    }
+    else
+	die_pame(pamh, pamerrno, buf, cl->cl_shell);
+}
 
 
 int
@@ -43,7 +84,6 @@ change_user(struct CL *cl)
     char *a_pam_user;
 #endif
 
-
     /* First, restore umask to default */
     umask (saved_umask);
 
@@ -52,7 +92,6 @@ change_user(struct CL *cl)
     if ((pas = getpwnam(cl->cl_runas)) == NULL) 
         die("failed to get passwd fields for user \"%s\"", cl->cl_runas);
     
-/* #ifndef USE_PAM */
 #ifdef HAVE_SETENV
     setenv("USER", pas->pw_name, 1);
     setenv("HOME", pas->pw_dir, 1);
@@ -68,7 +107,6 @@ change_user(struct CL *cl)
 	putenv( strncat(buf, pas->pw_shell, sizeof(buf)-7) );
     }
 #endif /* HAVE_SETENV */
-/* #endif /* USE_PAM */
 
 #ifdef HAVE_LIBPAM
     /* Open PAM session for the user and obtain any security
@@ -78,14 +116,14 @@ change_user(struct CL *cl)
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM for %s",
 					 cl->cl_shell);
     retcode = pam_acct_mgmt(pamh, PAM_SILENT);
-    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not init PAM account "
-					 "management for %s", cl->cl_shell);
+    if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas,
+					      "Could not init PAM account management");
     retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED | PAM_SILENT);
-    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not set PAM credentials "
-					 "for %s", cl->cl_shell);
+    if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas, 
+					      "Could not set PAM credentials");
     retcode = pam_open_session(pamh, PAM_SILENT);
-    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not open PAM session "
-					 "for %s", cl->cl_shell);
+    if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas,
+					      "Could not open PAM session");
 
     env = (const char * const *) pam_getenvlist(pamh);
     while (env && *env) {
