@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.h,v 1.3 2000-05-30 19:27:20 thib Exp $ */
+ /* $Id: fcrontab.h,v 1.4 2000-06-18 13:12:17 thib Exp $ */
 
 #ifndef __FCRONTABH__
 #define __FCRONTABH__
@@ -32,7 +32,7 @@
 /* macros */
 #define Skip_blanks(ptr) \
         while((*ptr == ' ') || (*ptr == '\t')) \
-	ptr++;
+	    ptr++;
 
 /* global variables */
 extern char debug_opt;
@@ -41,7 +41,7 @@ extern CF *file_base;
 /* prototype definition */
 
 /* fileconf.c */
-extern int read_file(char *file_name, char *user);
+extern int read_file(char *filename, char *user);
 extern void delete_file(const char *user_name);
 extern void save_file(char *path);
 /* end of fileconf.c */
