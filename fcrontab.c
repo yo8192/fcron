@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.6 2000-06-15 20:17:06 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.7 2000-06-15 20:39:28 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.6 2000-06-15 20:17:06 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.7 2000-06-15 20:39:28 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -289,27 +289,27 @@ void
 write_file(char *file)
 {
 
-	if ( file_base->cf_line_base == NULL ) {
-	    /* no entries */
-	    explain("%s's fcrontab contains no entries", user);
-	    remove_fcrontab(0);
-	}
-	else {
-	    if (ignore_prev == 1)
-		/* if user wants to ignore previous version, we remove it *
-		 * ( fcron daemon remove files no longer wanted before
-		 *   adding new ones ) */
-		remove_fcrontab(0);
+    if (ignore_prev == 1)
+	/* if user wants to ignore previous version, we remove it *
+	 * ( fcron daemon remove files no longer wanted before
+	 *   adding new ones ) */
+	remove_fcrontab(0);
 
-	    /* write that list in a temp file on disk */
-	    snprintf(buf, sizeof(buf), "new.%s", user);
-	    save_file(buf);
+    if ( file_base->cf_line_base == NULL ) {
+	/* no entries */
+	explain("%s's fcrontab contains no entries", user);
+	remove_fcrontab(0);
+    } 
+    else {
+	/* write that list in a temp file on disk */
+	snprintf(buf, sizeof(buf), "new.%s", user);
+	save_file(buf);
+    }
 
-	    /* copy original file to FCRONTABS dir */
-	    snprintf(buf, sizeof(buf), "%s.orig", user);
-	    copy(file, buf);
+    /* copy original file to FCRONTABS dir */
+    snprintf(buf, sizeof(buf), "%s.orig", user);
+    copy(file, buf);
 
-	} 
 
 }
 
