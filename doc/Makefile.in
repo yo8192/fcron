@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.17 2002-10-06 17:11:30 thib Exp $
+# $Id: Makefile.in,v 1.18 2002-10-06 17:22:24 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -145,7 +145,7 @@ tarclean: clean
 vclean: clean
 	rm -f HTML/* man/* txt/*
 
-ci: doc clean
+ci: clean
 # we run a "cd .." because it makes appear the path of the file ( ./doc/XXXX )
 # during the ci-ing
 	@(cd ..; find ./doc/ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
