@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.43 2000-10-10 19:00:37 thib Exp $
+# $Id: Makefile.in,v 1.44 2000-11-02 19:12:27 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -30,6 +30,7 @@ CC		= @CC@
 INSTALL		= @INSTALL@
 USERNAME 	= @USERNAME@
 GROUPNAME	= @GROUPNAME@
+DEBUG		= @DEBUG@
 
 # Optimize or debug ?
 #	-DDEBUG		even more verbose
@@ -102,13 +103,26 @@ install: all
 	$(INSTALL) -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1
 	$(INSTALL) -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5
 	$(INSTALL) -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3
-	(cd script ; ./sysVinit-install "$(INSTALL)" $(DESTSBIN))
 	cd doc; $(INSTALL) -m 644 -o root README LICENSE CHANGES *.html \
 		 $(DESTDOC)/fcron-$(VERSION)/
+
 # in order to get correct rights when upgrading :
 	find $(FCRONTABS) -type f -exec chown $(USERNAME):$(GROUPNAME) {} \;
 	if test -f $(ETC)/fcron.deny; then chown $(USERNAME):$(GROUPNAME) $(ETC)/fcron.deny ; fi
 	if test -f $(ETC)/fcron.allow; then chown $(USERNAME):$(GROUPNAME) $(ETC)/fcron.allow ; fi
+
+	(cd script ; ./sysVinit-install "$(INSTALL)" $(DESTSBIN) $(DEBUG))
+
+# reinstall the fcrontabs
+# to do that, the old (if any) version of fcron must not run
+# (sysVinit-install normally start the last version)
+	for FILE in $(FCRONTABS)/* ; do \
+		BASENAME=`basename $$FILE` ; \
+		FCRONTAB=`echo "$$BASENAME" | \
+		sed "s|.*orig|| ; s|new.*|| ; s|fcrontab.sig|| ; s|rm.*||"` ; \
+		( test ! -z "$$FCRONTAB" && fcrontab -u $$FCRONTAB -z ) \
+			|| echo -n ""; \
+	done
 
 
 uninstall:
