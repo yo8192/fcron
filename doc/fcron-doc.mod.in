@@ -1,7 +1,7 @@
 <!ENTITY % devrelease "INCLUDE">
 
 <!ENTITY date "@@Date@">
-<!ENTITY version "@@VERSION@">
+<!ENTITY version "@@VERSION_QUOTED@">
 <!ENTITY copyrightdate "2000-2004">
 <!ENTITY emailadr "fcron@free.fr">
 <!ENTITY selinuxadr "russell@coker.com.au">
