@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.52 2001-09-12 13:45:12 thib Exp $ */
+ /* $Id: fileconf.c,v 1.53 2001-10-29 13:22:10 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -711,20 +711,26 @@ read_opt(char *ptr, CL *cl)
 	    if(!in_brackets || (ptr=get_num(ptr,&i,UCHAR_MAX,1,NULL)) == NULL )
 		Handle_err;
 	    cl->cl_lavg[2] = i;
-	    set_lavg(cl->cl_option);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : 'lavg15' %d\n", i);
+	    if ( cl->cl_lavg[0] || cl->cl_lavg[1] || cl->cl_lavg[2] )
+		set_lavg(cl->cl_option);
+	    else
+		clear_lavg(cl->cl_option);
 #ifdef NOLOADAVG
 	    warn("As fcron has been compiled with no procfs support,\n"
 		 "you will not be able to use the lavg* options");
 #endif /* NOLOADAVG */ 
- 	    if (debug_opt)
-		fprintf(stderr, "  Opt : 'lavg15' %d\n", i);
 	}
 
 	else if( strcmp(opt_name, "lavg1") == 0 ) {
 	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL))==NULL)
 		Handle_err;
 	    cl->cl_lavg[0] = i;
-	    set_lavg(cl->cl_option);
+	    if ( cl->cl_lavg[0] || cl->cl_lavg[1] || cl->cl_lavg[2] )
+		set_lavg(cl->cl_option);
+	    else
+		clear_lavg(cl->cl_option);
 #if NOLOADAVG
 	    warn("As fcron has been compiled with no procfs support,\n"
 		 "you will not be able to use the lavg* options");
@@ -737,7 +743,10 @@ read_opt(char *ptr, CL *cl)
 	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL))==NULL)
 		Handle_err;
 	    cl->cl_lavg[1] = i;
-	    set_lavg(cl->cl_option);
+	    if ( cl->cl_lavg[0] || cl->cl_lavg[1] || cl->cl_lavg[2] )
+		set_lavg(cl->cl_option);
+	    else
+		clear_lavg(cl->cl_option);
 #ifdef NOLOADAVG
 	    warn("As fcron has been compiled with no procfs support,\n"
 		 "you will not be able to use the lavg* options");
@@ -750,7 +759,10 @@ read_opt(char *ptr, CL *cl)
 	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL))==NULL)
 		Handle_err;
 	    cl->cl_lavg[2] = i;
-	    set_lavg(cl->cl_option);
+	    if ( cl->cl_lavg[0] || cl->cl_lavg[1] || cl->cl_lavg[2] )
+		set_lavg(cl->cl_option);
+	    else
+		clear_lavg(cl->cl_option);
 #ifdef NOLOADAVG
 	    warn("As fcron has been compiled with no procfs support,\n"
 		 "you will not be able to use the lavg* options");
