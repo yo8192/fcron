@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.45 2001-07-10 14:49:52 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.46 2001-08-17 19:40:46 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.45 2001-07-10 14:49:52 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.46 2001-08-17 19:40:46 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -779,7 +779,7 @@ main(int argc, char **argv)
 
 	if (uid != fcrontab_uid)
 	    if (seteuid(fcrontab_uid) != 0) 
-		die_e("Could not change uid to fcrontab_uid[%d]",fcrontab_uid);
+		die_e("Couldn't change euid to fcrontab_uid[%d]",fcrontab_uid);
 	/* change directory */
 	if (chdir(fcrontabs) != 0) {
 	    error_e("Could not chdir to %s", fcrontabs);
@@ -787,9 +787,9 @@ main(int argc, char **argv)
 	}
 	/* get user's permissions */
 	if (seteuid(uid) != 0) 
-	    die_e("Could not change uid to uid[%d]", uid); 
+	    die_e("Could not change euid to %d", uid); 
 	if (setegid(fcrontab_gid) != 0) 
-	    die_e("Could not change gid to " GROUPNAME "[%d]", fcrontab_gid); 
+	    die_e("Could not change egid to " GROUPNAME "[%d]", fcrontab_gid); 
     }
 #else
     if (setuid(0) != 0 ) 
