@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.34 2000-11-16 17:57:11 thib Exp $ */
+ /* $Id: fcron.c,v 1.35 2000-12-14 18:09:43 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.34 2000-11-16 17:57:11 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.35 2000-12-14 18:09:43 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -405,6 +405,10 @@ main(int argc, char **argv)
  	close(0); dup2(i, 0);
 	close(1); dup2(i, 1);
 	close(2); dup2(i, 2);
+
+	/* finally, create a new session */
+	if ( setsid() == -1 )
+	    error("Could not setsid()");
 
     }
 
