@@ -22,13 +22,14 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: log.c,v 1.8 2001-07-09 11:49:17 thib Exp $ */
+ /* $Id: log.c,v 1.9 2001-09-12 13:37:13 thib Exp $ */
 
 /* This code is inspired by Anacron's sources of
    Itai Tzur <itzur@actcom.co.il> */
 
 
 #include "fcron.h"
+
 #include "log.h"
 
 static void xopenlog(void);
@@ -130,6 +131,34 @@ log_e(int priority, char *fmt, va_list args)
 	fprintf(stderr, "%s %s: %s\n", date, msg, strerror(saved_errno));
     }
 }
+
+
+#ifdef HAVE_LIBPAM
+/* Same as log(), but also appends an error description corresponding
+ * to the pam_error. */
+static void
+log_pame(int priority, pam_handle_t *pamh, int pamerrno, char *fmt, va_list args)
+{
+    char *msg;
+
+    if ( (msg = make_msg(fmt, args)) == NULL )
+        return ;
+
+    xopenlog();
+    syslog(priority, "%s: %s", msg, pam_strerror(pamh, pamerrno));
+
+    if (foreground == 1) {
+        time_t t = time(NULL);
+        struct tm *ft;
+        char date[30];
+
+        ft = localtime(&t);
+        date[0] = '\0';
+        strftime(date, sizeof(date), "%H:%M:%S", ft);
+        fprintf(stderr, "%s %s: %s\n", date, msg, pam_strerror(pamh, pamerrno));
+    }
+}
+#endif
 
 
 /* Log an "explain" level message */
@@ -238,6 +267,25 @@ die_e(char *fmt, ...)
 
 }  
 
+#ifdef HAVE_LIBPAM
+/* Log a "complain" level message, with a PAM error description, and exit */
+void
+die_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...)
+{
+    va_list args;
+
+    xcloselog();  /* PAM is likely to have used openlog() */
+
+    va_start(args, fmt);
+    log_pame(COMPLAIN_LEVEL, pamh, pamerrno, fmt, args);
+    va_end(args);
+    pam_end(pamh, pamerrno);  
+    if (getpid() == daemon_pid) error("Aborted");
+
+    exit(EXIT_ERR);
+
+}
+#endif
 
 void
 Debug(char *fmt, ...)

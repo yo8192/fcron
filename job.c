@@ -22,9 +22,10 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.42 2001-08-20 10:53:22 thib Exp $ */
+ /* $Id: job.c,v 1.43 2001-09-12 13:35:09 thib Exp $ */
 
 #include "fcron.h"
+
 #include "job.h"
 
 void sig_dfl(void);
@@ -33,18 +34,25 @@ void end_mailer(CL *line, int status);
 
 
 int
-change_user(char *user_name)
+change_user(struct CL *cl)
 {
     struct passwd *pas;
+#ifdef HAVE_LIBPAM
+    int    retcode = 0;
+    const char * const * env;
+    char *a_pam_user;
+#endif
+
 
     /* First, restore umask to default */
     umask (saved_umask);
 
     /* Obtain password entry and change privileges */
 
-    if ((pas = getpwnam(user_name)) == NULL) 
-        die("failed to get passwd fields for user \"%s\"", user_name);
+    if ((pas = getpwnam(cl->cl_runas)) == NULL) 
+        die("failed to get passwd fields for user \"%s\"", cl->cl_runas);
     
+/* #ifndef USE_PAM */
 #ifdef HAVE_SETENV
     setenv("USER", pas->pw_name, 1);
     setenv("HOME", pas->pw_dir, 1);
@@ -60,6 +68,35 @@ change_user(char *user_name)
 	putenv( strncat(buf, pas->pw_shell, sizeof(buf)-7) );
     }
 #endif /* HAVE_SETENV */
+/* #endif /* USE_PAM */
+
+#ifdef HAVE_LIBPAM
+    /* Open PAM session for the user and obtain any security
+       credentials we might need */
+
+    retcode = pam_start("fcron", pas->pw_name, &apamconv, &pamh);
+    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM for %s",
+					 cl->cl_shell);
+    retcode = pam_acct_mgmt(pamh, PAM_SILENT);
+    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not init PAM account "
+					 "management for %s", cl->cl_shell);
+    retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED | PAM_SILENT);
+    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not set PAM credentials "
+					 "for %s", cl->cl_shell);
+    retcode = pam_open_session(pamh, PAM_SILENT);
+    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not open PAM session "
+					 "for %s", cl->cl_shell);
+
+    env = (const char * const *) pam_getenvlist(pamh);
+    while (env && *env) {
+	if (putenv((char*) *env)) die_e("Could not copy PAM environment");
+	env++;
+    }
+
+    /* Close the log here, because PAM calls openlog(3) and
+       our log messages could go to the wrong facility */
+    xcloselog();
+#endif /* USE_PAM */
 
     /* Change running state to the user in question */
     if (initgroups(pas->pw_name, pas->pw_gid) < 0)
@@ -158,7 +195,7 @@ run_job(struct exe *exeent)
 	    mailpos = lseek(mailfd, 0, SEEK_END);
 	}
 
-	if (change_user(line->cl_runas) < 0)
+	if (change_user(line) < 0)
 	    return ;
 
 	sig_dfl();
@@ -275,14 +312,33 @@ end_job(CL *line, int status, int mailfd, short mailpos)
     }
     else if (WIFEXITED(status))
 	warn("Job %s terminated (exit status: %d)%s",
-		line->cl_shell, WEXITSTATUS(status), m);
+	     line->cl_shell, WEXITSTATUS(status), m);
     else if (WIFSIGNALED(status))
 	error("Job %s terminated due to signal %d%s",
 	      line->cl_shell, WTERMSIG(status), m);
     else /* is this possible? */
 	error("Job %s terminated abnormally %s", line->cl_shell, m);
 
-    if (mail_output == 1) launch_mailer(line, mailfd);
+#ifdef HAVE_LIBPAM
+    /* we close the PAM session before running the mailer command :
+     * it avoids a fork(), and we use PAM anyway to control whether a user command
+     * should be run or not.
+     * We consider that the administrator can use a PAM compliant mailer to control
+     * whether a mail can be sent or not.
+     * It should be ok like that, otherwise contact me ... -tg */
+
+    /* Aiee! we may need to be root to do this properly under Linux.  Let's
+       hope we're more l33t than PAM and try it as non-root. If someone
+       complains, I'll fix this :P -hmh */
+    pam_setcred(pamh, PAM_DELETE_CRED | PAM_SILENT);
+    pam_end(pamh, pam_close_session(pamh, PAM_SILENT));
+#endif
+
+    if (mail_output == 1) {
+	launch_mailer(line, mailfd);
+	/* never reached */
+	die_e("Internal error: launch_mailer returned");
+    }
 
     /* if mail is sent, execution doesn't get here : close /dev/null */
     if ( close(mailfd) != 0 )

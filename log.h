@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: log.h,v 1.2 2001-05-15 00:43:29 thib Exp $ */
+ /* $Id: log.h,v 1.3 2001-09-12 13:37:31 thib Exp $ */
 
 #ifndef __LOG_H__
 #define __LOG_H__
@@ -37,6 +37,9 @@ extern void error(char *fmt, ...);
 extern void error_e(char *fmt, ...);
 extern void die(char *fmt, ...);
 extern void die_e(char *fmt, ...);
+#ifdef HAVE_LIBPAM
+extern void die_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...);
+#endif
 extern void Debug(char *fmt, ...);
 
 #endif /* __LOG_H__ */
