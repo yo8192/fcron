@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.4 2000-05-30 19:26:58 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.5 2000-06-11 20:30:37 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.4 2000-05-30 19:26:58 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.5 2000-06-11 20:30:37 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -523,11 +523,16 @@ parseopt(int argc, char *argv[])
 	}
     }
 
-    if ( user == NULL )
+    if ( user == NULL ) {
 	if ((user = getenv("USER")) == NULL) {
 	    fprintf(stderr, "Could not get user name.\n");
 	    xexit(EXIT_ERR);
 	}
+    }
+    else {
+	if ( ! getpwnam(user) )
+	    die("user '%s' is not in passwd file. Aborting.", user);
+    }
 
     if ( ! is_allowed(user) ) {
 	die("User '%s' is not allowed to use %s. Aborting.",
