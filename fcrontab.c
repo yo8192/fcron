@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.37 2001-05-24 19:54:48 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.38 2001-06-03 10:54:22 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.37 2001-05-24 19:54:48 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.38 2001-06-03 10:54:22 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -136,7 +136,7 @@ read_pid(void)
     pid_t pid = 0;
     
     if ((fp = fopen(PIDFILE, "r")) != NULL) {
-	fscanf(fp, "%d", &pid);    
+	fscanf(fp, "%d", (int *) &pid);    
 	fclose(fp);
     }
 
@@ -185,24 +185,6 @@ sig_daemon(void)
 	    die_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
 #endif
 
-	/* try to create a lock file */
-	if ((fd = open(FCRONTABS "/fcrontab.sig", O_RDWR|O_CREAT, 0644)) == -1
-	    || ((fp = fdopen(fd, "r+")) == NULL) )
-	    die_e("can't open or create " FCRONTABS "/fcrontab.sig");	
-    
-	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
-	    debug("fcrontab is already waiting for signalling the daemon :"
-		  " exiting.");
-	    return;
-	}
-
-
-	(void) fcntl(fd, F_SETFD, 1);
-
-	/* abandon fd and fp even though the file is open. we need to
-	 * keep it open and locked, but we don't need the handles elsewhere.
-	 */
-
 	switch ( fork() ) {
 	case -1:
 	    remove(FCRONTABS "/fcrontab.sig");
@@ -216,8 +198,32 @@ sig_daemon(void)
 	    return;
 	}
 
+	foreground = 0;
+
+	/* try to create a lock file */
+	if ((fd = open(FCRONTABS "/fcrontab.sig", O_RDWR|O_CREAT, 0644)) == -1
+	    || ((fp = fdopen(fd, "r+")) == NULL) )
+	    die_e("can't open or create " FCRONTABS "/fcrontab.sig");	
+    
+#ifdef HAVE_FLOCK
+	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
+	    debug("fcrontab is already waiting for signalling the daemon :"
+		  " exiting.");
+	    return;
+	}
+#else /* HAVE_FLOCK */
+	if ( lockf(fd, F_TLOCK, 0) != 0 ) {
+	    debug("fcrontab is already waiting for signalling the daemon :"
+		  " exiting.");
+	    return;
+	}
+#endif /* ! HAVE_FLOCK */
+
 	sleep(sl);
     
+	fclose(fp);
+	close(fd);
+
 	remove(FCRONTABS "/fcrontab.sig");
     }
     else
@@ -227,6 +233,8 @@ sig_daemon(void)
     if ( (daemon_pid = read_pid()) == 0 )
 	/* daemon is not running any longer : we exit */
 	return ;
+
+    foreground = 1;
 
     if ( kill(daemon_pid, SIGHUP) != 0)
 	die_e("could not send SIGHUP to daemon (pid %d)", daemon_pid);
@@ -536,7 +544,7 @@ edit_file(char *buf)
 	}
 	    
 	/* only reached by parent */
-	wait4(pid, &status, 0, NULL);
+	waitpid(pid, &status, 0);
 	if ( ! WIFEXITED(status) ) {
 	    fprintf(stderr, "Editor exited abnormally:"
 		    " fcrontab is unchanged.\n");
