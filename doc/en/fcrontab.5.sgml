@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.8 2002-07-19 19:45:28 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.9 2002-08-29 17:35:32 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>
@@ -533,7 +533,7 @@ permissions and environment (only root is allowed to use this option).</para>
 			<para><emphasis><type>real</type></emphasis>(<constant>0</constant>) 
 <emphasis><type>real</type></emphasis>(<constant>0</constant>)
 <emphasis><type>real</type></emphasis>(<constant>0</constant>)</para>
-			<para>Set the values of the 1, 5 and 15 minutes (in this
+			<para>Set the values of the 1, 5 and 15-minute (in this
 order) system load average values below which the job should run. The values
 have a maximum of 1 decimal (i.e. "2.3"), any other decimals are only used to
 round off. Set a value to 0 to ignore the corresponding load average (or all of
