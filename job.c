@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.33 2001-02-01 20:52:06 thib Exp $ */
+ /* $Id: job.c,v 1.34 2001-02-10 12:56:12 thib Exp $ */
 
 #include "fcron.h"
 
@@ -307,6 +307,7 @@ void
 launch_mailer(CL *line, int mailfd)
     /* mail the output of a job to user */
 {
+#ifdef SENDMAIL
     foreground = 0;
 
     /* set stdin to the job's output */
@@ -320,7 +321,9 @@ launch_mailer(CL *line, int mailfd)
     error_e("Can't find \""SENDMAIL"\". Trying a execlp(\"sendmail\")");
     execlp("sendmail", "sendmail", SENDMAIL_ARGS, line->cl_mailto, NULL);
     die_e("Can't exec " SENDMAIL);
-
+#else /* defined(SENDMAIL) */
+    exit(EXIT_OK);
+#endif
 }
 
 int

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.38 2001-02-01 20:49:31 thib Exp $ */
+ /* $Id: fileconf.c,v 1.39 2001-02-10 12:53:57 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -1030,6 +1030,10 @@ read_freq(char *ptr, CF *cf)
 	goto exiterr;
     }
 
+#ifndef SENDMAIL
+    clear_mail(cl->cl_option);
+#endif
+
     cl->cl_next = cf->cf_line_base;
     cf->cf_line_base = cl;
 
@@ -1125,6 +1129,10 @@ read_arys(char *ptr, CF *cf)
 		file_name, line);
 	goto exiterr;
     }
+
+#ifndef SENDMAIL
+    clear_mail(cl->cl_option);
+#endif
 
     cl->cl_next = cf->cf_line_base;
     cf->cf_line_base = cl;
@@ -1254,6 +1262,10 @@ read_period(char *ptr, CF *cf)
     }
 
   ok:
+#ifndef SENDMAIL
+    clear_mail(cl->cl_option);
+#endif
+
     cl->cl_next = cf->cf_line_base;
     cf->cf_line_base = cl;
 
