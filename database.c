@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.25 2000-09-12 16:40:15 thib Exp $ */
+ /* $Id: database.c,v 1.26 2000-09-12 19:53:20 thib Exp $ */
 
 #include "fcron.h"
 
@@ -32,7 +32,6 @@ void goto_non_matching(CL *line, struct tm *tm);
 void run_serial_job(void);
 void run_queue_job(CL *line);
 void run_lavg_job(int i);
-void get_lavg(short int l_avg[3]);
 
 
 void
@@ -711,37 +710,6 @@ run_lavg_job(int i)
 }
 
 
-
-void
-get_lavg(short int l_avg[3])
-    /* return the 1, 5 and 15 mins system load average */
-{
-    FILE *f = NULL;
-    float fl = 0;
-
-    if ( (f = fopen(PROC "/loadavg", "r")) == NULL ) {
-	error_e("could not open '"PROC"/loadavg'"
-		" (make sure procfs is mounted)");
-	l_avg[0] = 0;
-	l_avg[1] = 0;
-	l_avg[2] = 0;
-	return;
-    }
-
-    fscanf(f, "%f", &fl);
-    l_avg[0] = fl * 10;
-    fscanf(f, " %f", &fl);
-    l_avg[1] = fl * 10;
-    fscanf(f, " %f", &fl);
-    l_avg[2] = fl * 10;
-
-    debug("get_lavg: %d, %d, %d", l_avg[0], l_avg[1], l_avg[2]);
-
-    fclose(f);
-
-}
-
-
 time_t
 check_lavg(time_t lim)
     /* run a job based on system load average if one should be run
@@ -749,14 +717,14 @@ check_lavg(time_t lim)
 {
     time_t tts = time_to_sleep(lim);
 
-#if PROC_LOADAVG == 0
+#ifdef NOLOADAVG
     while ( lavg_num > 0 )
 	run_lavg_job(0);
     return tts;
 #else
 
     register int i = 0;
-    short int l_avg[3];
+    double l_avg[3];
 
     /* first, check if some lines must be executed because of until */
     while ( i < lavg_num )
@@ -770,8 +738,15 @@ check_lavg(time_t lim)
     if ( lavg_num == 0 )
 	return tts;
 	
+    if ( (i = getloadavg(l_avg, 3)) != 3 )
+	while ( i++ < 3 )
+	    l_avg[i] = 0;
+    /* the 3 values stored in the fcron lines are the real value *= 10 */
+    l_avg[0] *= 10;
+    l_avg[1] *= 10;
+    l_avg[2] *= 10;
+    debug("get_lavg: %d, %d, %d", l_avg[0], l_avg[1], l_avg[2]);
     i = 0;
-    get_lavg(l_avg);
     while ( i < lavg_num ) {
 	/* check if the line should be executed */
 	if ( ( is_land(lavg_array[i].l_line->cl_option)
@@ -807,7 +782,7 @@ check_lavg(time_t lim)
     else
 	return (LAVG_SLEEP < tts) ? LAVG_SLEEP : tts;
     
-#endif /* PROC_LOADAVG = 0 */ 
+#endif /* def NOLOADAVG */ 
 
 }
 
