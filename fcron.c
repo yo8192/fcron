@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.38 2001-01-12 21:43:25 thib Exp $ */
+ /* $Id: fcron.c,v 1.39 2001-01-27 15:33:39 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.38 2001-01-12 21:43:25 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.39 2001-01-27 15:33:39 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -524,7 +524,9 @@ main_loop()
     /* synchronize save with jobs execution */
     save = now + SAVE;
 
-    if ( (stime = time_to_sleep(save)) < FIRST_SLEEP )
+    if ( serial_num > 0 )
+	stime = FIRST_SLEEP;
+    else if ( (stime = time_to_sleep(save)) < FIRST_SLEEP )
 	/* force first execution after FIRST_SLEEP sec : execution of jobs
 	 * during system boot time is not what we want */
 	stime = FIRST_SLEEP;
@@ -545,7 +547,7 @@ main_loop()
 	check_signal();
 
 	debug("\n");
-	test_jobs(now);
+	test_jobs();
 
     	if ( serial_running <= 0)
      	    run_serial_job();
