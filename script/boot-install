@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.16 2000-12-04 20:13:14 thib Exp $
+# $Id: boot-install,v 1.17 2000-12-08 12:50:24 thib Exp $
 
 # take 4 arguments : the name of the BSD-like install program
 #                    the DESTSBIN directory, the value of DEBUG
@@ -64,31 +64,6 @@ if test -f /etc/rc.d/rc.M; then
     fi
 fi 
 
-INSTALL="nothing"
-
-if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc \) ; then
-    # FreeBSD
-    if ! cat /etc/rc.local | grep "$STARTCMD"; then
-      while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
-	do
-	echo "Would you like to add $STARTCMD in the file /etc/rc.local ?"
-	read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
-	done
-      if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-	echo $STARTCMD >> /etc/rc.local
-	INSTALLED=1
-      else
-	INSTALLED=0
-      fi
-    elif cat /etc/rc.local | grep fcron; then	
-      echo "Fcron seems to be in /etc/rc.local, but not with the appropriate options :"
-      echo "you should probably correct this file in order to run fcron with $STARTCMD."
-      INSTALLED=1
-    else
-      echo "Fcron is already in /etc/rc.local."
-      INSTALLED=1
-    fi
-fi
 
 INSTALL="nothing"
 ROOTDIR=""
@@ -131,6 +106,33 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
     fi
 
 fi
+
+INSTALL="nothing"
+
+if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc \) ; then
+    # FreeBSD
+    if ! cat /etc/rc.local | grep "$STARTCMD"; then
+      while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
+	do
+	echo "Would you like to add $STARTCMD in the file /etc/rc.local ?"
+	read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+	done
+      if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
+	echo $STARTCMD >> /etc/rc.local
+	INSTALLED=1
+      else
+	INSTALLED=0
+      fi
+    elif cat /etc/rc.local | grep fcron; then	
+      echo "Fcron seems to be in /etc/rc.local, but not with the appropriate options :"
+      echo "you should probably correct this file in order to run fcron with $STARTCMD."
+      INSTALLED=1
+    else
+      echo "Fcron is already in /etc/rc.local."
+      INSTALLED=1
+    fi
+fi
+
 
 if test "$INSTALLED" -eq 0; then
 echo
