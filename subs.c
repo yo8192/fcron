@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.5 2001-01-12 21:42:48 thib Exp $ */
+ /* $Id: subs.c,v 1.6 2001-04-21 08:55:55 thib Exp $ */
 
 #include "global.h"
 
@@ -70,7 +70,69 @@ strdup2(const char *str)
 }
 
 
+int
+save_type(FILE *f, short int type)
+/* save a single type (with no data attached) in a binary fcrontab file */
+{
+    short int size = 0;
 
+    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
+    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
+    
+    return OK;
 
+  err:
+    return ERR;
 
+}
 
+int
+save_str(FILE *f, short int type, char *str)
+/* save a string of type "type" in a binary fcrontab file */
+{
+    short int size = 0;
+    size = strlen(str);
+
+    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
+    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
+    if ( write(fileno(f), str, size) < size ) goto err;
+
+    return OK;
+
+  err:
+    return ERR;
+    
+}
+
+int
+save_strn(FILE *f, short int type, char *str, short int size)
+/* save a "size"-length string of type "type" in a binary fcrontab file */
+{
+
+    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
+    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
+    if ( write(fileno(f), str, size) < size ) goto err;
+
+    return OK;
+
+  err:
+    return ERR;
+    
+}
+
+int
+save_lint(FILE *f, short int type, long int value)
+/* save an integer of type "type" in a binary fcrontab file */
+{
+    short int size = sizeof(value);
+
+    if ( write(fileno(f), &type, sizeof(type)) < sizeof(type) ) goto err;
+    if ( write(fileno(f), &size, sizeof(size)) < sizeof(size) ) goto err;
+    if ( write(fileno(f), &value, size) < size ) goto err;
+
+    return OK;
+
+  err:
+    return ERR;
+    
+}
