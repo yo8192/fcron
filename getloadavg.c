@@ -54,5 +54,5 @@ getloadavg(double *result, int n)
     }
   end:
     fclose(fp);
-    return (i<0) ? i : i+1;
+    return (i<0) ? i : i;
 }
