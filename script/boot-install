@@ -2,18 +2,19 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.30 2001-03-07 19:33:07 thib Exp $
+# $Id: boot-install,v 1.31 2001-04-21 08:53:40 thib Exp $
 
-# take 5 arguments : the name of the BSD-like install program (with "-o" and the correct username)
+# take 6 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
 #                    the value of DEBUG
 #                    the value of FCRONTABS
 #                    the automatic answer
+#                    the src dir
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
 startdir=$pwd
-if test $# -ne 5; then
+if test $# -ne 6; then
     echo "Too few/many arguments"
     exit 1
 fi
@@ -21,10 +22,14 @@ fi
 if test $3 -eq 1; then
     exit
 fi
+
+INSPROG=$1
+DESTBIN=$2
 DEBUG=$3
 #DEBUG=1
 FCRONTABS=$4
 ANSWER=$5
+SRCDIR=$6
 
 if test $DEBUG -eq 1; then
     STARTCMD="fcron -b -d"
@@ -93,12 +98,12 @@ if test $IS_FREEBSD -eq 1; then
       INSTALL="n"
     fi
     if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-      cp -f script/fcron.sh /usr/local/etc/rc.d/
+      cp -f $SRCDIR/script/fcron.sh /usr/local/etc/rc.d/
       if test $DEBUG -eq 1; then
         cat /usr/local/etc/rc.d/fcron.sh | sed 's: -b: -b -d:' > /usr/local/etc/rc.d/fcron.sh2
         mv -f /usr/local/etc/rc.d/fcron.sh2 /usr/local/etc/rc.d/fcron.sh
       fi
-      cat /usr/local/etc/rc.d/fcron.sh | sed "s:@@DESTSBIN@:$2:" > /usr/local/etc/rc.d/fcron.sh2
+      cat /usr/local/etc/rc.d/fcron.sh | sed "s:@@DESTSBIN@:$DESTBIN:" > /usr/local/etc/rc.d/fcron.sh2
       mv -f /usr/local/etc/rc.d/fcron.sh2 /usr/local/etc/rc.d/fcron.sh
       chmod +x /usr/local/etc/rc.d/fcron.sh
       INSTALLED=1
@@ -132,23 +137,25 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
     INSTALL="n"
   fi
   if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-    $1 -c -m 755 script/sysVinit-launcher $ROOTDIR/init.d/fcron
+    $INSPROG -c -m 755 $SRCDIR/script/sysVinit-launcher $ROOTDIR/init.d/fcron
     if test $DEBUG -eq 1; then
       cat $ROOTDIR/init.d/fcron | sed 's: -b: -b -d:' >$ROOTDIR/init.d/fcron2
       mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
       chmod +x $ROOTDIR/init.d/fcron
     fi
-    cat $ROOTDIR/init.d/fcron | sed "s:@@DESTSBIN@:$2:" >$ROOTDIR/init.d/fcron2
+    cat $ROOTDIR/init.d/fcron | sed "s:@@DESTSBIN@:$DESTBIN:" >$ROOTDIR/init.d/fcron2
     mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
     chmod +x $ROOTDIR/init.d/fcron
 
-    cd $ROOTDIR/rc2.d/ ; ln -f -s ../init.d/fcron S40fcron
-    cd $ROOTDIR/rc3.d/ ; ln -f -s ../init.d/fcron S40fcron
-    cd $ROOTDIR/rc4.d/ ; ln -f -s ../init.d/fcron S40fcron
-    cd $ROOTDIR/rc5.d/ ; ln -f -s ../init.d/fcron S40fcron
+    for j in 2 3 4 5
+    do
+    cd $ROOTDIR/rc$j.d/ ; ln -f -s ../init.d/fcron S40fcron
+    done
 
-    cd $ROOTDIR/rc0.d/ ; ln -f -s ../init.d/fcron K60fcron
-    cd $ROOTDIR/rc6.d/ ; ln -f -s ../init.d/fcron K60fcron
+    for j in 0 6
+    do
+    cd $ROOTDIR/rc$j.d/ ; ln -f -s ../init.d/fcron K60fcron
+    done
     cd $startdir
 
     INSTALLED=1
@@ -249,7 +256,7 @@ if PID=`pidof fcron`; then
 else
   KILL="killall -TERM fcron"
   KILLSTR=$KILL
-  COMMENT="WARNING : this command may not have the desired effect on non-Linux systems."
+  COMMENT="WARNING : this command may not have the desired effect on non-Linux systems.\n"
   PID="test -z on PID is not need in this case"
 fi
 if test -z "$PID"; then
@@ -266,7 +273,7 @@ else
     while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
     do
       echo "Would you like to do it with a '"$KILLSTR"'"
-      echo $COMMENT
+      echo -n $COMMENT
       echo "followed by a '"$CMD"' ?"
       echo -n "Please answer with 'y' or 'n' (default: 'y'): "
       read RESTART NOTHING
