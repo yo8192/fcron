@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.21 2001-05-15 00:45:16 thib Exp $ */
+ /* $Id: fcron.h,v 1.22 2001-05-17 00:57:25 thib Exp $ */
 
 #ifndef __FCRON_H__
 #define __FCRON_H__
@@ -85,8 +85,6 @@ extern short int lavg_serial_running;
 /* fcron.c */
 extern void xexit(int exit_value);
 
-#include "log.h"
-#include "subs.h"
 #include "database.h"
 #include "conf.h"
 #include "job.h"

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.35 2001-05-15 00:44:21 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.36 2001-05-17 00:52:43 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,13 +42,16 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.35 2001-05-15 00:44:21 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.36 2001-05-17 00:52:43 thib Exp $";
 
 void info(void);
 void usage(void);
 void sig_daemon(void);
 pid_t read_pid(void);
 
+
+/* used in temp_file() */
+char *tmp_path = "/tmp/";
 
 /* command line options */
 char rm_opt = 0;
@@ -554,7 +557,7 @@ edit_file(char *buf)
 	    int fd = 0;
 	    if ( (fd = open(tmp_str, O_RDONLY)) <= 0 ||
 		 fstat(fd, &st) != 0 || ! S_ISREG(st.st_mode) ||
-		 st.st_uid != asuid || st.st_nlink > 1) {
+		 S_ISLNK(st.st.mode) || st.st_uid != asuid || st.st_nlink > 1){
 		fprintf(stderr, "%s is not a valid regular file.\n", tmp_str);
 		close(fd);
 		goto exiterr;
@@ -897,9 +900,9 @@ main(int argc, char **argv)
 		strncpy(file, argv[file_opt], sizeof(file) - 1);
 
 	    if (make_file(file) == OK)
-		xexit ( EXIT_OK );
+		xexit(EXIT_OK);
 	    else
-		xexit ( EXIT_ERR );
+		xexit(EXIT_ERR);
 
 	}
 
