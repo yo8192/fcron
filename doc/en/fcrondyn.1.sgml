@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrondyn.1.sgml,v 1.1 2002-03-02 17:31:24 thib Exp $ -->
+<!-- $Id: fcrondyn.1.sgml,v 1.2 2002-03-02 17:32:45 thib Exp $ -->
 
 <refentry id="fcrondyn.1">
     <refmeta>
@@ -21,6 +21,12 @@ A copy of the license is included in gfdl.sgml.
 	<refname>fcrondyn</refname>
 	<refpurpose>dialog dyn-amically with a running fcron daemon</refpurpose>
     </refnamediv>
+
+
+<!-- ---------------------------------------------------------
+     TEXT HERE
+     --------------------------------------------------------- -->
+
 
     <refsect1>
 	<title>Return values</title>
