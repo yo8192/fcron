@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.12 2000-06-21 13:43:04 thib Exp $ */
+ /* $Id: conf.c,v 1.13 2000-06-22 12:29:49 thib Exp $ */
 
 #include "fcron.h"
 
@@ -455,7 +455,7 @@ read_file(const char *file_name, CF *cf)
 		if ( is_bootrun(cl->cl_option) ) {
 		    debug("   boot-run %s", cl->cl_shell);
 		    set_serial_once(cl->cl_option);
-		    add_serial_job(cl);
+		    cl->cl_pid = -1;
 		}
 		set_next_exe(cl, 1);
 	    }
@@ -466,8 +466,10 @@ read_file(const char *file_name, CF *cf)
 	    insert_nextexe(cl);
 	}	    
 
-	if ( cl->cl_pid == -1)
+	if ( cl->cl_pid == -1 ) {
+	    cl->cl_pid = 0;
 	    add_serial_job(cl);
+	}
 
 	/* check if the task has not been stopped during execution */
 	if (cl->cl_pid > 0) {
