@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.103 2003-12-29 18:26:07 thib Exp $
+# $Id: Makefile.in,v 1.104 2004-11-13 19:43:08 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -77,8 +77,10 @@ RCSNOCI:=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|config.log\|config
 RUN_NON_PRIVILEGED := @RUN_NON_PRIVILEGED@
 ifeq ($(RUN_NON_PRIVILEGED), 1)
 	BINMODE:=111
+	BINMODESIGHUP:=111
 else
 	BINMODE:=6111
+	BINMODESIGHUP:=4110
 endif
 
 ifeq ($(FCRONDYN), 1)
@@ -121,7 +123,7 @@ install: all
 
 	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 110 -s fcron $(DESTSBIN)
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m $(BINMODE) -s fcrontab $(DESTBIN)
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m $(BINMODE) -s fcronsighup $(DESTBIN)
+	$(INSTALL) -g $(GROUPNAME) -o $(ROOTNAME) -m $(BINMODESIGHUP) -s fcronsighup $(DESTBIN)
 ifeq ($(FCRONDYN), 1)
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m $(BINMODE) -s fcrondyn $(DESTBIN)
 endif

@@ -21,19 +21,21 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.7 2003-12-25 22:39:27 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.8 2004-11-13 19:41:55 thib Exp $ */
 
 #include "fcronsighup.h"
 #include "global.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.7 2003-12-25 22:39:27 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.8 2004-11-13 19:41:55 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
 pid_t read_pid(void);
 
 uid_t uid = 0;
+uid_t fcrontab_uid = 0;
+
 
 #ifdef DEBUG
 char debug_opt = 1;       /* set to 1 if we are in debug mode */
@@ -124,6 +126,11 @@ sig_daemon(void)
 	fprintf(stderr, "Modifications will be taken into account"
 		" at %s.\n", buf);
 
+	/* if fcrontabs is too long, snprintf will not be able to add "/fcrontab.sig"
+	 * string at the end of sigfile */
+	if ( strlen(fcrontabs) > (sizeof(sigfile) - sizeof("/fcrontab.sig")) )
+	    die("fcrontabs string too long (more than %d characters)",
+		  (sizeof(sigfile) - sizeof("/fcrontab.sig")));
 	snprintf(sigfile, sizeof(sigfile), "%s/fcrontab.sig", fcrontabs);
 
 	switch ( fork() ) {
@@ -178,8 +185,19 @@ sig_daemon(void)
 
     foreground = 1;
 
+#ifdef USE_SETE_ID
+    if (seteuid(ROOTUID) != 0)
+	error_e("seteuid(ROOTUID)");
+#endif /* USE_SETE_ID */
+
     if ( kill(daemon_pid, SIGHUP) != 0)
 	die_e("could not send SIGHUP to daemon (pid %d)", daemon_pid);
+
+#ifdef USE_SETE_ID
+    /* get user's permissions */
+    if (seteuid(fcrontab_uid) != 0) 
+	die_e("Could not change euid to " USERNAME "[%d]", uid); 
+#endif /* USE_SETE_ID */
 
 }
 
@@ -192,13 +210,28 @@ main(int argc, char **argv)
     if (strrchr(argv[0],'/')==NULL) prog_name = argv[0];
     else prog_name = strrchr(argv[0],'/')+1;
 
+    if ( ! (pass = getpwnam(USERNAME)) )
+	die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
+    fcrontab_uid = pass->pw_uid;
+
+#ifdef USE_SETE_ID
+    /* get user's permissions */
+    if (seteuid(fcrontab_uid) != 0) 
+	die_e("Could not change euid to " USERNAME "[%d]", uid); 
+#endif /* USE_SETE_ID */
+
     if ( argc == 2 )
 	fcronconf = argv[1];
     else if (argc > 2 )
 	usage();
 
     /* read fcron.conf and update global parameters */
+    /* We deactivate output to console, because otherwise it may be used
+     * by a malicious user to read some data it is not allow to read
+     * (fcronsighup is suid root) */
+    foreground = 0;
     read_conf();
+    foreground = 1;
     
     uid = getuid();
 

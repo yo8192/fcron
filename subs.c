@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.21 2004-04-29 19:34:45 thib Exp $ */
+ /* $Id: subs.c,v 1.22 2004-11-13 19:43:36 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -146,6 +146,8 @@ read_conf(void)
     char *ptr1 = NULL, *ptr2 = NULL;
     short namesize = 0;
     char err_on_enoent = 0;
+    struct group *gr = NULL;
+    gid_t fcrongid = -1;
 
     if (fcronconf != NULL)
 	/* fcronconf has been set by -c option : file must exist */
@@ -167,11 +169,20 @@ read_conf(void)
 	}
     }
 
-    /* check if the file is secure : owned and writable only by root */
-    if ( fstat(fileno(f), &st) != 0 || st.st_uid != ROOTUID
+    /* get fcrongid */
+    gr = getgrnam(GROUPNAME);
+    if ( gr == NULL ) {
+	die_e("Unable to find %s in /etc/group", GROUPNAME);
+    }
+    fcrongid = gr->gr_gid;
+
+    /* check if the file is secure : owner:root, group:fcron,
+     * writable only by owner */
+    if ( fstat(fileno(f), &st) != 0 
+	 || st.st_uid != ROOTUID || st.st_gid != fcrongid
 	 || st.st_mode & S_IWGRP || st.st_mode & S_IWOTH ) {
-	error("Conf file (%s) must be owned by root and (no more than) 644 : "
-	      "ignored", fcronconf);
+	error("Conf file (%s) must be owned by root:" GROUPNAME 
+	      " and (no more than) 644 : ignored", fcronconf, GROUPNAME);
 	fclose(f);
 	return;
     }
