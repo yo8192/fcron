@@ -4,7 +4,7 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.11 2001-07-10 14:50:18 thib Exp $
+# $Id: user-group,v 1.12 2001-08-17 19:49:38 thib Exp $
 
 # take 4 arguments : 	username
 # 			groupname
@@ -97,7 +97,7 @@ else
     CMD="useradd -c '$USERNAME' -g $GROUPNAME $USERNAME"
   elif adduser -D 2> /dev/null; then
     CMD="adduser -c '$USERNAME' -g $GROUPNAME $USERNAME"
-  elif test $IS_FREEBSD -eq 1; then
+  elif test "$IS_FREEBSD" -eq 1; then
     CMD="pw useradd $USERNAME -c $USERNAME"
   fi
   if test -z "$CMD"; then
@@ -106,7 +106,7 @@ else
     echo "(or choose another username with configure script)."
     exit 1
   fi
-  if test $ANSWER -eq 2; then
+  if test "$ANSWER" -eq 2; then
     while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
     do
       echo "Would you like to add $USERNAME in /etc/passwd with the following command ?"
@@ -120,7 +120,7 @@ else
         INSTALLED=1
       fi
     fi
-  elif test $ANSWER -eq 1; then
+  elif test "$ANSWER" -eq 1; then
     # automatic answer given by configure script (option --with-answer-all)
     if $CMD; then
       INSTALLED=1
@@ -129,7 +129,7 @@ else
 fi
 
 
-if test $INSTALLED -eq 0; then
+if test "$INSTALLED" -eq 0; then
   echo
   echo "User \"$USERNAME\" does not exist : please create it or choose another"
   echo "username with configure script."
