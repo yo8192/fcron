@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.14 2000-11-16 17:56:28 thib Exp $
+# $Id: boot-install,v 1.15 2000-11-18 14:50:03 thib Exp $
 
 # take 4 arguments : the name of the BSD-like install program
 #                    the DESTSBIN directory, the value of DEBUG
@@ -96,7 +96,8 @@ fi
 if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
     while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
       do
-      echo "Would you like to add fcron in the directory $ROOTDIR/init.d/ and in runlevel 2, 3, 4 and 5 ?"
+      echo "Would you like to add fcron in the directory $ROOTDIR/init.d/ and in runlevel 2, 3, 4 and 5"
+      echo "(directories $ROOTDIR/rc{2,3,4,5}.d/) ?"
       read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
       done
     if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
@@ -151,16 +152,23 @@ if test "$SYSV" -eq 1; then
       RESTARTED=1
     fi
 else
-    while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
-      do
-      echo "Would you like to do it with a 'killall -TERM fcron'"
-      echo "followed by a '"$STARTCMD"' ?"
-      read -p "Please answer with 'y' or 'n' (default: 'y'): " RESTART NOTHING
-      done
-    if test  \( -z "$RESTART" \) -o \( "$RESTART" = "y" \); then
-      killall -TERM fcron
-      $STARTCMD
-      RESTARTED=1
+    if killall 2> /dev/null; then
+	KILLALL="killall"
+    elif killall5 2> /dev/null; then
+	KILLALL="killall5"
+    fi
+    if test "$KILLALL" != ""; then
+      while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
+        do
+        echo "Would you like to do it with a 'killall -TERM fcron'"
+        echo "followed by a '"$STARTCMD"' ?"
+        read -p "Please answer with 'y' or 'n' (default: 'y'): " RESTART NOTHING
+        done
+      if test  \( -z "$RESTART" \) -o \( "$RESTART" = "y" \); then
+        killall -TERM fcron
+        $STARTCMD
+        RESTARTED=1
+      fi
     fi
 fi
 
