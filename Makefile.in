@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.2 2000-05-15 18:28:58 thib Exp $
+# $Id: Makefile.in,v 1.3 2000-05-15 19:07:44 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -120,7 +120,7 @@ clean:
 
 vclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
-	rm -f fcron*tar.gz
+	rm -f fcron*tar.gz MANIFEST doc/*.html
 
 need_make_doc:
 # force to do a part each time it is called if placed in its depencies.
@@ -139,7 +139,7 @@ tar: vclean doc
 
 	echo $(VERSION) > ./VERSION
 
-	@(find ./ -type f ! -regex '.*RCS.*' -exec ci -l {} \;)
+	@(find ./ -type f ! -regex '.*RCS.*' ! -name "*html" -exec ci -l {} \;)
 
 	@(find ./ -type f ! -regex '.*RCS.*' | sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
 	@(cd ..; ln -s fcron fcron-$(VERSION))
