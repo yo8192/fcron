@@ -22,23 +22,24 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.9 2000-06-16 11:53:24 thib Exp $ */
+ /* $Id: job.c,v 1.10 2000-06-19 12:43:27 thib Exp $ */
 
 #include "fcron.h"
 
 int temp_file(void);
 void xwrite(int fd, char *string);
 void launch_mailer(CL *line, int mailfd);
-int change_user(const char *user, short dochdir);
+int change_user(const char *user);
 void sig_dfl(void);
 void end_job(CL *line, int status, int mailfd, short mailpos);
 void end_mailer(CL *line, int status);
 
 
 int
-change_user(const char *user, short dochdir)
+change_user(const char *user)
 {
     struct passwd *pas;
+
 
     /* Obtain password entry and change privileges */
 
@@ -60,15 +61,6 @@ change_user(const char *user, short dochdir)
     if (setreuid(pas->pw_uid, pas->pw_uid) < 0) 
 	die("setreuid failed: %s %d", user, pas->pw_uid);
 
-    if (dochdir) {
-	if (chdir(pas->pw_dir) < 0) {
-	    error("chdir failed: %s '%s'", user, pas->pw_dir);
-	    if (chdir("/") < 0) {
-		error("chdir failed: %s '%s'", user, pas->pw_dir);
-		die("chdir failed: %s '/'", user);
-	    }
-	}
-    }
     return(pas->pw_uid);
 }
 
@@ -114,25 +106,14 @@ run_job(CL *line)
 	int status = 0;
 
 	foreground = 0;
-	if (change_user(line->cl_file->cf_user, 1) < 0)
+	if (change_user(line->cl_file->cf_user) < 0)
 	    return ;
 
 	sig_dfl();
 
-	/* stdin is already /dev/null, setup stdout and stderr */
-	if ( close(1) != 0 )
-	    die_e("Can't close file descriptor %d",1);
-	if ( close(2) != 0 )
-	    die_e("Can't close file descriptor %d",2);
-
-	if ( line->cl_file->cf_mailto != NULL &&
-	     strcmp(line->cl_file->cf_mailto, "") == 0 ) {
-
-	    if ( close(mailfd) != 0 )
-		die_e("Can't close file descriptor %d", mailfd);
+	if ( ! is_mail(line->cl_option) ) {
 	    if ( (mailfd = open("/dev/null", O_RDWR)) < 0 )
 		die_e("open: /dev/null:");
-
 	}
 	else {
 	    /* create temporary file for stdout and stderr of the job */
@@ -147,7 +128,7 @@ run_job(CL *line)
 	    mailpos = ( lseek(mailfd, 0, SEEK_END) - strlen(line->cl_shell) );
 	}
 
-	if (dup2(mailfd, 1) != 1 || dup2(mailfd, 2) != 2)
+	if (dup2(mailfd, 1) != 1 || dup2(1, 2) != 2)
 	    die_e("dup2() error");    /* dup2 also clears close-on-exec flag */
 
 	foreground = 1; 
@@ -161,8 +142,11 @@ run_job(CL *line)
 		error("could not setenv()");
 
 	if ( (home = getenv("HOME")) != NULL )
-	    if (chdir(home) != 0)
+	    if (chdir(home) != 0) {
 		error_e("Could not chdir to HOME dir '%s'", home);
+		if (chdir("/") < 0)
+		    die_e("Could not chdir to HOME dir '/'");
+	    }
 
 	if ( (shell = getenv("SHELL")) == NULL )
 	    shell = SHELL;
@@ -215,9 +199,7 @@ run_job(CL *line)
 	/* parent */
 
 	line->cl_pid = pid;
-
 	line->cl_file->cf_running += 1;
-
 	explain("  Job `%s' started (pid %d)", line->cl_shell, line->cl_pid);
 
     }
@@ -233,12 +215,8 @@ end_job(CL *line, int status, int mailfd, short mailpos)
     char *m;
 
 
-    if ( ( lseek(mailfd, 0, SEEK_END) - strlen (line->cl_shell) ) > mailpos ){
-	if ( line->cl_file->cf_mailto != NULL &&
-	     line->cl_file->cf_mailto[0] == '\0' )
-	    /* there is a mail output, but it will not be mail */
-	    mail_output = 2;
-	else
+    if ( is_mail(line->cl_option) &&
+	 ( lseek(mailfd, 0, SEEK_END) - strlen (line->cl_shell) ) > mailpos ) {
 	    /* an output exit : we will mail it */
 	    mail_output = 1;
     }
@@ -247,8 +225,10 @@ end_job(CL *line, int status, int mailfd, short mailpos)
 	mail_output = 0;
 
     m= (mail_output == 1) ? " (mailing output)" : "";
-    if (WIFEXITED(status) && WEXITSTATUS(status)==0)
+    if (WIFEXITED(status) && WEXITSTATUS(status)==0) {
+	foreground = 0;
 	explain("Job `%s' terminated%s", line->cl_shell, m);
+    }
     else if (WIFEXITED(status))
 	explain("Job `%s' terminated (exit status: %d)%s",
 		line->cl_shell, WEXITSTATUS(status), m);
@@ -261,7 +241,7 @@ end_job(CL *line, int status, int mailfd, short mailpos)
     if (mail_output == 1) launch_mailer(line, mailfd);
 
     /* if MAILTO is "", temp file is already closed */
-    if ( mail_output != 2 && close(mailfd) != 0 )
+    if ( close(mailfd) != 0 )
 	die_e("Can't close file descriptor %d", mailfd);
 
     exit(0);
@@ -277,9 +257,6 @@ launch_mailer(CL *line, int mailfd)
     foreground = 0;
 
     /* set stdin to the job's output */
-    if ( close(0) != 0 )
-	die_e("Can't close file descriptor %d",0);	    
-
     if (dup2(mailfd,0)!=0) die_e("Can't dup2()");
     if (lseek(0,0,SEEK_SET)!=0) die_e("Can't lseek()");
 
