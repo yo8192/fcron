@@ -722,7 +722,7 @@ if test -z "$DB2MAN"; then
 fi
 AC_MSG_CHECKING(Looking for docbook2man converter)
 AC_ARG_WITH(db2man,
-[ --with-db2man-spec=PATH	set PATH to a docbook2man converter.],
+[ --with-db2man=PATH(or 'no')	set PATH to a docbook2man converter.],
 [ case "$withval" in
   no) 
     DB2MAN=""
@@ -750,7 +750,8 @@ DB2MAN_SPEC="/usr/share/sgml/docbook/utils-0.6.9/helpers/docbook2man-spec.pl"
 
 AC_MSG_CHECKING(Looking for docbook2man-spec file)
 AC_ARG_WITH(db2man-spec,
-[ --with-db2man-spec=PATH	set the PATH to docbook2man-spec file.],
+[ --with-db2man-spec=PATH	set the PATH to docbook2man-spec file
+				(needed if no db2man converter is set).],
 [ case "$withval" in
   no) 
     DB2MAN_SPEC=""
