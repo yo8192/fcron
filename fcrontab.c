@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.25 2000-12-20 14:11:26 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.26 2000-12-23 20:12:05 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.25 2000-12-20 14:11:26 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.26 2000-12-23 20:12:05 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -148,73 +148,79 @@ sig_daemon(void)
     /* SIGHUP is sent once 10s before the next minute to avoid
      * some bad users to block daemon by sending it SIGHUP all the time */
 {
-    time_t t = 0;
-    int sl = 0;
-    FILE *fp = NULL;
-    int	fd = 0;
-    struct tm *tm = NULL;
+    /* we don't need to make root wait */
+    if (uid != 0) {
+	time_t t = 0;
+	int sl = 0;
+	FILE *fp = NULL;
+	int	fd = 0;
+	struct tm *tm = NULL;
 
 
-    t = time(NULL);
-    tm = localtime(&t);
+	t = time(NULL);
+	tm = localtime(&t);
     
-    if ( (sl = 60 - (t % 60) - 10) < 0 ) {
-	if ( (tm->tm_min = tm->tm_min + 2) >= 60 ) {
-	    tm->tm_hour++;
-	    tm->tm_min -= 60;
+	if ( (sl = 60 - (t % 60) - 10) < 0 ) {
+	    if ( (tm->tm_min = tm->tm_min + 2) >= 60 ) {
+		tm->tm_hour++;
+		tm->tm_min -= 60;
+	    }
+	    snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
+	    sl = 60 - (t % 60) + 50;
+	} else {
+	    if ( ++tm->tm_min >= 60 ) {
+		tm->tm_hour++;
+		tm->tm_min -= 60;
+	    }
+	    snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
 	}
-	snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
-	sl = 60 - (t % 60) + 50;
-    } else {
-	if ( ++tm->tm_min >= 60 ) {
-	    tm->tm_hour++;
-	    tm->tm_min -= 60;
-	}
-	snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
-    }
-
-    fprintf(stderr, "Modifications will be taken into account"
-	    " at %s.\n", buf);
+	fprintf(stderr, "Modifications will be taken into account"
+		" at %s.\n", buf);
 
 
 #if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (seteuid(fcrontab_uid) != 0)
-	die_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
+	if (seteuid(fcrontab_uid) != 0)
+	    die_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
 #endif
 
-    /* try to create a lock file */
-    if ((fd = open(FCRONTABS "/fcrontab.sig", O_RDWR|O_CREAT, 0644)) == -1
-	|| ((fp = fdopen(fd, "r+")) == NULL) )
-	die_e("can't open or create " FCRONTABS "/fcrontab.sig");	
+	/* try to create a lock file */
+	if ((fd = open(FCRONTABS "/fcrontab.sig", O_RDWR|O_CREAT, 0644)) == -1
+	    || ((fp = fdopen(fd, "r+")) == NULL) )
+	    die_e("can't open or create " FCRONTABS "/fcrontab.sig");	
     
-    if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
-	debug("fcrontab is already waiting for signalling the daemon : exit");
-	return;
-    }
+	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
+	    debug("fcrontab is already waiting for signalling the daemon :"
+		  " exit");
+	    return;
+	}
 
 
-    (void) fcntl(fd, F_SETFD, 1);
+	(void) fcntl(fd, F_SETFD, 1);
 
-    /* abandon fd and fp even though the file is open. we need to
-     * keep it open and locked, but we don't need the handles elsewhere.
-     */
+	/* abandon fd and fp even though the file is open. we need to
+	 * keep it open and locked, but we don't need the handles elsewhere.
+	 */
 
-    switch ( fork() ) {
-    case -1:
+	switch ( fork() ) {
+	case -1:
+	    remove(FCRONTABS "/fcrontab.sig");
+	    die_e("could not fork : daemon as not been signaled");
+	    break;
+	case 0:
+	    /* child */
+	    break;
+	default:
+	    /* parent */
+	    return;
+	}
+
+	sleep(sl);
+    
 	remove(FCRONTABS "/fcrontab.sig");
-	die_e("could not fork : daemon as not been signaled");
-	break;
-    case 0:
-	/* child */
-	break;
-    default:
-	/* parent */
-	return;
     }
-
-    sleep(sl);
-    
-    remove(FCRONTABS "/fcrontab.sig");
+    else
+	fprintf(stderr, "Modifications will be taken into account"
+		" right now.\n");
 
     if ( (daemon_pid = read_pid()) == 0 )
 	/* daemon is not running any longer : we exit */
@@ -436,8 +442,8 @@ edit_file(char *buf)
 
     explain("fcrontabs : editing %s's fcrontab", user);	
 
-    if ( (editor = getenv("VISUAL")) == NULL )
-	if( (editor = getenv("EDITOR")) == NULL )
+    if ( (editor = getenv("VISUAL")) == NULL || strcmp(editor, "\0") == 0 )
+	if( (editor = getenv("EDITOR")) == NULL || strcmp(editor, "\0") == 0 )
 	    editor = EDITOR;
 	
     sprintf(tmp, "/tmp/fcrontab.%d", getpid());
@@ -515,7 +521,7 @@ edit_file(char *buf)
 	    }
 #endif
 	    execlp(editor, editor, tmp, NULL);
-	    error_e(editor);
+	    error_e("Error while running '%s'", editor);
 	    goto exiterr;
 
 	case -1:
