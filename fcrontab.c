@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.31 2001-02-14 13:51:14 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.32 2001-02-26 11:11:10 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.31 2001-02-14 13:51:14 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.32 2001-02-26 11:11:10 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -464,15 +464,12 @@ edit_file(char *buf)
 	error_e("could not fdopen");
 	goto exiterr;
     }
-#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-    if (uid == 0)
-#else
-    if (1)
+#if ! (defined(HAVE_SETREGID) && defined(HAVE_SETREUID))
+    if (fchown(file, asuid, asgid) != 0) {
+	error_e("Could not fchown %s to asuid and asgid", tmp);
+	goto exiterr;
+    }
 #endif
-	if (fchown(file, asuid, asgid) != 0) {
-	    error_e("Could not fchown %s to asuid and asgid", tmp);
-	    goto exiterr;
-	}
     /* copy user's fcrontab (if any) to a temp file */
     if ( (f = fopen(buf, "r")) == NULL ) {
 	if ( errno != ENOENT ) {
@@ -505,18 +502,16 @@ edit_file(char *buf)
 	switch ( pid = fork() ) {
 	case 0:
 	    /* child */
-	    if (uid == 0)
-		/* we need to become root to perform the gid and uid changes */
-		if (setreuid(0, 0) != 0)
-		    error_e("setreuid(0, 0)");
 #if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
-  	    if (setregid(asgid, asgid) < 0) {
-  		error_e("setregid(asgid, asgid)");
-  		goto exiterr;
-  	    }
-	    if (setreuid(asuid, asuid) < 0) {
-		error_e("setreuid(asuid, asuid)");
-		goto exiterr;
+	    if (uid != 0) {
+		if (setregid(asgid, asgid) < 0) {
+		    error_e("setregid(asgid, asgid)");
+		    goto exiterr;
+		}
+		if (setreuid(asuid, asuid) < 0) {
+		    error_e("setreuid(asuid, asuid)");
+		    goto exiterr;
+		}
 	    }
 #else
   	    if (setgid(asgid) < 0) {
@@ -549,13 +544,12 @@ edit_file(char *buf)
 	    goto exiterr;
 	}
 
-
 	/* check if file has been modified */
 	if ( stat(tmp, &st) != 0 ) {
 	    error_e("could not stat %s", tmp);
 	    goto exiterr;
-	}
-    
+	}    
+
 	else if ( st.st_mtime > mtime || correction == 1) {
 
 	    correction = 0;
