@@ -1,20 +1,22 @@
 #!/bin/sh
 
-# $Id: gen-doc,v 1.7 2000-06-22 15:33:14 thib Exp $
+# $Id: gen-doc,v 1.8 2000-06-22 15:48:41 thib Exp $
 
 PREVIOUS=`cat ./VERSION`
 
 
 if test $PREVIOUS != $1; then
     cd doc
-    for i in [A-Z]*
+    for i in *
     do
     if test $i != RCS; then
+    if echo $i | egrep -e '[A-Z]+' > /dev/null; then
 	echo $i
 	sed -e "s:fcron version [0-9.]*:fcron version $1:" < $i > tmp
 	mv -f tmp $i
 	chown $USER $i
 	rm -f tmp
+    fi
     fi
     done    
 fi
