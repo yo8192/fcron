@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.24 2000-12-16 19:01:38 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.25 2000-12-20 14:11:26 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.24 2000-12-16 19:01:38 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.25 2000-12-20 14:11:26 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -666,6 +666,7 @@ parseopt(int argc, char *argv[])
     char c;
     extern char *optarg;
     extern int optind, opterr, optopt;
+    struct passwd *pass;
 
     /* constants and variables defined by command line */
 
@@ -692,6 +693,11 @@ parseopt(int argc, char *argv[])
 	    debug_opt = 1; break;
 
 	case 'l':
+	    if (rm_opt || edit_opt || reinstall_opt) {
+		fprintf(stderr, "Only one of the options -l, -r, -e and -z"
+			"can be used simultaneously.\n");
+		xexit(EXIT_ERR);
+	    }
 	    list_opt = 1;
 	    rm_opt = 0;
 	    edit_opt = 0;
@@ -699,6 +705,11 @@ parseopt(int argc, char *argv[])
 	    break;
 
 	case 'r':
+	    if (list_opt || edit_opt || reinstall_opt) {
+		fprintf(stderr, "Only one of the options -l, -r, -e and -z"
+			"can be used simultaneously.\n");
+		xexit(EXIT_ERR);
+	    }
 	    list_opt = 0;
 	    rm_opt = 1;
 	    edit_opt = 0;
@@ -706,6 +717,11 @@ parseopt(int argc, char *argv[])
 	    break;
 
 	case 'e':
+	    if (list_opt || rm_opt || reinstall_opt) {
+		fprintf(stderr, "Only one of the options -l, -r, -e and -z"
+			"can be used simultaneously.\n");
+		xexit(EXIT_ERR);
+	    }
 	    list_opt = 0;
 	    rm_opt = 0;
 	    edit_opt = 1;
@@ -713,6 +729,11 @@ parseopt(int argc, char *argv[])
 	    break;
 
 	case 'z':
+	    if (list_opt || rm_opt || edit_opt) {
+		fprintf(stderr, "Only one of the options -l, -r, -e and -z"
+			"can be used simultaneously.\n");
+		xexit(EXIT_ERR);
+	    }
 	    list_opt = 0;
 	    rm_opt = 0;
 	    edit_opt = 0;
@@ -736,17 +757,16 @@ parseopt(int argc, char *argv[])
     }
 
     if ( user == NULL ) {
-	/* we need to strdup2 the value given by getenv() because we free
+	/* get user's name using getpwuid() */
+	if ( ! (pass = getpwuid(uid)) )
+	    die("user '%s' is not in passwd file. Aborting.", USERNAME);
+	/* we need to strdup2 the value given by getpwuid() because we free
 	 * file->cf_user in delete_file */
-	if ((user = strdup2(getenv("USER"))) == NULL) {
-	    fprintf(stderr, "Could not get user name.\n");
-	    xexit(EXIT_ERR);
-	}
-	asuid = getuid();
-	asgid = getgid();
+	user = strdup2(pass->pw_name);
+	asuid = pass->pw_uid;
+	asgid = pass->pw_gid;
     }
     else {
-	struct passwd *pass;
 	if ( ! (pass = getpwnam(user)) )
 	    die("user '%s' is not in passwd file. Aborting.", user);
 	asuid = pass->pw_uid;
@@ -773,10 +793,10 @@ main(int argc, char **argv)
     if (strrchr(argv[0],'/')==NULL) prog_name = argv[0];
     else prog_name = strrchr(argv[0],'/')+1;
 
+    uid = getuid();
+
     /* interpret command line options */
     parseopt(argc, argv);
-
-    uid = getuid();
 
 #if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
     {
@@ -785,6 +805,16 @@ main(int argc, char **argv)
 	    die("user '%s' is not in passwd file. Aborting.", USERNAME);
 	fcrontab_uid = pass->pw_uid;
 	fcrontab_gid = pass->pw_gid;
+
+	if (uid != fcrontab_uid)
+	    if (seteuid(fcrontab_uid) != 0) 
+		die_e("Could not change uid to fcrontab_uid[%d]",fcrontab_uid);
+	/* change directory */
+	if (chdir(cdir) != 0) {
+	    error_e("Could not chdir to " FCRONTABS );
+	    xexit (EXIT_ERR);
+	}
+	/* get user's permissions */
 	if (seteuid(uid) != 0) 
 	    die_e("Could not change uid to uid[%d]", uid); 
 	if (setegid(fcrontab_gid) != 0) 
@@ -795,6 +825,11 @@ main(int argc, char **argv)
 	die_e("Could not change uid to 0"); 
     if (setgid(0) != 0)
     	die_e("Could not change gid to 0");
+    /* change directory */
+    if (chdir(cdir) != 0) {
+	error_e("Could not chdir to " FCRONTABS );
+	xexit (EXIT_ERR);
+    }
 #endif
     
 
@@ -805,12 +840,6 @@ main(int argc, char **argv)
     /* get current dir */
     if ( (orig_dir = getcwd(NULL, 0)) == NULL )
 	error_e("getcwd");
-
-    /* change directory */
-    if (chdir(cdir) != 0) {
-	error_e("Could not chdir to " FCRONTABS );
-	xexit (EXIT_ERR);
-    }
 
     snprintf(buf, sizeof(buf), "%s.orig", user);
 
