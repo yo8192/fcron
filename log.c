@@ -22,13 +22,14 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: log.c,v 1.6 2001-04-21 08:42:33 thib Exp $ */
+ /* $Id: log.c,v 1.7 2001-05-15 00:42:48 thib Exp $ */
 
 /* This code is inspired by Anacron's sources of
    Itai Tzur <itzur@actcom.co.il> ( thanks to him ) */
 
 
 #include "fcron.h"
+#include "log.h"
 
 static void xopenlog(void);
 

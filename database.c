@@ -22,14 +22,16 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.50 2001-04-21 08:50:46 thib Exp $ */
+ /* $Id: database.c,v 1.51 2001-05-15 00:46:54 thib Exp $ */
 
 #include "fcron.h"
+#include "database.h"
 
 int is_leap_year(int year);
 int get_nb_mdays(int year, int mon);
 void set_wday(struct tm *date);
 void goto_non_matching(CL *line, struct tm *tm, char option);
+#define END_OF_INTERVAL 1    /* goto_non_matching() : option */
 void run_normal_job(CL *line);
 void run_serial_job(void);
 void run_lavg_job(int i);

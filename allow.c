@@ -22,9 +22,10 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: allow.c,v 1.5 2001-01-12 21:37:52 thib Exp $ */
+ /* $Id: allow.c,v 1.6 2001-05-15 00:51:32 thib Exp $ */
 
 #include "fcrontab.h"
+#include "allow.h"
 
 int
 in_file(char *str, char *file)
