@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.2 2002-01-03 14:37:13 thib Exp $
+# $Id: Makefile.in,v 1.3 2002-01-03 14:44:36 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -54,6 +54,7 @@ mandoc: HTML/index.html
           jw -f docbook -b man -o man _tmp_ 2> /dev/null; \
 	  rm -f _tmp_ ; \
           done)
+	rm -f man/manpage.links man/manpage.refs
 
 
 txtdoc: HTML/index.html
