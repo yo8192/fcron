@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.64 2002-11-17 13:13:46 thib Exp $ */
+ /* $Id: conf.c,v 1.65 2003-07-14 10:52:21 thib Exp $ */
 
 #include "fcron.h"
 
@@ -437,6 +437,13 @@ read_file(const char *file_name, cf_t *cf)
     struct passwd *pass = NULL;
     short int type = 0, size = 0;
     int rc;
+#ifdef CONFIG_FLASK
+    int flask_enabled = is_flask_enabled();
+    struct security_query qry;
+    struct security_response rsp;
+    int retval;
+    const char *user_name;
+#endif
 
     /* open file */
     if ( (ff = fopen(file_name, "r")) == NULL ) {
@@ -446,6 +453,11 @@ read_file(const char *file_name, cf_t *cf)
 
     /* check if this file is owned by root : otherwise, all runas fields
      * of this field should be set to the owner */
+#ifdef CONFIG_FLASK
+    if(flask_enabled)
+	rc = fstat_secure(fileno(ff), &file_stat, &cf->cf_file_sid);
+    else
+#endif
     rc = fstat(fileno(ff), &file_stat);
     if ( rc != 0 ) {
 	error_e("Could not stat %s", file_name);
@@ -467,8 +479,11 @@ read_file(const char *file_name, cf_t *cf)
 	    }
 	    runas_str = strdup2(pass->pw_name);
 	}
+	cf->cf_user = strdup2(file_name + 4);
     }
     else {
+	if(!cf->cf_user)
+	    cf->cf_user = strdup2(file_name);
 	if ( file_stat.st_uid == ROOTUID ) {
 	    /* file is owned by root : either this file has already been parsed
 	     * at least once by fcron, or it is root's fcrontab */
@@ -479,6 +494,32 @@ read_file(const char *file_name, cf_t *cf)
 	    goto err;
 	}
     }
+
+#ifdef CONFIG_FLASK
+    /*
+     * Since crontab files are not directly executed,
+     * crond must ensure that the crontab file has
+     * a context that is appropriate for the context of
+     * the user cron job.  It performs an entrypoint
+     * permission check for this purpose.
+     */
+    if(!strcmp(cf->cf_user, SYSFCRONTAB))
+	user_name = "system_u";
+    else
+	user_name = cf->cf_user;
+    if(get_default_sid(user_name, 0, &cf->cf_user_sid))
+	error_e("NO SID for user \"%s\"", cf->cf_user_sid);
+    qry.ssid = cf->cf_user_sid;
+    qry.tsid = cf->cf_file_sid;
+    qry.tclass = SECCLASS_FILE;
+    qry.requested = FILE__ENTRYPOINT;
+    retval = security_compute_av(&qry, &rsp);
+    if(retval || ((qry.requested & rsp.allowed) != qry.requested)) {
+	syslog(LOG_ERR, "ENTRYPOINT FAILED for \"%s\" (SID %u) for file SID %u"
+	       , cf->cf_user, cf->cf_user_sid, cf->cf_file_sid);
+	goto err;
+    }
+#endif
 
     debug("User %s Entry", file_name);
     bzero(buf, sizeof(buf));
@@ -501,6 +542,8 @@ read_file(const char *file_name, cf_t *cf)
 	goto err;
     }
     /* get the owner's name */
+    /* we set cf->cf_user before for SE Linux, so we need to free it here */
+    free(cf->cf_user);
     if ( read_strn(fileno(ff), &cf->cf_user, size) != OK ) {
 	error("Cannot read user's name : file ignored");
 	goto err;

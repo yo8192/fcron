@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.39 2002-10-28 17:53:59 thib Exp $ */
+ /* $Id: global.h,v 1.40 2003-07-14 10:51:52 thib Exp $ */
 
 
 /* 
@@ -43,8 +43,20 @@
 #include <errno.h>
 #endif
 
+#ifdef CONFIG_FLASK
+#include <flask_util.h>
+#include <fs_secure.h>
+#include <ss.h>
+#include <linux/flask/av_permissions.h>
+#include <get_sid_list.h>
+#endif
+
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
+
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
 #endif
 
 #include <pwd.h>
@@ -95,10 +107,6 @@
 #include <fcntl.h>
 #elif HAVE_SYS_FCNTL_H
 #include <sys/fcntl.h>
-#endif
-
-#ifdef HAVE_LIMITS_H
-#include <limits.h>
 #endif
 
 #ifdef HAVE_LIBPAM
@@ -159,6 +167,10 @@ typedef struct cf_t {
     struct env_t *cf_env_base;  /* list of all env variables to set          */
     int		  cf_running;	/* number of jobs running                    */
     signed char	  cf_tzdiff;    /* time diff between system and local hour   */
+#ifdef CONFIG_FLASK
+    security_id_t cf_user_sid;
+    security_id_t cf_file_sid;
+#endif
 } cf_t;
 
 

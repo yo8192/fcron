@@ -11,7 +11,7 @@ if test \( "$prefix" = "NONE" \) -o \( -z "$prefix" \); then
 fi
 AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
-AC_PREREQ(2.7)
+AC_PREREQ(2.57)
 
 vers="2.9.4"
 vers_quoted="\"$vers\""
@@ -44,6 +44,7 @@ AC_CHECK_HEADERS(strings.h)
 AC_CHECK_HEADERS(sys/types.h sys/socket.h sys/un.h)
 AC_CHECK_HEADERS(security/pam_appl.h crypt.h shadow.h)
 AC_CHECK_HEADERS(sys/resource.h)
+AC_CHECK_HEADERS(flask_util.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -60,6 +61,7 @@ AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
 AC_FUNC_WAIT3
 AC_CHECK_LIB(xnet, shutdown)
+AC_CHECK_LIB(secure, getsecsid, [flaskavail=1], [flaskavail=0])
 AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
 AC_CHECK_LIB(kstat, kstat_open, [kstat=1], [kstat=0])
 if test $getloadavg -eq 1; then
@@ -70,7 +72,7 @@ dnl Nothing to do ...
 elif test $kstat -eq 1;  then
   AC_MSG_CHECKING(function to use for lavg* options)  
   LIBS="$LIBS -lkstat"
-  LIBOBJS="$LIBOBJS getloadavg.o"
+  AC_LIBOBJ([getloadavg])
   AC_DEFINE_UNQUOTED(HAVE_KSTAT, 1)
   AC_MSG_RESULT(kstat)
 else
@@ -596,6 +598,44 @@ USEPAM="$usepam"
 AC_SUBST(USEPAM)
 
 
+AC_MSG_CHECKING(if SELinux should be used)
+AC_ARG_WITH(selinux,
+[ --with-selinux=[yes|no]	Use (or not) SELinux (default: yes).],
+[ case "$withval" in
+  no)
+    useselinux=0
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    if test "$flaskavail" -eq 1; then
+	useselinux=1
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(not available)
+        AC_MSG_ERROR([
+  You requested the use of SELinux, but SELinux is considered 
+  as not available by configure script.
+])
+    fi
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+  if test "$flaskavail" -eq 1; then
+    useselinux=1
+    AC_MSG_RESULT(yes)
+  else
+    useselinux=0
+    AC_MSG_RESULT(not available)
+  fi
+)
+if test "$useselinux" -eq 1; then
+  LIBS="$LIBS -lsecure"
+  AC_DEFINE(CONFIG_FLASK)
+fi
+
+
 dnl ---------------------------------------------------------------------
 dnl Users and groups ...
 
@@ -979,7 +1019,7 @@ AC_SUBST(DB2MAN_BEFORE)
 AC_SUBST(DB2MAN_AFTER)
 
 
-DSSSL_DIR="/usr/share/sgml/docbook/dsssl-stylesheets-1.74b/"
+DSSSL_DIR="/usr/share/sgml/docbook/stylesheet/dsssl/modular"
 
 AC_MSG_CHECKING(Looking for dsssl stylsheets)
 AC_ARG_WITH(dsssl-dir,
