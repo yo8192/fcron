@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.32 2004-08-12 09:52:26 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.33 2004-08-17 12:58:11 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -63,6 +63,10 @@ A copy of the license is included in gfdl.sgml.
 	 <listitem>
 	    <para>fixed memory leak: some strings returned by log.c:make_msg()
 	       weren't always free()d.</para>
+	 </listitem>
+	 <listitem>
+	    <para>bug fix: fcrondyn commands renice and kill used not to handle correctly
+	       the case where a job has several entries in exeq (exesev jobs).</para>
 	 </listitem>
       </itemizedlist>
 
