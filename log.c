@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: log.c,v 1.9 2001-09-12 13:37:13 thib Exp $ */
+ /* $Id: log.c,v 1.10 2001-10-29 13:21:02 thib Exp $ */
 
 /* This code is inspired by Anacron's sources of
    Itai Tzur <itzur@actcom.co.il> */
@@ -157,6 +157,7 @@ log_pame(int priority, pam_handle_t *pamh, int pamerrno, char *fmt, va_list args
         strftime(date, sizeof(date), "%H:%M:%S", ft);
         fprintf(stderr, "%s %s: %s\n", date, msg, pam_strerror(pamh, pamerrno));
     }
+    xcloselog();
 }
 #endif
 
@@ -232,6 +233,21 @@ error_e(char *fmt, ...)
     va_end(args);
 }
 
+
+#ifdef HAVE_LIBPAM
+/* Log a "complain" level message, with a PAM error description */
+void
+error_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...)
+{
+    va_list args;
+
+    xcloselog();  /* PAM is likely to have used openlog() */
+
+    va_start(args, fmt);
+    log_pame(COMPLAIN_LEVEL, pamh, pamerrno, fmt, args);
+    va_end(args);
+}
+#endif
 
 /* Log a "complain" level message, and exit */
 void

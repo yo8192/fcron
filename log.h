@@ -21,14 +21,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: log.h,v 1.3 2001-09-12 13:37:31 thib Exp $ */
+ /* $Id: log.h,v 1.4 2001-10-29 13:21:16 thib Exp $ */
 
 #ifndef __LOG_H__
 #define __LOG_H__
 
 /* functions prototypes */
 extern void xcloselog(void);
-extern char *make_msg(char *fmt, va_list args);
 extern void explain(char *fmt, ...);
 extern void explain_e(char *fmt, ...);
 extern void warn(char *fmt, ...);
@@ -38,6 +37,7 @@ extern void error_e(char *fmt, ...);
 extern void die(char *fmt, ...);
 extern void die_e(char *fmt, ...);
 #ifdef HAVE_LIBPAM
+extern void error_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...);
 extern void die_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...);
 #endif
 extern void Debug(char *fmt, ...);
