@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.9 2000-09-12 19:59:48 thib Exp $
+# $Id: boot-install,v 1.10 2000-09-18 08:24:33 thib Exp $
 
 # take 2 arguments : the name of the BSD-like install program
 #                    and the DESTSBIN directory
@@ -32,18 +32,25 @@ if test -f /etc/rc; then
 	echo "fcron-launcher" >> /etc/rc.local
     fi
 fi
-if test -d /etc/rc.d/init.d/; then    
+ROOTDIR=""
+if test -d /etc/rc.d/init.d/; then
+    ROOTDIR="/etc/rc.d"
+elif test -d /etc/init.d/; then
+    ROOTDIR="/etc"
+fi
+if test $ROOTDIR != ""; then
     if test $DEBUG -eq 1; then
-      $1 -c -m 755 -o root sysVinit-launcher-debug /etc/rc.d/init.d/fcron
+      $1 -c -m 755 -o root sysVinit-launcher-debug $ROOTDIR/init.d/fcron
     else
-      $1 -c -m 755 -o root sysVinit-launcher /etc/rc.d/init.d/fcron
+      $1 -c -m 755 -o root sysVinit-launcher $ROOTDIR/init.d/fcron
     fi
     
-    cd /etc/rc.d/rc3.d/ ; ln -f -s ../init.d/fcron S40fcron
-    cd /etc/rc.d/rc4.d/ ; ln -f -s ../init.d/fcron S40fcron
-    cd /etc/rc.d/rc5.d/ ; ln -f -s ../init.d/fcron S40fcron
+    cd $ROOTDIR/rc2.d/ ; ln -f -s ../init.d/fcron S40fcron
+    cd $ROOTDIR/rc3.d/ ; ln -f -s ../init.d/fcron S40fcron
+    cd $ROOTDIR/rc4.d/ ; ln -f -s ../init.d/fcron S40fcron
+    cd $ROOTDIR/rc5.d/ ; ln -f -s ../init.d/fcron S40fcron
     
-    cd /etc/rc.d/rc0.d/ ; ln -f -s ../init.d/fcron  K60fcron
-    cd /etc/rc.d/rc6.d/ ; ln -f -s ../init.d/fcron  K60fcron
+    cd $ROOTDIR/rc0.d/ ; ln -f -s ../init.d/fcron  K60fcron
+    cd $ROOTDIR/rc6.d/ ; ln -f -s ../init.d/fcron  K60fcron
     cd $startdir
 fi
