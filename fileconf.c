@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.21 2000-10-07 14:13:44 thib Exp $ */
+ /* $Id: fileconf.c,v 1.22 2000-11-02 10:57:43 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -956,9 +956,9 @@ read_arys(char *ptr, CF *cf)
 
     /* check for non matching if option runfreq is set to 1 */
     if ( cl->cl_runfreq == 1 ) {
-	const size_t s_mins=bitstr_size(60), s_hrs=bitstr_size(24);
-	const size_t s_days=bitstr_size(32), s_mons=bitstr_size(12);
-	const size_t s_dow=bitstr_size(8);
+	const size_t s_mins=60, s_hrs=24;
+	const size_t s_days=32, s_mons=12;
+	const size_t s_dow=8;
 	int j = 0;
 	
 	bit_ffc(cl->cl_mins, s_mins, &j);
