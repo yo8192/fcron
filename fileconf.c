@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.59 2002-07-19 19:36:42 thib Exp $ */
+ /* $Id: fileconf.c,v 1.60 2002-08-25 17:12:05 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -330,15 +330,8 @@ read_env(char *ptr, CF *cf)
 	if ( strcmp(val, "\0") == 0 )
 	    clear_mail(default_line.cl_option);
 	else {
-	    struct passwd *pass = NULL;
-	    if ( (pass = getpwnam(val)) == 0 ) {
-		fprintf(stderr, "%s:%d:MAILTO: \"%s\" is not in passwd :"
-			" ignored\n", file_name, line, val);	
-		need_correction = 1;
-	    } else {
-		Set(default_line.cl_mailto, val);
-		set_mail(default_line.cl_option);
-	    }
+	    Set(default_line.cl_mailto, val);
+	    set_mail(default_line.cl_option);
 	}
 	    
     }
@@ -737,7 +730,6 @@ read_opt(char *ptr, CL *cl)
 
 	else if( strcmp(opt_name, "mailto") == 0) {
 	    char buf[50];
-	    struct passwd *pass = NULL;
 	    bzero(buf, sizeof(buf));
 
 	    if( ! in_brackets )
@@ -749,14 +741,8 @@ read_opt(char *ptr, CL *cl)
 	    if ( strcmp(buf, "\0") == 0 )
 		clear_mail(cl->cl_option);
 	    else {
-		if ( (pass = getpwnam(buf)) == NULL ) {
-		    fprintf(stderr, "%s:%d:mailto: \"%s\" is not in passwd :"
-			    " ignored\n", file_name, line, buf);	
-		    need_correction = 1;
-		} else {
 		    Set(cl->cl_mailto, buf);
 		    set_mail(cl->cl_option);
-		}
 	    }
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\" \"%s\"\n", opt_name, buf);
