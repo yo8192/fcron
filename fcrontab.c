@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.9 2000-06-21 14:59:07 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.10 2000-06-22 12:33:09 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.9 2000-06-21 14:59:07 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.10 2000-06-22 12:33:09 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -559,12 +559,17 @@ reinstall(char *buf)
     explain("reinstalling %s's fcrontab", user);
 
     if ( (i = open(buf, O_RDONLY)) < 0) {
-	if ( errno == ENOENT )
-	    fprintf(stderr,"Could not reinstall user %s has no fcrontab", buf);
+	if ( errno == ENOENT ) {
+	    fprintf(stderr, "Could not reinstall: user %s has no fcrontab\n",
+		    buf);
+	}
 	else
 	    fprintf(stderr, "Could not open '%s': %s\n", buf,
 		    strerror(errno));
+
+	exit (EXIT_ERR);
     }
+
     close(0); dup2(i, 0);
     close(i);
 
