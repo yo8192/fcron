@@ -2,21 +2,26 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.12 2000-11-03 13:22:00 thib Exp $
+# $Id: boot-install,v 1.13 2000-11-14 21:38:49 thib Exp $
 
-# take 3 arguments : the name of the BSD-like install program
-#                    the DESTSBIN directory, and the value of DEBUG
+# take 4 arguments : the name of the BSD-like install program
+#                    the DESTSBIN directory, the value of DEBUG
+#                    and the value of FCRONTABS
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
 startdir=$pwd
-#DEBUG=$3
-DEBUG=1
-
-if test $# -ne 3; then
+if test $# -ne 4; then
     echo "Too few/many arguments"
     exit 1
 fi
+
+if test $3 -eq 1; then
+    exit
+fi
+#DEBUG=$3
+DEBUG=1
+FCRONTABS=$4
 
 if test $DEBUG -eq 1; then
     STARTCMD="fcron -b -d"
@@ -24,51 +29,161 @@ else
     STARTCMD="fcron -b"
 fi    
 
+echo
+echo "Fcron should be started by your init scripts."
+echo "The installation process will try to do it."
+echo
+
+INSTALL="nothing"
+SYSV=0
+RESTARTED=0
+INSTALLED=0
+
 if test -f /etc/rc.d/rc.M; then
     # Slackware
     if ! cat /etc/rc.d/rc.local | grep $STARTCMD; then
+      while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
+	do
+	echo "Would you like to add $STARTCMD in the file /etc/rc.d/rc.local ?"
+	read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+	done
+      if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
 	echo $STARTCMD >> /etc/rc.d/rc.local
+	INSTALLED=1
+      else
+	INSTALLED=0
+      fi
+    elif cat /etc/rc.d/rc.local | grep fcron; then	
+      echo "Fcron seems to be in /etc/rc.d/rc.local, but not with the appropriate options :"
+      echo "you should probably correct this file in order to run fcron with $STARTCMD."
+      INSTALLED=1
+    else
+      echo "Fcron is already in /etc/rc.d/rc.local."
+      INSTALLED=1
     fi
-    killall -TERM fcron
-    fcron-launcher
 fi 
-if test -f /etc/rc; then
+
+if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc \) ; then
     # FreeBSD
     if ! cat /etc/rc.local | grep $STARTCMD; then
+      while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
+	do
+	echo "Would you like to add $STARTCMD in the file /etc/rc.local ?"
+	read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+	done
+      if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
 	echo $STARTCMD >> /etc/rc.local
+	INSTALLED=1
+      else
+	INSTALLED=0
+      fi
+    elif cat /etc/rc.local | grep fcron; then	
+      echo "Fcron seems to be in /etc/rc.local, but not with the appropriate options :"
+      echo "you should probably correct this file in order to run fcron with $STARTCMD."
+      INSTALLED=1
+    else
+      echo "Fcron is already in /etc/rc.local."
+      INSTALLED=1
     fi
-    killall -TERM fcron
-    fcron-launcher
 fi
+
 ROOTDIR=""
 if test -d /etc/rc.d/init.d/; then
     ROOTDIR="/etc/rc.d"
 elif test -d /etc/init.d/; then
     ROOTDIR="/etc"
 fi
-if test $ROOTDIR != ""; then
-    $1 -c -m 755 -o root sysVinit-launcher $ROOTDIR/init.d/fcron
-    if test $DEBUG -eq 1; then
+if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
+    while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
+      do
+      echo "Would you like to add fcron in the directory $ROOTDIR and in runlevel 2, 3, 4 and 5 ?"
+      read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
+      done
+    if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
+      $1 -c -m 755 -o root sysVinit-launcher $ROOTDIR/init.d/fcron
+      if test $DEBUG -eq 1; then
 	cat $ROOTDIR/init.d/fcron | sed 's: -b: -b -d:' >$ROOTDIR/init.d/fcron2
 	mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
 	chmod +x $ROOTDIR/init.d/fcron
-    fi
-    cat $ROOTDIR/init.d/fcron | sed "s:@@DESTSBIN@:$2:" >$ROOTDIR/init.d/fcron2
-    mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
-    chmod +x $ROOTDIR/init.d/fcron
+      fi
+      cat $ROOTDIR/init.d/fcron | sed "s:@@DESTSBIN@:$2:" >$ROOTDIR/init.d/fcron2
+      mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
+      chmod +x $ROOTDIR/init.d/fcron
     
-    cd $ROOTDIR/rc2.d/ ; ln -f -s ../init.d/fcron S40fcron
-    cd $ROOTDIR/rc3.d/ ; ln -f -s ../init.d/fcron S40fcron
-    cd $ROOTDIR/rc4.d/ ; ln -f -s ../init.d/fcron S40fcron
-    cd $ROOTDIR/rc5.d/ ; ln -f -s ../init.d/fcron S40fcron
+      cd $ROOTDIR/rc2.d/ ; ln -f -s ../init.d/fcron S40fcron
+      cd $ROOTDIR/rc3.d/ ; ln -f -s ../init.d/fcron S40fcron
+      cd $ROOTDIR/rc4.d/ ; ln -f -s ../init.d/fcron S40fcron
+      cd $ROOTDIR/rc5.d/ ; ln -f -s ../init.d/fcron S40fcron
     
-    cd $ROOTDIR/rc0.d/ ; ln -f -s ../init.d/fcron  K60fcron
-    cd $ROOTDIR/rc6.d/ ; ln -f -s ../init.d/fcron  K60fcron
-    cd $startdir
+      cd $ROOTDIR/rc0.d/ ; ln -f -s ../init.d/fcron K60fcron
+      cd $ROOTDIR/rc6.d/ ; ln -f -s ../init.d/fcron K60fcron
+      cd $startdir
 
-    # we stop fcron like this (not using "fcron restart") because
-    # an old version of fcron may not stop correctly otherwise.
-    killall -TERM fcron
-    $ROOTDIR/init.d/fcron start
+      INSTALLED=1
+      SYSV=1
+    else
+      INSTALLED=0      
+    fi
+
+fi
+
+if test "$INSTALLED" -eq 0; then
+echo
+echo "Installation process failed to install fcron in your init scripts :"
+echo "please do it manually."
+fi
+
+# we stop fcron like this (not using "fcron restart") because
+# an old version of fcron may not stop correctly otherwise.
+echo 
+echo "You should now restart fcron."
+RESTART="nothing"
+if test "$SYSV" -eq 1; then
+    while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
+      do
+      echo "Would you like to do it with a 'killall -TERM fcron'"
+      echo "followed by a '"$ROOTDIR"/init.d/fcron start' ?"
+      read -p "Please answer with 'y' or 'n' (default: 'y'): " RESTART NOTHING
+      done
+    if test \( -z "$RESTART" \) -o \( "$RESTART" = "y" \); then
+      killall -TERM fcron
+      $ROOTDIR/init.d/fcron start
+      RESTARTED=1
+    fi
+else
+    while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
+      do
+      echo "Would you like to do it with a 'killall -TERM fcron'"
+      echo "followed by a '"$STARTCMD"' ?"
+      read -p "Please answer with 'y' or 'n' (default: 'y'): " RESTART NOTHING
+      done
+    if test  \( -z "$RESTART" \) -o \( "$RESTART" = "y" \); then
+      killall -TERM fcron
+      $STARTCMD
+      RESTARTED=1
+    fi
+fi
+
+echo
+echo "After having restarted fcron, you should reinstall the fcrontabs."
+if test "$RESTARTED" -eq 1; then
+    REINSTALL="nothing"
+    # reinstall the fcrontabs
+    # to do that, the old (if any) version of fcron must not run
+    # (sysVinit-install normally start the last version)
+    while test \( ! -z "$REINSTALL" \) -a \( "$REINSTALL" != "y" \) -a \( "$REINSTALL" != "n" \);
+      do
+      echo "Would you like to do it now ?"
+      read -p "Please answer with 'y' or 'n' (default: 'y'): " REINSTALL NOTHING
+      done
+    if test \( -z "$REINSTALL" \) -o \( "$REINSTALL" = "y" \); then
+	for FILE in $FCRONTABS/* ; do \
+	    BASENAME=`basename $FILE` ; \
+	    FCRONTAB=`echo "$BASENAME" | \
+	    sed "s|.*orig|| ; s|new.*|| ; s|fcrontab.sig|| ; s|rm.*||"` ; \
+	    ( test ! -z "$FCRONTAB" && fcrontab -u $FCRONTAB -z ) \
+		    || echo -n ""; \
+	done
+    fi
 fi
 
