@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.36 2002-07-19 19:40:32 thib Exp $
+# $Id: boot-install,v 1.37 2003-12-26 00:11:23 thib Exp $
 
 # takes 6 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -83,10 +83,10 @@ echo "The script proposes the following location to do it :"
 if test $IS_FREEBSD -eq 1; then
   echo "  /usr/local/etc/rc.d/fcron.sh"
 fi
-if test -d /etc/rc.d/init.d/; then
-  echo "  /etc/rc.d/init.d/fcron"
-elif test -d /etc/init.d/; then
+if test -d /etc/init.d/; then
   echo "  /etc/init.d/fcron"
+elif test -d /etc/rc.d/init.d/; then
+  echo "  /etc/rc.d/init.d/fcron"
 fi
 if test -f /etc/rc.d/rc.local; then
   echo "  /etc/rc.d/rc.local"
@@ -138,10 +138,10 @@ fi
 
 INSTALL="nothing"
 ROOTDIR=""
-if test -d /etc/rc.d/init.d/; then
-    ROOTDIR="/etc/rc.d"
-elif test -d /etc/init.d/; then
+if test -d /etc/init.d/; then
     ROOTDIR="/etc"
+elif test -d /etc/rc.d/init.d/; then
+    ROOTDIR="/etc/rc.d"
 fi
 if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
   if test $ANSWER -eq 2; then
