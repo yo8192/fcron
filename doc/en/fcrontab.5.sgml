@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.3 2002-01-27 16:37:37 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.4 2002-01-27 16:43:18 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>
@@ -425,7 +425,7 @@ A copy of the license is included in gfdl.sgml.
 		    <term>random</term>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>0</constant>)</para>
-			<para>In a <link linkend="fcrontab.5.periodent">line run periodically</link>, this option answer the question : should this job be run as soon as possible in its interval of execution (safer), or should fcron set a random time of execution in that interval ? Note that if this option is set, the job may not run if fcron is not running during <emphasis>all</emphasis>the execution interval. Besides, you must know that the random scheme may be quite easy to guess for skilled people.</para>
+			<para>In a <link linkend="fcrontab.5.periodent">line run periodically</link>, this option answers the question : should this job be run as soon as possible in its interval of execution (safer), or should fcron set a random time of execution in that interval ? Note that if this option is set, the job may not run if fcron is not running during <emphasis>all</emphasis> the execution interval. Besides, you must know that the random scheme may be quite easy to guess for skilled people.</para>
 		    </listitem>
 		</varlistentry>
 	    </variablelist>
