@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.34 2004-11-13 19:47:02 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.35 2004-11-13 19:49:21 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -19,6 +19,9 @@ A copy of the license is included in gfdl.sgml.
 	    <para>Fixed serious security vulnerabilities in fcronsighup,
 	    and improved fcronsighup's overall security (drop privileges,
 	    better check user inputs, etc).</para>
+	 </listitem>
+	 <listitem>
+	    <para>Fixed several typos in the doc.</para>
 	 </listitem>
       </itemizedlist>
 
