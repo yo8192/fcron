@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.61 2001-04-21 08:49:10 thib Exp $
+# $Id: Makefile.in,v 1.62 2001-04-29 22:21:31 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -58,18 +58,21 @@ OPTION =
 # Should not be changed under this #
 ####################################
 
-VERSION= @VERSION@
-CFLAGS= $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
-OBJSD = fcron.o subs.o database.o job.o log.o conf.o $(LIBOBJS)
-OBJS= fcrontab.o fileconf.o subs.o log.o allow.o
-HEADERSD = $(SRCDIR)/fcron.h config.h $(SRCDIR)/global.h $(SRCDIR)/option.h $(SRCDIR)/getloadavg.h
-HEADERS = $(SRCDIR)/fcrontab.h config.h $(SRCDIR)/global.h $(SRCDIR)/option.h
+VERSION = @VERSION@
+CFLAGS = $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
+OBJSD = fcron.o subs.o log.o database.o job.o conf.o $(LIBOBJS)
+OBJS = fcrontab.o subs.o log.o fileconf.o allow.o
+OBJCONV = convert-fcrontab.o subs.o log.o
+HEADERSALL = config.h $(SRCDIR)/global.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/save.h $(SRCDIR)/option.h 
+HEADERSD = $(HEADERSALL) $(SRCDIR)/fcron.h $(SRCDIR)/getloadavg.h $(SRCDIR)/database.h $(SRCDIR)/conf.h $(SRCDIR)/job.h
+HEADERS = $(HEADERSALL) $(SRCDIR)/fcrontab.h $(SRCDIR)/allow.h $(SRCDIR)/fileconf.h
+HEADERSCONV = $(HEADERSALL) $(SRCDIR)/convert-fcrontab.h
 
 # this is two regular expressions
 RCSNOLOG=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\)
 REXP_MANPAGES=.*[158]
 
-all: fcron fcrontab
+all: fcron fcrontab convert-fcrontab
 
 fcron: $(OBJSD) $(HEADERSD)
 	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJSD)
@@ -77,19 +80,16 @@ fcron: $(OBJSD) $(HEADERSD)
 fcrontab: $(OBJS) $(HEADERS)
 	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJS)
 
-fcrontab.o: $(SRCDIR)/fcrontab.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(SRCDIR)/fcrontab.c 
+convert-fcrontab: $(OBJCONV) $(HEADERSCONV) 
+	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJCONV)
 
-fileconf.o:  $(SRCDIR)/fileconf.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(SRCDIR)/fileconf.c 
-
-allow.o:  $(SRCDIR)/allow.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $(SRCDIR)/allow.c 
-
-%.o: $(SRCDIR)/%.c $(HEADERSD)
+%.o: $(SRCDIR)/%.c $(HEADERSALL) $(SRCDIR)/%.h
 	$(CC) $(CFLAGS) -c $<
 
 install: all
+
+# needed by boot-install script :
+	echo `fcron -V 2>&1 | grep "^fcron "` > $(SRCDIR)/script/PREVIOUS_VERSION
 
 	$(SRCDIR)/script/user-group $(USERNAME) $(GROUPNAME) $(ANSWERALL)
 
@@ -145,7 +145,7 @@ uninstall:
 
 clean:
 	rm -f *.o
-	rm -f fcron fcrontab
+	rm -f fcron fcrontab convert-fcrontab
 
 vclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
