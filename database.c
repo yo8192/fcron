@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.53 2001-05-29 19:32:37 thib Exp $ */
+ /* $Id: database.c,v 1.54 2001-06-01 11:34:58 thib Exp $ */
 
 #include "fcron.h"
 #include "database.h"
@@ -233,7 +233,7 @@ add_serial_job(CL *line)
 
     /* check if the line is already in the serial queue */
     if ( (is_serial_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX) ||
-	 line->cl_numexe > 0) {
+	 (! is_serial_sev(line->cl_option) &&line->cl_numexe > 0) ) {
 	debug("already in serial queue %s", line->cl_shell);
 	return;
     }
@@ -289,8 +289,8 @@ add_lavg_job(CL *line)
 {
 
     /* check if the line is already in the lavg queue */
-    if ( (is_lavg_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX)
-	 || line->cl_numexe > 0 ) {
+    if ( (is_lavg_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX) ||
+	 (! is_lavg_sev(line->cl_option) &&  line->cl_numexe > 0 ) ) {
 	debug("already in lavg queue %s", line->cl_shell);
 	return;
     }
