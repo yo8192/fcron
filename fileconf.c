@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.36 2001-01-30 15:49:26 thib Exp $ */
+ /* $Id: fileconf.c,v 1.37 2001-01-30 17:41:35 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -839,7 +839,6 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if(strcmp(opt_name, "runas") == 0) {
-	    uid_t uid = 0;
 	    if (getuid() != 0) {
 		fprintf(stderr, "must be privileged to use option runas: "
 			"skipping option\n");
