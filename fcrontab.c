@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.65 2004-11-13 19:42:39 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.66 2005-02-26 15:10:11 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -47,7 +47,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.65 2004-11-13 19:42:39 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.66 2005-02-26 15:10:11 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -179,59 +179,93 @@ xexit(int exit_val)
 
 
 int
-copy(char *orig, char *dest)
-    /* copy orig file to dest */
+copy_src(char *orig, char *dest)
+    /* copy src file from orig to dest */
+    /* we first copy the file to a temp file name, and then we rename it,
+     * so as to avoid data loss if the filesystem is full. */
 {
-    int from;
-    int to_fd;
+    int from = -1, to_fd = -1;
     int nb;
     char *copy_buf[LINE_LEN];
 
+    char tmp_filename_str[PATH_LEN+4];
+    int dest_path_len, tmp_filename_index;
+    char *tmp_suffix_str = ".tmp";
+    int max_dest_len = sizeof(tmp_filename_str)- sizeof(tmp_suffix_str);
+
     if ( (from = open(orig, O_RDONLY)) == -1) {
-	error_e("copy: open(orig)");
-	return ERR;
+	error_e("copy: open(orig) : old source file kept");
+	goto exiterr;
     }
+
     /* create it as fcrontab_uid (to avoid problem if user's uid changed)
      * except for root. Root requires filesystem uid root for security
      * reasons */
 #ifdef USE_SETE_ID
     if (asuid == ROOTUID) {
 	if (seteuid(ROOTUID) != 0)
-	    error_e("seteuid(ROOTUID)");
+	    die_e("seteuid(ROOTUID) : old source file kept");
     } 
     else {
     	if (seteuid(fcrontab_uid) != 0)
 	    error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
     }
 #endif
-    to_fd = open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR|S_IWUSR|S_IRGRP);
-    if (to_fd == -1) {
-	error_e("copy: dest");
-	return ERR;
+
+    /* the temp file must be in the same directory as the dest file */
+    dest_path_len = strlen(dest);
+    strncpy(tmp_filename_str, dest, max_dest_len);
+    tmp_filename_index = (dest_path_len > max_dest_len) ?
+	max_dest_len : dest_path_len;
+    strcpy(&tmp_filename_str[tmp_filename_index], tmp_suffix_str);
+
+    to_fd = open(tmp_filename_str, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC,
+		 S_IRUSR|S_IWUSR|S_IRGRP);
+    if ( to_fd < 0 ) {
+	error_e("could not open file %s", tmp_filename_str);
+	goto exiterr;
     }
+
 #ifdef USE_SETE_ID
     if (asuid != ROOTUID && seteuid(uid) != 0)
-	die_e("seteuid(uid[%d])", uid);
+	die_e("seteuid(uid[%d]) : old source file kept", uid);
 #endif
     if (asuid == ROOTUID ) {
-	if ( fchmod(to_fd, S_IWUSR | S_IRUSR) != 0 )
-	    error_e("Could not fchmod %s to 600", dest);
-	if ( fchown(to_fd, ROOTUID, fcrontab_gid) != 0 )
-	    error_e("Could not fchown %s to root", dest);
+	if ( fchmod(to_fd, S_IWUSR | S_IRUSR) != 0 ) {
+	    error_e("Could not fchmod %s to 600", tmp_filename_str);
+	    goto exiterr;
+	}
+	if ( fchown(to_fd, ROOTUID, fcrontab_gid) != 0 ) {
+	    error_e("Could not fchown %s to root", tmp_filename_str);
+	    goto exiterr;
+	}
     }
 
     while ( (nb = read(from, copy_buf, sizeof(copy_buf))) != -1 && nb != 0 )
 	if ( write(to_fd, copy_buf, nb) != nb ) {
-	    error("Error while copying file. Aborting.\n");
-	    close(from);
-	    close(to_fd);
-	    return ERR;
+	    error_e("Error while copying file (no space left ?)."
+		    " Aborting : old source file kept");
+	    goto exiterr;
 	}
 
     close(from);
     close(to_fd);
+    from = to_fd = -1;
+
+    if ( rename(tmp_filename_str, dest) < 0 ) {
+	error_e("Unable to rename %s to %s : old source file kept",
+		tmp_filename_str, dest);
+	goto exiterr;
+    }
     
     return OK;
+
+  exiterr:
+    if ( from != -1 )
+	close(from);
+    if ( to_fd != -1 )
+	close(to_fd);
+    return ERR;
 }
 
 
@@ -300,22 +334,26 @@ write_file(char *file)
 	 *   adding new ones ) */
 	remove_fcrontab(0);
 
-    if ( file_base->cf_line_base == NULL ) {
-	/* no entries */
-	explain("%s's fcrontab contains no entries : removed.", user);
-	remove_fcrontab(0);
-    } 
-    else {
-	/* write the binary fcrontab on disk */
-	snprintf(buf, sizeof(buf), "new.%s", user);
-	if ( save_file(buf) != OK )
-	    return_val = ERR;
-    }
-
     /* copy original file to fcrontabs dir */
     snprintf(buf, sizeof(buf), "%s.orig", user);
-    if ( copy(file, buf) == ERR )
+    if ( copy_src(file, buf) == ERR ) {
 	return_val = ERR;
+    }
+    else {
+
+	if ( file_base->cf_line_base == NULL ) {
+	    /* no entries */
+	    explain("%s's fcrontab contains no entries : removed.", user);
+	    remove_fcrontab(0);
+	} 
+	else {
+	    /* write the binary fcrontab on disk */
+	    snprintf(buf, sizeof(buf), "new.%s", user);
+	    if ( save_file(buf) != OK )
+		return_val = ERR;
+	}
+
+    }
 
     return return_val;
 }
@@ -332,12 +370,13 @@ make_file(char *file)
 
 	if (write_file(file) == ERR)
 	    return ERR;
+	else
+	    /* tell daemon to update the conf */
+	    need_sig = 1;
 
 	/* free memory used to store the list */
 	delete_file(user);
 
-	/* tell daemon to update the conf */
-	need_sig = 1;
 	break;
 
     case ERR:
@@ -388,8 +427,8 @@ edit_file(char *buf)
     struct stat st;
     time_t mtime = 0;
     char *tmp_str;
-    FILE *f, *fi;
-    int file = 0;
+    FILE *f = NULL, *fi = NULL;
+    int file = -1;
     int c;
     char correction = 0;
     short return_val = EXIT_OK;
@@ -423,13 +462,20 @@ edit_file(char *buf)
     }
     else { 
 	/* copy original file to temp file */
-	while ( (c=getc(f)) != EOF )
-	    putc(c, fi);
+	while ( (c=getc(f)) != EOF ) {
+	    if ( putc(c, fi) == EOF ) {
+		error_e("could not write to file %s", buf);
+		goto exiterr;
+	    }
+	}
 	fclose(f);
+	f = NULL;
     }
 
     fclose(fi);
+    fi = NULL;
     close(file);
+    file = -1;
 
     do {
 
@@ -554,12 +600,13 @@ edit_file(char *buf)
 
     if ( write_file(tmp_str) != OK )
 	return_val = EXIT_ERR;
-    
+    else
+	/* tell daemon to update the conf */
+	need_sig = 1;
+	
+
     /* free memory used to store the list */
     delete_file(user);
-    
-    /* tell daemon to update the conf */
-    need_sig = 1;
     
   end:
     if ( remove(tmp_str) != 0 )
@@ -571,6 +618,12 @@ edit_file(char *buf)
     if ( remove(tmp_str) != 0 )
 	error_e("could not remove %s", tmp_str);
     free(tmp_str);
+    if ( f != NULL )
+	fclose(f);
+    if ( fi != NULL )
+	fclose(fi);
+    if ( file != -1 )
+	close(file);
     xexit (EXIT_ERR);
 
 }
