@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.8 2001-05-17 00:53:55 thib Exp $ */
+ /* $Id: subs.c,v 1.9 2001-06-12 06:40:33 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -42,7 +42,7 @@ remove_blanks(char *str)
 
     /* scan backward to the first character that is not a space */
     do	{c--;}
-    while (c >= str && isspace(*c));
+    while (c >= str && isspace( (int) *c));
 
     /* if last char is a '\n', we remove it */
     if ( *c == '\n' )

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: allow.c,v 1.7 2001-06-05 10:19:10 thib Exp $ */
+ /* $Id: allow.c,v 1.8 2001-06-12 06:40:54 thib Exp $ */
 
 #include "fcrontab.h"
 #include "allow.h"
@@ -53,7 +53,7 @@ in_file(char *str, char *file)
 
 	/* skip leading and trailing blanks, comments */
 	start = buf;
-	while ( *start != '\0' && isspace(*start) )
+	while ( *start != '\0' && isspace( (int) *start) )
 	    start++;
 	if ( *start == '#' || *start == '\0' )
 	    continue;
