@@ -870,6 +870,30 @@ if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
 fi
 
 
+sysfcrontab="systab"
+use_sysfcrontab=1
+AC_MSG_CHECKING(use a system fcrontab)
+AC_ARG_WITH(sysfcrontab,
+[ --with-sysfcrontab=NAME	Use (or not) a system fcrontab (default: yes)],
+[ case "$withval" in
+  no)
+    use_sysfcrontab=0
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    AC_MSG_RESULT(yes)
+    ;;
+  *)
+    sysfcrontab="$withval"
+    AC_MSG_RESULT($sysfcrontab)
+  esac ],
+  AC_MSG_RESULT(yes)
+)
+if test "$use_sysfcrontab" -eq 1 ; then
+  AC_DEFINE_UNQUOTED(SYSFCRONTAB, "$sysfcrontab")
+fi
+
+
 dnl ---------------------------------------------------------------------
 dnl DocBook
 

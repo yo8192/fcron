@@ -21,13 +21,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.h,v 1.3 2001-12-23 22:04:48 thib Exp $ */
+ /* $Id: fileconf.h,v 1.4 2002-08-30 20:05:42 thib Exp $ */
 
 #ifndef __FILECONF_H__
 #define __FILECONF_H__
 
 /* functions prototypes */
-extern int read_file(char *filename, char *user);
+extern int read_file(char *filename);
 extern void delete_file(const char *user_name);
 extern int save_file(char *path);
 

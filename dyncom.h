@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: dyncom.h,v 1.3 2002-08-25 17:25:35 thib Exp $ */
+ /* $Id: dyncom.h,v 1.4 2002-08-30 20:05:58 thib Exp $ */
 
 /* This file describe the communication protocol between fcron and fcrondyn */
 
@@ -56,6 +56,10 @@
 #define ALL (-1)
 #define CUR_USER (-2)
 #define ARG_REQUIRED (-3)
+
+#ifdef SYSFCRONTAB
+#define SYSFCRONTAB_UID (-100)
+#endif
 
 /* commands : if you change something here, please update fcrondyn.c's cmd_list
  *            and fcron's socket.c . */

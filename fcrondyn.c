@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.5 2002-08-25 17:10:11 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.6 2002-08-30 20:04:28 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.5 2002-08-25 17:10:11 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.6 2002-08-30 20:04:28 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -169,6 +169,9 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
     int i = 0, j = 0, rank = -1;
     long int int_buf = 0;
     struct passwd *pass = NULL;
+#ifdef SYSFCRONTAB
+    long int sysfcrontab_uid = SYSFCRONTAB_UID;
+#endif
 
     bzero(buf, sizeof(buf));
     *cmd_len = 0;
@@ -241,15 +244,30 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 	    case USER:
 		int_buf = (long int) *(cmd_str + word_size);
 		*(cmd_str + word_size) = '\0';
-		if ( (pass = getpwnam(cmd_str) ) == NULL ) {
-		    fprintf(stderr, "Error : '%s' is not a valid user name.\n", cmd_str);
-		    return INVALID_ARG;
+#ifdef SYSFCRONTAB
+		if ( strcmp(cmd_str, SYSFCRONTAB) == 0 ) {
+		    Write_cmd(sysfcrontab_uid);
 		}
+		else {
+#endif
+		    if ( ( pass = getpwnam(cmd_str) ) == NULL ) {
+			fprintf(stderr,"Error : '%s' isn't a valid username.\n",cmd_str);
+			return INVALID_ARG;
+		    }
+		    Write_cmd(pass->pw_uid);
+#ifdef SYSFCRONTAB
+		}
+#endif
 		*(cmd_str + word_size) = (char) int_buf;
 		cmd_str += word_size;
-		Write_cmd(pass->pw_uid);
 		if ( debug_opt )
-		    fprintf(stderr, "  uid = %d\n", pass->pw_uid);
+		    fprintf(stderr, "  uid = %d\n",
+#ifdef SYSFCRONTAB
+			    (pass) ? pass->pw_uid : SYSFCRONTAB_UID
+#else
+			    pass->pw_uid
+#endif
+			);
 		break;
 
 	    case JOBID:

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.60 2002-08-25 17:12:05 thib Exp $ */
+ /* $Id: fileconf.c,v 1.61 2002-08-30 20:05:39 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -147,7 +147,7 @@ get_line(char *str, size_t size, FILE *file)
 }
 
 int
-read_file(char *filename, char *user)
+read_file(char *filename)
     /* read file "name" and append CF list */
 {
     CF *cf = NULL;
@@ -179,14 +179,14 @@ read_file(char *filename, char *user)
     Alloc(cf, CF);
     cf->cf_user = strdup2(user);
     default_line.cl_file = cf;
-    default_line.cl_runas = strdup2(user);
-    default_line.cl_mailto = strdup2(user);
+    default_line.cl_runas = strdup2(runas);
+    default_line.cl_mailto = strdup2(runas);
     set_default_opt(default_line.cl_option);
 
     if ( debug_opt )
 	fprintf(stderr, "FILE %s\n", file_name);
 
-    if (strcmp(user, "root") == 0)
+    if (strcmp(runas, "root") == 0)
 	max_entries = 65535;
 
     /* max_lines acts here as a security counter to avoid endless loop. */
@@ -544,8 +544,8 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 	    if ( i == 1 ) {
 		bzero(cl, sizeof(CL));
-		Set(cl->cl_runas, user);
-		Set(cl->cl_mailto, user);
+		Set(cl->cl_runas, runas);
+		Set(cl->cl_mailto, runas);
 		set_default_opt(cl->cl_option);
 	    }
 	    if (debug_opt)

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.6 2002-08-25 17:27:14 thib Exp $ */
+ /* $Id: socket.c,v 1.7 2002-08-30 20:06:04 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -233,7 +233,7 @@ print_fields(int fd, unsigned char *details)
 
     fields[TERM_LEN-1] = '\0';
 
-    if ( send(fd, fields, len, 0) < 0 )
+    if ( send(fd, fields, (len < sizeof(fields)) ? len : sizeof(fields), 0) < 0 )
 	error_e("error in send()");
 
 }
@@ -261,6 +261,7 @@ print_line(int fd, struct CL *line,  unsigned char *details, pid_t pid, int inde
     if ( bit_test(details, FIELD_OPTIONS) ) {
 	char opt[9];
 	int i = 0;
+	opt[0] = '\0';
 	if ( is_lavg(line->cl_option) )
 	    i += snprintf(opt+i, sizeof(opt)-i, "L%.*s",
 			  (is_lavg_sev(line->cl_option)) ? 0:1, "O");
@@ -274,7 +275,9 @@ print_line(int fd, struct CL *line,  unsigned char *details, pid_t pid, int inde
     }
     if ( bit_test(details, FIELD_LAVG) ) {
 	len += snprintf(buf+len, sizeof(buf)-len, " %.1lf,%.1lf,%.1lf",
-			((double)((line->cl_lavg)[0]))/10, ((double)((line->cl_lavg)[1]))/10, ((double)((line->cl_lavg)[2]))/10);
+			((double)((line->cl_lavg)[0]))/10,
+			((double)((line->cl_lavg)[1]))/10,
+			((double)((line->cl_lavg)[2]))/10);
 	if ( until > 0 ) {
 	    ftime = localtime( &until );
 	    len += snprintf(buf+len, sizeof(buf)-len, " %02d/%02d/%d %02d:%02d %s",
@@ -293,7 +296,7 @@ print_line(int fd, struct CL *line,  unsigned char *details, pid_t pid, int inde
     }
     len += snprintf(buf+len, sizeof(buf)-len, " %s\n", line->cl_shell);
 
-    if ( send(fd, buf, len + 1, 0) < 0 )
+    if ( send(fd, buf, (len < sizeof(buf)) ? len : sizeof(buf), 0) < 0 )
 	error_e("error in send()");
     
 }
@@ -376,20 +379,28 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 	if (! all) {
 	    struct passwd *pass;
 	    
-	    if ( (pass = getpwuid( (uid_t) cmd[1] )) == NULL ) {
-		warn_e("Unable to find passwd entry for %ld", cmd[1]);
-		send(fd, err_invalid_user_str, sizeof(err_invalid_user_str), 0);
-		send(fd, END_STR, sizeof(END_STR), 0);
-		return;
+#ifdef SYSFCRONTAB
+	    if ( cmd[1] == SYSFCRONTAB_UID )
+		user = SYSFCRONTAB;
+	    else {
+#endif
+		if ( (pass = getpwuid( (uid_t) cmd[1] )) == NULL ) {
+		    warn_e("Unable to find passwd entry for %ld", cmd[1]);
+		    send(fd, err_invalid_user_str, sizeof(err_invalid_user_str), 0);
+		    send(fd, END_STR, sizeof(END_STR), 0);
+		    return;
+		}
+		if ( ! is_root && strcmp(pass->pw_name, client->fcl_user) != 0 ) {
+		    warn_e("%s is not allowed to see %s's jobs. %ld", client->fcl_user,
+			   pass->pw_name);
+		    send(fd, err_others_nallowed_str, sizeof(err_others_nallowed_str),0);
+		    send(fd, END_STR, sizeof(END_STR), 0);
+		    return;
+		}
+		user = pass->pw_name;
+#ifdef SYSFCRONTAB
 	    }
-	    if ( ! is_root && strcmp(pass->pw_name, client->fcl_user) != 0 ) {
-		warn_e("%s is not allowed to see %s's jobs. %ld", client->fcl_user,
-		       pass->pw_name);
-		send(fd, err_others_nallowed_str, sizeof(err_others_nallowed_str), 0);
-		send(fd, END_STR, sizeof(END_STR), 0);
-		return;
-	    }
-	    user = pass->pw_name;
+#endif
 	}
 
 	/* list all jobs one by one and find the corresponding ones */

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.45 2002-08-29 17:34:14 thib Exp $ */
+ /* $Id: config.h.in,v 1.46 2002-08-30 20:06:01 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -38,8 +38,7 @@
 #define FCRON_DENY       "fcron.deny"
 #define FCRON_CONF       "fcron.conf"
 
-#define SENDMAIL_ARGS	"-Ffcron", "-odi"   /* args of mail command */
-
+#define SENDMAIL_ARGS	 "-Ffcron", "-odi"   /* args of mail command */
 
 /* *** time *** */
 #define FIRST_SLEEP 20      /* fcron sleep at least this time after startup
@@ -188,6 +187,9 @@
 /* user and group name to run under */
 #undef USERNAME
 #undef GROUPNAME
+
+/* special user for the system fcrontab */
+#undef SYSFCRONTAB
 
 /* Define to empty if the keyword does not work.  */
 #undef const
