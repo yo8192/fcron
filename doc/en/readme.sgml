@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: readme.sgml,v 1.5 2003-12-25 23:00:11 thib Exp $ -->
+<!-- $Id: readme.sgml,v 1.6 2004-11-13 19:47:06 thib Exp $ -->
 
 <sect1 id="readme">
     <title>About fcron</title>
@@ -98,10 +98,16 @@ guide</ulink> for the installation informations)
 		    <listitem><para><productname>AIX 4.3.3</productname>
 			</para></listitem>
 		</itemizedlist>
-		<para>(but should work on many more systems thanks to
-<application>configure</application> script). Anyway, if you have troubles
-making it work on a <productname>POSIX</productname> system, please contact me
-at &email;.</para>
+	       <para>and fcron 2.9.5 has been reported to work also on:</para>
+	       <itemizedlist>
+		  <listitem>
+		     <para>Darwin/MacOS-X</para>
+		  </listitem>
+	       </itemizedlist>
+		<para>but fcron should work on other OS as well. Yet,
+		  if you have troubles
+		  making it work on a <productname>POSIX</productname> system, please
+		  contact me at &email;.</para>
 	    </listitem>
 	    <listitem><para>a running <application>syslog</application> (or you
 won't have any log)</para></listitem>
