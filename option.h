@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.2 2000-06-18 13:14:57 thib Exp $ */
+ /* $Id: option.h,v 1.3 2000-06-19 12:44:33 thib Exp $ */
 
 /* read and set options of a line */
 
@@ -64,11 +64,11 @@
 */
 #define	is_freq(opt) \
 	(_bit_test(opt, 0))
-#define is_dt(opt) \
+#define is_td(opt) \
         ( ! _bit_test(opt, 0))
 #define	set_freq(opt) \
 	(_bit_set(opt, 0))
-#define set_dt(opt) \
+#define set_td(opt) \
 	(_bit_clear(opt, 0))
 
 
