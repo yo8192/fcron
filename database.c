@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.46 2001-01-30 21:27:28 thib Exp $ */
+ /* $Id: database.c,v 1.47 2001-02-01 20:52:14 thib Exp $ */
 
 #include "fcron.h"
 
@@ -724,7 +724,8 @@ goto_non_matching(CL *line, struct tm *ftime, char option)
 		}
 	    }
 	    
-	    if (option == END_OF_INTERVAL &&
+	    if (option == END_OF_INTERVAL && 
+		is_freq_periodically(line->cl_option) &&
 		ftime->tm_year <= next_period.tm_year &&
 		ftime->tm_mon <= next_period.tm_mon &&
 		ftime->tm_mday <= next_period.tm_mday &&
@@ -1104,8 +1105,9 @@ check_lavg(time_t lim)
 	      || lavg_array[i].l_line->cl_runfreq == 1)
 	     && lavg_array[i].l_until < now){
 	    if ( ! is_run_if_late(lavg_array[i].l_line->cl_option) ) {
-		explain("Interval of execution exceeded : %s (not run)",
-			lavg_array[i].l_line->cl_shell);
+		if ( ! is_nolog(lavg_array[i].l_line->cl_option) )
+		    explain("Interval of execution exceeded : %s (not run)",
+			    lavg_array[i].l_line->cl_shell);
 
 		/* set time of the next execution and send a mail if needed */
 		if ( is_notice_notrun(lavg_array[i].l_line->cl_option) )
