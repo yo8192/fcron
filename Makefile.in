@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.75 2001-07-09 13:07:58 thib Exp $
+# $Id: Makefile.in,v 1.76 2001-09-12 13:47:56 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -62,7 +62,7 @@ OBJSIG = fcronsighup.o subs.o log.o allow.o
 HEADERSALL = config.h $(SRCDIR)/global.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/save.h $(SRCDIR)/option.h 
 HEADERSD = $(HEADERSALL) $(SRCDIR)/fcron.h $(SRCDIR)/getloadavg.h $(SRCDIR)/database.h $(SRCDIR)/conf.h $(SRCDIR)/job.h
 HEADERS = $(HEADERSALL) $(SRCDIR)/fcrontab.h $(SRCDIR)/allow.h $(SRCDIR)/fileconf.h
-HEADERSCONV = $(HEADERSALL) $(SRCDIR)/convert-fcrontab.h
+HEADERSCONV = $(HEADERSALL)
 HEADERSSIG = $(HEADERSALL) $(SRCDIR)/allow.h
 
 # this is two regular expressions

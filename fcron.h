@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.23 2001-05-29 19:27:55 thib Exp $ */
+ /* $Id: fcron.h,v 1.24 2001-09-12 13:44:58 thib Exp $ */
 
 #ifndef __FCRON_H__
 #define __FCRON_H__
@@ -63,7 +63,7 @@ extern pid_t daemon_pid;
 extern mode_t saved_umask;
 extern char *prog_name;
 extern char sig_hup;
-extern CF *file_base;
+extern struct CF *file_base;
 extern struct job *queue_base;
 extern struct CL **serial_array;
 extern short int serial_array_size;
@@ -85,10 +85,6 @@ extern short int lavg_serial_running;
 
 /* fcron.c */
 extern void xexit(int exit_value);
-
-#include "database.h"
-#include "conf.h"
-#include "job.h"
 
 #endif /* __FCRON_H */
 

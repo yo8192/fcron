@@ -22,10 +22,12 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.50 2001-08-20 10:58:13 thib Exp $ */
+ /* $Id: conf.c,v 1.51 2001-09-12 13:45:54 thib Exp $ */
 
 #include "fcron.h"
+
 #include "conf.h"
+#include "database.h"
 
 int read_file(const char *file_name, CF *cf);
 int add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str,
