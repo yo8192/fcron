@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.9 2002-03-31 15:07:40 thib Exp $
+# $Id: Makefile.in,v 1.10 2002-07-19 19:43:25 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -35,7 +35,7 @@ STYLESHEET = stylesheets/fcron-doc.dsl
 MODFILE = fcron-doc.mod
 VERSION = @VERSION@
 SGMLFILES = fcron-doc.sgml readme.sgml relnotes.sgml changes.sgml faq.sgml thanks.sgml todo.sgml fcron.8.sgml fcrontab.1.sgml install.sgml fcron.conf.5.sgml fcrontab.5.sgml fcrondyn.1.sgml fdl.sgml gpl.sgml 
-TXTFILES = readme install thanks faq gpl todo relnotes
+TXTFILES = readme install thanks faq gpl todo relnotes changes
 MANPAGES = fcron.8 fcron.conf.5 fcrontab.1 fcrontab.5 fcrondyn.1
 
 # this is a regular expression :
