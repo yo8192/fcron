@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.64 2001-05-05 19:08:20 thib Exp $
+# $Id: Makefile.in,v 1.65 2001-05-15 00:46:22 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -157,9 +157,14 @@ updatedoc: doc/*
 	script/gen-doc $(VERSION)
 
 configure: configure.in
+# update configure script, then Makefile and config.h, and finally 
+# run make tar using the new Makefile (needed because the version
+# is set in the configure.in file)
 	autoconf
+	./configure
+	make tar ; exit 0
 
-tar: updatedoc configure vclean
+tar: configure updatedoc vclean
 
 	echo $(VERSION) > ./VERSION
 
