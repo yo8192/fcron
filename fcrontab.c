@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.32 2001-02-26 11:11:10 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.33 2001-04-21 08:43:35 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.32 2001-02-26 11:11:10 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.33 2001-04-21 08:43:35 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -358,13 +358,14 @@ write_file(char *file)
 
     if ( file_base->cf_line_base == NULL ) {
 	/* no entries */
-	explain("%s's fcrontab contains no entries", user);
+	explain("%s's fcrontab contains no entries : removed.", user);
 	remove_fcrontab(0);
     } 
     else {
-	/* write that list in a temp file on disk */
+	/* write the binary fcrontab on disk */
 	snprintf(buf, sizeof(buf), "new.%s", user);
-	save_file(buf);
+	if ( save_file(buf) != OK )
+	    return_val = ERR;
     }
 
     /* copy original file to FCRONTABS dir */
@@ -447,6 +448,7 @@ edit_file(char *buf)
     int file = 0;
     char c;
     char correction = 0;
+    short return_val = EXIT_OK;
 
     explain("fcrontabs : editing %s's fcrontab", user);	
 
@@ -544,6 +546,34 @@ edit_file(char *buf)
 	    goto exiterr;
 	}
 
+#if ! (defined(HAVE_SETREGID) && defined(HAVE_SETREUID))
+	/* we have chown the tmp file to user's name : user may have
+	 * linked the tmp file to a file owned by root. In that case, as
+	 * fcrontab is setuid root, user may read some informations he is not
+	 * allowed to read :
+	 * we *must* check that the tmp file is not a link. */
+
+	/* open the tmp file, chown it to root and chmod it to avoid race
+	 * conditions */
+	/* make sure that the tmp file is not a link */
+	{
+	    int fd = 0;
+	    if ( (fd = open(tmp, O_RDONLY)) <= 0 ||
+		 fstat(fd, &st) != 0 || ! S_ISREG(st.st_mode) ||
+		 st.st_uid != asuid || st.st_nlink > 1) {
+		fprintf(stderr, "%s is not a valid regular file.\n", tmp);
+		close(fd);
+		goto exiterr;
+	    }
+	    if ( fchown(fd, 0, 0) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ) {
+		fprintf(stderr, "Can't chown or chmod %s.\n", tmp);
+		close(fd);
+		goto exiterr;
+	    }
+	    close(fd);
+	}
+#endif
+	
 	/* check if file has been modified */
 	if ( stat(tmp, &st) != 0 ) {
 	    error_e("could not stat %s", tmp);
@@ -586,7 +616,8 @@ edit_file(char *buf)
 
     } while ( correction == 1);
 
-    write_file(tmp);
+    if ( write_file(tmp) != OK )
+	return_val = EXIT_ERR;
     
     /* free memory used to store the list */
     delete_file(user);
@@ -597,7 +628,7 @@ edit_file(char *buf)
   end:
     if ( remove(tmp) != 0 )
 	error_e("could not remove %s", tmp);
-    xexit (EXIT_OK);
+    xexit (return_val);
 
   exiterr:
     if ( remove(tmp) != 0 )
@@ -846,7 +877,7 @@ main(int argc, char **argv)
     
 
     /* this program is seteuid : we set default permission mode
-     * to  600 for security reasons */
+     * to  640 for security reasons */
     umask(026);
 
     snprintf(buf, sizeof(buf), "%s.orig", user);
@@ -873,7 +904,8 @@ main(int argc, char **argv)
 
 	}
 
-    } else if ( list_opt + rm_opt + edit_opt + reinstall_opt != 1 )
+    } 
+    else if(list_opt + rm_opt + edit_opt + reinstall_opt != 1 || file_opt != 0)
 	usage();
 
 
