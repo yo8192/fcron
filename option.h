@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.12 2000-12-10 10:59:15 thib Exp $ */
+ /* $Id: option.h,v 1.13 2001-01-12 21:44:50 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -64,7 +64,7 @@
   6      is this job should be run serially only once (for bootrun) ?
   7      does the output have to be mailed to user ?
   8      does the output (even if zero-length) must be mailed to user ?
-  9      does this line use option runas ?
+  9  ****** bit 9 unused **********************
   10     can this job be executed several times simultaneously
   11     can this job be put several times in the serial queue simultaneously
   12     can this job be put several times in the lavg queue simultaneously
@@ -218,15 +218,8 @@
 
 
 /*
-  bit 9 : set to 1 : line uses option runas
-          set to 0 : line does not use option runas
+  bit 9 : currently unused
 */
-#define	is_runas(opt) \
-	(_bit_test(opt, 9))
-#define	set_runas(opt) \
-	(_bit_set(opt, 9))
-#define clear_runas(opt) \
-	(_bit_clear(opt, 9))
 
 
 /*
