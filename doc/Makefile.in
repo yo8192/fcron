@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.1 2002-01-03 14:27:07 thib Exp $
+# $Id: Makefile.in,v 1.2 2002-01-03 14:37:13 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -40,7 +40,7 @@ RCSNOCI=.*\(bitstring.3\|fcron-doc.ced\|HTML.*\|txt.*\|man.*\)
 
 all: doc
 
-doc: HTML/index.html mandoc txtdoc
+doc: HTML/index.html
 
 mandoc: HTML/index.html
 	@(echo ; echo "Building man pages ..."; echo )
@@ -67,9 +67,13 @@ fcron-doc.mod: fcron-doc.mod.in
 	../script/gen-in.pl fcron-doc.mod.in fcron-doc.mod ../
 
 HTML/index.html: $(SGMLFILES) fcron-doc.mod.in stylesheets/fcron-doc.dsl.in
+	make fcron-doc.mod
 	@(echo ; echo "Building index.html"; echo)
 	rm -fR HTML/*
 	$(JADE) -t sgml -i html -d stylesheets/fcron-doc.dsl\#html fcron-doc.sgml
+# We put that here to avoid to run this each time, even if doc is up to date
+# (as it is not a file, make cannot check if it is up to date)
+	make mandoc txtdoc
 
 install: clean
 	if test ! -d $(DESTMAN)/man1; then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTMAN)/man1 ; fi
@@ -118,7 +122,8 @@ clean:
 	(for i in man txt stylesheets . ; do \
 	  cd $$i ; \
 	  echo "Cleaning : `pwd`"; \
-          rm -f *~ *.html *.htm *.texi *.info *.refs manpage.links manpage.refs *.tar.gz ; \
+          rm -f *~ *.html *.htm *.texi *.info *.refs manpage.links manpage.refs \
+	        core *.tar.gz ; \
           cd .. ;  \
           done)
 
