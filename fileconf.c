@@ -22,14 +22,15 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.14 2000-08-28 17:59:26 thib Exp $ */
+ /* $Id: fileconf.c,v 1.15 2000-08-29 18:03:03 thib Exp $ */
 
 #include "fcrontab.h"
 
 char *get_string(char *ptr);
 int get_line(char *str, size_t size, FILE *file);
 char *get_time(char *ptr, time_t *time);
-char *get_num(char *ptr, int *num, int max, const char **names);
+char *get_num(char *ptr, int *num, int max, short int decimal,
+	      const char **names);
 char *get_runas(char *ptr, uid_t *uid);
 char *get_nice(char *ptr, int *nice);
 char *get_bool(char *ptr, int *i);
@@ -318,7 +319,7 @@ read_env(char *ptr, CF *cf)
 	else {
 	    struct passwd *pass = NULL;
 	    if ( (pass = getpwnam(val)) == 0 ) {
-		fprintf(stderr, "%s:%d: %s is not in passwd.\n",
+		fprintf(stderr, "%s:%d: '%s' is not in passwd.\n",
 			file_name, line, val);	
 		need_correction = 1;
 	    } else
@@ -382,7 +383,7 @@ get_nice(char *ptr, int *nice)
 	ptr++;
     }
 
-    if ( (ptr = get_num(ptr, nice, 21, NULL)) == NULL )
+    if ( (ptr = get_num(ptr, nice, 20, 0, NULL)) == NULL )
 	return NULL;
 
     if ( negative == 1 ) {
@@ -510,7 +511,7 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if(strcmp(opt_name, "r")==0 || strcmp(opt_name, "runfreq")==0) {
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 65534, NULL)) == NULL )
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 65535, 0, NULL))==NULL )
 		Handle_err;
 	    cl->cl_runfreq = i;
  	    if (debug_opt)
@@ -518,21 +519,21 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if( strcmp(opt_name, "lavg") == 0 ) {
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
 		Handle_err;
 	    cl->cl_lavg[0] = i;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : 'lavg1' %d\n", i);
 	    if ( *ptr++ != ',' )
 		Handle_err;
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
 		Handle_err;
 	    cl->cl_lavg[1] = i;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : 'lavg5' %d\n", i);
 	    if ( *ptr++ != ',' )
 		Handle_err;
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
 		Handle_err;
 	    cl->cl_lavg[2] = i;
 	    set_lavg(cl->cl_option);
@@ -541,7 +542,7 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if( strcmp(opt_name, "lavg1") == 0 ) {
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
 		Handle_err;
 	    cl->cl_lavg[0] = i;
 	    set_lavg(cl->cl_option);
@@ -550,7 +551,7 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if( strcmp(opt_name, "lavg5") == 0 ) {
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
 		Handle_err;
 	    cl->cl_lavg[1] = i;
 	    set_lavg(cl->cl_option);
@@ -559,7 +560,7 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if( strcmp(opt_name, "lavg15") == 0 ) {
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, 256, NULL)) == NULL )
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 255, 1, NULL)) == NULL )
 		Handle_err;
 	    cl->cl_lavg[2] = i;
 	    set_lavg(cl->cl_option);
@@ -629,12 +630,16 @@ read_opt(char *ptr, CL *cl)
 	    i = 0;
 	    while ( isalnum(*ptr) )
 		buf[i++] = *ptr++;
-	    if ( (pass = getpwnam(buf)) == NULL ) {
-		fprintf(stderr, "%s:%d: %s is not in passwd.\n",
-			file_name, line, buf);	
-		need_correction = 1;
-	    } else
-	    cl->cl_mailto = pass->pw_uid;
+	    if ( strcmp(buf, "\0") == 0 )
+		clear_mail(cl->cl_option);
+	    else {
+		if ( (pass = getpwnam(buf)) == NULL ) {
+		    fprintf(stderr, "%s:%d: '%s' is not in passwd.\n",
+			    file_name, line, buf);	
+		    need_correction = 1;
+		} else
+		    cl->cl_mailto = pass->pw_uid;
+	    }
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' '%s'\n", opt_name, buf);
 	}
@@ -862,7 +867,7 @@ read_arys(char *ptr, CF *cf)
     else {
 	ptr++;
 	if ( isdigit(*ptr) ) {
-	    if ( (ptr = get_num(ptr, &i, 65534, NULL)) == NULL ) {
+	    if ( (ptr = get_num(ptr, &i, 65535, 0, NULL)) == NULL ) {
 		fprintf(stderr, "%s:%d: Error while reading runfreq:"
 			" skipping line.\n", file_name, line);
 		free(cl);
@@ -886,11 +891,12 @@ read_arys(char *ptr, CF *cf)
 	fprintf(stderr, "     ");
 
     /* get the fields (check for errors) */
-    R_field(ptr, cl->cl_mins, 60, NULL, "minutes");
-    R_field(ptr, cl->cl_hrs, 24, NULL, "hours");
-    R_field(ptr, cl->cl_days, 32, NULL, "days");
+    R_field(ptr, cl->cl_mins, 59, NULL, "minutes");
+    R_field(ptr, cl->cl_hrs, 23, NULL, "hours");
+    R_field(ptr, cl->cl_days, 31, NULL, "days");
+    /* month are defined by user from 1 to 12 : max is 12 */
     R_field(ptr, cl->cl_mons, 12, mons_ary, "months");
-    R_field(ptr, cl->cl_dow, 8, dows_ary, "days of week");
+    R_field(ptr, cl->cl_dow, 7, dows_ary, "days of week");
 
     if (debug_opt)
 	/* if debug_opt is set, we print informations in read_field function,
@@ -948,14 +954,14 @@ read_arys(char *ptr, CF *cf)
 }
 
 char *
-get_num(char *ptr, int *num, int max, const char **names)
+get_num(char *ptr, int *num, int max, short int decimal, const char **names)
     /* read a string's number and return it under int format.
      *  Also check if that number is less than max */
 {
+    int i = 0;
     *num = 0;
 
     if ( isalpha(*ptr) ) {
-	int i;
 
 	if ( names == NULL ) {
 	    need_correction = 1;
@@ -980,15 +986,23 @@ get_num(char *ptr, int *num, int max, const char **names)
 
     } else {
 
-	if ( max == 12 )
-	    /* month are defined by user from 1 to 12 */
-	    max = 13;
+	while ( isdigit(*ptr) || *ptr == '.') { 
 
-	while ( isdigit(*ptr) ) { 
-	    *num *= 10; 
-	    *num += *ptr - 48; 
+	    if ( *ptr == '.' && ptr++ && i++ > 0 )
+		return NULL;
+	    if ( i > 0 && --decimal < 0 ) {
+		/* the decimal number is exceeded : we round off,
+		 * skip the other decimals and return */
+		if ( *ptr >= '5' )
+		    *num += 1;
+		while ( isdigit(*(++ptr)) ) ;
+		ptr--;
+	    } else {
+		*num *= 10; 
+		*num += *ptr - 48; 
+	    }
 
-	    if (*num >= max) {
+	    if (*num > max) {
 		need_correction = 1;
 		return NULL;
 	    }
@@ -997,7 +1011,10 @@ get_num(char *ptr, int *num, int max, const char **names)
 
 	} 
 
-	if ( max == 13 )
+	if ( decimal > 0 )
+	    *num *= 10 * decimal;
+
+	if ( max == 12 )
 	    /* this number is part of the month field.
 	     * user set it from 1 to 12, but we manage it internally
 	     * as a number from 0 to 11 : we remove 1 to *num */
@@ -1030,11 +1047,13 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	if ( *ptr == '*' ) {
 	    /* we have to fill everything (may be modified by a step ) */
 	    start = 0;
-	    stop = max - 1;
+	    /* user set month from 1 to 12, but we manage it internally
+	     * as a number from 0 to 11 */
+	    stop = ( max == 12 ) ? 11 : max;
 	    ptr++;
 	} else {
 
-	    if ( (ptr = get_num(ptr, &start, max, names)) == NULL )
+	    if ( (ptr = get_num(ptr, &start, max, 0, names)) == NULL )
 		return NULL;
 
 	    if (*ptr == ',' || *ptr == ' ' || *ptr == '\t') {
@@ -1048,7 +1067,7 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	    /* check for a dash */
 	    else if ( *ptr == '-' ) {
 		ptr++;
-		if ( (ptr = get_num(ptr, &stop, max, names)) == NULL )
+		if ( (ptr = get_num(ptr, &stop, max, 0, names)) == NULL )
 		    return NULL;
 	    } else {
 		/* syntax error */
@@ -1060,7 +1079,7 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	/* check for step size */
 	if ( *ptr == '/' ) {
 	    ptr++;
-	    if ((ptr = get_num(ptr, &step, max, names)) == NULL || step == 0)
+	    if ((ptr = get_num(ptr, &step, max, 0, names))==NULL || step == 0)
 		return NULL;
 	} else
 	    /* step undefined : default is 0 */
@@ -1077,7 +1096,7 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	while ( *ptr == '~' ) {
 	    ptr++;
 	    rm = 0;
-	    if ( (ptr = get_num(ptr, &rm, max, names)) == NULL )
+	    if ( (ptr = get_num(ptr, &rm, max, 0, names)) == NULL )
 		return NULL;
 
 	    if (debug_opt)
@@ -1085,12 +1104,12 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	    bit_clear(ary, rm);
 
 	    /* if we remove one value of Sunday, remove the other */
-	    if (max == 8 && rm == 0) {
+	    if (max == 7 && rm == 0) {
 		bit_clear(ary, 7);
 	    if (debug_opt)
 		fprintf(stderr, " ~%d", 7);	    
 	    }
-	    else if (max == 8 && rm == 7) {
+	    else if (max == 7 && rm == 7) {
 		bit_clear(ary, 0);
 	    if (debug_opt)
 		fprintf(stderr, " ~%d", 0);	    	    
@@ -1101,7 +1120,7 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
     }
 
     /* Sunday is both 0 and 7 : if one is set, set the other */
-    if ( max == 8 ) {
+    if ( max == 7 ) {
 	if ( bit_test(ary, 0) )
 	    bit_set(ary, 7);
 	else if ( bit_test(ary, 7) )
