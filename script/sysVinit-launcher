@@ -6,7 +6,7 @@
 # processname: fcron
 # pidfile: /var/run/fcron.pid
 # config: /var/spool/fcron/*
-# $Id: sysVinit-launcher,v 1.3 2000-09-03 18:55:25 thib Exp $
+# $Id: sysVinit-launcher,v 1.4 2000-09-18 08:25:39 thib Exp $
 
 FUNCTION=0
 
@@ -30,7 +30,9 @@ case "$1" in
 	fi
 	RETVAL=$?
 	echo
-	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/fcron
+	if test -d /var/lock/subsys/; then
+	    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/fcron
+	fi
 	;;
   stop)
 	echo -n "Shutting down fcron"
@@ -41,7 +43,9 @@ case "$1" in
 	fi
 	RETVAL=$?
 	echo
-	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/fcron
+	if test -d /var/lock/subsys/; then
+	    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/fcron
+	fi
 	;;
   status)
 	if test $FUNCTION -eq 1; then
