@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.27 2000-12-08 12:52:46 thib Exp $ */
+ /* $Id: fileconf.c,v 1.28 2000-12-10 20:26:40 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -1104,6 +1104,7 @@ read_period(char *ptr, CF *cf)
 {
     CL *cl = NULL;
     unsigned int i = 0;
+    short int remain = 8;
 
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
@@ -1126,13 +1127,26 @@ read_period(char *ptr, CF *cf)
     if (debug_opt)
 	fprintf(stderr, "     ");
 
+    if ( is_freq_periodically(cl->cl_option) ) {
+	if (is_freq_mins(cl->cl_option)) remain = 0;
+	else if (is_freq_hrs(cl->cl_option)) remain = 1;
+	else if (is_freq_days(cl->cl_option)) remain = 2;
+	else if (is_freq_mons(cl->cl_option)) remain = 3;
+	else if (is_freq_dow(cl->cl_option)) remain = 2;
+    }
+
     /* get the fields (check for errors) */
-    R_field(ptr, cl->cl_mins, 59, NULL, "minutes");
-    R_field(ptr, cl->cl_hrs, 23, NULL, "hours");
-    R_field(ptr, cl->cl_days, 31, NULL, "days");
+    if ( remain-- > 0) { R_field(ptr, cl->cl_mins, 59, NULL, "minutes") }
+    else bit_nset(cl->cl_mins, 0, 59);
+    if ( remain-- > 0) { R_field(ptr, cl->cl_hrs, 23, NULL, "hours") }
+    else bit_nset(cl->cl_hrs, 0, 23);    
+    if ( remain-- > 0) { R_field(ptr, cl->cl_days, 31, NULL, "days") } 
+    else bit_nset(cl->cl_days, 1, 32);
     /* month are defined by user from 1 to 12 : max is 12 */
-    R_field(ptr, cl->cl_mons, 12, mons_ary, "months");
-    R_field(ptr, cl->cl_dow, 7, dows_ary, "days of week");
+    if ( remain-- > 0) { R_field(ptr, cl->cl_mons, 12, mons_ary, "months") }
+    else bit_nset(cl->cl_mons, 0, 11);
+    if ( remain-- > 0) { R_field(ptr, cl->cl_dow,7, dows_ary, "days of week") }
+    else bit_nset(cl->cl_dow, 0, 7);
 
     if (debug_opt)
 	/* if debug_opt is set, we print informations in read_field function,
@@ -1149,7 +1163,10 @@ read_period(char *ptr, CF *cf)
 	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
 		file_name, line);
 	goto exiterr;
-    }
+    } 
+    else if ( cl->cl_shell[0] == '*' || isdigit(cl->cl_shell[0]) )
+	fprintf(stderr, "%s:%d: Warning : shell command beginning by '%c'.\n",
+		file_name, line, cl->cl_shell[0]);
 
     /* check for non matching if option runfreq is set to 1 */
     if ( ! is_freq_periodically(cl->cl_option) ) {
