@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.h,v 1.7 2003-12-25 22:52:53 thib Exp $ */
+ /* $Id: subs.h,v 1.8 2004-04-29 19:36:38 thib Exp $ */
 
 #ifndef __SUBS_H__
 #define __SUBS_H__
@@ -47,5 +47,6 @@ extern char *strdup2(const char *);
 extern int get_word(char **str);
 extern int temp_file(char **name);
 extern void read_conf(void);
+extern void free_conf(void);
 
 #endif /* __SUBS_H__ */
