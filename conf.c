@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.31 2000-12-14 21:21:46 thib Exp $ */
+ /* $Id: conf.c,v 1.32 2000-12-15 17:51:49 thib Exp $ */
 
 #include "fcron.h"
 
@@ -138,8 +138,10 @@ synchronize_dir(const char *dir_name)
     for (list_cur = rm_list; list_cur; list_cur = list_cur->next ) {
 	explain("removing file '%s'", list_cur->str + 3);
 	delete_file(list_cur->str + 3);  /* len("rm.") = 3 */
-	remove(list_cur->str + 3);
-	remove(list_cur->str);
+	if ( remove(list_cur->str + 3) != 0 && errno != ENOENT )
+	    error_e("Could not remove '%s'", list_cur->str + 3);
+	if ( remove(list_cur->str) != 0 && errno != ENOENT )
+	    error_e("Could not remove '%s'", list_cur->str);
     }
     
     /* finally add new files */
