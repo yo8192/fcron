@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.46 2001-08-17 19:40:46 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.47 2001-08-20 20:01:43 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.46 2001-08-17 19:40:46 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.47 2001-08-20 20:01:43 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -171,7 +171,7 @@ copy(char *orig, char *dest)
     /* create it as fcrontab_uid (to avoid problem if user's uid changed)
      * except for root. Root requires filesystem uid root for security
      * reasons */
-#if defined(HAVE_SETEGID) && defined(HAVE_SETEUID)
+#ifdef USE_SETE_ID
     if (asuid != 0 && seteuid(fcrontab_uid) != 0)
 	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
 #endif
@@ -179,7 +179,7 @@ copy(char *orig, char *dest)
 	error_e("copy: dest");
 	return ERR;
     }
-#if defined(HAVE_SETEGID) && defined(HAVE_SETEUID)
+#ifdef USE_SETE_ID
     if (asuid != 0 && seteuid(uid) != 0)
 	die_e("seteuid(uid[%d])", uid);
 #endif
@@ -222,7 +222,7 @@ remove_fcrontab(char rm_orig)
 	    error_e("could not remove %s", buf);		
     }
 
-#if defined(HAVE_SETEGID) && defined(HAVE_SETEUID)
+#ifdef USE_SETE_ID
     if (seteuid(fcrontab_uid) != 0)
 	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
 #endif
@@ -240,7 +240,7 @@ remove_fcrontab(char rm_orig)
     
     need_sig = 1;
 
-#if defined(HAVE_SETEGID) && defined(HAVE_SETEUID)
+#ifdef USE_SETE_ID
     if (seteuid(uid) != 0)
 	die_e("seteuid(uid[%d])", uid);
 #endif
@@ -366,7 +366,7 @@ edit_file(char *buf)
 	error_e("could not fdopen");
 	goto exiterr;
     }
-#if ! (defined(HAVE_SETEGID) && defined(HAVE_SETEUID))
+#ifndef USE_SETE_ID
     if (fchown(file, asuid, asgid) != 0) {
 	error_e("Could not fchown %s to asuid and asgid", tmp_str);
 	goto exiterr;
@@ -436,7 +436,7 @@ edit_file(char *buf)
 	    goto exiterr;
 	}
 
-#if ! (defined(HAVE_SETEGID) && defined(HAVE_SETEUID))
+#ifndef USE_SETE_ID
 	/* we have chown the tmp file to user's name : user may have
 	 * linked the tmp file to a file owned by root. In that case, as
 	 * fcrontab is setuid root, user may read some informations he is not
@@ -769,7 +769,7 @@ main(int argc, char **argv)
     /* interpret command line options */
     parseopt(argc, argv);
 
-#if defined(HAVE_SETEGID) && defined(HAVE_SETEUID)
+#ifdef USE_SETE_ID
     {
 	struct passwd *pass;
 	if ( ! (pass = getpwnam(USERNAME)) )

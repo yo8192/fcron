@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.35 2001-08-17 19:48:18 thib Exp $ */
+ /* $Id: config.h.in,v 1.36 2001-08-20 20:02:53 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -156,6 +156,9 @@
 #undef DEBUG
 /* 1 if you want foreground mode by default */
 #undef FOREGROUND
+
+/* Define if we should use sete[ug]id() funcs */
+#undef USE_SETE_ID
 
 /* username to run under */
 #undef USERNAME
