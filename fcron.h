@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.18 2001-01-30 17:41:57 thib Exp $ */
+ /* $Id: fcron.h,v 1.19 2001-04-21 08:46:55 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -60,6 +60,7 @@ extern char debug_opt;
 extern char foreground;
 extern char *cdir;
 extern pid_t daemon_pid;
+extern mode_t saved_umask;
 extern char *prog_name;
 extern char sig_hup;
 extern CF *file_base;
@@ -102,6 +103,10 @@ extern void Debug(char *fmt, ...);
 /* subs.c */
 extern int remove_blanks(char *str);
 extern char *strdup2(const char *);
+extern int save_type(FILE *f, short int type);
+extern int save_str(FILE *f, short int type, char *str);
+extern int save_strn(FILE *f, short int type, char *str, short int size);
+extern int save_lint(FILE *f, short int type, long int value);
 /* end of subs.c */
 
 /* database.c */
