@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.29 2001-03-01 19:18:32 thib Exp $
+# $Id: boot-install,v 1.30 2001-03-07 19:33:07 thib Exp $
 
 # take 5 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -44,10 +44,29 @@ echo "The installation process is going to try to install fcron in them."
 echo
 echo "Note that if you answer no to a proposition made at this point by"
 echo "the installation script, it will try to propose another way to do it."
+echo "(if there are several possibilities, a list will be printed before each"
+echo "action)"
 echo
 echo "If you answer no to all the propositions of the script, or if the script"
-echo "fails, a message will be printed telling you what you should do"
-echo "manually."
+echo "fails, a message will be printed telling you what you should do manually."
+echo
+
+echo
+echo "The script proposes the following location to do it :"
+if test $IS_FREEBSD -eq 1; then
+  echo "  /usr/local/etc/rc.d/fcron.sh"
+fi
+if test -d /etc/rc.d/init.d/; then
+  echo "  /etc/rc.d/init.d/fcron"
+elif test -d /etc/init.d/; then
+  echo "  /etc/init.d/fcron"
+fi
+if test -f /etc/rc.d/rc.local; then
+  echo "  /etc/rc.d/rc.local"
+fi
+if test -f /etc/rc.local; then
+  echo "  /etc/rc.local"
+fi
 echo
 
 INSTALL="nothing"
@@ -88,42 +107,6 @@ if test $IS_FREEBSD -eq 1; then
     fi
   fi
 fi
-
-
-INSTALL="nothing"
-if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc.d/rc.M \); then
-  # Slackware
-  if ! cat /etc/rc.d/rc.local | grep "$STARTCMD"; then
-    if cat /etc/rc.d/rc.local | grep fcron; then	
-      echo "Fcron seems to be in /etc/rc.d/rc.local, but not with the appropriate options :"
-      echo "you should probably correct this file in order to run fcron with $STARTCMD."
-      INSTALLED=1
-    else
-      if test $ANSWER -eq 2; then
-        while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
-        do
-          echo "Would you like to add $STARTCMD in the file /etc/rc.d/rc.local ?"
-          echo -n "Please answer with 'y' or 'n' (default: 'y'): "
-          read INSTALL NOTHING
-        done
-      # automatic answer given by configure script (option --with-answer-all)
-      elif test $ANSWER -eq 1; then
-        INSTALL="y"
-      else
-        INSTALL="n"
-      fi
-      if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-        echo $STARTCMD >> /etc/rc.d/rc.local
-        INSTALLED=1
-      else
-        INSTALLED=0
-      fi
-    fi
-  else
-    echo "Fcron is already in /etc/rc.d/rc.local."
-    INSTALLED=1
-  fi
-fi 
 
 
 INSTALL="nothing"
@@ -177,8 +160,44 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
 fi
 
 INSTALL="nothing"
+if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc.d/rc.local \); then
+  # Slackware
+  if ! cat /etc/rc.d/rc.local | grep "$STARTCMD"; then
+    if cat /etc/rc.d/rc.local | grep fcron; then	
+      echo "Fcron seems to be in /etc/rc.d/rc.local, but not with the appropriate options :"
+      echo "you should probably correct this file in order to run fcron with $STARTCMD."
+      INSTALLED=1
+    else
+      if test $ANSWER -eq 2; then
+        while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
+        do
+          echo "Would you like to add $STARTCMD in the file /etc/rc.d/rc.local ?"
+          echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+          read INSTALL NOTHING
+        done
+      # automatic answer given by configure script (option --with-answer-all)
+      elif test $ANSWER -eq 1; then
+        INSTALL="y"
+      else
+        INSTALL="n"
+      fi
+      if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
+        echo $STARTCMD >> /etc/rc.d/rc.local
+        INSTALLED=1
+      else
+        INSTALLED=0
+      fi
+    fi
+  else
+    echo "Fcron is already in /etc/rc.d/rc.local."
+    INSTALLED=1
+  fi
+fi 
 
-if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc \) ; then
+
+INSTALL="nothing"
+
+if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc.local \) ; then
   if ! cat /etc/rc.local | grep "$STARTCMD"; then
     if cat /etc/rc.local | grep fcron; then	
       echo "Fcron seems to be in /etc/rc.local, but not with the appropriate options :"
