@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.60 2004-07-11 18:05:23 thib Exp $ */
+ /* $Id: job.c,v 1.61 2004-08-12 09:27:04 thib Exp $ */
 
 #include "fcron.h"
 
@@ -440,7 +440,7 @@ run_job(struct exe_t *exeent)
 	/* read the pid of the job */
 	while ( i < sizeof(pid_t) ) {
 	    j = read(pipe_pid_fd[0], (char*)(&(exeent->e_job_pid))+i, sizeof(pid_t));
-	    if ( j < 0 ) {
+	    if ( j <= 0 && errno != EINTR ) {
 		error_e("Could not read job pid : setting it to -1");
 		exeent->e_job_pid = -1;
 		break;
