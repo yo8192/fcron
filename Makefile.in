@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.50 2000-12-10 20:28:44 thib Exp $
+# $Id: Makefile.in,v 1.51 2000-12-14 21:19:17 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -96,7 +96,7 @@ install: all
 	$(INSTALL) -g root -o root -m 755 -d $(DESTMAN)/man5
 	$(INSTALL) -g root -o root -m 755 -d $(DESTMAN)/man8
 	$(INSTALL) -g root -o root -m 755 -d $(DESTDOC)/fcron-$(VERSION)
-	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 700 -d $(FCRONTABS)
+	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 770 -d $(FCRONTABS)
 
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 110 -s fcron $(DESTSBIN)
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrontab $(DESTBIN)
@@ -109,7 +109,7 @@ install: all
 		 $(DESTDOC)/fcron-$(VERSION)/
 
 # in order to get correct rights when upgrading :
-	find $(FCRONTABS) -type f -exec chown $(USERNAME):$(GROUPNAME) {} \;
+	find $(FCRONTABS) -type f -name "*.orig" -exec chown $(USERNAME):$(GROUPNAME) {} \; -exec chmod 640 {} \;
 	if test -f $(ETC)/fcron.deny; then chown $(USERNAME):$(GROUPNAME) $(ETC)/fcron.deny ; fi
 	if test -f $(ETC)/fcron.allow; then chown $(USERNAME):$(GROUPNAME) $(ETC)/fcron.allow ; fi
 
