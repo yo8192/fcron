@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.67 2002-10-28 17:54:37 thib Exp $ */
+ /* $Id: database.c,v 1.68 2003-07-14 10:52:44 thib Exp $ */
 
 #include "fcron.h"
 
@@ -1106,7 +1106,7 @@ mail_notrun(cl_t *line, char context, struct tm *since)
 		 (time.tm_year+1900), time.tm_wday, time.tm_hour, time.tm_min);
 	break;
     case QUEUE_FULL:
-	fprintf(mailf, "Line %s could be added to lavg or serial queue which"
+	fprintf(mailf,"Line %s couldn't be added to lavg or serial queue which"
 		 " is full ( %d/%d/%d wday:%d %02d:%02d ).\n", line->cl_shell,
 		 (time.tm_mon + 1), time.tm_mday, (time.tm_year + 1900),
 		 time.tm_wday, time.tm_hour, time.tm_min);
