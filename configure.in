@@ -543,36 +543,6 @@ WARNING :
 )
 
 
-if test "$bootinstall" = ""; then
-  bootinstall=1
-fi
-AC_MSG_CHECKING(install interactively a boot script)
-AC_ARG_WITH(boot-install,
-[  --with-boot-install=[yes|no]	Install (interactively) a boot script (default: yes).],
-[ case "$withval" in
-  no)
-    bootinstall=0
-    AC_MSG_RESULT(no)
-    ;;
-  yes)
-    bootinstall=1
-    AC_MSG_RESULT(yes)
-    ;;
-  *)
-    AC_MSG_ERROR(Must be set to either "yes" or "no".)
-    ;;
-  esac ],
-    if test "$bootinstall" = "1"; then
-      AC_MSG_RESULT(yes)
-    else
-      AC_MSG_RESULT(no)
-    fi
-)
-BOOTINSTALL="$bootinstall"
-AC_DEFINE_UNQUOTED(BOOTINSTALL, "$bootinstall")
-AC_SUBST(BOOTINSTALL)
-
-
 if test "$fcrondyn" = ""; then
   fcrondyn=1
 fi
@@ -832,6 +802,36 @@ AC_ARG_WITH(debug,
 )
 DEBUG=$debug
 AC_SUBST(DEBUG)
+
+
+if test "$bootinstall" = ""; then
+  bootinstall=1
+fi
+AC_MSG_CHECKING(install interactively a boot script)
+AC_ARG_WITH(boot-install,
+[  --with-boot-install=[yes|no]	Install (interactively) a boot script (default: yes).],
+[ case "$withval" in
+  no)
+    bootinstall=0
+    AC_MSG_RESULT(no)
+    ;;
+  yes)
+    bootinstall=1
+    AC_MSG_RESULT(yes)
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ],
+    if test "$bootinstall" = "1"; then
+      AC_MSG_RESULT(yes)
+    else
+      AC_MSG_RESULT(no)
+    fi
+)
+BOOTINSTALL="$bootinstall"
+AC_DEFINE_UNQUOTED(BOOTINSTALL, "$bootinstall")
+AC_SUBST(BOOTINSTALL)
 
 
 AC_ARG_WITH(cflags,
