@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.5 2002-02-02 14:52:52 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.6 2002-02-16 10:09:46 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
@@ -20,10 +20,16 @@ A copy of the license is included in gfdl.sgml.
 	    <para>It results on a much better HTML version, which I recommand you use. It is installed by default in fcron documentation directory (for instance, on my system : <filename>/usr/share/doc/fcron-X.X.X/</filename>).</para>
 	</listitem>
 	<listitem>
+	    <para>Fcrontab.5 has been updated and improved. Some examples have been added and some possible use of the different lines and options are mentioned.</para>
+	</listitem>
+	<listitem>
 	    <para>Added option random, which allows an entry run periodically to be run at a random time in its intervals of execution, instead of being run as soon as possible.</para>
 	</listitem>
 	<listitem>
 	    <para>bug fixed : you can now use arguments in the var EDITOR and VISUAL.</para>
+	</listitem>
+	<listitem>
+	    <para>bug fixed : fcron used to call sometimes a sleep(-1), which causes a freeze (no crash, but a very very long sleep :) ) under system using LIBC5, and maybe on some non-linux systems. It was not causing any problem under GLIBC2. Thanks go to Nick Pasich.</para>
 	</listitem>
     </itemizedlist>
 	    
