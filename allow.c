@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: allow.c,v 1.9 2001-06-22 21:10:30 thib Exp $ */
+ /* $Id: allow.c,v 1.10 2001-07-09 11:50:30 thib Exp $ */
 
 #include "fcrontab.h"
 #include "allow.h"
@@ -38,12 +38,9 @@ in_file(char *str, char *file)
     FILE *f = NULL;
     char *start = NULL;
 
-    if ( access(file, F_OK) != 0 )
-	/* file does not exist */
-	return -1;
-
     if ( (f = fopen(file, "r")) == NULL ) {
 	if (errno == ENOENT)
+	    /* file does not exist */
 	    return -1;
 	else
 	    die_e("could not open %s", file);
@@ -53,8 +50,7 @@ in_file(char *str, char *file)
 
 	/* skip leading and trailing blanks, comments */
 	start = buf;
-	while ( *start != '\0' && isspace( (int) *start) )
-	    start++;
+	Skip_blanks(start);
 	if ( *start == '#' || *start == '\0' )
 	    continue;
 	remove_blanks(start);
