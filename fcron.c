@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.62 2002-03-31 15:05:49 thib Exp $ */
+ /* $Id: fcron.c,v 1.63 2002-03-31 17:20:35 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.62 2002-03-31 15:05:49 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.63 2002-03-31 17:20:35 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -654,7 +654,9 @@ main_loop()
     struct timeval tv;     /* we use usec field to get more precision */
     time_t stime;          /* time to sleep until next job
 			    * execution */
+#ifdef FCRONDYN
     int retcode = 0;
+#endif
 
     debug("Entering main loop");
 
