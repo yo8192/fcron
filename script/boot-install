@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.15 2000-11-18 14:50:03 thib Exp $
+# $Id: boot-install,v 1.16 2000-12-04 20:13:14 thib Exp $
 
 # take 4 arguments : the name of the BSD-like install program
 #                    the DESTSBIN directory, the value of DEBUG
@@ -22,6 +22,7 @@ fi
 #DEBUG=$3
 DEBUG=1
 FCRONTABS=$4
+echo "fcrontab $FCRONTABS"
 
 if test $DEBUG -eq 1; then
     STARTCMD="fcron -b -d"
@@ -31,7 +32,7 @@ fi
 
 echo
 echo "Fcron should be started by your init scripts."
-echo "The installation process will try to do it."
+echo "The installation process is going to try to install fcron in them."
 echo
 
 INSTALL="nothing"
@@ -41,7 +42,7 @@ INSTALLED=0
 
 if test -f /etc/rc.d/rc.M; then
     # Slackware
-    if ! cat /etc/rc.d/rc.local | grep $STARTCMD; then
+    if ! cat /etc/rc.d/rc.local | grep "$STARTCMD"; then
       while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
 	do
 	echo "Would you like to add $STARTCMD in the file /etc/rc.d/rc.local ?"
@@ -63,9 +64,11 @@ if test -f /etc/rc.d/rc.M; then
     fi
 fi 
 
+INSTALL="nothing"
+
 if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc \) ; then
     # FreeBSD
-    if ! cat /etc/rc.local | grep $STARTCMD; then
+    if ! cat /etc/rc.local | grep "$STARTCMD"; then
       while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
 	do
 	echo "Would you like to add $STARTCMD in the file /etc/rc.local ?"
@@ -87,6 +90,7 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc \) ; then
     fi
 fi
 
+INSTALL="nothing"
 ROOTDIR=""
 if test -d /etc/rc.d/init.d/; then
     ROOTDIR="/etc/rc.d"
@@ -101,7 +105,7 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
       read -p "Please answer with 'y' or 'n' (default: 'y'): " INSTALL NOTHING
       done
     if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-      $1 -c -m 755 -o root sysVinit-launcher $ROOTDIR/init.d/fcron
+      $1 -c -m 755 -o root script/sysVinit-launcher $ROOTDIR/init.d/fcron
       if test $DEBUG -eq 1; then
 	cat $ROOTDIR/init.d/fcron | sed 's: -b: -b -d:' >$ROOTDIR/init.d/fcron2
 	mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
@@ -139,41 +143,46 @@ fi
 echo 
 echo "You should now restart fcron."
 RESTART="nothing"
-if test "$SYSV" -eq 1; then
-    while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
-      do
-      echo "Would you like to do it with a 'killall -TERM fcron'"
-      echo "followed by a '"$ROOTDIR"/init.d/fcron start' ?"
-      read -p "Please answer with 'y' or 'n' (default: 'y'): " RESTART NOTHING
-      done
-    if test \( -z "$RESTART" \) -o \( "$RESTART" = "y" \); then
-      killall -TERM fcron
-      $ROOTDIR/init.d/fcron start
-      RESTARTED=1
-    fi
+PID=`pidof fcron`
+KILL="kill -TERM $PID"
+if test -z "$PID"; then
+    echo "Fcron is not running."
+    echo "You may start it after having reinstalled the fcrontabs."
+    RESTARTED=1    
 else
-    if killall 2> /dev/null; then
-	KILLALL="killall"
-    elif killall5 2> /dev/null; then
-	KILLALL="killall5"
-    fi
-    if test "$KILLALL" != ""; then
+  if test "$SYSV" -eq 1; then
       while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
         do
-        echo "Would you like to do it with a 'killall -TERM fcron'"
+        echo "Would you like to do it with a 'kill -TERM \`pidof fcron\`'"
+        echo "followed by a '"$ROOTDIR"/init.d/fcron start' ?"
+        read -p "Please answer with 'y' or 'n' (default: 'y'): " RESTART NOTHING
+        done
+      if test \( -z "$RESTART" \) -o \( "$RESTART" = "y" \); then
+        $KILL
+        $ROOTDIR/init.d/fcron start
+        RESTARTED=1
+      fi
+  else
+      while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
+        do
+        echo "Would you like to do it with a 'kill -TERM \`pidof fcron\`'"
         echo "followed by a '"$STARTCMD"' ?"
         read -p "Please answer with 'y' or 'n' (default: 'y'): " RESTART NOTHING
         done
       if test  \( -z "$RESTART" \) -o \( "$RESTART" = "y" \); then
-        killall -TERM fcron
+        $KILL
         $STARTCMD
         RESTARTED=1
       fi
-    fi
+  fi
 fi
 
 echo
-echo "After having restarted fcron, you should reinstall the fcrontabs."
+if test "$RESTARTED" = "1"; then
+    echo "You should now reinstall the fcrontabs."
+else
+    echo "After having restarted fcron, you should reinstall the fcrontabs."
+fi
 if test "$RESTARTED" -eq 1; then
     REINSTALL="nothing"
     # reinstall the fcrontabs
@@ -186,11 +195,13 @@ if test "$RESTARTED" -eq 1; then
       done
     if test \( -z "$REINSTALL" \) -o \( "$REINSTALL" = "y" \); then
 	for FILE in $FCRONTABS/* ; do \
-	    BASENAME=`basename $FILE` ; \
-	    FCRONTAB=`echo "$BASENAME" | \
-	    sed "s|.*orig|| ; s|new.*|| ; s|fcrontab.sig|| ; s|rm.*||"` ; \
-	    ( test ! -z "$FCRONTAB" && fcrontab -u $FCRONTAB -z ) \
-		    || echo -n ""; \
+	    if test "$FILE" != "$FCRONTABS/*"; then
+		BASENAME=`basename $FILE` ; \
+		FCRONTAB=`echo "$BASENAME" | \
+		sed "s|.*orig|| ; s|new.*|| ; s|fcrontab.sig|| ; s|rm.*||"` ; \
+		( test ! -z "$FCRONTAB" && fcrontab -u $FCRONTAB -z ) \
+			|| echo -n ""; \
+	    fi
 	done
     fi
 fi
