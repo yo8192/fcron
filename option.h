@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.14 2001-01-15 18:46:39 thib Exp $ */
+ /* $Id: option.h,v 1.15 2001-01-27 15:45:08 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -64,7 +64,7 @@
   6      is this job should be run serially only once (for bootrun) ?
   7      does the output have to be mailed to user ?
   8      does the output (even if zero-length) must be mailed to user ?
-  9  ****** bit 9 unused **********************
+  9      if time of execution is exceeded, exec the lavg job or not ?
   10     can this job be executed several times simultaneously
   11     can this job be put several times in the serial queue simultaneously
   12     can this job be put several times in the lavg queue simultaneously
@@ -220,8 +220,15 @@
 
 
 /*
-  bit 9 : currently unused
+  bit 9 : set to 1 : exec the job now if time of execution is exceeded
+          set to 0 : do not exec the job if time of execution is exceeded
 */
+#define	is_run_if_late(opt) \
+	(_bit_test(opt, 9))
+#define	set_run_if_late(opt) \
+	(_bit_set(opt, 9))
+#define clear_run_if_late(opt) \
+	(_bit_clear(opt, 9))
 
 
 /*
@@ -375,11 +382,11 @@
            set to 0 : let the job in the %-queue if interval is exceeded
 */
 #define	is_strict(opt) \
-	(_bit_test(opt, 20))
+	( ! _bit_test(opt, 20))
 #define	set_strict(opt) \
-	(_bit_set(opt, 20))
-#define clear_strict(opt) \
 	(_bit_clear(opt, 20))
+#define clear_strict(opt) \
+	(_bit_set(opt, 20))
 
 
 /*

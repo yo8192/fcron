@@ -22,14 +22,14 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.43 2001-01-12 21:44:45 thib Exp $ */
+ /* $Id: database.c,v 1.44 2001-01-27 15:44:39 thib Exp $ */
 
 #include "fcron.h"
 
 int is_leap_year(int year);
 int get_nb_mdays(int year, int mon);
 void set_wday(struct tm *date);
-void goto_non_matching(CL *line, struct tm *tm);
+void goto_non_matching(CL *line, struct tm *tm, char option);
 void run_normal_job(CL *line);
 void run_serial_job(void);
 void run_lavg_job(int i);
@@ -37,7 +37,7 @@ void run_queue_job(CL *line);
 
 
 void
-test_jobs(time_t t2)
+test_jobs(void)
   /* determine which jobs need to be run, and run them. */
 {
     struct job *j;
@@ -46,9 +46,9 @@ test_jobs(time_t t2)
     debug("Looking for jobs to execute ...");
 /*      // */
 
-    while ( (j=queue_base) && j->j_line->cl_nextexe <= t2 ){
-	set_next_exe(j->j_line, 0);
+    while ( (j=queue_base) && j->j_line->cl_nextexe <= now ){
 	if ( j->j_line->cl_remain > 0 && --(j->j_line->cl_remain) > 0) {
+	    set_next_exe(j->j_line, STD);
 	    debug("    cl_remain: %d", j->j_line->cl_remain);
 	    continue ;
 	}
@@ -61,6 +61,8 @@ test_jobs(time_t t2)
 	    add_serial_job(j->j_line);
 	else
 	    run_normal_job(j->j_line);
+	
+	set_next_exe(j->j_line, STD);
     }
 
 }
@@ -280,6 +282,8 @@ add_serial_job(CL *line)
 void
 add_lavg_job(CL *line)
     /* add the next queued job in lavg queue */
+    /* WARNING : must be run before a set_next_exe() to get the strict option
+     * working correctly */
 {
 
     /* check if the line is already in the lavg queue */
@@ -322,9 +326,35 @@ add_lavg_job(CL *line)
 
     lavg_array[lavg_num].l_line = line;
     line->cl_numexe += 1;
-    lavg_array[lavg_num++].l_until = 
-	(line->cl_until > 0) ? now + line->cl_until : 0;
+    set_run_if_late(line->cl_option);
+    if ( is_strict(line->cl_option) && line->cl_runfreq == 1) {
+	struct tm *ft;
+	struct tm ftime;
+	time_t end_of_cur_int = 0;
 
+	ft = localtime(&line->cl_nextexe);
+
+	/* localtime() function seem to return every time the same pointer :
+	   it resets our previous changes, so we need to prevent it
+	   ( localtime() is used in the debug() function) */
+	memcpy(&ftime, ft, sizeof(struct tm));
+
+	goto_non_matching(line, &ftime, END_OF_INTERVAL);
+
+	end_of_cur_int = mktime(&ftime);
+
+	if ((line->cl_until > 0) && (line->cl_until + now < end_of_cur_int))
+	    lavg_array[lavg_num].l_until = line->cl_until + now;
+	else {
+	    lavg_array[lavg_num].l_until = end_of_cur_int;
+	    clear_run_if_late(line->cl_option);
+	}
+    }
+    else
+	lavg_array[lavg_num].l_until = 
+	    (line->cl_until > 0) ? now + line->cl_until : 0;
+
+    lavg_num++;
 }
 
 
@@ -502,11 +532,11 @@ set_wday(struct tm *date)
 
 
 void
-goto_non_matching(CL *line, struct tm *ftime)
+goto_non_matching(CL *line, struct tm *ftime, char option)
     /* search the first the nearest time and date that does
      * not match the line */
 {
-    if ( is_freq_periodically(line->cl_option)) {
+    if ( is_freq_periodically(line->cl_option) && option != END_OF_INTERVAL) {
 	int max = get_nb_mdays(ftime->tm_year, ftime->tm_mon);
 	if (is_freq_mid(line->cl_option)) {
 	    if (is_freq_mins(line->cl_option))
@@ -593,7 +623,7 @@ goto_non_matching(CL *line, struct tm *ftime)
 	}
 	if (debug_opt)
 	    set_wday(ftime);
-	debug("   %s first non matching %d/%d/%d wday:%d %02d:%02d",
+	debug("   %s beginning of next period %d/%d/%d wday:%d %02d:%02d",
 	      line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
 	      (ftime->tm_year + 1900), ftime->tm_wday,
 	      ftime->tm_hour, ftime->tm_min);
@@ -612,6 +642,10 @@ goto_non_matching(CL *line, struct tm *ftime)
 	char ignore_mons = (is_freq_mons(line->cl_option)) ? 1:0;
 	char ignore_dow = (is_freq_dow(line->cl_option)) ? 1:0;
     
+	if (option == END_OF_INTERVAL)
+	    /* we want to go to the end of the current interval */
+	    ignore_mins=ignore_hrs=ignore_days=ignore_mons=ignore_dow = 0;
+
 	/* */
 	debug("   ignore: %d %d %d %d %d", ignore_mins, ignore_hrs,
 	      ignore_days, ignore_mons, ignore_dow);
@@ -671,9 +705,15 @@ goto_non_matching(CL *line, struct tm *ftime)
 		}
 	    }
 	}
-	  
-	debug("   %s first non matching %d/%d/%d wday:%d %02d:%02d",
-	      line->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
+
+	if (option == END_OF_INTERVAL)
+	    /* we want the end of the current interval, not the beginning
+	     * of the first non-matching interval */
+	    ftime->tm_min--;
+	
+	debug("   %s %s %d/%d/%d wday:%d %02d:%02d", line->cl_shell,
+	      (option == STD) ? "first non matching" : "end of interval",
+	      (ftime->tm_mon + 1), ftime->tm_mday,
 	      (ftime->tm_year + 1900), ftime->tm_wday,
 	      ftime->tm_hour, ftime->tm_min);
 	return;
@@ -682,7 +722,7 @@ goto_non_matching(CL *line, struct tm *ftime)
 
 
 void 
-set_next_exe(CL *line, char is_new_line)
+set_next_exe(CL *line, char option)
   /* set the cl_nextexe of a given CL and insert it in the queue */
 {
 
@@ -708,8 +748,8 @@ set_next_exe(CL *line, char is_new_line)
 	/* to prevent multiple execution in the same minute */
 	ftime.tm_min += 1;
 	ftime.tm_sec = 0;
-	if ( line->cl_runfreq == 1 && ! is_new_line )
-	    goto_non_matching(line, &ftime);
+	if (line->cl_runfreq==1 && option != NO_GOTO && option != NO_GOTO_LOG)
+	    goto_non_matching(line, &ftime, STD);
 
       setMonth:
 	for (i = ftime.tm_mon; (bit_test(line->cl_mons, i)==0) && (i<12); i++);
@@ -842,7 +882,7 @@ set_next_exe(CL *line, char is_new_line)
       set_cl_nextexe:    
 	line->cl_nextexe = mktime(&ftime);
 
-	if ( ! is_new_line )
+	if ( option != NO_GOTO )
 	    debug("   cmd: %s next exec %d/%d/%d wday:%d %02d:%02d",
 		  line->cl_shell, (ftime.tm_mon + 1), ftime.tm_mday,
 		  (ftime.tm_year + 1900), ftime.tm_wday,
@@ -856,20 +896,129 @@ set_next_exe(CL *line, char is_new_line)
 	      line->cl_timefreq);
     }
     
-
     insert_nextexe(line);
-
-	
 
 }
 
+
+void
+set_next_exe_notrun(CL *line, char context)
+    /* set the time of the next execution and send a mail to tell him the job
+     * has not run if necessary */
+{
+    time_t next_period = 0;
+    struct tm *ft = NULL;
+    struct tm ftime, last_nextexe;
+    char set_next_exe_opt = 0;
+
+/*  // */
+    debug("  set_next_exe_notrun : %s %d", line->cl_shell, context);
+/*  // */
+
+    if (context == SYSDOWN) {
+	ft = localtime(&line->cl_nextexe);
+	set_next_exe_opt = NO_GOTO;
+    }
+    else {
+	ft = localtime(&now);
+	set_next_exe_opt = NO_GOTO_LOG;
+    }
+    
+    /* localtime() function seem to return every time the same pointer :
+       it resets our previous changes, so we need to prevent it
+       ( localtime() is used in the debug() function) */
+    memcpy(&ftime, ft, sizeof(struct tm));
+    /* we also copy it to last_nextexe which will be used in mail_notrun */
+    memcpy(&last_nextexe, ft, sizeof(struct tm));
+    
+    ftime.tm_sec = 0;
+    goto_non_matching(line, &ftime, STD);
+    next_period = mktime(&ftime);
+
+    set_next_exe(line, set_next_exe_opt);
+    if ( line->cl_nextexe >= next_period ) {
+	/* line has not run during one or more period(s) : send a mail */
+	mail_notrun(line, context, &last_nextexe);
+    }
+
+}
+
+void
+mail_notrun(CL *line, char context, struct tm *last_nextexe)
+    /* send a mail to tell user a %-job has not run (and why) */
+{
+    int pid = 0;
+    int fd = 0;
+
+    switch ( pid = fork() ) {
+    case -1:
+	error_e("Fork error : could not mail for not run %s", line->cl_shell);
+	return;
+    case 0:
+	/* child */
+	break;
+    default:
+	/* parent */
+
+/*  // */
+	debug("Reporting by mail non execution of %s (pid %d)", 
+	      line->cl_shell, pid);
+/*  // */
+
+	/* create a entry in exe_array */
+	if ( exe_num >= exe_array_size ) {
+	    struct exe *ptr = NULL;
+	    short int old_size = exe_array_size;
+	    
+	    debug("Resizing exe_array");
+	    exe_array_size = (exe_array_size + EXE_GROW_SIZE);
+	    
+	    if ( (ptr = calloc(exe_array_size, sizeof(struct exe))) == NULL )
+		die_e("could not calloc exe_array");
+	    
+	    memcpy(ptr, exe_array, (sizeof(struct exe) * old_size));
+	    free(exe_array);
+	    exe_array = ptr;
+	}
+	/* set line to NULL as this is not a line ... */
+	exe_array[exe_num].e_line = NULL;
+	exe_array[exe_num].e_pid = pid;
+	exe_num++;
+	return;
+    }
+
+    if ( last_nextexe == NULL )
+	last_nextexe = localtime(&line->cl_nextexe);
+
+    /* create a temp file, and write in it the message to send */
+    fd = create_mail(line, "Non-execution of fcron job");
+
+    if (context == SYSDOWN) {
+	xwrite(fd, "Line has not run since x due to system's down state.\n");
+    }
+    else if (context == LAVG) {
+	xwrite(fd, "Line has not run since x due to a too high system load"
+	       " average or too many lavg-serial job.\n");
+    }
+    
+    /* become user (for security reasons) */
+    if (change_user(line->cl_runas) < 0)
+	return ;
+
+    /* then, send mail */
+    launch_mailer(line, fd);
+    
+    /* we should not come here : launch_mailer does not return */
+    error("mail_notrun : launch_mailer failed");
+    
+}
 
 time_t
 check_lavg(time_t lim)
     /* run a job based on system load average if one should be run
      * and return the time to sleep */
 {
-    time_t tts = time_to_sleep(lim);
+    time_t tts = 0;
 
 #ifdef NOLOADAVG
     while ( lavg_num > 0 )
@@ -886,12 +1035,39 @@ check_lavg(time_t lim)
 
     /* first, check if some lines must be executed because of until */
     while ( i < lavg_num )
-	if ( lavg_array[i].l_line->cl_until && lavg_array[i].l_until < now ) {
-	    debug("until %s %d", lavg_array[i].l_line->cl_shell,
-		  lavg_array[i].l_until);
-	    run_lavg_job(i);
+	if ( (lavg_array[i].l_line->cl_until > 0 
+	      || lavg_array[i].l_line->cl_runfreq == 1)
+	     && lavg_array[i].l_until < now){
+	    if ( ! is_run_if_late(lavg_array[i].l_line->cl_option) ) {
+		explain("Interval of execution exceeded : %s (not run)",
+			lavg_array[i].l_line->cl_shell);
+
+		/* set time of the next execution and send a mail if needed */
+		if ( is_notice_notrun(lavg_array[i].l_line->cl_option) )
+  		    set_next_exe_notrun(lavg_array[i].l_line, LAVG);
+		else
+		    set_next_exe(lavg_array[i].l_line, NO_GOTO_LOG);
+
+		/* remove this job from the lavg queue */
+		lavg_array[i].l_line->cl_numexe -= 1;
+		if (i < --lavg_num) {
+		    lavg_array[i] = lavg_array[lavg_num];
+		    lavg_array[lavg_num].l_line = NULL;
+		}
+		else
+		    lavg_array[i].l_line = NULL;
+
+	    }
+	    else {
+		debug("until %s %d", lavg_array[i].l_line->cl_shell,
+		      lavg_array[i].l_until);
+		run_lavg_job(i);
+	    }
 	} else
 	    i++;
+
+    /* we do this set here as the nextexe of lavg line may change before */
+    tts = time_to_sleep(lim);
 
     if ( lavg_num == 0 )
 	return tts;

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.36 2001-01-12 21:43:41 thib Exp $ */
+ /* $Id: conf.c,v 1.37 2001-01-27 15:41:09 thib Exp $ */
 
 #include "fcron.h"
 
@@ -495,11 +495,43 @@ read_file(const char *file_name, CF *cf)
 	    cl->cl_runas = runas;
 	}
 
+	/* we need that here because the user's name (contained in the
+	 * struct CF may be required */
+	cl->cl_file = cf;
+
+	/* check if the task has not been stopped during execution and
+	 * insert in lavg or serial queues the jobs which was in one
+	 * at fcron's stop and the bootrun jobs */
+	if (cl->cl_numexe > 0) {
+	    cl->cl_numexe = 0;
+	    if ( ! is_strict(cl->cl_option) ) {
+		if ( is_lavg(cl->cl_option) )
+		    add_lavg_job(cl);
+		else if ( is_serial(cl->cl_option) 
+			  || is_serial_once(cl->cl_option) )
+		    add_serial_job(cl);
+		else {
+		    /* job has been stopped during execution :
+		     * launch it again */
+		    warn("job %s did not finish : running it again.",
+			 cl->cl_shell);
+		    set_serial_once(cl->cl_option);
+		    add_serial_job(cl);
+		}
+	    }
+	}
+
 	if ( is_td(cl->cl_option) ) {
     
 	    /* set the time and date of the next execution  */
 	    if ( cl->cl_nextexe <= now ) {
-		if ( is_bootrun(cl->cl_option) && t_save != 0) {
+		if ( cl->cl_nextexe == 0 )
+		    /* the is a line from a new file */
+		    set_next_exe(cl, NO_GOTO);		    
+		else if(cl->cl_runfreq == 1 && is_notice_notrun(cl->cl_option))
+		    set_next_exe_notrun(cl, SYSDOWN);
+		else if ( is_bootrun(cl->cl_option) && t_save != 0 
+			  && cl->cl_runfreq != 1) {
 		    if ( cl->cl_remain > 0 && --cl->cl_remain > 0 ) {
 			debug("    cl_remain: %d", cl->cl_remain);
 		    }
@@ -510,10 +542,13 @@ read_file(const char *file_name, CF *cf)
 			if ( ! is_lavg(cl->cl_option) )
 			    set_serial_once(cl->cl_option);
 		    }
-		    set_next_exe(cl, 0);
+		    set_next_exe(cl, STD);
 		}
-		else
-		    set_next_exe(cl, 1);
+		else {
+		    if ( is_notice_notrun(cl->cl_option) )
+			mail_notrun(cl, SYSDOWN, NULL);
+		    set_next_exe(cl, NO_GOTO);
+		}
 	    }
 	    else
 		insert_nextexe(cl);
@@ -525,25 +560,6 @@ read_file(const char *file_name, CF *cf)
 	    cl->cl_nextexe += slept;
 	    insert_nextexe(cl);
 	}	    
-
-	/* check if the task has not been stopped during execution and
-	 * insert in lavg or serial queues the jobs which was in one
-	 * at fcron's stop and the bootrun jobs */
-	if (cl->cl_numexe > 0) {
-	    cl->cl_numexe = 0;
-	    if ( is_lavg(cl->cl_option) )
-		add_lavg_job(cl);
-	    else if (is_serial(cl->cl_option) || is_serial_once(cl->cl_option))
-		add_serial_job(cl);
-	    else {
-		/* job has been stopped during execution :
-		 * launch it again */
-		warn("job %s did not finish : running it again.",
-		     cl->cl_shell);
-		set_serial_once(cl->cl_option);
-		add_serial_job(cl);
-	    }
-	}
 
 	if (debug_opt) {
 	    struct tm *ftime;
@@ -557,7 +573,6 @@ read_file(const char *file_name, CF *cf)
 
 	cl->cl_next = cf->cf_line_base;
 	cf->cf_line_base = cl;
-	cl->cl_file = cf;
 	Alloc(cl, CL);
     }
     /* check for an error */
@@ -568,11 +583,6 @@ read_file(const char *file_name, CF *cf)
     /* free last calloc : unused */
     free(cl);
     
-/* // if (fgets(buf, sizeof(buf), ff) == NULL || */
-/* // 	strncmp(buf, "eof\n", sizeof("eof\n")) != 0) */
-/* // 	error("file %s is truncated : you should reinstall it with fcrontab",
-   file_name); */
-
     fclose(ff);
 
     return 0;
