@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.c,v 1.13 2002-10-06 17:10:37 thib Exp $ */
+ /* $Id: convert-fcrontab.c,v 1.14 2002-10-28 17:56:09 thib Exp $ */
 
 #include "global.h"
 
@@ -30,7 +30,7 @@
 #include "log.h"
 #include "subs.h"
 
-char rcs_info[] = "$Id: convert-fcrontab.c,v 1.13 2002-10-06 17:10:37 thib Exp $";
+char rcs_info[] = "$Id: convert-fcrontab.c,v 1.14 2002-10-28 17:56:09 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -134,46 +134,6 @@ delete_file(cf_t *file)
 
 }
 
-/* error management */
-#define Save_type(FD, TYPE) \
-        { \
-          if ( save_type(FD, TYPE) != OK ) { \
-            error_e("Could not write type : file has not been installed."); \
-            close(FD); \
-            remove(buf); \
-            exit(EXIT_ERR); \
-	  } \
-        }
-
-#define Save_str(FD, TYPE, STR) \
-        { \
-          if ( save_str(FD, TYPE, STR) != OK ) { \
-            error_e("Could not write str : file has not been installed."); \
-            close(FD); \
-            remove(buf); \
-            exit(EXIT_ERR); \
-	  } \
-        }
-
-#define Save_strn(FD, TYPE, STR, SIZE) \
-        { \
-          if ( save_strn(FD, TYPE, STR, SIZE) != OK ) { \
-            error_e("Could not write strn : file has not been installed."); \
-            close(FD); \
-            remove(buf); \
-            exit(EXIT_ERR); \
-	  } \
-        }
-
-#define Save_lint(FD, TYPE, VALUE) \
-        { \
-          if ( save_lint(FD, TYPE, VALUE) != OK ) { \
-            error_e("Could not write lint : file has not been installed."); \
-            close(FD); \
-            remove(buf); \
-            exit(EXIT_ERR); \
-	  } \
-        }
 
 void
 convert_file(char *file_name)
@@ -270,52 +230,10 @@ convert_file(char *file_name)
     if ( fchmod(fd, file_stat.st_mode) != 0 )
 	die_e("Could not fchmod %s", buf);
     
-    
-    Save_lint(fd, S_HEADER_T, S_FILEVERSION );
-    Save_str(fd, S_USER_T, file->cf_user);
-    Save_lint(fd, S_TIMEDATE_T, t_save);
-
-    for (env = file->cf_env_base; env; env = env->e_next)
-	Save_str(fd, S_ENVVAR_T, env->e_val);
-	
-    for (line = file->cf_line_base; line; line = line->cl_next) {
-
-	/* this ones are saved for every lines */
-	Save_str(fd, S_SHELL_T, line->cl_shell);
-	Save_str(fd, S_RUNAS_T, line->cl_runas);
-	Save_str(fd, S_MAILTO_T, line->cl_mailto);
-	Save_lint(fd, S_NEXTEXE_T, line->cl_nextexe);
-	Save_strn(fd, S_OPTION_T, line->cl_option, 3);
-
-	/* the following are saved only if needed */
-	if ( line->cl_numexe )
-	    Save_strn(fd, S_NUMEXE_T, &line->cl_numexe, 1);
-	if ( is_lavg(line->cl_option) )
-	    Save_strn(fd, S_LAVG_T, line->cl_lavg, 3);
-	if ( line->cl_until > 0 )
-	    Save_lint(fd, S_UNTIL_T, line->cl_until);
-	if ( line->cl_nice != 0 )
-	    Save_strn(fd, S_NICE_T, &line->cl_nice, 1);
-	if ( line->cl_runfreq > 0 ) {
-	    Save_lint(fd, S_RUNFREQ_T, line->cl_runfreq);
-	    Save_lint(fd, S_REMAIN_T, line->cl_remain);
-	}
-		     
-	if ( is_freq(line->cl_option) ) {
-	    /* save the frequency to run the line */
-	    Save_lint(fd, S_TIMEFREQ_T, line->cl_timefreq)
-		}
-	else {
-	    /* save the time and date bit fields */
-	    Save_strn(fd, S_MINS_T, line->cl_mins, bitstr_size(60));
-	    Save_strn(fd, S_HRS_T, line->cl_hrs, bitstr_size(24));
-	    Save_strn(fd, S_DAYS_T, line->cl_days, bitstr_size(32));
-	    Save_strn(fd, S_MONS_T, line->cl_mons, bitstr_size(12));
-	    Save_strn(fd, S_DOW_T, line->cl_dow, bitstr_size(8));
-	}
-
-	/* This field *must* be the last of each line */
-	Save_type(fd, S_ENDLINE_T);
+    if ( write_file_to_disk(fd, file, t_save) == ERR ) {
+	close(fd);
+	remove(buf);
+	exit(EXIT_ERR);
     }
 
     close(fd);
