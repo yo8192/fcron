@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.50 2001-11-02 13:38:15 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.51 2001-11-02 14:27:33 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -45,7 +45,7 @@
 #include "allow.h"
 #include "fileconf.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.50 2001-11-02 13:38:15 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.51 2001-11-02 14:27:33 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -92,7 +92,7 @@ int conv_pam(int num_msg, const struct pam_message **msgm,
 	     struct pam_response **response, void *appdata_ptr);
 pam_handle_t *pamh = NULL;
 const struct pam_conv apamconv = { conv_pam, NULL };
-#endif
+#endif /* HAVE_LIBPAM */
 
 void
 info(void)
@@ -780,7 +780,7 @@ failed_conversation:
 
     return PAM_CONV_ERR;
 }
-#endif
+#endif /* HAVE_LIBPAM */
 
 
 void
@@ -1090,8 +1090,6 @@ main(int argc, char **argv)
 	xexit(EXIT_OK);
 
     }
-
-
 
     /* never reached */
     return EXIT_OK;
