@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.19 2001-04-21 08:46:55 thib Exp $ */
+ /* $Id: fcron.h,v 1.20 2001-04-29 22:15:38 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -84,61 +84,12 @@ extern short int lavg_serial_running;
 
 /* fcron.c */
 extern void xexit(int exit_value);
-/* end of fcron.c */
 
-/* log.c */
-extern void xcloselog(void);
-extern char *make_msg(char *fmt, va_list args);
-extern void explain(char *fmt, ...);
-extern void explain_e(char *fmt, ...);
-extern void warn(char *fmt, ...);
-extern void warn_e(char *fmt, ...);
-extern void error(char *fmt, ...);
-extern void error_e(char *fmt, ...);
-extern void die(char *fmt, ...);
-extern void die_e(char *fmt, ...);
-extern void Debug(char *fmt, ...);
-/* end of log.c */
-
-/* subs.c */
-extern int remove_blanks(char *str);
-extern char *strdup2(const char *);
-extern int save_type(FILE *f, short int type);
-extern int save_str(FILE *f, short int type, char *str);
-extern int save_strn(FILE *f, short int type, char *str, short int size);
-extern int save_lint(FILE *f, short int type, long int value);
-/* end of subs.c */
-
-/* database.c */
-extern void test_jobs(void);
-extern void wait_chld(void);
-extern void wait_all(int *counter);
-extern time_t time_to_sleep(time_t lim);
-extern time_t check_lavg(time_t lim);
-extern void set_next_exe(CL *line, char option);
-extern void set_next_exe_notrun(CL *line, char context);
-extern void mail_notrun(CL *line, char context, struct tm *since);
-extern void insert_nextexe(CL *line);
-extern void add_serial_job(CL *line);
-extern void add_lavg_job(CL *line);
-extern void run_serial_job(void);
-/* end of database.c */
-
-/* conf.c */
-extern void reload_all(const char *dir_name);
-extern void synchronize_dir(const char *dir_name);
-extern void delete_file(const char *user_name);
-extern void save_file(CF *file_name);
-/* end of conf.c */
-
-/* job.c */
-extern int change_user(char *user_name);
-extern void run_job(struct exe *exeent);
-extern int create_mail(CL *line, char *subject);
-extern void launch_mailer(CL *line, int mailfd);
-extern void xwrite(int fd, char *string);
-/* end of job.c */
-
+#include "log.h"
+#include "subs.h"
+#include "database.h"
+#include "conf.h"
+#include "job.h"
 
 #endif /* __FCRONH */
 
