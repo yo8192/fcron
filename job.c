@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.48 2001-12-23 22:03:46 thib Exp $ */
+ /* $Id: job.c,v 1.49 2002-02-25 18:38:13 thib Exp $ */
 
 #include "fcron.h"
 
@@ -222,21 +222,30 @@ run_job(struct exe *exeent)
 	char *curshell;
 	char *home;
 	env_t *env;
-	int mailfd = 0;
+	int mailfd = -1;
 	short int mailpos = 0;	/* 'empty mail file' size */
 	int status = 0;
+ 	int to_stdout = foreground && is_stdout(line->cl_option); 
+ 
+	/* */
+ 	debug("sent output to %s, %s, %s\n", to_stdout ? "stdout" : "file",
+ 	      foreground ? "running in foreground" : "running in background",
+ 	      is_stdout(line->cl_option) ? "stdout" : "normal" );
+	/* */
 
 	foreground = 0;
 
-	/* we create the temp file (if needed) before change_user(),
-	 * as temp_file() need the root privileges */
-	if ( ! is_mail(line->cl_option) ) {
-	    if ( (mailfd = open("/dev/null", O_RDWR)) < 0 )
-		die_e("open: /dev/null:");
-	}
-	else {
-	    mailfd = create_mail(line, "Output of fcron job");
-	    mailpos = lseek(mailfd, 0, SEEK_END);
+	if ( ! to_stdout ) {
+	    /* we create the temp file (if needed) before change_user(),
+	     * as temp_file() need the root privileges */
+	    if ( ! is_mail(line->cl_option) ) {
+		if ( (mailfd = open("/dev/null", O_RDWR)) < 0 )
+		    die_e("open: /dev/null:");
+	    }
+	    else {
+		mailfd = create_mail(line, "Output of fcron job");
+		mailpos = lseek(mailfd, 0, SEEK_END);
+	    }
 	}
 
 	if (change_user(line) < 0)
@@ -247,7 +256,7 @@ run_job(struct exe *exeent)
 	if ( line->cl_nice != 0 && nice(line->cl_nice) != 0 )
 	    error_e("could not set nice value");
 	
-	if (dup2(mailfd, 1) != 1 || dup2(1, 2) != 2)
+	if ( ! to_stdout && (dup2(mailfd, 1) != 1 || dup2(1, 2) != 2))
 	    die_e("dup2() error");    /* dup2 also clears close-on-exec flag */
 
 	foreground = 1; 
@@ -339,10 +348,11 @@ end_job(CL *line, int status, int mailfd, short mailpos)
     char mail_output;
     char *m;
 
-    if (is_mailzerolength(line->cl_option) || 
-	( ( is_mail(line->cl_option) &&
-	    ( lseek(mailfd, 0, SEEK_END) > mailpos ||
-	      ! (WIFEXITED(status) && WEXITSTATUS(status) == 0) ) ) ) )
+    if ( mailfd != -1 &&
+	 (is_mailzerolength(line->cl_option) || 
+	  ( ( is_mail(line->cl_option) &&
+	      ( lseek(mailfd, 0, SEEK_END) > mailpos ||
+		! (WIFEXITED(status) && WEXITSTATUS(status) == 0) ) ) ) ) )
 	/* an output exit : we will mail it */
 	mail_output = 1;
     else
@@ -385,7 +395,7 @@ end_job(CL *line, int status, int mailfd, short mailpos)
     }
 
     /* if mail is sent, execution doesn't get here : close /dev/null */
-    if ( close(mailfd) != 0 )
+    if ( mailfd != -1 && close(mailfd) != 0 )
 	die_e("Can't close file descriptor %d", mailfd);
 
     exit(0);
