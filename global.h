@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.38 2002-10-06 17:02:05 thib Exp $ */
+ /* $Id: global.h,v 1.39 2002-10-28 17:53:59 thib Exp $ */
 
 
 /* 
@@ -105,16 +105,8 @@
 #include "pam.h"
 #endif
 
-
 #include "bitstring.h"     /* bit arrays */
 #include "option.h"        /* manage fcrontab's options */
-
-/* constants for fcrontabs needed to load and save the fcrontabs to disk */
-#include "save.h"
-/* log part */
-#include "log.h"
-/* functions used by fcrontab, fcrondyn, and fcron */
-#include "subs.h"
 
 /* you should not change this (nor need to do it) */
 #define ERR     -1           
@@ -129,12 +121,16 @@
             die_e("Could not calloc.");
 
 #define Set(VAR, VALUE) \
+        { \
           free(VAR); \
-          VAR = strdup2(VALUE);
+          VAR = strdup2(VALUE); \
+        }
 
 #define Flush(VAR) \
+        { \
           free(VAR); \
-          VAR = NULL;
+          VAR = NULL; \
+	}
 
 #define Skip_blanks(PTR) \
         while((*(PTR) == ' ') || (*(PTR) == '\t')) \
@@ -212,6 +208,18 @@ typedef struct exe_t {
     pid_t        e_ctrl_pid; /* pid of the fcron process controling the job */
     pid_t        e_job_pid;  /* pid of the job itself */
 } exe_t;
+
+
+/* local header files : we include here the headers which may use some types defined
+ *                      above. */
+
+/* constants for fcrontabs needed to load and save the fcrontabs to disk */
+#include "save.h"
+/* log part */
+#include "log.h"
+/* functions used by fcrontab, fcrondyn, and fcron */
+#include "subs.h"
+
 
 #endif /* __GLOBAL_H__ */
 

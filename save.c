@@ -22,76 +22,267 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.c,v 1.2 2002-09-07 13:12:10 thib Exp $ */
+ /* $Id: save.c,v 1.3 2002-10-28 17:56:29 thib Exp $ */
 
 #include "global.h"
 #include "save.h"
 
 extern char debug_opt;
 
+int write_buf_to_disk(int fd, char *write_buf, int *buf_used);
+int save_type(int fd, short int type, char *write_buf, int *buf_used);
+int save_str(int fd, short int type, char *str, char *write_buf, int *buf_used);
+int save_strn(int fd, short int type, char *str, short int size, char *write_buf,
+	      int *buf_used);
+int save_lint(int fd, short int type, long int value, char *write_buf, int *buf_used);
+
 int
-save_type(int fd, short int type)
+save_type(int fd, short int type, char *write_buf, int *buf_used)
 /* save a single type (with no data attached) in a binary fcrontab file */
 {
     short int size = 0;
+    int write_len = sizeof(type) + sizeof(size);
 
-    if ( write(fd, &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fd, &size, sizeof(size)) < sizeof(size) ) goto err;
-    
+    if ( write_len > WRITE_BUF_LEN - *buf_used )
+	if ( write_buf_to_disk(fd, write_buf, buf_used) == ERR )
+	    return ERR;
+
+    memcpy((write_buf+*buf_used), &type, sizeof(type));
+    *buf_used += sizeof(type);
+    memcpy((write_buf+*buf_used), &size, sizeof(size));
+    *buf_used += sizeof(size);
+
     return OK;
-
-  err:
-    return ERR;
 
 }
 
 int
-save_str(int fd, short int type, char *str)
+save_str(int fd, short int type, char *str, char *write_buf, int *buf_used)
 /* save a string of type "type" in a binary fcrontab file */
 {
-    short int size = 0;
-    size = strlen(str);
+    short int size = strlen(str);
+    int write_len = sizeof(type) + sizeof(size) + size;
 
-    if ( write(fd, &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fd, &size, sizeof(size)) < sizeof(size) ) goto err;
-    if ( write(fd, str, size) < size ) goto err;
+    if ( write_len > WRITE_BUF_LEN - *buf_used )
+	if ( write_buf_to_disk(fd, write_buf, buf_used) == ERR )
+	    return ERR;
+
+    memcpy((write_buf+*buf_used), &type, sizeof(type));
+    *buf_used += sizeof(type);
+    memcpy((write_buf+*buf_used), &size, sizeof(size));
+    *buf_used += sizeof(size);
+    memcpy((write_buf+*buf_used), str, size);
+    *buf_used += size;
 
     return OK;
-
-  err:
-    return ERR;
-    
 }
 
 int
-save_strn(int fd, short int type, char *str, short int size)
+save_strn(int fd, short int type, char *str, short int size, char *write_buf,
+	  int *buf_used)
 /* save a "size"-length string of type "type" in a binary fcrontab file */
 {
+    int write_len = sizeof(type) + sizeof(size) + size;
 
-    if ( write(fd, &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fd, &size, sizeof(size)) < sizeof(size) ) goto err;
-    if ( write(fd, str, size) < size ) goto err;
+    if ( write_len > WRITE_BUF_LEN - *buf_used )
+	if ( write_buf_to_disk(fd, write_buf, buf_used) == ERR )
+	    return ERR;
+
+    memcpy((write_buf+*buf_used), &type, sizeof(type));
+    *buf_used += sizeof(type);
+    memcpy((write_buf+*buf_used), &size, sizeof(size));
+    *buf_used += sizeof(size);
+    memcpy((write_buf+*buf_used), str, size);
+    *buf_used += size;
 
     return OK;
-
-  err:
-    return ERR;
-    
 }
 
 int
-save_lint(int fd, short int type, long int value)
+save_lint(int fd, short int type, long int value, char *write_buf, int *buf_used)
 /* save an integer of type "type" in a binary fcrontab file */
 {
     short int size = sizeof(value);
+    int write_len = sizeof(type) + sizeof(size) + size;
 
-    if ( write(fd, &type, sizeof(type)) < sizeof(type) ) goto err;
-    if ( write(fd, &size, sizeof(size)) < sizeof(size) ) goto err;
-    if ( write(fd, &value, size) < size ) goto err;
+    if ( write_len > WRITE_BUF_LEN - *buf_used )
+	if ( write_buf_to_disk(fd, write_buf, buf_used) == ERR )
+	    return ERR;
+
+    memcpy((write_buf+*buf_used), &type, sizeof(type));
+    *buf_used += sizeof(type);
+    memcpy((write_buf+*buf_used), &size, sizeof(size));
+    *buf_used += sizeof(size);
+    memcpy((write_buf+*buf_used), &value, size);
+    *buf_used += size;
 
     return OK;
+}
 
-  err:
-    return ERR;
-    
+
+int
+write_buf_to_disk(int fd, char *write_buf, int *buf_used)
+/* write the buffer to disk */
+{
+    ssize_t to_write = *buf_used; 
+    ssize_t written = 0;
+    ssize_t return_val;
+    int num_retries = 0;
+
+    while ( written < to_write ) {
+	if ( num_retries++ > (int)(to_write / 2) ) {
+	    error("too many retries (%d) to write buf to disk : giving up.",num_retries);
+	    return ERR;
+	}
+	return_val = write(fd, (write_buf+written), to_write - written);
+	if ( return_val == -1 ) {
+	    error_e("could not write() buf to disk");
+	    return ERR;
+	}
+	written += return_val;
+    }
+
+    /* */
+    debug("write_buf_to_disk() : written %d/%d, %d retry(ies)", written, to_write, 
+	  num_retries);
+    /* */
+
+    if ( written == to_write ) {
+	*buf_used = 0;
+	return OK;
+    }
+    else {
+	error("write_buf_to_disk() : written %d bytes for %d requested.",
+	      written, to_write);
+	return ERR;
+    }
+}
+
+
+/* write_file_to_disk() error management */
+#define Save_type(FD, TYPE, BUF, BUF_USED) \
+        { \
+          if ( save_type(FD, TYPE, BUF, BUF_USED) != OK ) { \
+            error_e("Could not write type : file %s has not been saved.", \
+                     file->cf_user); \
+            return ERR; \
+	  } \
+        }
+
+#define Save_str(FD, TYPE, STR, BUF, BUF_USED) \
+        { \
+          if ( save_str(FD, TYPE, STR, BUF, BUF_USED) != OK ) { \
+            error_e("Could not write str : file %s has not been saved.", \
+                     file->cf_user); \
+            return ERR; \
+	  } \
+        }
+
+#define Save_strn(FD, TYPE, STR, SIZE, BUF, BUF_USED) \
+        { \
+          if ( save_strn(FD, TYPE, STR, SIZE, BUF, BUF_USED) != OK ) { \
+            error_e("Could not write strn : file %s has not been saved.", \
+                     file->cf_user); \
+            return ERR; \
+	  } \
+        }
+
+#define Save_lint(FD, TYPE, VALUE, BUF, BUF_USED) \
+        { \
+          if ( save_lint(FD, TYPE, VALUE, BUF, BUF_USED) != OK ) { \
+            error_e("Could not write lint : file %s has not been saved.", \
+                     file->cf_user); \
+            return ERR; \
+	  } \
+        }
+
+int
+write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
+/* write the data on the disk */
+{
+    cl_t *line = NULL;
+    env_t *env = NULL;
+    char write_buf[WRITE_BUF_LEN];
+    int write_buf_used = 0;
+
+    /* put program's version : it permits to daemon not to load
+     * a file which he won't understand the syntax, for exemple
+     * a file using a depreciated format generated by an old fcrontab,
+     * if the syntax has changed */
+    /* an binary fcrontab *must* start by such a header */
+    Save_lint(fd, S_HEADER_T, S_FILEVERSION, write_buf, &write_buf_used);
+
+    /* put the user's name : needed to check if his uid has not changed */
+    /* S_USER_T *must* be the 2nd field of a binary fcrontab */
+    Save_str(fd, S_USER_T, file->cf_user, write_buf, &write_buf_used);
+
+    /* put the time & date of saving : this is use for calcutating 
+     * the system down time. As it is a new file, we set it to 0 */
+    /* S_USER_T *must* be the 3rd field of a binary fcrontab */
+    Save_lint(fd, S_TIMEDATE_T, time_date, write_buf, &write_buf_used);
+
+    /* Save the time diff between local (real) and system hour (if any) */
+    if ( file->cf_tzdiff != 0 )
+	Save_lint(fd, S_TZDIFF_T, file->cf_tzdiff, write_buf, &write_buf_used);
+
+    /*   env variables, */
+    for (env = file->cf_env_base; env; env = env->e_next)
+	Save_str(fd, S_ENVVAR_T, env->e_val, write_buf, &write_buf_used);
+	
+    /*   then, lines. */
+    for (line = file->cf_line_base; line; line = line->cl_next) {
+
+	/* this ones are saved for every lines */
+	Save_str(fd, S_SHELL_T, line->cl_shell, write_buf, &write_buf_used);
+	Save_str(fd, S_RUNAS_T, line->cl_runas, write_buf, &write_buf_used);
+	Save_str(fd, S_MAILTO_T, line->cl_mailto, write_buf, &write_buf_used);
+	Save_strn(fd, S_OPTION_T, line->cl_option, OPTION_SIZE,
+		  write_buf, &write_buf_used);
+
+	/* the following are saved only if needed */
+	if ( is_volatile(line->cl_option) && is_freq(line->cl_option) ) {
+	    Save_lint(fd, S_FIRST_T, line->cl_first, write_buf, &write_buf_used);
+	}
+	else
+	    Save_lint(fd, S_NEXTEXE_T, line->cl_nextexe, write_buf, &write_buf_used);
+	if ( line->cl_numexe )
+	    Save_strn(fd, S_NUMEXE_T, &line->cl_numexe, 1, write_buf, &write_buf_used);
+	if ( is_lavg(line->cl_option) )
+	    Save_strn(fd, S_LAVG_T, line->cl_lavg, LAVG_SIZE,
+		      write_buf, &write_buf_used);
+	if ( line->cl_until > 0 )
+	    Save_lint(fd, S_UNTIL_T, line->cl_until, write_buf, &write_buf_used);
+	if ( line->cl_nice != 0 )
+	    Save_strn(fd, S_NICE_T, &line->cl_nice, 1, write_buf, &write_buf_used);
+	if ( line->cl_runfreq > 0 ) {
+	    Save_lint(fd, S_RUNFREQ_T, line->cl_runfreq, write_buf, &write_buf_used);
+	    Save_lint(fd, S_REMAIN_T, line->cl_remain, write_buf, &write_buf_used);
+	}
+		     
+	if ( is_freq(line->cl_option) ) {
+	    /* save the frequency to run the line */
+	    Save_lint(fd, S_TIMEFREQ_T, line->cl_timefreq, write_buf, &write_buf_used);
+	}
+	else {
+	    /* save the time and date bit fields */
+	    Save_strn(fd, S_MINS_T, line->cl_mins, bitstr_size(60),
+		      write_buf, &write_buf_used);
+	    Save_strn(fd, S_HRS_T, line->cl_hrs, bitstr_size(24),
+		      write_buf, &write_buf_used);
+	    Save_strn(fd, S_DAYS_T, line->cl_days, bitstr_size(32),
+		      write_buf, &write_buf_used);
+	    Save_strn(fd, S_MONS_T, line->cl_mons, bitstr_size(12),
+		      write_buf, &write_buf_used);
+	    Save_strn(fd, S_DOW_T, line->cl_dow, bitstr_size(8),
+		      write_buf, &write_buf_used);
+	}
+
+	/* This field *must* be the last of each line */
+	Save_type(fd, S_ENDLINE_T, write_buf, &write_buf_used);
+    }
+
+    if ( write_buf_to_disk(fd, write_buf, &write_buf_used) == ERR )
+	return ERR;
+
+    return OK;
 }
