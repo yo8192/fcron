@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.13 2000-08-28 17:54:46 thib Exp $ */
+ /* $Id: config.h.in,v 1.14 2000-08-29 18:01:39 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -91,13 +91,13 @@
 
 /* *** memory *** */
 #define EXE_INITIAL_SIZE 6 /* initial number of possible running job 
-				  * if more jobs have to be run simultaneously,
-				  * fcron will have to calloc() more memory */
+			    * if more jobs have to be run simultaneously,
+			    * fcron will have to calloc() more memory */
 #define EXE_GROW_SIZE 5 /* this is the number of entries that will be
-			       * added to exe_array each time it has to grow
-			       * up */
+			 * added to exe_array each time it has to grow
+			 * up */
 
-#define SERIAL_QUEUE_MAX 20 /* if serial queue contains this number of entries,
+#define SERIAL_QUEUE_MAX 30 /* if serial queue contains this number of entries,
 			     * the next serial job to be executed will be run
 			     * non-serially each time a serial job is added */
 #define SERIAL_INITIAL_SIZE 10 /* initial number of possible serial job. If
@@ -133,14 +133,15 @@
 			     * before executing a job, to avoid to run jobs
 			     * during system boot */
 
+#define LAVG_SLEEP 30 /* the time we sleep when some jobs are in lavg queue */
+
+
 /* *** behavior *** */
 #define SERIAL_ONCE 0 /* can a job be several times in the serial queue at
 		       * the same moment ? */
 
 #define LAVG_ONCE 1 /* can a job be several times in the lavg queue at
 		     * the same moment ? */
-
-#define LAVG_SLEEP 30 /* the time we sleep when some jobs are in lavg queue */
 
 /* Syslog facility and priorities messages will be logged to (see syslog(3)) */
 
