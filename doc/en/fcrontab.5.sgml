@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.6 2002-03-02 17:33:25 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.7 2002-03-31 15:10:09 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>
@@ -87,6 +87,10 @@ A copy of the license is included in gfdl.sgml.
 			<row>
 			    <entry>hours (60 minutes) : </entry>
 			    <entry>h  </entry>
+			</row>
+			<row>
+			    <entry>seconds : </entry>
+			    <entry>s  </entry>
 			</row>
 		    </tbody>
 		</tgroup>
@@ -301,7 +305,7 @@ A copy of the license is included in gfdl.sgml.
 		    <term>f</term>
 		    <listitem>
 			<para><emphasis><type>time-value</type></emphasis></para>
-			<para>Delay before first execution of a job based on system up time ("@"-lines). Useful in the following case : you have several jobs running, say, every hour. By setting different first value for each job, you can avoid them to run simultaneously everytime.</para>
+			<para>Delay before first execution of a job based on system up time ("@"-lines). Useful in the following case : you have several jobs running, say, every hour. By setting different first value for each job, you can avoid them to run simultaneously everytime. You can also set it to 0, which is useful when used in conjunction with option &optvolatile;.</para>
 		    </listitem>
 		</varlistentry>
 		<varlistentry id="fcrontab.5.runfreq">
@@ -455,6 +459,22 @@ A copy of the license is included in gfdl.sgml.
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>0</constant>)</para>
 			<para>In a <link linkend="fcrontab.5.periodent">line run periodically</link>, this option answers the question : should this job be run as soon as possible in its interval of execution (safer), or should fcron set a random time of execution in that interval ? Note that if this option is set, the job may not run if fcron is not running during <emphasis>all</emphasis> the execution interval. Besides, you must know that the random scheme may be quite easy to guess for skilled people.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.volatile">
+		    <term>volatile</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>0</constant>)</para>
+			<para>When set to true, the job is based on a "volatile" system up time, i.e. restart counting each time fcron is started, which is useful when fcron is started by a script running only, for instance, during a dialup connection : the "volatile" system up time then refers to the dialup connection time. You may also want to use option &optfirst; if you use fcron that way.</para>
+			<para>&seealso; options &optfirst;, &optstdout;, <link linkend="uptent">lines based on elapsed system up time</link>, fcron's option <option>--once</option> in <link linkend="fcron.8">&fcron;(8)</link>.</para>
+		    </listitem>
+		</varlistentry>
+		<varlistentry id="fcrontab.5.stdout">
+		    <term>stdout</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>0</constant>)</para>
+			<para>If fcron is running in the forground, then also let jobs print to stderr/stdout instead of mailing or discarding it.</para>
+			<para>&seealso; fcron's option <option>--once</option> in <link linkend="fcron.8">&fcron;(8)</link>.</para>
 		    </listitem>
 		</varlistentry>
 	    </variablelist>
