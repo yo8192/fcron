@@ -2,51 +2,47 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.6 2000-05-30 19:23:52 thib Exp $
+# $Id: boot-install,v 1.7 2000-06-21 10:42:19 thib Exp $
 
-# take two arguments : first is the compilation line arguments, in order
-#    to determine if fcron should be installed with debugs options,
-#    and the second is the name of the BSD-like install program
+# take one arguments : the name of the BSD-like install program
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
 startdir=$pwd
+DEBUG=1
 
 if test $# -ne 2; then
     echo "Too few arguments"
     exit 1
 fi
 
+$1 -c -m 755 -o root fcron-launcher $2
+
 if test -f /etc/rc.d/rc.M; then
     # Slackware
-    if ! cat /etc/rc.d/rc.local | grep "fcron -b"; then
-	echo "fcron -b" >> /etc/rc.d/rc.local
+    if ! cat /etc/rc.d/rc.local | grep "fcron-launcher"; then
+	echo "fcron-launcher" >> /etc/rc.d/rc.local
     fi
 
 fi 
 if test -f /etc/rc; then
     # FreeBSD
-    if ! cat /etc/rc.local | grep "fcron -b"; then
-	echo "fcron -b" >> /etc/rc.local
+    if ! cat /etc/rc.local | grep "fcron-launcher"; then
+	echo "fcron-launcher" >> /etc/rc.local
     fi
 fi
 if test -d /etc/rc.d/init.d/; then    
-    if echo $1 | grep -e '-DDEBUG'; then
-      $2 -c -m 755 -o root script/sysVinit-launcher-debug /etc/rc.d/init.d/fcron
+    if test $DEBUG -eq 1; then
+      $1 -c -m 755 -o root sysVinit-launcher-debug /etc/rc.d/init.d/fcron
     else
-      $2 -c -m 755 -o root script/sysVinit-launcher /etc/rc.d/init.d/fcron
+      $1 -c -m 755 -o root sysVinit-launcher /etc/rc.d/init.d/fcron
     fi
     
-    cd /etc/rc.d/rc3.d/
-    ln -f -s ../init.d/fcron S40fcron
-    cd /etc/rc.d/rc4.d/
-    ln -f -s ../init.d/fcron S40fcron
-    cd /etc/rc.d/rc5.d/
-    ln -f -s ../init.d/fcron S40fcron
+    cd /etc/rc.d/rc3.d/ ; ln -f -s ../init.d/fcron S40fcron
+    cd /etc/rc.d/rc4.d/ ; ln -f -s ../init.d/fcron S40fcron
+    cd /etc/rc.d/rc5.d/ ; ln -f -s ../init.d/fcron S40fcron
     
-    cd /etc/rc.d/rc0.d/
-    ln -f -s ../init.d/fcron  K60fcron
-    cd /etc/rc.d/rc6.d/
-    ln -f -s ../init.d/fcron  K60fcron
+    cd /etc/rc.d/rc0.d/ ; ln -f -s ../init.d/fcron  K60fcron
+    cd /etc/rc.d/rc6.d/ ; ln -f -s ../init.d/fcron  K60fcron
     cd $startdir
 fi

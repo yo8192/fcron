@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.17 2000-06-19 12:44:18 thib Exp $
+# $Id: Makefile.in,v 1.18 2000-06-21 10:46:28 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -104,7 +104,7 @@ install: all
 	$(INSTALL) -c -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1/
 	$(INSTALL) -c -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5/
 	$(INSTALL) -c -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3/
-	script/sysVinit-install "$(CFLAGS)" $(INSTALL)
+	(cd script ; ./sysVinit-install $(INSTALL) $(DESTSBIN))
 	mkdir -p $(DESTDOC)/fcron-$(VERSION)
 	cd doc; $(INSTALL) -c -m 644 -o root README LICENSE CHANGES *.html \
 		 $(DESTDOC)/fcron-$(VERSION)/
