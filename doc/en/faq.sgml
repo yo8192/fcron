@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.2 2002-01-27 16:36:28 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.3 2002-03-31 15:07:22 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
@@ -68,28 +68,6 @@ A copy of the license is included in gfdl.sgml.
        But, if you have to make a big change in the time and date,
        you should probably reset all the scheduled "nextexe"
        by running "fcrontab -z" on all the fcrontabs.</para>
-	    </answer>
-	</qandaentry>
-	<qandaentry>
-	    <question>
-		<para>How can I use fcrontab in scripts ?</para>
-	    </question>
-	    <answer>
-		<para>
-      You can use pipes with "<command>fcrontab -l</command>" 
-      (list the fcrontab) and "<command>fcrontab -</command>"
-      (read the new fcrontab from input).
-      For example : </para>
-		<screen><command>echo -e "`fcrontab -l | grep -v exim`\n0 * * * *	/usr/sbin/exim -q" | fcrontab -</command></screen>
-		<para>
-		  can be used to add a line.
-      Another way to do it would be to:
-      list the fcrontab settings into a temporary file 
-      ("<command>fcrontab -l > tmpfile</command>");
-      modify the temporary file ("<command>echo $LINE >> tmpfile</command>");
-      replace the original fcrontab by the temporary; and finally,
-      remove the temporary file ("<command>fcrontab tmpfile ; rm -f tmpfile</command>").
-		</para>
 	    </answer>
 	</qandaentry>
 	<qandaentry>
@@ -158,6 +136,78 @@ A copy of the license is included in gfdl.sgml.
        n is the time over which the readings are averaged.
 		</programlisting>
 		</para>
+	    </answer>
+	</qandaentry>
+
+	<qandaentry>
+	    <question>
+		<para>How can I use fcrontab in scripts ?</para>
+	    </question>
+	    <answer>
+		<para>
+      You can use pipes with "<command>fcrontab -l</command>" 
+      (list the fcrontab) and "<command>fcrontab -</command>"
+      (read the new fcrontab from input).
+      For example : </para>
+		<screen><command>echo -e "`fcrontab -l | grep -v exim`\n0 * * * *	/usr/sbin/exim -q" | fcrontab -</command></screen>
+		<para>
+		  can be used to add a line.
+      Another way to do it would be to:
+      list the fcrontab settings into a temporary file 
+      ("<command>fcrontab -l > tmpfile</command>");
+      modify the temporary file ("<command>echo $LINE >> tmpfile</command>");
+      replace the original fcrontab by the temporary; and finally,
+      remove the temporary file ("<command>fcrontab tmpfile ; rm -f tmpfile</command>").
+		</para>
+	    </answer>
+	</qandaentry>
+
+	<qandaentry>
+	    <question>
+		<para>Can I use fcron from time to time, for instance in a script ?</para>
+	    </question>
+	    <answer>
+		<para>Let's suppose you use fcron in your ppp-up script. Fcron can permit you to run some jobs at connection startup, but not at each connection, like it would be if the job was run directly by the ppp-up script : for instance, only once every week.</para>
+		<para><example>
+			<title>Using fcron in a script : running a job once every day, week, etc, at dialup connection</title>
+			<para>You can use a script like :</para>
+			<programlisting>
+# A ppp-up script ...
+# run the jobs pending, then returns :
+fcron -f -y -o
+</programlisting>
+			<para>in conjunction with a fcrontab file like :</para>
+<programlisting>
+# a fcrontab file ...
+%random(no),weekly,stdout * * /a/command/to/download/latest/mozilla/release
+%monthly,stdout * * * /update/junkbuster/config/files
+</programlisting>
+		    </example></para>
+		<para>You can also use fcron to run some jobs until the end of the connection. For instance, you can make fetchmail retrieve mails more often during connection : we suppose that it is configured to retrieve mails every hours, which launches a dialup connection if necessary, and we want it to check for mails every 5 minutes while connected.</para>
+		<para><example>
+			<title>Using fcron in a script : running a job until the end of the connection</title>
+			<para>ppp-up script :</para>
+			<programlisting>
+# A ppp-up script ...
+# run fcron at the beginning of the connection :
+fcron -b
+</programlisting>
+			<para>ppp-down script :</para>
+			<programlisting>
+# A ppp-down script ...
+# stop fcron at the end of the connection :
+# -- Warning : killall may have unwanted effect on non linux systems --
+killall -TERM fcron
+</programlisting>
+			<para>the fcrontab :</para>
+			<programlisting>
+# a fcrontab file ...
+@volatile,first(0) 5 fetchmail
+</programlisting>
+		    </example></para>
+
+		<para>If you run fcron in several scripts, or if you run fcron as a daemon and want also to run fcron in scripts, then you should use fcron, fcrontab and fcrondyn's <option>--configfile</option>.</para>
+		<para>For more details, see fcron's options <option>--once</option>, <option>--nosyslog</option>, <option>--firstsleep</option> and <option>--configfile</option> in <link linkend="fcron.8">&fcron;(8)</link>, and fcrontab's options &optvolatile;, &optstdout;, &optfirst; in <link linkend="fcrontab.5">&fcrontab;(5)</link></para>
 	    </answer>
 	</qandaentry>
     </qandaset>
