@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.26 2000-12-04 20:16:50 thib Exp $ */
+ /* $Id: fileconf.c,v 1.27 2000-12-08 12:52:46 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -34,10 +34,10 @@ char *get_num(char *ptr, int *num, int max, short int decimal,
 char *get_runas(char *ptr, uid_t *uid);
 char *get_nice(char *ptr, int *nice);
 char *get_bool(char *ptr, int *i);
-char *read_field(char *ptr, bitstr_t *ary, int max, const char **names,
-		 char is_runfreq1);
+char *read_field(char *ptr, bitstr_t *ary, int max, const char **names);
 void read_freq(char *ptr, CF *cf);
 void read_arys(char *ptr, CF *cf);
+void read_period(char *ptr, CF *cf);
 void read_env(char *ptr, CF *cf);
 char *read_opt(char *ptr, CL *cl);
 
@@ -63,12 +63,6 @@ const char *mons_ary[] = {
     NULL
 };
 
-/* warning : all names must have the same length */
-/* we want a number from 1 to 5: we set the first string to a number,
- * in order to make get_num() ignore it */
-const char *field_ary[] = {
-    "333", "min", "hrs", "day", "mon", "dow", NULL
-};
 
 char *
 get_string(char *ptr)
@@ -237,6 +231,10 @@ read_file(char *filename, char *user)
 	    break;
 	case '&':
 	    read_arys(ptr, cf);
+	    entries++;
+	    break;
+	case '%':
+	    read_period(ptr, cf);
 	    entries++;
 	    break;
 	case '!':
@@ -569,77 +567,113 @@ read_opt(char *ptr, CL *cl)
 	}
 
 	else if(strcmp(opt_name, "r")==0 || strcmp(opt_name, "runfreq")==0) {
-	    if(!in_brackets ||(ptr=get_num(ptr, &i, USHRT_MAX, 0, NULL))==NULL)
+	    if( !in_brackets || (ptr=get_num(ptr,&i,USHRT_MAX,0,NULL)) == NULL)
 		Handle_err;
+	    if (i <= 1)
+		fprintf(stderr, "runfreq must be 2 or more.\n");
+	    if (i <= 1)
+		Handle_err;	
 	    cl->cl_runfreq = i;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
 	}
 
-	else if( strcmp(opt_name, "ignore") == 0 ) {
-	    do {
-		if(!in_brackets || (ptr=get_num(ptr,&i,5,0,field_ary)) == NULL)
-		    Handle_err;
-		switch (i) {
-		case 1:
-		    set_ign_mins(cl->cl_option); break;
-		case 2:
-		    set_ign_hrs(cl->cl_option); break;
-		case 3:
-		    set_ign_days(cl->cl_option); break;
-		case 4:
-		    set_ign_mons(cl->cl_option); break;
-		case 5:
-		    set_ign_dow(cl->cl_option); break;
-		default:
-		    Handle_err;
-		}
-		if (debug_opt)
-		    fprintf(stderr, "  Opt : '%s' %s\n",opt_name,field_ary[i]);
-
-	    } while (*ptr == ',' && ptr++);
+	/* options to run once per interval :
+	 * ignore every fields below the limit */
+	else if (strcmp(opt_name, "mins") == 0)
+	    /* nothing to do */
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	else if (strcmp(opt_name, "hours") == 0) {
+	    set_freq_mins(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+	else if (strcmp(opt_name, "days") == 0) {
+	    set_freq_mins(cl->cl_option);
+	    set_freq_hrs(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+	else if (strcmp(opt_name, "mons") == 0) {
+	    set_freq_mins(cl->cl_option);
+	    set_freq_hrs(cl->cl_option);
+	    set_freq_days(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+	else if (strcmp(opt_name, "dow") == 0) {
+	    set_freq_mins(cl->cl_option);
+	    set_freq_hrs(cl->cl_option);
+	    set_freq_days(cl->cl_option);
+	    set_freq_mons(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 
-	else if( strcmp(opt_name, "account") == 0 ) {
-	    do {
-		if(!in_brackets || (ptr=get_num(ptr,&i,5,0,field_ary)) == NULL)
-		    Handle_err;
-		switch (i) {
-		case 1:
-		    clear_ign_mins(cl->cl_option); break;
-		case 2:
-		    clear_ign_hrs(cl->cl_option); break;
-		case 3:
-		    clear_ign_days(cl->cl_option); break;
-		case 4:
-		    clear_ign_mons(cl->cl_option); break;
-		case 5:
-		    clear_ign_dow(cl->cl_option); break;
-		default:
-		    Handle_err;
-		}
-		if (debug_opt)
-		    fprintf(stderr, "  Opt : '%s' %s\n",opt_name,field_ary[i]);
-
-	    } while (*ptr == ',' && ptr++);
+	/* run once an element of the selected field 
+	 * (once an hour, once a day, etc) */
+	else if (strcmp(opt_name, "hourly") == 0) {
+	    set_freq_hrs(cl->cl_option);
+	    set_freq_periodically(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+	else if (strcmp(opt_name, "daily") == 0) {
+	    set_freq_days(cl->cl_option);
+	    set_freq_periodically(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+	else if (strcmp(opt_name, "monthly") == 0) {
+	    set_freq_mons(cl->cl_option);
+	    set_freq_periodically(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+	else if (strcmp(opt_name, "weekly") == 0) {
+	    set_freq_dow(cl->cl_option);
+	    set_freq_periodically(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
 	}
 
-	else if( strcmp(opt_name, "lavg") == 0 ) {
-	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL))==NULL)
+	/* run once an element of the selected field 
+	 * from middle to middle of that field 
+	 * (ie once from 12h to 12h the following day) */
+	else if (strcmp(opt_name, "midhourly") == 0) {
+	    set_freq_hrs(cl->cl_option);
+	    set_freq_periodically(cl->cl_option);
+	    set_freq_mid(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+	else if (strcmp(opt_name, "middaily") == 0 
+		 || strcmp(opt_name, "nightly") == 0) {
+	    set_freq_days(cl->cl_option);
+	    set_freq_periodically(cl->cl_option);
+	    set_freq_mid(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+	else if (strcmp(opt_name, "midmonthly") == 0) {
+	    set_freq_mons(cl->cl_option);
+	    set_freq_periodically(cl->cl_option);
+	    set_freq_mid(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+	else if (strcmp(opt_name, "midweekly") == 0) {
+	    set_freq_dow(cl->cl_option);
+	    set_freq_periodically(cl->cl_option);
+	    set_freq_mid(cl->cl_option);
+	    fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+
+	else if ( strcmp(opt_name, "lavg") == 0 ) {
+	    if (!in_brackets || (ptr=get_num(ptr,&i,UCHAR_MAX,1,NULL)) == NULL)
 		Handle_err;
 	    cl->cl_lavg[0] = i;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : 'lavg1' %d\n", i);
 	    if ( *ptr++ != ',' )
 		Handle_err;
-	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL))==NULL)
+	    if (!in_brackets || (ptr=get_num(ptr,&i,UCHAR_MAX,1,NULL)) == NULL)
 		Handle_err;
 	    cl->cl_lavg[1] = i;
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : 'lavg5' %d\n", i);
 	    if ( *ptr++ != ',' )
 		Handle_err;
-	    if( ! in_brackets || (ptr=get_num(ptr, &i, UCHAR_MAX, 1, NULL)) == NULL )
+	    if(!in_brackets || (ptr=get_num(ptr,&i,UCHAR_MAX,1,NULL)) == NULL )
 		Handle_err;
 	    cl->cl_lavg[2] = i;
 	    set_lavg(cl->cl_option);
@@ -974,7 +1008,7 @@ read_freq(char *ptr, CF *cf)
 
 
 #define R_field(ptr, ary, max, aryconst, descrp) \
-  if((ptr = read_field(ptr, ary, max, aryconst, is_runfreq1)) == NULL) { \
+  if((ptr = read_field(ptr, ary, max, aryconst)) == NULL) { \
       if (debug_opt) \
           fprintf(stderr, "\n"); \
       fprintf(stderr, "%s:%d: Error while reading " descrp " field: " \
@@ -989,7 +1023,6 @@ read_arys(char *ptr, CF *cf)
 {
     CL *cl = NULL;
     unsigned int i = 0;
-    char is_runfreq1 = 0;
 
     Alloc(cl, CL);
     memcpy(cl, &default_line, sizeof(CL));
@@ -1002,8 +1035,14 @@ read_arys(char *ptr, CF *cf)
 		fprintf(stderr, "%s:%d: Error while reading runfreq:"
 			" skipping line.\n", file_name, line);
 		goto exiterr;
-	    } else
+	    } else {
+		if (i <= 1) {
+		    fprintf(stderr, "%s:%d: runfreq must be 2 or more :"
+			    " skipping line.\n");
+		    goto exiterr;
+		}
 		cl->cl_runfreq = i;
+	    }
 	}
 	else if ( isalnum(*ptr) )
 	    if ( (ptr = read_opt(ptr, cl)) == NULL ) {
@@ -1020,8 +1059,72 @@ read_arys(char *ptr, CF *cf)
     if (debug_opt)
 	fprintf(stderr, "     ");
 
-    /* set is_runfreq1 : this is used in R_field */
-    is_runfreq1 = (cl->cl_runfreq == 1) ? 1 : 0;
+    /* get the fields (check for errors) */
+    R_field(ptr, cl->cl_mins, 59, NULL, "minutes");
+    R_field(ptr, cl->cl_hrs, 23, NULL, "hours");
+    R_field(ptr, cl->cl_days, 31, NULL, "days");
+    /* month are defined by user from 1 to 12 : max is 12 */
+    R_field(ptr, cl->cl_mons, 12, mons_ary, "months");
+    R_field(ptr, cl->cl_dow, 7, dows_ary, "days of week");
+
+    if (debug_opt)
+	/* if debug_opt is set, we print informations in read_field function,
+	 *  but no end line : we print it here */
+	fprintf(stderr, " remain %d\n", cl->cl_remain);
+
+    /* get the shell command (remove trailing blanks) */
+    if ( (cl->cl_shell = get_string(ptr)) == NULL ) {
+	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
+		file_name, line);
+	goto exiterr;	
+    }
+    if ( strcmp(cl->cl_shell, "\0") == 0 ) {
+	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
+		file_name, line);
+	goto exiterr;
+    }
+
+    cl->cl_next = cf->cf_line_base;
+    cf->cf_line_base = cl;
+
+    if ( debug_opt )
+	fprintf(stderr, "  Cmd '%s'\n", cl->cl_shell);
+    return;
+
+  exiterr:
+    need_correction = 1;
+    free(cl);
+    return;
+
+}
+
+void
+read_period(char *ptr, CF *cf)
+    /* read a line to run periodically (i.e. once a day, once a week, etc) */
+{
+    CL *cl = NULL;
+    unsigned int i = 0;
+
+    Alloc(cl, CL);
+    memcpy(cl, &default_line, sizeof(CL));
+
+    /* skip the % */
+    ptr++;
+
+    /* set cl_remain if not specified */
+    if ( (ptr = read_opt(ptr, cl)) == NULL ) {
+	goto exiterr;
+    }
+    Skip_blanks(ptr);
+
+    /* a runfreq set to 1 means : this is a periodical line */
+    cl->cl_remain = cl->cl_runfreq = 1;
+
+    /* we set this here, because it may be unset by read_opt (reset option) */
+    set_td(cl->cl_option);
+
+    if (debug_opt)
+	fprintf(stderr, "     ");
 
     /* get the fields (check for errors) */
     R_field(ptr, cl->cl_mins, 59, NULL, "minutes");
@@ -1049,44 +1152,44 @@ read_arys(char *ptr, CF *cf)
     }
 
     /* check for non matching if option runfreq is set to 1 */
-    if ( cl->cl_runfreq == 1 ) {
+    if ( ! is_freq_periodically(cl->cl_option) ) {
 	const size_t s_mins=60, s_hrs=24;
 	const size_t s_days=32, s_mons=12;
 	const size_t s_dow=8;
 	int j = 0;
 	
-	if ( ! is_ign_mins(cl->cl_option) ) {
+	if ( ! is_freq_mins(cl->cl_option) ) {
 	    bit_ffc(cl->cl_mins, s_mins, &j);
-	    if ( j != -1 ) goto ok;
+	    if ( j != -1 && j < s_mins) goto ok;
 	}
-	if ( ! is_ign_hrs(cl->cl_option) ) {
+	if ( ! is_freq_hrs(cl->cl_option) ) {
 	    bit_ffc(cl->cl_hrs, s_hrs, &j);
-	    if ( j != -1 ) goto ok;
+	    if ( j != -1 && j < s_hrs) goto ok;
 	}
-	if ( ! is_ign_days(cl->cl_option) ) {
+	if ( ! is_freq_days(cl->cl_option) ) {
 	    bit_ffc(cl->cl_days, s_days, &j);
-	    if ( j != -1 ) {
+	    if ( j != -1 && j < s_days) {
 		if ( is_dayand(cl->cl_option) )
 		    goto ok;
 		else {
-		    if ( ! is_ign_dow(cl->cl_option) ) {
+		    if ( ! is_freq_dow(cl->cl_option) ) {
 			bit_ffc(cl->cl_dow, s_dow, &j);
-			if ( j != -1 ) goto ok;
+			if ( j != -1 && j < s_dow) goto ok;
 		    }
 		}
 	    }
 	}
-	if ( ! is_ign_mons(cl->cl_option) ) {
+	if ( ! is_freq_mons(cl->cl_option) ) {
 	    bit_ffc(cl->cl_mons, s_mons, &j);
-	    if ( j != -1 ) goto ok;
+	    if ( j != -1 && j < s_mons ) goto ok;
 	}
-	if ( ! is_ign_dow(cl->cl_option) ) {
+	if ( ! is_freq_dow(cl->cl_option) ) {
 	    bit_ffc(cl->cl_dow, s_dow, &j);
-	    if ( j != -1 && is_dayand(cl->cl_option) ) goto ok;
+	    if ( j != -1 && j < s_dow && is_dayand(cl->cl_option) ) goto ok;
 	}
 
-	fprintf(stderr, "%s:%d: runfreq=1 with no intervals: skipping line.\n",
-		file_name, line);
+	fprintf(stderr, "%s:%d: periodical line with no intervals: "
+		"skipping line.\n", file_name, line);
 	goto exiterr;
     }
 
@@ -1179,8 +1282,7 @@ get_num(char *ptr, int *num, int max, short int decimal, const char **names)
 
 
 char *
-read_field(char *ptr, bitstr_t *ary, int max, const char **names,
-	   char is_runfreq1)
+read_field(char *ptr, bitstr_t *ary, int max, const char **names)
     /* read a field like "2,5-8,10-20/2,21-30~25" and fill ary */
 {
     int start = 0;
@@ -1188,8 +1290,6 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names,
     int step = 0;
     int rm = 0;
     int i = 0;
-    char is_single = 0;
-    char is_interval = 0;
 
     while ( (*ptr != ' ') && (*ptr != '\t') && (*ptr != '\0') ) {
 	
@@ -1215,15 +1315,7 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names,
 		/* this is a single number : set up array and continue */
 		if (debug_opt)
 		    fprintf(stderr, " %d", start);
-		if (is_interval == 1) {
-		    fprintf(stderr, "\n%s:%d: Could not have both single "
-			    "numbers and intervals with option runfreq set"
-			    " to 1", file_name, line);
-		    need_correction = 1;
-		    return NULL;
-		}
 		bit_set(ary, start);
-		is_single = 1;
 		continue;
 	    }
 
@@ -1251,19 +1343,6 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names,
 	/* fill array */	
 	if (debug_opt)
 	    fprintf(stderr, " %d-%d/%d", start, stop, step);
-
-	if (step == 1) {
-	    if (is_single == 1) {
-		fprintf(stderr, "\n%s:%d: Could not have both single numbers "
-			"and intervals with option runfreq set to 1",
-			file_name, line);
-		need_correction = 1;
-		return NULL;
-	    }
-	    is_interval = 1;
-	}
-	else
-	    is_single = 1;
 
 	if (start < stop)
 	    for (i = start;  i <= stop;  i += step)
