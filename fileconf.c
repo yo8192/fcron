@@ -22,22 +22,26 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.5 2000-06-15 20:17:46 thib Exp $ */
+ /* $Id: fileconf.c,v 1.6 2000-06-18 13:12:56 thib Exp $ */
 
 #include "fcrontab.h"
 
-int get_line(char *str, size_t size, FILE *file, int *line);
-char *get_time(char *ptr, time_t *time, int line, char *file_name);
-char *read_num(char *ptr, int *num, int max, const char **names);
-void read_freq(char *ptr, CF *cf, int line, char *file_name);
-void read_arys(char *ptr, CF *cf, int line, char *file_name);
-char *read_field(char *ptr, bitstr_t *ary, int max, const char **names,
-	       int line, char *file_name);
-void read_env(char *ptr, CF *cf, int line, char *file_name);
 char *get_string(char *ptr);
+int get_line(char *str, size_t size, FILE *file);
+char *get_time(char *ptr, time_t *time);
+char *get_num(char *ptr, int *num, int max, const char **names);
+char *get_bool(char *ptr, int *i);
+char *read_field(char *ptr, bitstr_t *ary, int max, const char **names);
+void read_freq(char *ptr, CF *cf);
+void read_arys(char *ptr, CF *cf);
+void read_env(char *ptr, CF *cf);
+char *read_opt(char *ptr, CL *cl);
 
 
 char need_correction;
+CL default_line;    /* default options for a line */
+char *file_name;
+int line;
 
 /* warning : all names must have the same length */
 const char *dows_ary[] = {
@@ -86,7 +90,7 @@ get_string(char *ptr)
 
 
 int
-get_line(char *str, size_t size, FILE *file, int *line)
+get_line(char *str, size_t size, FILE *file)
     /* similar to fgets, but increase line if necessary,
      * and continue over an "\" followed by an "\n" char */
 {
@@ -101,9 +105,9 @@ get_line(char *str, size_t size, FILE *file, int *line)
 	    /* check if the \n char is preceded by a "\" char : 
 	     *  in this case, suppress the "\", don't copy the \n,
 	     *  and continue */
-	    if ( *(str + i - 1) == '\\') {
+	    if ( i > 0 && *(str + i - 1) == '\\') {
 		i--;
-		(*line)++;
+		line++;
 		continue;
 	    }
 	    else {
@@ -128,28 +132,30 @@ get_line(char *str, size_t size, FILE *file, int *line)
     /* line is too long : goto next line and return ERR */
     while ((*str = getc(file)) != '\n' && *str != EOF )
 	;
-    (*line)++;
+    line++;
     need_correction = 1;
     return ERR;
 
 }
 
 int
-read_file(char *file_name, char *user)
+read_file(char *filename, char *user)
     /* read file "name" and append CF list */
 {
     CF *cf = NULL;
     FILE *file = NULL;
     char buf[LINE_LEN];
     int max_lines;
-    int line = 1;
-    int max_entries = MAXLINES;
+    int max_entries = MAXENTRIES;
     int entries=0;
     char *ptr = NULL;
     int ret;
     
     bzero(buf, sizeof(buf));
+    bzero(&default_line, sizeof(CL));
     need_correction = 0;
+    line = 1;
+    file_name = filename;
 
     /* open file */
 
@@ -163,6 +169,7 @@ read_file(char *file_name, char *user)
     }
 
     Alloc(cf, CF);
+    default_line.cl_file = cf;
 
     if ( debug_opt )
 	fprintf(stderr, "FILE %s\n", file_name);
@@ -171,11 +178,11 @@ read_file(char *file_name, char *user)
 	max_entries = 65535;
 
     /* max_lines acts here as a security counter to avoid endless loop. */
-    max_lines = max_entries * 10;
+    max_lines = (max_entries * 10) + 10;
 
     while ( entries <= max_entries && line <= max_lines ) {
 
-	if ( (ret = get_line(buf, sizeof(buf), file, &line)) == OK)
+	if ( (ret = get_line(buf, sizeof(buf), file)) == OK)
 	    ;
 	else if ( ret == ERR ) {
 	    fprintf(stderr, "%s:%d: Line is too long (more than %d):"
@@ -188,6 +195,9 @@ read_file(char *file_name, char *user)
 	ptr = buf;
 	Skip_blanks(ptr);
 
+	if (debug_opt && *ptr != '#' && *ptr != '\0')
+	    fprintf(stderr, "      %s\n", buf);
+
 	switch(*ptr) {
 	case '#':
 	case '\0':
@@ -195,30 +205,41 @@ read_file(char *file_name, char *user)
 	    line++;
 	    continue;
 	case '@':
-	    if (debug_opt)
-		fprintf(stderr, "      %s\n", buf);
-	    read_freq(ptr, cf, line, file_name);
+	    read_freq(ptr, cf);
 	    entries++;
 	    break;
 	case '&':
-	    if (debug_opt)
-		fprintf(stderr, "      %s\n", buf);
-	    read_arys(ptr, cf, line, file_name);
+	    read_arys(ptr, cf);
 	    entries++;
+	    break;
+	case '!':
+	    ptr = read_opt(ptr, &default_line);
+	    if ( *ptr != '\0' ) {
+		fprintf(stderr, "%s:%d: Syntax error: string '%s' ignored\n",
+			file_name, line, ptr);
+		need_correction = 1;
+	    }
 	    break;
 	default:
 	    if ( isdigit(*ptr) || *ptr == '*' ) {
-		if (debug_opt)
-		    fprintf(stderr, "      %s\n", buf);
-		read_arys(ptr, cf, line, file_name);
+		read_arys(ptr, cf);
 		entries++;
 	    } else
-		read_env(ptr, cf, line, file_name);
+		read_env(ptr, cf);
 	}
 
 	line++;	
 
     }
+
+    if (entries == max_entries) {
+	error("%s:%d: maximum number of entries (%d) has been reached by %s",
+	      file_name, line, user);
+	fprintf(stderr, "Anything after this line will be ignored\n");
+    }
+    else if (line == max_lines)
+	error("%s:%d: maximum number of lines (%d) has been reached by %s",
+	      file_name, line, user);
 
     cf->cf_user = user;
     cf->cf_next = file_base;
@@ -234,7 +255,7 @@ read_file(char *file_name, char *user)
 }
 
 void
-read_env(char *ptr, CF *cf, int line, char *file_name)
+read_env(char *ptr, CF *cf)
     /* append env variable list.
      * (remove blanks) */
 {
@@ -246,7 +267,7 @@ read_env(char *ptr, CF *cf, int line, char *file_name)
     bzero(name, sizeof(name));
 
     /* copy env variable's name */
-    while ( isalnum(*ptr) && *ptr != '=' && j < sizeof(name)) {
+    while (isalnum(*ptr) && *ptr != '=' && !isspace(*ptr) && j < sizeof(name)){
 	name[j++] = *ptr;
 	ptr++;
     }
@@ -262,6 +283,9 @@ read_env(char *ptr, CF *cf, int line, char *file_name)
     /* if j == 0 name is a zero length string */
     if ( *ptr++ != '=' || j == 0 )
 	goto error;
+
+    while ( isspace(*ptr) )
+	ptr++;
 
     /* get value */
     if ( ( val = get_string(ptr)) == NULL ) {
@@ -282,9 +306,11 @@ read_env(char *ptr, CF *cf, int line, char *file_name)
 
     /* the MAILTO assignment is, in fact, an fcron option :
      *  we don't store it in the same way. */
-    if ( strcmp(name, "MAILTO") == 0 )
+    if ( strcmp(name, "MAILTO") == 0 ) {
+	if ( cf->cf_mailto != NULL )
+	    free(cf->cf_mailto);
 	cf->cf_mailto = val;
-    
+    }
     else {
 
 	Alloc(env, env_t);	
@@ -304,14 +330,157 @@ read_env(char *ptr, CF *cf, int line, char *file_name)
 
 }
 
+char *
+get_bool(char *ptr, int *i)
+    /* get a bool value : either true (1) or false (0)
+     * return NULL on error */
+{
+    if ( *ptr == '1' )
+	goto true;
+    else if ( *ptr == '0' )
+	goto false;
+    else if ( strncmp(ptr, "true", 4) == 0 ) {
+	ptr += 3;
+	goto true;
+    }
+    else if ( strncmp(ptr, "false", 5) == 0 ) {
+	ptr += 4;
+	goto false;
+    }
+    else
+	return NULL;
+
+  true:
+    *i = 1;
+    ptr++;
+    return ptr;
+
+  false:
+    *i = 0;
+    ptr++;
+    return ptr;
+    
+}
+
 
 char *
-get_time(char *ptr, time_t *time, int line, char *file_name )
+read_opt(char *ptr, CL *cl)
+    /* read one or several options and fill in the field "option" */
+{
+    char opt_name[20];
+    int i;
+    char in_brackets;
+    
+#define Handle_err \
+    { \
+        fprintf(stderr, "%s:%d: Argument for option '%s' is not valid: " \
+		"skipping line.\n", file_name, line, opt_name); \
+        need_correction = 1; \
+        return NULL; \
+    }
+
+    if ( *ptr == '!' )
+	ptr++;
+
+    do { 
+	i = 0;
+	bzero(opt_name, sizeof(opt_name));
+
+	while ( isalnum(*ptr) )
+	    opt_name[i++] = *ptr++;
+    
+	i = 1;
+	in_brackets = 0;
+
+	if ( *ptr == '(' ) {
+	    in_brackets = 1;
+	    ptr++;
+	}
+
+	if ( strcmp(opt_name, "s") == 0 || strcmp(opt_name, "serial") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if (i == 0 )
+		clear_serial(cl->cl_option);
+	    else
+		set_serial(cl->cl_option);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+	else if(strcmp(opt_name, "b")==0 || strcmp(opt_name, "bootrun")==0){
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		clear_bootrun(cl->cl_option);
+	    else
+		set_bootrun(cl->cl_option);	
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+	else if( strcmp(opt_name, "reset")==0 ) {
+	    if ( in_brackets && ((ptr = get_bool(ptr, &i)) == NULL || i == 0) )
+		Handle_err;
+	    bzero(cl, sizeof(cl));
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s'\n", opt_name);
+	}
+	else if(strcmp(opt_name, "f") == 0 || strcmp(opt_name, "first") == 0){
+	    if( ! in_brackets || (ptr=get_time(ptr, &(cl->cl_nextexe)))==NULL)
+		Handle_err;
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %ld\n",opt_name,cl->cl_nextexe);
+	}
+	else if(strcmp(opt_name, "r")==0 || strcmp(opt_name, "runfreq")==0) {
+	    if( ! in_brackets || (ptr=get_num(ptr, &i, 65534, NULL)) == NULL )
+		Handle_err;
+	    cl->cl_remain = i;
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' %d\n", opt_name, i);
+	}
+	else if(strcmp(opt_name, "m")==0 || strcmp(opt_name, "mailto")==0) {
+	    char buf[50];
+	    bzero(buf, sizeof(buf));
+
+	    if( ! in_brackets )
+		Handle_err;
+
+	    i = 0;
+	    while ( isalnum(*ptr) )
+		buf[i++] = *ptr++;
+	    if ( cl->cl_file->cf_mailto != NULL )
+		free(cl->cl_file->cf_mailto);
+	    cl->cl_file->cf_mailto = strdup2(buf);
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : '%s' '%s'\n", opt_name, buf);
+	}
+	else
+	    fprintf(stderr, "%s:%d: Option '%s' unknown: "
+		    "skipping option.\n", file_name, line, opt_name);  
+	
+	if ( in_brackets ) {
+	    if ( *ptr != ')' )
+		{ Handle_err }
+	    else
+		ptr++;
+	}
+
+    } while ( *ptr == ',' && ptr++);
+	
+    Skip_blanks(ptr);
+    return ptr;
+}
+
+
+char *
+get_time(char *ptr, time_t *time)
     /* convert time read in string in time_t format */
 {
     time_t sum;
     
-    while( (*ptr != ' ') && (*ptr != '\t') && (*ptr != '\0') ) { 
+    *time = 0 ;
+
+    while( (*ptr != ' ') && (*ptr != '\t') && (*ptr != '\0') &&
+	   (*ptr != ')') ) { 
 
 	sum = 0;
 
@@ -333,12 +502,14 @@ get_time(char *ptr, time_t *time, int line, char *file_name )
 	    sum *= 3600;
 	    ptr++;
 	    break;
-	default:                /* minutes */
-	    if ( (*ptr != ' ') && (*ptr != '\t') ) {
-		need_correction = 1;
-		return NULL;
-	    }
-	    
+	case ' ':
+	case '\t':
+	case ')':
+	    sum *= 60;          /* minutes */
+	    break;
+	default:
+	    need_correction = 1;
+	    return NULL;
 	}
 
 	*time += sum;
@@ -346,31 +517,47 @@ get_time(char *ptr, time_t *time, int line, char *file_name )
     }
 
     Skip_blanks(ptr);
-    return ptr;
+    if (*time == 0) {
+	need_correction = 1;
+	return NULL;
+    }
+    else
+	return ptr;
 }
 
 
 
 void
-read_freq(char *ptr, CF *cf, int line, char *file_name)
+read_freq(char *ptr, CF *cf)
     /* read a freq entry, and append a line to cf */
 {
-    CL *cl=NULL;
+    CL *cl = NULL;
     
     Alloc(cl, CL);
+    memcpy(cl, &default_line, sizeof(CL));
 
+    /* skip the @ */
     ptr++;
-    /* get the time before first execution */
-    if ( (ptr = get_time(ptr, &(cl->cl_nextexe), line, file_name)) == NULL ) {
-	fprintf(stderr, "%s:%d: Error while reading first delay:"
-		" skipping line.\n", file_name, line);
-	return;
-    }
 
-    Skip_blanks(ptr);
+    /* get the time before first execution or the options */
+    if ( isdigit(*ptr) ) {
+	if ( (ptr = get_time(ptr, &(cl->cl_nextexe))) == NULL ) {
+	    fprintf(stderr, "%s:%d: Error while reading first delay:"
+		    " skipping line.\n", file_name, line);
+	    return;
+	}
+	
+	Skip_blanks(ptr);
+    }
+    else if ( isalnum(*ptr) ) {
+	if ( (ptr = read_opt(ptr, cl)) == NULL )
+	    return;
+    }
+    else
+	Skip_blanks(ptr);
 
     /* then cl_timefreq */
-    if ( (ptr = get_time(ptr, &(cl->cl_timefreq), line, file_name)) == NULL) {
+    if ( (ptr = get_time(ptr, &(cl->cl_timefreq))) == NULL) {
 	fprintf(stderr, "%s:%d: Error while reading frequency:"
 		" skipping line.\n", file_name, line);
 	return;
@@ -410,7 +597,7 @@ read_freq(char *ptr, CF *cf, int line, char *file_name)
 
 
 #define R_field(ptr, ary, max, aryconst, descrp) \
-  if((ptr = read_field(ptr, ary, max, aryconst, line, file_name)) == NULL) { \
+  if((ptr = read_field(ptr, ary, max, aryconst)) == NULL) { \
       if (debug_opt) \
           fprintf(stderr, "\n"); \
       fprintf(stderr, "%s:%d: Error while reading " descrp " field: " \
@@ -420,32 +607,40 @@ read_freq(char *ptr, CF *cf, int line, char *file_name)
   }
 
 void
-read_arys(char *ptr, CF *cf, int line, char *file_name)
+read_arys(char *ptr, CF *cf)
     /* read a run freq number plus a normal fcron line */
 {
     CL *cl = NULL;
+    int i;
 
     Alloc(cl, CL);
+    memcpy(cl, &default_line, sizeof(CL));
 
 
     /* set cl_remain if not specified or 
      * if set to 1 to skip unnecessary tests */
     if ( *ptr != '&' )
 	/* cl_remain not specified : set it to 0 */
-	cl->cl_remain = 0;
+	i = 0;
     else {
 	ptr++;
-	/* get remain number */
-	while ( isdigit(*ptr) ) {	    
-	    cl->cl_remain *= 10;
-	    cl->cl_remain += *ptr - 48;
-	    ptr++;
+	if ( isdigit(*ptr) ) {
+	    if ( (ptr = get_num(ptr, &i, 65534, NULL)) == NULL ) {
+		fprintf(stderr, "%s:%d: Error while reading runfreq:"
+			" skipping line.\n", file_name, line);
+		free(cl);
+		return;
+	    }
 	}
+	else if ( isalnum(*ptr) )
+	    if ( (ptr = read_opt(ptr, cl)) == NULL )
+		return;
 
 	Skip_blanks(ptr);
+
     }
 
-    cl->cl_runfreq = cl->cl_remain;
+    cl->cl_runfreq = cl->cl_remain = i;
 
     if (debug_opt)
 	fprintf(stderr, "     ");
@@ -480,7 +675,7 @@ read_arys(char *ptr, CF *cf, int line, char *file_name)
 }
 
 char *
-read_num(char *ptr, int *num, int max, const char **names)
+get_num(char *ptr, int *num, int max, const char **names)
     /* read a string's number and return it under int format.
      *  Also check if that number is less than max */
 {
@@ -542,8 +737,7 @@ read_num(char *ptr, int *num, int max, const char **names)
 
 
 char *
-read_field(char *ptr, bitstr_t *ary, int max, const char **names,
-	   int line, char *file_name)
+read_field(char *ptr, bitstr_t *ary, int max, const char **names)
     /* read a field like "2,5-8,10-20/2,21-30~25" and fill ary */
 {
     int start = 0;
@@ -567,7 +761,7 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names,
 	    ptr++;
 	} else {
 
-	    if ( (ptr = read_num(ptr, &start, max, names)) == NULL )
+	    if ( (ptr = get_num(ptr, &start, max, names)) == NULL )
 		return NULL;
 
 	    if (*ptr == ',' || *ptr == ' ' || *ptr == '\t') {
@@ -581,7 +775,7 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names,
 	    /* check for a dash */
 	    else if ( *ptr == '-' ) {
 		ptr++;
-		if ( (ptr = read_num(ptr, &stop, max, names)) == NULL )
+		if ( (ptr = get_num(ptr, &stop, max, names)) == NULL )
 		    return NULL;
 	    } else {
 		/* syntax error */
@@ -593,7 +787,7 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names,
 	/* check for step size */
 	if ( *ptr == '/' ) {
 	    ptr++;
-	    if ((ptr = read_num(ptr, &step, max, names)) == NULL || step == 0)
+	    if ((ptr = get_num(ptr, &step, max, names)) == NULL || step == 0)
 		return NULL;
 	} else
 	    /* step undefined : default is 0 */
@@ -610,7 +804,7 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names,
 	while ( *ptr == '~' ) {
 	    ptr++;
 	    rm = 0;
-	    if ( (ptr = read_num(ptr, &rm, max, names)) == NULL )
+	    if ( (ptr = get_num(ptr, &rm, max, names)) == NULL )
 		return NULL;
 
 	    if (debug_opt)
