@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.48 2001-06-22 21:08:18 thib Exp $ */
+ /* $Id: fileconf.c,v 1.49 2001-07-04 16:15:54 thib Exp $ */
 
 #include "fcrontab.h"
 #include "fileconf.h"
@@ -333,8 +333,7 @@ read_env(char *ptr, CF *cf)
 			" ignored\n", file_name, line, val);	
 		need_correction = 1;
 	    } else {
-		free(default_line.cl_mailto);
-		default_line.cl_mailto = strdup2(val);
+		Set(default_line.cl_mailto, val);
 		set_mail(default_line.cl_option);
 	    }
 	}
@@ -549,10 +548,8 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 	    if ( i == 1 ) {
 		bzero(cl, sizeof(CL));
-		free(cl->cl_runas);
-		cl->cl_runas = strdup2(user);
-		free(cl->cl_mailto);
-		cl->cl_mailto = strdup2(user);
+		Set(cl->cl_runas, user);
+		Set(cl->cl_mailto, user);
 		set_default_opt(cl->cl_option);
 	    }
 	    if (debug_opt)
@@ -830,8 +827,7 @@ read_opt(char *ptr, CL *cl)
 			    " ignored\n", file_name, line, buf);	
 		    need_correction = 1;
 		} else {
-		    free(cl->cl_mailto);
-		    cl->cl_mailto = strdup2(buf);
+		    Set(cl->cl_mailto, buf);
 		    set_mail(cl->cl_option);
 		}
 	    }
@@ -909,8 +905,7 @@ read_opt(char *ptr, CL *cl)
 		    need_correction = 1;
 		} 
 		else {
-		    free(cl->cl_runas);
-		    cl->cl_runas = strdup2(name);
+		    Set(cl->cl_runas, name);
 		    if (debug_opt)
 			fprintf(stderr, "  Opt : \"%s\" %s\n", opt_name, name);
 		}
@@ -1016,8 +1011,7 @@ check_username(char *ptr, CF *cf, CL *cl)
 	    fprintf(stderr, "must be privileged to run as another user : "
 		    "ignoring\n");
 	} else {
-	    free(cl->cl_runas);
-            cl->cl_runas = strdup2(username);
+	    Set(cl->cl_runas, username);
             if (debug_opt)
 		fprintf(stderr, "  Opt : inline_runas %s\n", username);
 	}

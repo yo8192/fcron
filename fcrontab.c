@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.39 2001-06-22 21:06:37 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.40 2001-07-04 16:15:36 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.39 2001-06-22 21:06:37 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.40 2001-07-04 16:15:36 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -826,8 +826,7 @@ parseopt(int argc, char *argv[])
 	    fprintf(stderr, "must be privileged to use -u\n");
 	    xexit(EXIT_ERR);
 	}
-	free(user);
-	user = strdup2(argv[optind]) ; 
+	Set(user, argv[optind]); 
     }
     else if (argc - optind == 1) {
 	if ( list_opt + rm_opt + edit_opt + reinstall_opt == 0 )
@@ -837,8 +836,7 @@ parseopt(int argc, char *argv[])
 		fprintf(stderr, "must be privileged to use [user|-u user]\n");
 		xexit(EXIT_ERR);
 	    }
-	    free(user);
-	    user = strdup2(argv[optind]); 	    
+	    Set(user, argv[optind]); 	    
 	}
     }
     else if (list_opt + rm_opt + edit_opt + reinstall_opt != 1)

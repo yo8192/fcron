@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.46 2001-06-22 21:09:00 thib Exp $ */
+ /* $Id: conf.c,v 1.47 2001-07-04 16:16:08 thib Exp $ */
 
 #include "fcron.h"
 #include "conf.h"
@@ -626,8 +626,7 @@ read_file(const char *file_name, CF *cf)
 		if (strcmp(cl->cl_runas, runas_str) != 0)
 		    warn("warning: runas(%s) is not owner (%s): overridden.",
 			 cl->cl_runas, runas_str);
-		free(cl->cl_runas);
-		cl->cl_runas = strdup2(runas_str);
+		Set(cl->cl_runas, runas_str);
 	    }
 	    
 	    /* we need that here because the user's name contained in the
