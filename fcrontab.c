@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.19 2000-11-14 19:44:49 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.20 2000-12-04 20:16:24 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.19 2000-11-14 19:44:49 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.20 2000-12-04 20:16:24 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -301,7 +301,7 @@ remove_fcrontab(char rm_orig)
 	    if ( errno == ENOENT )
 		return ENOENT;
 	    else
-		error_e("could not removing %s", buf);		
+		error_e("could not remove %s", buf);		
 	}
 
     }
@@ -611,13 +611,14 @@ edit_file(char *buf)
 }
 
 
-void
+int
 install_stdin(void)
     /* install what we get through stdin */
 {
     FILE *tmp_file = NULL;
     char tmp[FNAME_LEN];
     register char c;
+    short return_val = EXIT_OK;
 	    	    
 #if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
     /* create a temp file with user's permissions */
@@ -626,8 +627,7 @@ install_stdin(void)
 #endif
     sprintf(tmp, "/tmp/fcrontab.%d", getpid());
     if( (tmp_file = fopen(tmp, "w")) == NULL )
-	fprintf(stderr, "Could not open '%s': %s\n", tmp,
-		strerror(errno));
+	die_e("Could not open '%s'", tmp);
 
     while ( (c = getc(stdin)) != EOF )
 	putc(c, tmp_file);
@@ -640,16 +640,29 @@ install_stdin(void)
 	goto exiterr;
     }
 #endif
+
     if ( make_file(tmp) == ERR )
 	goto exiterr;
-    else {
-	remove(tmp);
-	xexit ( EXIT_OK );
-    }
+    else
+	goto exit;
 
   exiterr:
-    remove(tmp);
-    xexit ( EXIT_ERR );
+	return_val = EXIT_ERR;    
+  exit:
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    /* create a temp file with user's permissions */
+    if (seteuid(uid) != 0)
+	die_e("seteuid(uid[%d])", uid);
+#endif
+    if ( remove(tmp) != 0 )
+	error_e("Could not remove %s", tmp);
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    if (seteuid(fcrontab_uid) != 0) {
+	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
+	goto exiterr;
+    }
+#endif
+    return return_val;
 
 }
 
@@ -675,7 +688,7 @@ reinstall(char *buf)
     close(0); dup2(i, 0);
     close(i);
 
-    install_stdin();
+    xexit(install_stdin());
 
 }
 
@@ -809,7 +822,7 @@ main(int argc, char **argv)
     if (seteuid(fcrontab_uid) != 0 ) 
 	die_e("Could not change uid to " USERNAME "[%d]", fcrontab_uid ); 
     if (setegid(fcrontab_gid) != 0)
-    	die_e("Could not change gid to " GROUPNAME "[%d]", fcrontab_gid);
+      	die_e("Could not change gid to " GROUPNAME "[%d]", fcrontab_gid); 
 #else
     if (setuid(0) != 0 ) 
 	die_e("Could not change uid to 0"); 
@@ -839,7 +852,7 @@ main(int argc, char **argv)
 
 	if ( strcmp(argv[file_opt], "-") == 0 )
 
-	    install_stdin();
+	    xexit(install_stdin());
 
 	else {
 
