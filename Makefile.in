@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.34 2000-09-13 15:45:30 thib Exp $
+# $Id: Makefile.in,v 1.35 2000-09-13 19:27:47 thib Exp $
 
 # Where should we install it ?
 prefix		= @prefix@
@@ -46,7 +46,7 @@ OPTION =
 ####################################
 
 VERSION= @VERSION@
-CFLAGS= $(INCLUDE) $(OPTIM) $(OPTION) $(DEFS) $(LIBS)
+CFLAGS= $(INCLUDE) $(OPTIM) $(OPTION) $(DEFS)
 OBJSD = fcron.o subs.o database.o job.o log.o conf.o $(LIBOBJS)
 OBJS= fcrontab.o fileconf.o subs.o log.o allow.o
 HEADERSD = fcron.h config.h global.h option.h getloadavg.h
@@ -59,10 +59,10 @@ REXP_MANPAGES=.*[158]
 all: fcron fcrontab updatedoc
 
 fcron: $(OBJSD)
-	$(CC) $(CFLAGS) -o $@ $(OBJSD)
+	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJSD)
 
 fcrontab: $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+	$(CC) $(CFLAGS) $(LIBS) -o $@ $(OBJS)
 
 fcrontab.o: fcrontab.c $(HEADERS)
 	$(CC) $(CFLAGS) -c fcrontab.c 
@@ -78,17 +78,16 @@ allow.o:  allow.c $(HEADERS)
 
 install: all
 
-	$(INSTALL) -c -m 111 -o root -s fcron $(DESTSBIN)
-	$(INSTALL) -c -m 4111 -o root -s fcrontab $(DESTBIN)
-	$(INSTALL) -c -m 700 -o root files/fcron.allow $(ETC)
-	$(INSTALL) -c -m 700 -o root files/fcron.deny $(ETC)
-	$(INSTALL) -c -m 644 -o root doc/fcron.8 $(DESTMAN)/man8
-	$(INSTALL) -c -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1
-	$(INSTALL) -c -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5
-	$(INSTALL) -c -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3
+	$(INSTALL) -m 111 -o root -s fcron $(DESTSBIN)
+	$(INSTALL) -m 4111 -o root -s fcrontab $(DESTBIN)
+	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 700 -o root files/fcron.allow files/fcron.deny $(ETC)
+	$(INSTALL) -m 644 -o root doc/fcron.8 $(DESTMAN)/man8
+	$(INSTALL) -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1
+	$(INSTALL) -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5
+	$(INSTALL) -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3
 	(cd script ; ./sysVinit-install "$(INSTALL)" $(DESTSBIN))
 	mkdir -p $(DESTDOC)/fcron-$(VERSION)
-	cd doc; $(INSTALL) -c -m 644 -o root README LICENSE CHANGES *.html \
+	cd doc; $(INSTALL) -m 644 -o root README LICENSE CHANGES *.html \
 		 $(DESTDOC)/fcron-$(VERSION)/
 	mkdir -p $(FCRONTABS)
 	chmod 700 $(FCRONTABS)
