@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.8 2002-07-19 19:43:47 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.9 2002-08-10 20:42:10 thib Exp $ -->
 
 <sect1 id="todo">
     <title>Todo</title>
@@ -20,6 +20,7 @@ well.</para>
     <itemizedlist>
 	<listitem>
 	    <para>bug fix : makewhatis does not work correctly with fcron 2.9.0</para>
+	    <para>Help is welcome to catch this bug !</para>
 	</listitem>
 	<listitem>
 	    <para>bug fix (?) : "already running" bug (? - unconfirmed) </para>

@@ -8,13 +8,16 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.10 2002-07-19 19:45:07 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.11 2002-08-10 20:42:46 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
 
     <itemizedlist>
 	<title>From version 2.9.0 to 2.9.1</title>
+	<listitem>
+	    <para>fcron can now be run without root's privileges (see FAQ)</para>
+	</listitem>
 	<listitem>
 	    <para>added configure's option --with-boot-install .</para>
 	</listitem>
@@ -23,8 +26,14 @@ A copy of the license is included in gfdl.sgml.
 some system.</para>
 	</listitem>
 	<listitem>
+	    <para>configure script now uses getpwnam() and getgrnam() instead of
+ reading directly /etc/passwd and /etc/group : this makes easier the use of NIS, LDAP,
+ etc.</para>
+	</listitem>
+	<listitem>
 	    <para>Bug fix : using some "cmd > /dev/stderr" (or stdout) in a script 
-used to make fcron send a bogus output mail.</para>
+used to make fcron send a bogus output mail. (rewrite of the code managing the
+output of jobs)</para>
 	</listitem>
 	<listitem>
 	    <para>Bug fix : typo error prevented fcrontab to be compiled on some

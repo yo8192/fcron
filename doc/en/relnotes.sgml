@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: relnotes.sgml,v 1.2 2002-07-19 19:43:02 thib Exp $ -->
+<!-- $Id: relnotes.sgml,v 1.3 2002-08-10 20:41:58 thib Exp $ -->
 
 <sect1 id="relnotes">
     <title>Release notes : &fcron; &version;</title>
@@ -23,7 +23,7 @@ can disable PAM use in configure, using "--with-pam=no".</para>
 particular, fcrondyn does not use PAM yet.</para>
 	</listitem>
 	<listitem>
-	    <para>Fcrondyn may not be very secure, and may be used to block
+	    <para>Fcrondyn might be not very secure, and might be used to block
 &fcron;.</para>
 	</listitem>
     </itemizedlist>

@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.54 2002-03-02 17:28:07 thib Exp $ */
+ /* $Id: conf.c,v 1.55 2002-08-10 20:40:09 thib Exp $ */
 
 #include "fcron.h"
 
@@ -459,7 +459,7 @@ read_file(const char *file_name, CF *cf)
     else {
 	if ( file_stat.st_uid == ROOTUID )
 	    /* file is owned by root : either this file has already been parsed
-	     * at least once by fcron, either it is the root's fcrontab */
+	     * at least once by fcron, or it is root's fcrontab */
 	    runas = ROOTUID;
 	else {
 	    error("Non-new file %s owned by someone else than root",file_name);

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.3 2002-07-19 19:40:57 thib Exp $ */
+ /* $Id: socket.c,v 1.4 2002-08-10 20:41:46 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -80,7 +80,7 @@ init_socket(void)
 
     /* */
     if ( chmod(fifofile, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH) != 0 )
-	error_e("Cannot fchmod() socket file");
+	error_e("Cannot chmod() socket file");
     /* */
 	 
     fcntl(listen_fd, F_SETFD, 1);
