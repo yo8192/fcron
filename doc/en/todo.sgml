@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.28 2004-08-12 09:52:15 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.29 2004-08-17 12:56:26 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -29,10 +29,6 @@ A copy of the license is included in gfdl.sgml.
 	       <para>mails from B. Wohler : improve the doc + change (?)  the
 		  name of fcrondyn -> fcronc ?? </para>
 	    </listitem>
-	    <listitem>
-	       <para>add an option to prevent fcron from running a job if the
-		  system is running on battery (anacron does it ?)</para>
-	    </listitem>
 	 </itemizedlist>
       </sect2>
       <sect2>
@@ -50,10 +46,6 @@ A copy of the license is included in gfdl.sgml.
 	    </listitem>
 	    <listitem>
 	       <para>Mem footprint reduction : use an/some union(s) in CL struct.</para>
-	    </listitem>
-	    <listitem>
-	       <para>implement more commands for fcrondyn, and make it more
-		  secure and reliable</para>
 	    </listitem>
 	    <listitem>
 	       <para>add a timezone option instead of the tzdiff (so it would
@@ -101,6 +93,16 @@ A copy of the license is included in gfdl.sgml.
 		  dependencies ?)  Add a way to run a job only if a command
 		  returns true. It would permit, for instance, to run some jobs
 		  on a laptop only if it is on AC power.</para>
+	       <para>and depending on the return value of the command, cancel
+		  the execution, or wait x seconds before trying again, etc</para>
+	    </listitem>
+	    <listitem>
+	       <para>add an option to prevent fcron from running a job if the
+		  system is running on battery (anacron does it ?)
+	       (add another queue - when system comes on-line, run the job
+	       or move it to serialq. Do the same for lavg+serial job 
+		  -> when trying to run a job from serialq, test if system is on-line
+		  and/or lavg is low, or move it back to another queue)</para>
 	    </listitem>
 	    <listitem>
 	       <para>add a system of data flow</para>

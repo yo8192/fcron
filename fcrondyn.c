@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.12 2003-12-29 14:11:31 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.13 2004-08-17 12:52:45 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.12 2003-12-29 14:11:31 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.13 2004-08-17 12:52:45 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -136,8 +136,8 @@ RETSIGTYPE
 sigpipe_handler(int x)
     /* handle broken pipes ... */
 {
-    fprintf(stderr, "Broken pipe : fcron may have closed the connection\nif it has been "
-	    "idle for more than %ds, otherwise check if fcron is still running.\n",
+    fprintf(stderr, "Broken pipe : fcron may have closed the connection\nThe connection "
+	    "has been idle for more than %ds, or fcron may not be running anymore.\n",
 	    MAX_IDLE_TIME);
     fprintf(stderr, "Exiting ...\n");
 
