@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.33 2001-05-05 19:09:27 thib Exp $
+# $Id: boot-install,v 1.34 2001-06-03 10:59:35 thib Exp $
 
 # take 6 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -23,7 +23,12 @@ if test $3 -eq 1; then
     exit
 fi
 
-INSPROG=$1
+# The program we use to install a file. This may be the script install.sh.
+if echo "$1" | grep 'install.sh$'; then
+    INSPROG=$SRCDIR/$1
+else
+    INSPROG=$1
+fi
 DESTBIN=$2
 DEBUG=$3
 #DEBUG=1
