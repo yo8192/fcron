@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.56 2003-07-14 10:50:03 thib Exp $ */
+ /* $Id: job.c,v 1.57 2003-12-25 22:39:55 thib Exp $ */
 
 #include "fcron.h"
 
@@ -174,6 +174,8 @@ sig_dfl(void)
 	signal(SIGCHLD, SIG_DFL);
 	signal(SIGHUP, SIG_DFL);
 	signal(SIGUSR1, SIG_DFL);
+	signal(SIGUSR2, SIG_DFL);
+	signal(SIGPIPE, SIG_DFL);
 }
 
 
@@ -381,14 +383,17 @@ run_job(struct exe_t *exeent)
 
 	    if ( ! to_stdout && is_mail(line->cl_option ) ) {
 		/* user wants a mail : we use the pipe */
-		int ch = 0;
+		char mailbuf[TERM_LEN];
 		FILE *pipef = fdopen(pipe_fd[0], "r");
 
 		if ( pipef == NULL )
 		    die_e("Could not fdopen() pipe_fd[0]");
 
-		while ( (ch = getc(pipef)) != EOF )
-		    putc(ch, mailf);
+		mailbuf[sizeof(mailbuf)-1] = '\0';
+		while ( fgets(mailbuf, sizeof(mailbuf), pipef) != NULL )
+		    if ( fputs(mailbuf, mailf) < 0 )
+			warn("fputs() failed to write to mail file for job %s (pid %d)",
+			     line->cl_shell, pid);
 		fclose(pipef); /* (closes also pipe_fd[0]) */
 	    }
 
