@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.18 2000-08-22 18:01:30 thib Exp $ */
+ /* $Id: conf.c,v 1.19 2000-08-28 17:52:05 thib Exp $ */
 
 #include "fcron.h"
 
@@ -427,9 +427,8 @@ read_file(const char *file_name, CF *cf)
 
     /* read env variables */
     Alloc(env, env_t);
-    while( (env->e_name = read_str(ff, buf, sizeof(buf))) != NULL ) {
-	env->e_val = read_str(ff, buf, sizeof(buf));
-	debug("  Env: '%s=%s'", env->e_name, env->e_val );
+    while( (env->e_val = read_str(ff, buf, sizeof(buf))) != NULL ) {
+	debug("  Env: '%s'", env->e_val );
 	
 	env->e_next = cf->cf_env_base;
 	cf->cf_env_base = env;
@@ -468,10 +467,15 @@ read_file(const char *file_name, CF *cf)
 	}	    
 
 	if ( cl->cl_pid == -1 ) {
-	    cl->cl_pid = 0;
-	    add_serial_job(cl);
+	    if ( is_lavg(cl->cl_option) ) {
+		cl->cl_pid = 0;
+		add_lavg_job(cl);
+	    }
+	    else {
+		cl->cl_pid = 0;
+		add_serial_job(cl);
+	    }
 	}
-
 
 	/* check if the task has not been stopped during execution */
 	if (cl->cl_pid > 0) {
@@ -506,9 +510,9 @@ read_file(const char *file_name, CF *cf)
     /* free last calloc : unused */
     free(cl);
     
-//    if (fgets(buf, sizeof(buf), ff) == NULL ||
-//	strncmp(buf, "eof\n", sizeof("eof\n")) != 0)
-//	error("file '%s' is truncated : you should reinstall it", file_name);
+/* // if (fgets(buf, sizeof(buf), ff) == NULL || */
+/* // 	strncmp(buf, "eof\n", sizeof("eof\n")) != 0) */
+/* // 	error("file '%s' is truncated : you should reinstall it",file_name); */
 
     fclose(ff);
 
@@ -581,7 +585,6 @@ delete_file(const char *user_name)
     cur_env = file->cf_env_base;
     while  ( (env = cur_env) != NULL ) {
 	cur_env = env->e_next;
-	free(env->e_name);
 	free(env->e_val);
 	free(env);
     }
@@ -639,10 +642,9 @@ save_file(CF *file, char *path)
 	fprintf(f, "%ld", now);
 
 	/*   env variables, */
-	for (env = cf->cf_env_base; env; env = env->e_next) {
-	    fprintf(f, "%s%c", env->e_name, '\0');
+	for (env = cf->cf_env_base; env; env = env->e_next)
 	    fprintf(f, "%s%c", env->e_val, '\0');
-	}
+	
 	fprintf(f, "%c", '\0');
 
 	/* finally, lines. */
@@ -653,10 +655,10 @@ save_file(CF *file, char *path)
 
 	}
     
-//	/* then, write the number of lines to permit to check if the file
-//	 * is complete (i.e. fcron may has been interrupted during
-//	 * save process */
-//	fprintf(f, "eof\n");
+	/* then, write the number of lines to permit to check if the file
+	 * is complete (i.e. fcron may has been interrupted during
+	 * save process */
+/*  //	fprintf(f, "eof\n"); */
 	
 	fclose(f);
 
