@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.15 2000-06-28 14:00:51 thib Exp $ */
+ /* $Id: conf.c,v 1.16 2000-06-28 16:25:28 thib Exp $ */
 
 #include "fcron.h"
 
@@ -260,7 +260,9 @@ synchronize_file(char *file_name)
 			  new_l->cl_timefreq == old_l->cl_timefreq ) ||
 			( is_td(new_l->cl_option) &&
 			  memcmp( &(new_l->cl_mins), &(old_l->cl_mins),
-				  size)==0 )
+				  size)==0 &&
+			  is_dayor(new_l->cl_option) == 
+			  is_dayor(old_l->cl_option) )
 			) ) {
 			
 			if ( new_l->cl_runfreq == old_l->cl_runfreq ) 
