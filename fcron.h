@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.h,v 1.14 2000-11-16 17:58:50 thib Exp $ */
+ /* $Id: fcron.h,v 1.15 2001-01-12 21:43:33 thib Exp $ */
 
 #ifndef __FCRONH__
 #define __FCRONH__
@@ -121,7 +121,7 @@ extern void run_serial_job(void);
 extern void reload_all(const char *dir_name);
 extern void synchronize_dir(const char *dir_name);
 extern void delete_file(const char *user_name);
-extern void save_file(CF *file_name, char *path);
+extern void save_file(CF *file_name);
 /* end of conf.c */
 
 /* job.c */

@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.37 2001-01-04 15:53:04 thib Exp $ */
+ /* $Id: fcron.c,v 1.38 2001-01-12 21:43:25 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.37 2001-01-04 15:53:04 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.38 2001-01-12 21:43:25 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -95,7 +95,7 @@ info(void)
 {
     fprintf(stderr,
 	    "fcron " VERSION_QUOTED " - periodic command scheduler\n"
-	    "Copyright 2000 Thibault Godouet <fcron@free.fr>\n"
+	    "Copyright 2000-2001 Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	);
@@ -133,13 +133,13 @@ xexit(int exit_value)
     /* we save all files now and after having waiting for all
      * job being executed because we might get a SIGKILL
      * if we don't exit quickly */
-    save_file(NULL, NULL);
+    save_file(NULL);
     
     f = file_base;
     while ( f != NULL ) {
 	if ( f->cf_running > 0 ) {
 	    wait_all( &f->cf_running );
-	    save_file(f, NULL);
+	    save_file(f);
 	}
 	delete_file(f->cf_user);    
 
@@ -553,7 +553,7 @@ main_loop()
 	if ( save <= now ) {
 	    save = now + SAVE;
 	    /* save all files */
-	    save_file(NULL, NULL);
+	    save_file(NULL);
 	}
 
 	stime = check_lavg(save);
