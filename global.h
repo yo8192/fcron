@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.37 2002-10-05 14:26:25 thib Exp $ */
+ /* $Id: global.h,v 1.38 2002-10-06 17:02:05 thib Exp $ */
 
 
 /* 
@@ -156,14 +156,14 @@ typedef struct env_t {
     struct env_t *e_next;
 } env_t ;
 
-typedef struct CF {
-    struct CF    *cf_next;
-    struct CL    *cf_line_base;
+typedef struct cf_t {
+    struct cf_t  *cf_next;
+    struct cl_t  *cf_line_base;
     char	 *cf_user;	/* user-name			             */
     struct env_t *cf_env_base;  /* list of all env variables to set          */
     int		  cf_running;	/* number of jobs running                    */
     signed char	  cf_tzdiff;    /* time diff between system and local hour   */
-} CF;
+} cf_t;
 
 
 #define OPTION_SIZE 4
@@ -172,9 +172,9 @@ typedef struct CF {
  *   because some tests made are dependent to that order */
 /* warning : if you change a field type, you may have to also make some changes
  *   in the save/load binary fcrontab functions */
-typedef struct CL {
-    struct CL     *cl_next;
-    struct CF     *cl_file;       /* the file in which the line is           */
+typedef struct cl_t {
+    struct cl_t   *cl_next;
+    struct cf_t   *cl_file;       /* the file in which the line is           */
     char	  *cl_shell;      /* shell command			     */
     char          *cl_runas;      /* determine permissions of the job        */
     char          *cl_mailto;     /* mail output to cl_mailto                */
@@ -195,22 +195,23 @@ typedef struct CL {
     bitstr_t	   bit_decl(cl_days, 32); /* 1-31			     */
     bitstr_t	   bit_decl(cl_mons, 12); /* 0-11                	     */
     bitstr_t	   bit_decl(cl_dow, 8);	  /* 0-7, 0 and 7 are both Sunday    */
-} CL;
+} cl_t;
 
-typedef struct job {
-    struct CL    *j_line;
-    struct job   *j_next;
-} job;
+typedef struct job_t {
+    struct cl_t  *j_line;
+    struct job_t   *j_next;
+} job_t;
 
-typedef struct lavg {
-    struct CL  *l_line;  
-    time_t      l_until;   /* the timeout of the wait for load averages */
-} lavg;
+typedef struct lavg_t {
+    struct cl_t *l_line;  
+    time_t       l_until;   /* the timeout of the wait for load averages */
+} lavg_t;
 
-typedef struct exe {
-    struct CL  *e_line;
-    pid_t       e_pid;
-} exe;
+typedef struct exe_t {
+    struct cl_t *e_line;
+    pid_t        e_ctrl_pid; /* pid of the fcron process controling the job */
+    pid_t        e_job_pid;  /* pid of the job itself */
+} exe_t;
 
 #endif /* __GLOBAL_H__ */
 
