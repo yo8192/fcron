@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2001 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.35 2001-01-04 15:53:58 thib Exp $ */
+ /* $Id: conf.c,v 1.36 2001-01-12 21:43:41 thib Exp $ */
 
 #include "fcron.h"
 
@@ -51,7 +51,7 @@ reload_all(const char *dir_name)
     while ( f != NULL ) {
 	if ( f->cf_running > 0 )
 	    wait_all( &f->cf_running );
-	save_file(f, NULL);
+	save_file(f);
 	delete_file(f->cf_user);    
 
 	/* delete_file remove the f file from the list :
@@ -193,7 +193,6 @@ synchronize_file(char *file_name)
     CF *cur_f = NULL;
     char *user = NULL;
 
-
     if (strchr(file_name, '.') != NULL ) {
 	/* this is a new file : we have to check if there is an old
 	 * version in database in order to keep a maximum of fields
@@ -233,9 +232,6 @@ synchronize_file(char *file_name)
 		free(cur_f);
 		return;
 	    }
-
-	    /* set cf_user field */
-	    cur_f->cf_user = strdup2(user);
 
 	    /* assign old pointer to the old file, and move it to the first
 	     * place of the list : delete_file() only remove the first
@@ -289,13 +285,12 @@ synchronize_file(char *file_name)
 	    /* remove old file from the list */
 	    delete_file(user);
 	    
-
 	    /* insert new file in the list */
 	    cur_f->cf_next = file_base;
 	    file_base = cur_f;
 
 	    /* save final file */
-	    save_file(cur_f, user);
+	    save_file(cur_f);
 
 	    /* delete new.user file */
 	    if ( remove(file_name) != 0 )
@@ -306,7 +301,6 @@ synchronize_file(char *file_name)
 	else {
 	    /* no old version exist in database : load this file
 	     * as a normal file, but change its name */
-	    user = (file_name + 4);
 	
 	    Alloc(cur_f, CF);
 
@@ -316,15 +310,12 @@ synchronize_file(char *file_name)
 		return;
 	    }
 
-	    /* set cf_user field */
-	    cur_f->cf_user = strdup2(user);
-
 	    /* insert the file in the list */
 	    cur_f->cf_next = file_base;
 	    file_base = cur_f;
 
 	    /* save as a normal file */
-	    save_file(cur_f, user);
+	    save_file(cur_f);
 
 	    /* delete new.user file */
 	    if ( remove(file_name) != 0 )
@@ -343,10 +334,6 @@ synchronize_file(char *file_name)
 	    free(cur_f);
 	    return;
 	}
-
-	/* set cf_user field */
-	user = file_name;
-	cur_f->cf_user = strdup2(user);
 
 	/* insert the file in the list */
 	cur_f->cf_next = file_base;
@@ -387,10 +374,10 @@ read_file(const char *file_name, CF *cf)
     char buf[LINE_LEN];
     time_t t_save = 0;
     time_t slept = 0;
-    char *user = NULL;
     char zero[bitstr_size(60)];
     uid_t runas = 0;
     struct stat file_stat;
+    struct passwd *pass = NULL;
 
     bzero(zero, sizeof(zero));
 
@@ -406,7 +393,46 @@ read_file(const char *file_name, CF *cf)
 	error_e("Could not stat %s", file_name);
 	return 1;
     }
-    (file_stat.st_uid != 0) ? runas = file_stat.st_uid : 0;
+
+    if ( strncmp(file_name,"new.", 4) == 0 ) {
+	if ( file_stat.st_uid == 0 )
+	    /* file is owned by root : no test needed : set runas to 0 */
+	    runas = 0;
+	else {
+	    /* this is a standard user's new fcrontab : set the runas field to
+	     * the owner of the file */
+	    runas = file_stat.st_uid;
+	    if ( (pass = getpwuid(file_stat.st_uid)) == NULL ) {
+		error_e("Could not getpwuid(%d)", file_stat.st_uid);
+		return 1;
+	    }
+	    /* set cf_user field */
+	    cf->cf_user = strdup2(pass->pw_name);
+	}
+    }
+    else {
+	if ( file_stat.st_uid == 0 ) {
+	    /* file is owned by root : either this file has already been parsed
+	     * at least once by fcron, either it is the root's fcrontab */
+	    if (strcmp(file_name,"root") == 0)
+		/* this is root's fcrontab : set runas to 0 */
+		runas = 0;
+	    else {
+		/* this is a user's fcrontab : set the runas fields to the uid
+		 * corresponding to the name of the file, since the uid of the
+		 * user may have changed since last load */ 
+		if ( (pass = getpwnam(file_name)) == NULL ) {
+		    error_e("Could not getpwnam(%s)", file_name);
+		    return 1;
+		}
+		runas = pass->pw_uid;
+	    }
+	}
+	else {
+	    error("Non-new file %s owned by someone else than root",file_name);
+	    return 1;
+	}
+    }
 
     debug("User %s Entry", file_name);
     bzero(buf, sizeof(buf));
@@ -427,7 +453,7 @@ read_file(const char *file_name, CF *cf)
     }    
 
     /* get the owner's name */
-    if ( (user = read_str(ff, buf, sizeof(buf))) == NULL ) {
+    if ( (cf->cf_user = read_str(ff, buf, sizeof(buf))) == NULL ) {
 	error("Cannot read user's name : file ignored");
 	return 1;
     }
@@ -464,7 +490,8 @@ read_file(const char *file_name, CF *cf)
 	/* set runas field if necessary (to improve security) */
 	if (runas > 0) {
 	    if (cl->cl_runas != runas)
-		warn("warning : runas is not owner's uid : overridden.");
+		warn("warning: runas(%d) is not owner's uid(%d): overridden.",
+		     cl->cl_runas, runas);
 	    cl->cl_runas = runas;
 	}
 
@@ -700,7 +727,7 @@ delete_file(const char *user_name)
 
 
 void
-save_file(CF *file, char *path)
+save_file(CF *file)
     /* Store the informations relatives to the executions
      * of tasks at a defined frequency of system's running time */
 {
@@ -721,18 +748,13 @@ save_file(CF *file, char *path)
 	debug("Saving %s...", cf->cf_user);
 
 	/* open file for writing */
-	if ( path == NULL ) {
-	    if ( (f = fopen(cf->cf_user, "w")) == NULL )
-		error_e("save");
-	}
-	else
-	    if ( (f = fopen(path, "w")) == NULL )
-		error_e("save");
+	if ( (f = fopen(cf->cf_user, "w")) == NULL )
+	    error_e("save");
 
 	/* chown the file to root:root : this file should only be read and
 	 * modified by fcron (not fcrontab) */
 	if (fchown(fileno(f), 0, 0) != 0)
-	    error_e("Could not fchown \"%s\"", (path) ? path : file->cf_user);
+	    error_e("Could not fchown \"%s\"", file->cf_user);
 
 	/* save file : */
 
