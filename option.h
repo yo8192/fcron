@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.9 2000-09-03 14:31:32 thib Exp $ */
+ /* $Id: option.h,v 1.10 2000-09-30 11:59:34 thib Exp $ */
 
 /* read and set options of a line */
 
@@ -41,6 +41,8 @@
   7      does the output have to be mailed to user ?
   8      does the output (even if zero-length) must be mailed to user ?
   9      does this line use option runas ?
+  10     can this job be executed several times simultaneously
+  11     can this job be put several times in the serial queue simultaneously
 
 */
 
@@ -48,6 +50,9 @@
 
 #ifndef __OPTIONH__
 #define __OPTIONH__
+
+/* we need to include this to get some default values */
+#include "config.h"
 
 /* internal macros */
 
@@ -187,6 +192,43 @@
 	(_bit_set(opt, 9))
 #define clear_runas(opt) \
 	(_bit_clear(opt, 9))
+
+
+/*
+  bit 10 : set to 1 : line can be executed several times simultaneously
+           set to 0 : line can only be executed once simultaneously
+*/
+#define	is_exe_sev(opt) \
+	(_bit_test(opt, 10))
+#define	set_exe_sev(opt) \
+	(_bit_set(opt, 10))
+#define clear_exe_sev(opt) \
+	(_bit_clear(opt, 10))
+
+
+#if ( SERIAL_ONCE == 0 )
+/*
+  bit 11 : set to 1 : can be put several times in serial queue simultaneously
+           set to 0 : can only be put once in serial queue simultaneously
+*/
+#define	is_serial_sev(opt) \
+	(_bit_test(opt, 11))
+#define	set_serial_sev(opt) \
+	(_bit_set(opt, 11))
+#define clear_serial_sev(opt) \
+	(_bit_clear(opt, 11))
+#else
+/*
+  bit 11 : set to 1 : can only be put once in serial queue simultaneously
+           set to 0 : can be put several times in serial queue simultaneously
+*/
+#define	is_serial_sev(opt) \
+	( ! _bit_test(opt, 11))
+#define	set_serial_sev(opt) \
+	(_bit_clear(opt, 11))
+#define clear_serial_sev(opt) \
+	(_bit_set(opt, 11))
+#endif /* SERIAL_ONCE == 0 */
 
 
 #endif /* __OPTIONH__ */
