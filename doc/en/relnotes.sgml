@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,24 +8,26 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: relnotes.sgml,v 1.5 2003-07-14 10:56:26 thib Exp $ -->
+<!-- $Id: relnotes.sgml,v 1.6 2003-12-25 22:58:07 thib Exp $ -->
 
 <sect1 id="relnotes">
     <title>Release notes : &fcron; &version;</title>
     <itemizedlist>
-	<listitem>
+	 <listitem>
 	    <para>PAM support has not been tested thoroughly. Help from a PAM
-expert would be appreciated (to audit the PAM code in fcron, and test it). You
-can disable PAM use in configure, using "--with-pam=no".</para>
-	</listitem>
-	<listitem>
-	    <para>Some commands of &fcrondyn; are not implemented yet. In
-particular, fcrondyn does not use PAM yet.</para>
-	</listitem>
-	<listitem>
+	       expert would be appreciated (to audit the PAM code in fcron, and
+	       test it). You can disable PAM use in configure, using
+	       "--with-pam=no".</para>
+	    <para>Moreover, fcrondyn does not use PAM at this time (should it
+	       anyway ?).</para>
+	 </listitem>
+	 <listitem>
+	    <para>Some commands of &fcrondyn; are not implemented yet.</para>
+	 </listitem>
+	 <listitem>
 	    <para>Fcrondyn might be not very secure, and might be used to block
-&fcron;.</para>
-	</listitem>
+	       &fcron;.</para>
+	 </listitem>
     </itemizedlist>
 </sect1>
 

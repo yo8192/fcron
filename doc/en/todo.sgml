@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,29 +8,22 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.22 2003-09-12 20:55:59 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.23 2003-12-25 22:59:21 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
       <para>Here are some things that should be done ... Note that some of these
-	 entries are just some ideas, which <emphasis>may</emphasis> be done
-	 in the long run.</para> 
-      <para>If you plan to help me, please send a mail at &email; to prevent
-	 two people from doing the same thing. You can send me some propositions as
+	 entries are just some ideas, which <emphasis>may</emphasis> be done in
+	 the long run.</para> 
+      <para>If you plan to help me, please send a mail at &email; to prevent two
+	 people from doing the same thing. You can send me some propositions as
 	 well, or ask me to move something to the top of the heap ;) .</para>
       <sect2>
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>add psgml-docbook-dtd.cache, psgml-ecat.file to RCS &
-		  CVS</para>
-	    </listitem>
-	    <listitem>
-	       <para>mails from wohler@newt.com : improve the doc + change (?)  the
+	       <para>mails from B. Wohler : improve the doc + change (?)  the
 		  name of fcrondyn -> fcronc ?? </para>
-	    </listitem>
-	    <listitem>
-	       <para>crash when /var is full ???</para>
 	    </listitem>
 	    <listitem>
 	       <para>problem with daylight savings ? ("already running" ...)
@@ -46,9 +39,8 @@ A copy of the license is included in gfdl.sgml.
 		  system is running on battery (anacron does it ?)</para>
 	    </listitem>
 	    <listitem>
-	       <para>bug fix : makewhatis does not work correctly with fcron 2.9.0
-		  and following</para>
-	       <para>Help is welcome to catch this bug !</para>
+	       <para>create a mailing list for help/user support : send a mail
+	       on fcronannounce + news on web site to advertise it.</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
@@ -56,28 +48,43 @@ A copy of the license is included in gfdl.sgml.
 	 <title>Low priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>Use directory notifications (?) (portable ?)
-		  (cf. dnotify)</para>
+	       <para>code cleaning : create a .c/.h file for data structures
+		  (file/line lists, serial queue, lavg list, exe list),
+		  and work with them only through functions/macros.</para>
+	       <para>Note : thoroughly check for bugs which can be introduced
+		  during the code cleaning (make sure that after the
+		  modification, the code executed is still the same as before
+		  !).</para>
 	    </listitem>
 	    <listitem>
-	       <para>PAM support (included in fcron, but needs more tests by people
-		  using PAM - not implemented in fcrondyn : is it needed in
-		  fcrondyn anyway ?)</para>
+	       <para>Mem footprint reduction : for fcron processes which are aimed
+	       at running sendmail, free() some memory (file/line lists, queues, ...)
+	       (but does it worth it ? takes too much exe time for few memory ?)</para>
+	       <para>Also use an/some union(s) in CL struct.</para>
 	    </listitem>
 	    <listitem>
-	       <para>implement more commands for fcrondyn, and make it more secure
-		  and reliable</para>
+	       <para>implement more commands for fcrondyn, and make it more
+		  secure and reliable</para>
 	    </listitem>
 	    <listitem>
-	       <para>add a timezone option instead of the tzdiff (so it would look
-		  like !timezone(europe/paris)) (?)</para>
+	       <para>add a timezone option instead of the tzdiff (so it would
+		  look like !timezone(europe/paris)) (?)</para>
 	    </listitem>
 	    <listitem>
 	       <para>For environment settings, make a var substitution.</para>
 	    </listitem>
 	    <listitem>
-	       <para>add a return code for jobs which would mean that they should
-		  not be run again (in case of an error, etc...).</para>
+	       <para>add a return code for jobs which would mean that they
+		  should not be run again (in case of an error, etc...).</para>
+	    </listitem>
+	    <listitem>
+	       <para>Use directory notifications (?) (portable ?) (cf.
+		  dnotify)</para>
+	    </listitem>
+	    <listitem>
+	       <para>PAM support (included in fcron, but needs more tests by
+		  people using PAM - not implemented in fcrondyn : is it needed
+		  in fcrondyn anyway ?)</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
@@ -85,20 +92,20 @@ A copy of the license is included in gfdl.sgml.
 	 <title>Ideas</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>add a system of modules : at startup, fcron loads some modules
-		  (.so files). Then, when fcron should run the job, it calls a
-		  function of the module, and let it manage the job (threads
-		  ?). (do linux dlopen(), etc exist on other systems ? - yes :
-		  thanks Harring ;) dlopen exists on all POSIX system - even
-		  windoze - abait it does not use the same insterface of function
-		  calls. But it can be easily implemented to port to another
-		  system.).</para>
+	       <para>add a system of modules : at startup, fcron loads some
+		  modules (.so files). Then, when fcron should run the job, it
+		  calls a function of the module, and let it manage the job
+		  (threads ?). (do linux dlopen(), etc exist on other systems ?
+		  - yes : thanks Harring ;) dlopen exists on all POSIX system -
+		  even windoze - abait it does not use the same insterface of
+		  function calls. But it can be easily implemented to port to
+		  another system.).</para>
 	    </listitem>
 	    <listitem>
 	       <para>(related to the system of modules ? create a kind of
-		  dependencies ?)  Add a way to run a job only if a command returns
-		  true. It would permit, for instance, to run some jobs on a laptop
-		  only if it is on AC power.</para>
+		  dependencies ?)  Add a way to run a job only if a command
+		  returns true. It would permit, for instance, to run some jobs
+		  on a laptop only if it is on AC power.</para>
 	    </listitem>
 	    <listitem>
 	       <para>add a system of data flow</para>
@@ -108,16 +115,17 @@ A copy of the license is included in gfdl.sgml.
 		  and restart it (SIGCONT) when the lavg has decreased.</para>
 	    </listitem>
 	    <listitem>
-	       <para>Add a timeout for task completion : if a task takes more than
-		  a specified timeout, then start another script with the initial
-		  task PID as argument.  That would allow a kill with different
-		  signals (-HUP, -TERM -STOP, .... or any other action like sending
-		  a mail to sysadmin to alert him/her that a task is taking too
-		  much time and that he has to have a look at it.) </para>
+	       <para>Add a timeout for task completion : if a task takes more
+		  than a specified timeout, then start another script with the
+		  initial task PID as argument.  That would allow a kill with
+		  different signals (-HUP, -TERM -STOP, .... or any other action
+		  like sending a mail to sysadmin to alert him/her that a task
+		  is taking too much time and that he has to have a look at it.)
+	       </para>
 	    </listitem>
 	    <listitem>
-	       <para>Add a directory similar to xinet.d or logrotate.d to add job
-		  entries (?).</para>
+	       <para>Add a directory similar to xinet.d or logrotate.d to add
+		  job entries (?).</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
@@ -130,3 +138,4 @@ mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
 End:
 -->
+   

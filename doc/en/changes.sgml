@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2002 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.25 2003-09-12 21:35:40 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.26 2003-12-25 22:59:58 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -29,6 +29,11 @@ A copy of the license is included in gfdl.sgml.
 	    subject line, and is very similar to vixie cron's one.</para>
 	 </listitem>
 	 <listitem>
+	    <para>bug fix : "makewhatis" bug is fixed -- at last !</para>
+	    <para>In fact, the problems encountered were due to an abusively ignored
+	       signal SIGPIPE.</para>
+	 </listitem>
+	 <listitem>
 	    <para>bug fix : possible crash of fcron when trying to save a file
 	    if there was no space left on device.</para>
 	 </listitem>
@@ -38,6 +43,9 @@ A copy of the license is included in gfdl.sgml.
 	    of these characters in their name.</para>
 	 </listitem>
 	 <listitem>
+	    <para>bug fix : option first was broken in fcron 2.9.3.</para>
+	 </listitem>
+	 <listitem>
 	    <para>fixed a little typo in an error message
 	    (could->couldn't)</para>
 	 </listitem>
@@ -45,7 +53,13 @@ A copy of the license is included in gfdl.sgml.
 	    <para>fixed compile on SunOS 5.9 .</para>
 	 </listitem>
 	 <listitem>
+	    <para>Fcron now compiles on MacOS X.</para>
+	 </listitem>
+	 <listitem>
 	    <para>added some $srcdir to be able (again ;) ) to run configure from another directory.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Perf improvement : use buffer for i/o in run_job().</para>
 	 </listitem>
       </itemizedlist>
 
