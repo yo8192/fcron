@@ -86,8 +86,19 @@ AC_CHECK_FUNCS(getopt_long)
 AC_CHECK_FUNCS(mkstemp)
 AC_CHECK_FUNCS(flock lockf)
 AC_CHECK_FUNCS(setlinebuf)
+AC_CHECK_FUNCS(signal)
+AC_CHECK_FUNCS(sigset)
+
 AC_CHECK_FUNCS(seteuid, [seteuid=1], [seteuid=0])
 AC_CHECK_FUNCS(setegid, [setegid=1], [setegid=0])
+AC_CHECK_FUNCS(setresuid, [setresuid=1], [setresuid=0])
+AC_CHECK_FUNCS(setresgid, [setresgid=1], [setresgid=0])
+if test \( \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) \) -o \( \( "$setresuid" -eq 1 \) -a \( "$setresgid" -eq 1 \) \) ; then
+  has_euid=1
+else
+  has_euid=0
+fi
+
 AC_CHECK_FUNCS(setpriority)
 
 AC_CHECK_FUNCS(getspnam, [getspnam=1], [getspnam=0])
@@ -681,13 +692,13 @@ AC_ARG_WITH(username,
     AC_MSG_ERROR(Need USERNAME.)
     ;;
   yes)
-    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
+    if test "$has_euid" -eq 1 ; then
 	username=fcron
     fi
     AC_MSG_RESULT($username)
     ;;
   *)
-    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
+    if test "$has_euid" -eq 1 ; then
         username="$withval";
 	AC_MSG_RESULT($username)
 	if test "$withval" = "$rootname" && test "$RUN_NON_PRIVILEGED" != "1"; then
@@ -696,8 +707,7 @@ AC_ARG_WITH(username,
 Beware that running fcrontab setuid root is not very secure. You should use
 another user name if possible.
 ])
-            seteuid=0
-            setegid=0
+            has_euid=0
         fi
     else
 	AC_MSG_RESULT($username)
@@ -705,7 +715,7 @@ another user name if possible.
     fi
     ;;
     esac ],
-    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
+    if test "$has_euid" -eq 1 ; then
 	username=fcron
     fi
     AC_MSG_RESULT($username)
@@ -719,13 +729,13 @@ AC_ARG_WITH(groupname,
     AC_MSG_ERROR(Need GROUPNAME.)
     ;;
   yes)
-    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
+    if test "$has_euid" -eq 1 ; then
 	groupname=fcron
     fi
     AC_MSG_RESULT($groupname)
     ;;
   *)
-    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
+    if test "$has_euid" -eq 1 ; then
 	groupname="$withval";
 	AC_MSG_RESULT($groupname)
     else
@@ -734,7 +744,7 @@ AC_ARG_WITH(groupname,
     fi
     ;;
     esac ],
-    if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
+    if test "$has_euid" -eq 1 ; then
 	groupname=fcron
     fi
     AC_MSG_RESULT($groupname)
@@ -747,7 +757,7 @@ GROUPNAME="$groupname"
 AC_SUBST(GROUPNAME)
 AC_DEFINE_UNQUOTED(GROUPNAME, "$groupname")
 
-if test \( $seteuid -eq 1 \) -a \( $setegid -eq 1 \) ; then
+if test "$has_euid" -eq 1 ; then
   AC_DEFINE(USE_SETE_ID)
 fi
 
