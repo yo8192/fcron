@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.3 2000-05-22 17:34:35 thib Exp $ */
+ /* $Id: database.c,v 1.4 2000-05-24 12:35:19 thib Exp $ */
 
 #include "fcron.h"
 
@@ -38,8 +38,6 @@ test_jobs(time_t t2)
 {
     CF *file;
     CL *line;
-    //time_t ti = 0;
-    //int adjust = 0;
 
     debug("Looking for jobs to execute ...");
 
@@ -75,12 +73,6 @@ test_jobs(time_t t2)
 	    /* jobs based on timefreq */
 	    else if (line->cl_timefreq > 0 && line->cl_remain <= 0 ) {
 
-		/* time may has changed since the begin time t2
-		 * if system load average is high : we handle it here */
-		//ti = time(NULL);
-		//adjust = ti - t2;
-
-		//line->cl_remain = line->cl_timefreq - adjust;
 		line->cl_remain = line->cl_timefreq;
 
 		if (line->cl_pid > 0) {
@@ -271,8 +263,6 @@ goto_non_matching(CL *line, struct tm *ftime)
 	}
 
 	set_wday(ftime);
-	/* mktime set the wday */
-	//mktime(ftime);
 
 	if( ! ( bit_test(line->cl_hrs, ftime->tm_hour) &&
 		bit_test(line->cl_days, ftime->tm_mday) &&
@@ -361,8 +351,6 @@ set_next_exe(CL *line, char is_new_line)
 	}
 
 	set_wday(&ftime);
-	/* mktime set the wday */
-	//mktime(&ftime);
 
         /* check if the day of week is OK */
 	if ( bit_test(line->cl_dow, ftime.tm_wday) == 0 ) {
