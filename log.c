@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: log.c,v 1.11 2001-12-23 22:03:58 thib Exp $ */
+ /* $Id: log.c,v 1.12 2002-02-25 18:38:38 thib Exp $ */
 
 /* This code is inspired by Anacron's sources of
    Itai Tzur <itzur@actcom.co.il> */
@@ -85,8 +85,10 @@ log(int priority, char *fmt, va_list args)
     if ( (msg = make_msg(fmt, args)) == NULL)
 	return;
 
-    xopenlog();
-    syslog(priority, "%s", msg);
+    if (dosyslog) {
+	xopenlog();
+	syslog(priority, "%s", msg);
+    }
 
     if (foreground == 1) {
 	time_t t = time(NULL);
@@ -117,8 +119,10 @@ log_e(int priority, char *fmt, va_list args)
     if ( (msg = make_msg(fmt, args)) == NULL )
 	return ;
 
-    xopenlog();
-    syslog(priority, "%s: %s", msg, strerror(saved_errno));
+    if ( dosyslog ) {
+	xopenlog();
+	syslog(priority, "%s: %s", msg, strerror(saved_errno));
+    }
 
     if (foreground == 1) {
 	time_t t = time(NULL);

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.3 2001-12-23 22:03:08 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.4 2002-02-25 18:37:36 thib Exp $ */
 
 #include "global.h"
 
@@ -30,16 +30,13 @@
 #include "subs.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.3 2001-12-23 22:03:08 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.4 2002-02-25 18:37:36 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
 pid_t read_pid(void);
 
 uid_t uid = 0;
-
-/* used in temp_file() */
-char *tmp_path = "/tmp/";
 
 #ifdef DEBUG
 char debug_opt = 1;       /* set to 1 if we are in debug mode */
@@ -50,6 +47,7 @@ char debug_opt = 0;       /* set to 1 if we are in debug mode */
 /* needed by log part : */
 char *prog_name = NULL;
 char foreground = 1;
+char dosyslog = 1;
 pid_t daemon_pid = 0;
 
 

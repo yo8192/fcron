@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.54 2002-02-02 14:51:36 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.55 2002-02-25 18:40:40 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -44,8 +44,9 @@
 
 #include "allow.h"
 #include "fileconf.h"
+#include "temp_file.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.54 2002-02-02 14:51:36 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.55 2002-02-25 18:40:40 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -85,6 +86,7 @@ char file[FNAME_LEN];
 /* needed by log part : */
 char *prog_name = NULL;
 char foreground = 1;
+char dosyslog = 1;
 pid_t daemon_pid = 0;
 
 #ifdef HAVE_LIBPAM
