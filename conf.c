@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.23 2000-09-30 11:58:01 thib Exp $ */
+ /* $Id: conf.c,v 1.24 2000-10-05 15:01:29 thib Exp $ */
 
 #include "fcron.h"
 
@@ -545,7 +545,11 @@ delete_file(const char *user_name)
 	    continue;
 	}
 
-	wait_all(&file->cf_running);
+	for ( i = 0; i < exe_num; i++)
+	    if ( exe_array[i].e_line->cl_file == file )
+		/* we set the e_line to NULL, as so we know in wait_chld()
+		 * and wait_all() the corresponding file has been removed */
+		exe_array[i].e_line = NULL;
 
 	/* free lavg queue entries */
 	for ( i = 0; i < lavg_num; i++ )
