@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.37 2005-02-26 15:18:10 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.38 2005-03-12 12:41:29 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -34,6 +34,12 @@ A copy of the license is included in gfdl.sgml.
 	       behavior about /etc/crontab and /etc/cron.d. Please have a look
 	       at the top of script/check_system_crontabs for more information.
 	    </para>
+	 </listitem>
+	 <listitem>
+	    <para>HP-UX support (needs more tests).</para>
+	 </listitem>
+	 <listitem>
+	    <para>bug fix : restore umask even if fcron runs unprivileged.</para>
 	 </listitem>
       </itemizedlist>
 
