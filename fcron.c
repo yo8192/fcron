@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.14 2000-06-18 13:11:11 thib Exp $ */
+ /* $Id: fcron.c,v 1.15 2000-06-18 15:28:15 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.14 2000-06-18 13:11:11 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.15 2000-06-18 15:28:15 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -102,11 +102,13 @@ xexit(int exit_value)
 {
     CF *f = NULL;
 
+    now = time(NULL);
+
     /* we save all files now and after having waiting for all
      * job being executed because we might get a SIGKILL
      * if we don't exit quickly */
     save_file(NULL, NULL);
-
+    
     f = file_base;
     while ( f != NULL ) {
 	if ( f->cf_running > 0 ) {
