@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.12 2002-09-28 15:09:48 thib Exp $
+# $Id: Makefile.in,v 1.13 2002-10-05 14:28:21 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -82,7 +82,7 @@ fcron-doc.mod: fcron-doc.mod.in
 HTML/index.html: $(SGMLFILES) fcron-doc.mod.in stylesheets/fcron-doc.dsl.in
 	make fcron-doc.mod
 	@(echo ; echo "Building index.html"; echo)
-	rm -fR HTML/*
+	rm -fR HTML/*.html
 	$(JADE) -t sgml -i html -d stylesheets/fcron-doc.dsl\#html fcron-doc.sgml
 # We put that here to avoid to run this each time, even if doc is up to date
 # (as it is not a file, make cannot check if it is up to date)
