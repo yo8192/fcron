@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.55 2002-08-10 20:40:09 thib Exp $ */
+ /* $Id: conf.c,v 1.56 2002-08-25 17:24:14 thib Exp $ */
 
 #include "fcron.h"
 
@@ -704,6 +704,14 @@ add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str, time_t t_save)
      * struct CF may be required */
     cl->cl_file = cf;
 
+    /* check if the mailto field is valid */
+    if ( cl->cl_mailto && (*(cl->cl_mailto) == '-' ||
+			   strcspn(cl->cl_mailto, " \t\n") != strlen(cl->cl_mailto) ) ) {
+	error("mailto field \'%s\' is not valid : set to owner %s.", cl->cl_mailto,
+	      cl->cl_file->cf_user);
+	free(cl->cl_mailto);
+	cl->cl_mailto = strdup2(cl->cl_file->cf_user);
+    }
 
     /* check if the job hasn't been stopped during execution and insert
      * it in lavg or serial queue if it was in one at fcron's stops  */
