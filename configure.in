@@ -13,7 +13,7 @@ AC_PREFIX_DEFAULT($prefix)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.7)
 
-vers="2.9.2"
+vers="2.9.3"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -891,6 +891,8 @@ AC_ARG_WITH(sysfcrontab,
 )
 if test "$use_sysfcrontab" -eq 1 ; then
   AC_DEFINE_UNQUOTED(SYSFCRONTAB, "$sysfcrontab")
+  SYSFCRONTAB="$sysfcrontab"
+  AC_SUBST(SYSFCRONTAB)
 fi
 
 
