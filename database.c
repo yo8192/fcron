@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.24 2000-09-05 19:56:33 thib Exp $ */
+ /* $Id: database.c,v 1.25 2000-09-12 16:40:15 thib Exp $ */
 
 #include "fcron.h"
 
@@ -719,8 +719,9 @@ get_lavg(short int l_avg[3])
     FILE *f = NULL;
     float fl = 0;
 
-    if ( (f = fopen(PROC "loadavg", "r")) == NULL ) {
-	error_e("could not open '"PROC"loadavg' (make sure /proc is mounted)");
+    if ( (f = fopen(PROC "/loadavg", "r")) == NULL ) {
+	error_e("could not open '"PROC"/loadavg'"
+		" (make sure procfs is mounted)");
 	l_avg[0] = 0;
 	l_avg[1] = 0;
 	l_avg[2] = 0;
