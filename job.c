@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.35 2001-02-14 13:53:08 thib Exp $ */
+ /* $Id: job.c,v 1.36 2001-03-02 17:50:34 thib Exp $ */
 
 #include "fcron.h"
 
@@ -256,7 +256,8 @@ run_job(struct exe *exeent)
 	exeent->e_pid = pid;
 	line->cl_file->cf_running += 1;
 	if ( ! is_nolog(line->cl_option) )
-	    explain("Job %s started (pid %d)", line->cl_shell, pid);
+	    explain("Job %s started for user %s (pid %d)", line->cl_shell,
+		    line->cl_file->cf_user, pid);
 
     }
 
