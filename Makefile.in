@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.84 2002-03-31 17:20:40 thib Exp $
+# $Id: Makefile.in,v 1.85 2002-03-31 17:26:47 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -112,7 +112,7 @@ install: all
 	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 110 -s fcron $(DESTSBIN)
 	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrontab $(DESTBIN)
 	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 6111 -s fcronsighup $(DESTBIN)
-	test "$(FCRONDYN)" -eq  "1" && $(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrondyn $(DESTBIN)
+	if test "$(FCRONDYN)" =  "1"; then $(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 6111 -s fcrondyn $(DESTBIN) ; fi
 	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.allow $(SRCDIR)/files/fcron.deny $(ETC)
 	test -f $(ETC)/fcron.conf || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.conf $(ETC)
 	test "${USEPAM}" = "0" || $(SRCDIR)/script/install-pam-conf $(SRCDIR) $(ETC) $(ROOTNAME) $(ROOTGROUP) "$(INSTALL)"
@@ -143,6 +143,7 @@ uninstall:
 	rm -f $(DESTSBIN)/fcron
 	rm -f $(DESTBIN)/fcrontab
 	rm -f $(DESTBIN)/fcronsighup
+	rm -f $(DESTBIN)/fcrondyn
 	@(cd doc && make uninstall)
 	$(SRCDIR)/script/boot-uninstall
 
