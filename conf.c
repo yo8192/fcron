@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.24 2000-10-05 15:01:29 thib Exp $ */
+ /* $Id: conf.c,v 1.25 2000-10-07 14:14:21 thib Exp $ */
 
 #include "fcron.h"
 
@@ -387,7 +387,10 @@ read_file(const char *file_name, CF *cf)
     time_t t_save = 0;
     time_t slept = 0;
     char *user = NULL;
+    int i = 1;
+    char zero[bitstr_size(60)];
 
+    bzero(zero, sizeof(zero));
 
     /* open file */
     if ( (ff = fopen(file_name, "r")) == NULL ) {
@@ -444,6 +447,29 @@ read_file(const char *file_name, CF *cf)
 	cl->cl_shell = read_str(ff, buf, sizeof(buf));
 
 	if ( is_td(cl->cl_option) ) {
+
+	    /* to prevent from invinite loop with unvalid lines */
+	    if ( memcmp(cl->cl_mins, zero, bitstr_size(60)) == 0 ) {
+		error("No min set in '%s': setting all", cl->cl_shell);
+		bit_nset(cl->cl_mins, 0, 59);
+	    }
+	    if ( memcmp(cl->cl_mins, zero, bitstr_size(24)) == 0 ) {
+		error("No hour set in '%s': setting all", cl->cl_shell);
+		bit_nset(cl->cl_hrs, 0, 23);
+	    }
+	    if ( memcmp(cl->cl_mins, zero, bitstr_size(32)) == 0 ) {
+		error("No month day set in '%s': setting all", cl->cl_shell);
+		bit_nset(cl->cl_days, 0, 31);
+	    }
+	    if ( memcmp(cl->cl_mins, zero, bitstr_size(12)) == 0 ) {
+		error("No month set in '%s': setting all", cl->cl_shell);
+		bit_nset(cl->cl_mons, 0, 11);
+	    }
+	    if ( memcmp(cl->cl_mins, zero, bitstr_size(8)) == 0 ) {
+		error("No week day set in '%s': setting all", cl->cl_shell);
+		bit_nset(cl->cl_dow, 0, 7);
+	    }
+    
 	    /* set the time and date of the next execution  */
 	    if ( cl->cl_nextexe <= now ) {
 		if ( is_bootrun(cl->cl_option) && t_save != 0) {
@@ -546,13 +572,25 @@ delete_file(const char *user_name)
 	}
 
 	for ( i = 0; i < exe_num; i++)
-	    if ( exe_array[i].e_line->cl_file == file )
+	    if ( exe_array[i].e_line != NULL && 
+		 exe_array[i].e_line->cl_file == file ) {
 		/* we set the e_line to NULL, as so we know in wait_chld()
-		 * and wait_all() the corresponding file has been removed */
+		 * and wait_all() the corresponding file has been removed.
+		 * Plus, we decrement serial_running and lavg_serial_running
+		 * as we won't be able to do it at the end of the job */
+		if ( ( is_serial(exe_array[i].e_line->cl_option) ||
+		       is_serial_once(exe_array[i].e_line->cl_option) ) &&
+		     ! is_lavg(exe_array[i].e_line->cl_option) )
+		    serial_running--;
+		else if ( is_serial(exe_array[i].e_line->cl_option) &&
+			  is_lavg(exe_array[i].e_line->cl_option) )
+		    lavg_serial_running--;
 		exe_array[i].e_line = NULL;
+	    }
 
 	/* free lavg queue entries */
-	for ( i = 0; i < lavg_num; i++ )
+	i = 0;
+	while (i < lavg_num)
 	    if ( lavg_array[i].l_line->cl_file == file ) {
 		debug("removing '%s' from lavg queue",
 		      lavg_array[i].l_line->cl_shell);
@@ -563,7 +601,9 @@ delete_file(const char *user_name)
 		}
 		else
 		    lavg_array[i].l_line = NULL;
-	    }
+	    } 
+	    else
+		i++;
 
 	/* free serial queue entries */
 	for ( i = 0; i < serial_array_size; i++)
