@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.c,v 1.11 2002-09-07 13:11:59 thib Exp $ */
+ /* $Id: convert-fcrontab.c,v 1.12 2002-10-05 14:27:22 thib Exp $ */
 
 #include "global.h"
 
@@ -30,7 +30,7 @@
 #include "log.h"
 #include "subs.h"
 
-char rcs_info[] = "$Id: convert-fcrontab.c,v 1.11 2002-09-07 13:11:59 thib Exp $";
+char rcs_info[] = "$Id: convert-fcrontab.c,v 1.12 2002-10-05 14:27:22 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -135,41 +135,41 @@ delete_file(CF *file)
 }
 
 /* error management */
-#define Save_type(fd, type) \
+#define Save_type(FD, TYPE) \
         { \
-          if ( save_type(fd, type) != OK ) { \
+          if ( save_type(FD, TYPE) != OK ) { \
             error_e("Could not write type : file has not been installed."); \
-            close(fd); \
+            close(FD); \
             remove(buf); \
             exit(EXIT_ERR); \
 	  } \
         }
 
-#define Save_str(fd, type, str) \
+#define Save_str(FD, TYPE, STR) \
         { \
-          if ( save_str(fd, type, str) != OK ) { \
+          if ( save_str(FD, TYPE, STR) != OK ) { \
             error_e("Could not write str : file has not been installed."); \
-            close(fd); \
+            close(FD); \
             remove(buf); \
             exit(EXIT_ERR); \
 	  } \
         }
 
-#define Save_strn(fd, type, str, size) \
+#define Save_strn(FD, TYPE, STR, SIZE) \
         { \
-          if ( save_strn(fd, type, str, size) != OK ) { \
+          if ( save_strn(FD, TYPE, STR, SIZE) != OK ) { \
             error_e("Could not write strn : file has not been installed."); \
-            close(fd); \
+            close(FD); \
             remove(buf); \
             exit(EXIT_ERR); \
 	  } \
         }
 
-#define Save_lint(fd, type, value) \
+#define Save_lint(FD, TYPE, VALUE) \
         { \
-          if ( save_lint(fd, type, value) != OK ) { \
+          if ( save_lint(FD, TYPE, VALUE) != OK ) { \
             error_e("Could not write lint : file has not been installed."); \
-            close(fd); \
+            close(FD); \
             remove(buf); \
             exit(EXIT_ERR); \
 	  } \
@@ -260,7 +260,7 @@ convert_file(char *file_name)
     /* open a temp file in write mode and truncate it */
     strcpy(buf, "tmp_");
     strncat(buf, file_name, sizeof(buf) - sizeof("tmp_") - 1);
-    fd = open(buf, O_CREAT | O_TRUNC | O_SYNC);
+    fd = open(buf, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC);
     if ( fd == -1 )
 	die_e("Could not open %s", buf);
 
