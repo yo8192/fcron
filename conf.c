@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.4 2000-05-31 19:11:15 thib Exp $ */
+ /* $Id: conf.c,v 1.5 2000-06-03 20:27:15 thib Exp $ */
 
 #include "fcron.h"
 
@@ -218,17 +218,10 @@ synchronize_file(char *file_name)
 	     * it's the size of all time table (mins, days ...) */
 	    const size_t size=( bitstr_size(60) + bitstr_size(24) + 
 				bitstr_size(32) + bitstr_size(12) +
-				bitstr_size(7) );
+				bitstr_size(7) + sizeof(time_t) + 
+				sizeof(short int) );
 	    
-	    /* assign old pointer to the old file, and remove it 
-	     * from the list */
 	    old = cur_f;
-
-	    if (prev != NULL)
-		prev->cf_next = cur_f->cf_next;
-	    else 
-		/* this is the first file in the list */
-		file_base = cur_f->cf_next;
 
 	    /* load new file */
 	    Alloc(cur_f, CF);
@@ -238,8 +231,20 @@ synchronize_file(char *file_name)
 		return;
 	    }
 
-	    /* set cf_user field ( len("new.")=4 ) */
+	    /* set cf_user field */
 	    cur_f->cf_user = strdup2(user);
+
+	    /* assign old pointer to the old file, and move it to the first
+	     * place of the list : delete_file() only remove the first
+	     * occurrence of the file which has the name given in argument */
+	    if (prev != NULL) {
+		prev->cf_next = old->cf_next;
+		old->cf_next = file_base;
+		file_base = old;
+	    }
+	    else 
+		/* this is the first file in the list : no need to move it */
+
 
 	    /* compare each lines between the new and the old 
 	     * version of the file */
@@ -249,14 +254,14 @@ synchronize_file(char *file_name)
 		    /* compare the shell command and the fields 
 		       from cl_mins down to cl_runfreq or the timefreq */
 		    if ( strcmp(new_l->cl_shell, old_l->cl_shell) == 0 &&
-			 new_l->cl_timefreq == old_l->cl_timefreq &&
 			 memcmp(new_l->cl_mins, old_l->cl_mins, size) == 0
 			) {
 			
 			new_l->cl_remain = old_l->cl_remain;
 			if ( (new_l->cl_nextexe = old_l->cl_nextexe) > 0 )
 			    insert_nextexe(new_l);
-			else insert_freq(new_l);
+			else
+			    insert_freq(new_l);
 
 			if (debug_opt) {
 			    if (new_l->cl_nextexe > 0) {
@@ -277,6 +282,10 @@ synchronize_file(char *file_name)
 
 		    } 
 		}
+
+	    /* remove old file from the list */
+	    delete_file(user);
+	    
 
 	    /* insert new file in the list */
 	    cur_f->cf_next = file_base;
@@ -510,26 +519,34 @@ delete_file(const char *user_name)
 		cur_line = line->cl_next;
 
 		/* remove line from the lists */
-		if( line->cl_runfreq != 0 ) {
+		if( line->cl_timefreq != 0 ) {
 		    for ( j = freq_base; j != NULL; j = j->j_next )
 			if ( j->j_line == line ) {
-			    prev_j->j_next = j->j_next;
+			    if (prev_j != NULL) prev_j->j_next = j->j_next;
+			    else 		freq_base = j->j_next;
 			    free(j);
 			    break;
 			}
+			else
+			    prev_j = j;
 		}
 		else
 		    for ( j = queue_base; j != NULL; j = j->j_next )
 			if ( j->j_line == line ) {
-			    prev_j->j_next = j->j_next;
+			    if (prev_j != NULL) prev_j->j_next = j->j_next;
+			    else 		queue_base = j->j_next;
 			    free(j);
 			    break;
 			}
+			else
+			    prev_j = j;
 
 		/* free line itself */
 		free(line->cl_shell);
 		free(line);
 	    }
+	    /* delete_file() MUST remove only the first occurrence :
+	     * this is needed by synchronize_file() */
 	    break ;
 	} else {
 	    prev_file = file;

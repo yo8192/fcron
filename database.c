@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.6 2000-05-31 19:11:35 thib Exp $ */
+ /* $Id: database.c,v 1.7 2000-06-03 20:28:34 thib Exp $ */
 
 #include "fcron.h"
 
@@ -41,7 +41,7 @@ test_jobs(time_t t2)
     debug("Looking for jobs to execute ...");
 
     /* job based on date & time */
-    for (j=queue_base; (j!=NULL)&&(j->j_line->cl_nextexe <= t2); j=j->j_next){
+    while ( (j=queue_base) && j->j_line->cl_nextexe <= t2 ){
 	set_next_exe(j->j_line, 0);
 	if (--(j->j_line->cl_remain) > 0) {
 	    debug("    cl_Remain: %d", j->j_line->cl_remain);
@@ -61,7 +61,7 @@ test_jobs(time_t t2)
     }
 
     /* job based on frequency */
-    for (j=freq_base; (j!=NULL)&&(j->j_line->cl_remain <= 0); j=j->j_next){
+    while ( (j=freq_base) && j->j_line->cl_remain <= 0 ){
 	j->j_line->cl_remain = j->j_line->cl_timefreq;
 	insert_freq(j->j_line);
 	if (j->j_line->cl_pid > 0) {
@@ -82,6 +82,7 @@ wait_chld(void)
   /* wait_chld() - check for job completion */
 {
     struct job *j = NULL;
+    struct job *jprev = NULL;
     int pid;
     int status;
 
@@ -97,8 +98,17 @@ wait_chld(void)
 	    }
 	    else if ( pid == j->j_line->cl_mailpid ) {
 		end_mailer(j->j_line, status);
+
+		/* remove file from exe list */
+		if (jprev != NULL)
+		    jprev->j_next = j->j_next;
+		else
+		    exe_base = j->j_next;
+		free(j);
+		
 		goto nextloop;
 	    }
+	    jprev = j;
 	}	
       nextloop:
     }
@@ -111,20 +121,33 @@ wait_all(int *counter)
    /* return after all jobs completion. */
 {
     struct job *j = NULL;
+    struct job *jprev = NULL;
     int pid;
     int status;
 
     debug("Waiting for all jobs");
 
     while ( (*counter > 0) && (pid = wait3(&status, 0, NULL)) > 0 ) {
-
 	for (j = exe_base; j != NULL ; j = j->j_next) {
-
-	    if (pid < 0 || pid == j->j_line->cl_pid)
+	    if (pid < 0 || pid == j->j_line->cl_pid) {
 		end_job(j->j_line, status);
-	    else if ( pid == j->j_line->cl_mailpid )
+		goto nextloop;
+	    }
+	    else if ( pid == j->j_line->cl_mailpid ) {
 		end_mailer(j->j_line, status);
+
+		/* remove file from exe list */
+		if (jprev != NULL)
+		    jprev->j_next = j->j_next;
+		else
+		    exe_base = j->j_next;
+		free(j);
+		
+		goto nextloop;
+	    }
+	    jprev = j;
 	}
+      nextloop:
     }    
 
 }
@@ -364,52 +387,66 @@ void
 insert_nextexe(CL *line)
     /* insert a job based on time and date in the corresponding queue list */
 {
-	struct job *newjob = NULL;
+    struct job *newjob = NULL;
 
-	if (queue_base != NULL) {
-	    struct job *j = NULL;
-	    struct job *jprev = NULL;
-	    struct job *old_entry = NULL;
+    if (queue_base != NULL) {
+	struct job *j = NULL;
+	struct job *jprev = NULL;
+	struct job *old_entry = NULL;
 
-	    j = queue_base;
-	    while (j != NULL && (line->cl_nextexe > j->j_line->cl_nextexe)) {
-		if ( j->j_line == line ) {
-		    old_entry = j;
+	/* find the job in the list */
+	for (j = queue_base; j != NULL ; j = j->j_next)
+	    if ( j->j_line == line ) {
+		old_entry = j;
+		/* remove it from the list */
+		if (jprev != NULL) {
 		    jprev->j_next = j->j_next;
 		    j = jprev;
 		}
-		jprev = j;
-		j = j->j_next;
+		else
+		    /* first element of the list */
+		    j = queue_base = j->j_next;
+
+		break;
 	    }
-	    if (old_entry == NULL) {
-		/* this job wasn't in the queue : we append it */
-		Alloc(newjob, job);
-		newjob->j_line = line;
-	    }
-	    else
-		/* this job was already in the queue : we move it */
-		newjob = old_entry;
 
-	    newjob->j_next = j;
+	if (j == NULL || line->cl_nextexe < j->j_line->cl_nextexe)
+	    j = queue_base;
+	while (j != NULL && (line->cl_nextexe >= j->j_line->cl_nextexe)) {
+	    jprev = j;
+	    j = j->j_next;
+	}	    
 
-	    if (jprev == NULL)
-		queue_base = newjob;
-	    else
-		jprev->j_next = newjob;
-
-	}
-	else {
-	    /* no job in queue */
+	if (old_entry == NULL) {
+	    /* this job wasn't in the queue : we append it */
 	    Alloc(newjob, job);
-	    newjob->j_line = line;	    
-	    queue_base = newjob;
+	    newjob->j_line = line;
 	}
+	else
+	    /* this job was already in the queue : we move it */
+	    newjob = old_entry;
+
+	newjob->j_next = j;
+
+	if (jprev == NULL)
+	    queue_base = newjob;
+	else
+	    jprev->j_next = newjob;
+
+    }
+    else {
+	/* no job in queue */
+	Alloc(newjob, job);
+	newjob->j_line = line;	    
+	queue_base = newjob;
+    }
 
 }
 
 void
 insert_freq(CL *line)
-    /* insert a job based on frequency in the corresponding queue list */
+    /* insert a job based on frequency in the corresponding queue list *
+     * if the job was already in the queue list, move it to the right rank. */
 {
     struct job *newjob = NULL;
 
@@ -419,16 +456,29 @@ insert_freq(CL *line)
 	struct job *jprev = NULL;
 	struct job *old_entry = NULL;
 
-	j = freq_base;
-	while (j != NULL && (line->cl_remain > j->j_line->cl_remain)) {
+	/* find the job in the list */
+	for (j = freq_base; j != NULL ; j = j->j_next)
 	    if ( j->j_line == line ) {
 		old_entry = j;
-		jprev->j_next = j->j_next;
-		j = jprev;
+		/* remove it from the list */
+		if (jprev != NULL) {
+		    jprev->j_next = j->j_next;
+		    j = jprev;
+		}
+		else
+		    /* first element of the list */
+		    j = freq_base = j->j_next;
+		
+		break;
 	    }
+
+	if ( j == NULL || line->cl_remain < j->j_line->cl_remain)
+	    j = freq_base;
+	while (j != NULL && (line->cl_remain >= j->j_line->cl_remain)) {
 	    jprev = j;
 	    j = j->j_next;
-	}
+	}	    
+
 	if (old_entry == NULL) {
 	    /* this job wasn't in the queue : we append it */
 	    Alloc(newjob, job);
@@ -464,7 +514,7 @@ time_to_sleep(short lim)
     now = time(NULL);
 
     if (queue_base == NULL && freq_base == NULL)
-	/* no lines : we sleep as much as we can */
+	/* no lines : we sleep as much as we can, so how much lim permits us */
 	goto end;
     else if (queue_base == NULL && freq_base != NULL) {
 	tts = freq_base->j_line->cl_remain;
@@ -483,6 +533,9 @@ time_to_sleep(short lim)
 	tts = freq_base->j_line->cl_remain;
 
   end:
+    if (tts > lim)
+	tts = lim;
+
     debug("Time to sleep: %lds", tts);
 
     return tts;
