@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.39 2001-02-14 13:52:50 thib Exp $ */
+ /* $Id: conf.c,v 1.40 2001-02-27 20:50:03 thib Exp $ */
 
 #include "fcron.h"
 
@@ -499,9 +499,9 @@ read_file(const char *file_name, CF *cf)
 	 * struct CF may be required */
 	cl->cl_file = cf;
 
-	/* check if the task has not been stopped during execution and
-	 * insert in lavg or serial queues the jobs which was in one
-	 * at fcron's stop and the bootrun jobs */
+	/* check if the task has not been stopped during execution and insert
+	 * in lavg or serial queues the jobs which was in one at fcron's stops
+	 */
 	if (cl->cl_numexe > 0) {
 	    cl->cl_numexe = 0;
 	    if ( ! is_strict(cl->cl_option) ) {
@@ -536,16 +536,21 @@ read_file(const char *file_name, CF *cf)
 			debug("    cl_remain: %d", cl->cl_remain);
 		    }
 		    else {
+			/* run bootrun jobs */
 			cl->cl_remain = cl->cl_runfreq;
 			debug("   boot-run %s", cl->cl_shell);
-			cl->cl_numexe = 1;
-			if ( ! is_lavg(cl->cl_option) )
+			if ( ! is_lavg(cl->cl_option) ) {
 			    set_serial_once(cl->cl_option);
+			    add_serial_job(cl);
+			}
+			else
+			    add_lavg_job(cl);			    
 		    }
 		    set_next_exe(cl, STD);
 		}
 		else {
 		    if ( is_notice_notrun(cl->cl_option) ) {
+			/* set next exe and mail user */
 			struct tm *since2 = localtime(&cl->cl_nextexe), since;
 			memcpy(&since, since2, sizeof(since));
 			set_next_exe(cl, NO_GOTO);
@@ -556,10 +561,12 @@ read_file(const char *file_name, CF *cf)
 		}
 	    }
 	    else
+		/* value of nextexe is valid : just insert line in queue */
 		insert_nextexe(cl);
-	} else {
+	} else {  /* is_td(cl->cl_option) */
+	    /* standard @-lines */
 	    if ( cl->cl_timefreq < 60 ) {
-		error("Invalid timefreq in %s: set to 1 day", cl->cl_shell);
+		error("Invalid timefreq for %s: set to 1 day", cl->cl_shell);
 		cl->cl_timefreq = 3600*24;
 	    }
 	    cl->cl_nextexe += slept;
