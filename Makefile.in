@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.76 2001-09-12 13:47:56 thib Exp $
+# $Id: Makefile.in,v 1.77 2001-10-29 13:23:33 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -38,6 +38,7 @@ USERNAME 	= @USERNAME@
 GROUPNAME	= @GROUPNAME@
 DEBUG		= @DEBUG@
 ANSWERALL	= @ANSWERALL@
+USEPAM		= @USEPAM@
 
 # Options
 #	-DDEBUG		even more verbose
@@ -110,6 +111,7 @@ install: all
 	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 6111 -s fcronsighup $(DESTBIN)
 	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.allow $(SRCDIR)/files/fcron.deny $(ETC)
 	test -f $(ETC)/fcron.conf || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.conf $(ETC)
+	test "${USEPAM}" = "0" || test -f $(ETC)/pam.d/fcron || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(ROOTGROUP) $(SRCDIR)/files/fcron.pam $(ETC)/pam.d/fcron
 	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcron.8 $(DESTMAN)/man8
 	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcrontab.1 $(DESTMAN)/man1
 	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/fcrontab.5 $(DESTMAN)/man5
