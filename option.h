@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.8 2000-08-28 18:00:34 thib Exp $ */
+ /* $Id: option.h,v 1.9 2000-09-03 14:31:32 thib Exp $ */
 
 /* read and set options of a line */
 
@@ -98,7 +98,7 @@
 #define	is_land(opt) \
 	( ! _bit_test(opt, 2))
 #define	set_lor(opt) \
-	(_bit_set(opt, 1))
+	(_bit_set(opt, 2))
 #define	set_land(opt) \
 	(_bit_clear(opt, 2))
 
