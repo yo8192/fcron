@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.46 2001-05-24 19:57:10 thib Exp $ */
+ /* $Id: fileconf.c,v 1.47 2001-06-03 10:56:18 thib Exp $ */
 
 #include "fcrontab.h"
 #include "fileconf.h"
@@ -233,7 +233,7 @@ read_file(char *filename, char *user)
 	    }
 	    break;
 	default:
-	    if ( isdigit(*ptr) || *ptr == '*' ) {
+	    if ( isdigit( (int) *ptr) || *ptr == '*' ) {
 		read_arys(ptr, cf);
 		entries++;
 	    } else
@@ -281,8 +281,8 @@ read_env(char *ptr, CF *cf)
     bzero(name, sizeof(name));
 
     /* copy env variable's name */
-    while ( (isalnum(*ptr) || *ptr == '_') && *ptr != '=' && !isspace(*ptr) 
-	    && j < sizeof(name) ) {
+    while ( (isalnum( (int) *ptr) || *ptr == '_') && *ptr != '=' 
+	    && ! isspace( (int) *ptr) && j < sizeof(name) ) {
 	name[j++] = *ptr;
 	ptr++;
     }
@@ -292,14 +292,14 @@ read_env(char *ptr, CF *cf)
 	goto error;
 
     /* skip '=' and spaces around */
-    while ( isspace(*ptr) )
+    while ( isspace( (int) *ptr) )
 	ptr++;
 
     /* if j == 0 name is a zero length string */
     if ( *ptr++ != '=' || j == 0 )
 	goto error;
 
-    while ( isspace(*ptr) )
+    while ( isspace( (int) *ptr) )
 	ptr++;
 
     /* get value */
@@ -454,7 +454,7 @@ read_opt(char *ptr, CL *cl)
 	i = 0;
 	bzero(opt_name, sizeof(opt_name));
 
-	while ( isalnum(*ptr)  && i < sizeof(opt_name))
+	while ( isalnum( (int) *ptr)  && i < sizeof(opt_name))
 	    opt_name[i++] = *ptr++;
     
 	i = 1;
@@ -819,7 +819,7 @@ read_opt(char *ptr, CL *cl)
 		Handle_err;
 
 	    i = 0;
-	    while ( isalnum(*ptr) && i + 1 < sizeof(buf) )
+	    while ( isalnum( (int) *ptr) && i + 1 < sizeof(buf) )
 		buf[i++] = *ptr++;
 	    if ( strcmp(buf, "\0") == 0 )
 		clear_mail(cl->cl_option);
@@ -950,7 +950,7 @@ get_time(char *ptr, time_t *time)
 
 	sum = 0;
 
-	while ( isdigit(*ptr) ) {
+	while ( isdigit( (int) *ptr) ) {
 	    sum *= 10;
 	    sum += *ptr - 48;
 	    ptr++;
@@ -1008,7 +1008,7 @@ read_freq(char *ptr, CF *cf)
     ptr++;
 
     /* get the time before first execution or the options */
-    if ( isdigit(*ptr) ) {
+    if ( isdigit( (int) *ptr) ) {
 	if ( (ptr = get_time(ptr, &(cl->cl_nextexe))) == NULL ) {
 	    fprintf(stderr, "%s:%d: Error while reading first delay:"
 		    " skipping line.\n", file_name, line);
@@ -1017,7 +1017,7 @@ read_freq(char *ptr, CF *cf)
 	
 	Skip_blanks(ptr);
     }
-    else if ( isalnum(*ptr) ) {
+    else if ( isalnum( (int) *ptr) ) {
 	if ( (ptr = read_opt(ptr, cl)) == NULL )
 	    goto exiterr;
     }
@@ -1106,7 +1106,7 @@ read_arys(char *ptr, CF *cf)
     /* set cl_remain if not specified */
     if ( *ptr == '&' ) {
 	ptr++;
-	if ( isdigit(*ptr) ) {
+	if ( isdigit( (int) *ptr) ) {
 	    if ( (ptr = get_num(ptr, &i, USHRT_MAX, 0, NULL)) == NULL ) {
 		fprintf(stderr, "%s:%d: Error while reading runfreq:"
 			" skipping line.\n", file_name, line);
@@ -1120,7 +1120,7 @@ read_arys(char *ptr, CF *cf)
 		cl->cl_runfreq = i;
 	    }
 	}
-	else if ( isalnum(*ptr) )
+	else if ( isalnum( (int) *ptr) )
 	    if ( (ptr = read_opt(ptr, cl)) == NULL ) {
 		goto exiterr;
 	    }
@@ -1245,7 +1245,7 @@ read_period(char *ptr, CF *cf)
 		file_name, line);
 	goto exiterr;
     } 
-    else if ( cl->cl_shell[0] == '*' || isdigit(cl->cl_shell[0]) )
+    else if ( cl->cl_shell[0] == '*' || isdigit( (int) cl->cl_shell[0]) )
 	fprintf(stderr, "%s:%d: Warning : shell command beginning by '%c'.\n",
 		file_name, line, cl->cl_shell[0]);
 
@@ -1318,7 +1318,7 @@ get_num(char *ptr, int *num, int max, short int decimal, const char **names)
     int i = 0;
     *num = 0;
 
-    if ( isalpha(*ptr) ) {
+    if ( isalpha( (int) *ptr) ) {
 
 	if ( names == NULL ) {
 	    need_correction = 1;
@@ -1343,7 +1343,7 @@ get_num(char *ptr, int *num, int max, short int decimal, const char **names)
 
     } else {
 
-	while ( isdigit(*ptr) || *ptr == '.') { 
+	while ( isdigit( (int) *ptr) || *ptr == '.') { 
 
 	    if ( *ptr == '.' && ptr++ && i++ > 0 )
 		return NULL;
@@ -1352,7 +1352,7 @@ get_num(char *ptr, int *num, int max, short int decimal, const char **names)
 		 * skip the other decimals and return */
 		if ( *ptr >= '5' )
 		    *num += 1;
-		while ( isdigit(*(++ptr)) ) ;
+		while ( isdigit( (int) *(++ptr)) ) ;
 		ptr--;
 	    } else {
 		*num *= 10; 
