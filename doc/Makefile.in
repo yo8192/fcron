@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.20 2003-07-14 12:44:06 thib Exp $
+# $Id: Makefile.in,v 1.21 2003-12-29 15:41:18 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -100,22 +100,21 @@ install: clean
 	@(if test ! -d $(DESTDOC)/fcron-$(VERSION)/HTML; then $(INSTALL) -g $(ROOTGROUP)\
 	    -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION)/HTML/ ; fi)
 
-# We need to 'cd ..' because SRCDIR may be set to '.', and we are in a sub directory
 	@(echo "Installing man pages in $(DESTMAN)/man{1,3,5,8} ...")
-	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcron.8 $(DESTMAN)/man8)
-	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcrontab.1 $(DESTMAN)/man1)
-	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcrondyn.1 $(DESTMAN)/man1)
-	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcrontab.5 $(DESTMAN)/man5)
-	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/fcron.conf.5 $(DESTMAN)/man5)
-	@(cd .. ; $(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/doc/man/bitstring.3 $(DESTMAN)/man3)
+	@($(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/man/fcron.8 $(DESTMAN)/man8)
+	@($(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/man/fcrontab.1 $(DESTMAN)/man1)
+	@($(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/man/fcrondyn.1 $(DESTMAN)/man1)
+	@($(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/man/fcrontab.5 $(DESTMAN)/man5)
+	@($(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/man/fcron.conf.5 $(DESTMAN)/man5)
+	@($(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/man/bitstring.3 $(DESTMAN)/man3)
 	@(echo "Installing txt files in $(DESTDOC)/fcron-$(VERSION)/txt/ ...")
-	@(cd .. ; for i in $(SRCDIR)/doc/txt/*; do \
+	@(for i in $(SRCDIR)/txt/*; do \
 	          echo "$$i" ; \
 	          $(INSTALL) -m 644 -o $(ROOTNAME) $$i \
 	                     $(DESTDOC)/fcron-$(VERSION)/txt/ ;\
 	          done)
 	@(echo "Installing html files $(DESTDOC)/fcron-$(VERSION)/HTML/ ...")
-	@(cd .. ; for i in $(SRCDIR)/doc/HTML/*; do \
+	@(for i in $(SRCDIR)/HTML/*; do \
 	          $(INSTALL) -m 644 -o $(ROOTNAME) $$i \
 	                     $(DESTDOC)/fcron-$(VERSION)/HTML/ ;\
 	          done)
@@ -131,7 +130,7 @@ uninstall:
 
 
 clean:
-	@(for i in man txt stylesheets . ; do \
+	@(cd $(SRCDIR) ; for i in man txt stylesheets . ; do \
 	  cd $$i ; \
 	  echo "Cleaning : `pwd`"; \
           rm -f *~ *.html *.htm *.texi *.info *.refs manpage.links manpage.refs \
