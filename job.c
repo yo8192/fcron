@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.46 2001-11-04 18:57:58 thib Exp $ */
+ /* $Id: job.c,v 1.47 2001-12-23 12:20:10 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,6 +33,12 @@ void end_job(CL *line, int status, int mailfd, short mailpos);
 void end_mailer(CL *line, int status);
 #ifdef HAVE_LIBPAM
 void die_mail_pame(CL *cl, int pamerrno, struct passwd *pas, char *str);
+#endif
+
+#ifndef HAVE_SETENV
+char env_user[PATH_LEN];
+char env_home[PATH_LEN];
+char env_shell[PATH_LEN];
 #endif
 
 #ifdef HAVE_LIBPAM
@@ -99,13 +105,12 @@ change_user(struct CL *cl)
     setenv("SHELL", pas->pw_shell, 1);
 #else
     {
-	char buf[PATH_LEN + 5];
-	strcat( strcpy(buf, "USER"), "=");
-	putenv( strncat(buf, pas->pw_name, sizeof(buf)-6) );
-	strcat( strcpy(buf, "HOME"), "=");
-	putenv( strncat(buf, pas->pw_dir, sizeof(buf)-6) );
-	strcat( strcpy(buf, "SHELL"), "=");
-	putenv( strncat(buf, pas->pw_shell, sizeof(buf)-7) );
+	strcat( strcpy(env_user, "USER"), "=");
+	putenv( strncat(env_user, pas->pw_name, sizeof(env_user)-6) );
+	strcat( strcpy(env_home, "HOME"), "=");
+	putenv( strncat(env_home, pas->pw_dir, sizeof(env_home)-6) );
+	strcat( strcpy(env_shell, "SHELL"), "=");
+	putenv( strncat(env_shell, pas->pw_shell, sizeof(env_shell)-7) );
     }
 #endif /* HAVE_SETENV */
 
