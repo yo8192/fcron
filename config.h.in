@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.20 2000-09-16 12:36:37 thib Exp $ */
+ /* $Id: config.h.in,v 1.21 2000-09-30 11:58:39 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -237,6 +237,9 @@
 
 /* Define if you have the <getopt.h> header file.  */
 #undef HAVE_GETOPT_H
+
+/* Define if you have the <limits.h> header file.  */
+#undef HAVE_LIMITS_H
 
 /* Define if you have the <mach/mach.h> header file.  */
 #undef HAVE_MACH_MACH_H
