@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.32 2001-06-22 21:09:30 thib Exp $ */
+ /* $Id: config.h.in,v 1.33 2001-07-07 17:33:03 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -139,6 +139,8 @@
 
 /* *** paths *** */
 #undef ETC
+#undef SBINDIREX
+#undef BINDIREX
 #undef FCRONTABS
 #undef SENDMAIL
 #undef PROC
