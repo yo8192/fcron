@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.3 2000-05-15 19:07:44 thib Exp $
+# $Id: Makefile.in,v 1.4 2000-05-16 19:53:59 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -57,12 +57,15 @@ INSTALL= install
 # Should not be changed under this #
 ####################################
 
-VERSION= 0.8.0
+export VERSION= 0.8.0
 CFLAGS= $(INCLUDE) $(OPTIM) $(OTHERFLAGS) $(OPTION) -DVERSION=\"$(VERSION)\" -DFCRONTABS=\"$(FCRONTABS)\" -DETC=\"$(ETC)\"
 OBJSD = fcron.o subs.o database.o job.o log.o conf.o
 OBJS= fcrontab.o fileconf.o subs.o log.o allow.c
 HEADERSD = fcron.h config.h global.h
 HEADERS = fcrontab.h config.h global.h
+
+# this is a regular expression
+RCSNOLOG=.*\(.html\|VERSION\|MANIFEST\)
 
 all: fcron fcrontab
 
@@ -92,10 +95,10 @@ install: all
 	$(INSTALL) -m 4111 -o root -s fcrontab $(DESTBIN)/
 	$(INSTALL) -m 700 -o root files/fcron.allow $(ETC)/
 	$(INSTALL) -m 700 -o root files/fcron.deny $(ETC)/
-	$(INSTALL) -m 644 -o root man/fcron.8 $(DESTMAN)/man8/
-	$(INSTALL) -m 644 -o root man/fcrontab.1 $(DESTMAN)/man1/
-	$(INSTALL) -m 644 -o root man/fcrontab.5 $(DESTMAN)/man5/
-	$(INSTALL) -m 644 -o root man/bitstring.3 $(DESTMAN)/man3/
+	$(INSTALL) -m 644 -o root doc/fcron.8 $(DESTMAN)/man8/
+	$(INSTALL) -m 644 -o root doc/fcrontab.1 $(DESTMAN)/man1/
+	$(INSTALL) -m 644 -o root doc/fcrontab.5 $(DESTMAN)/man5/
+	$(INSTALL) -m 644 -o root doc/bitstring.3 $(DESTMAN)/man3/
 	script/sysVinit-install "$(CFLAGS)" $(INSTALL)
 	mkdir -p /usr/doc/fcron-$(VERSION)
 	cd doc; $(INSTALL) -m 644 -o root README LICENSE CHANGES *.html \
@@ -120,33 +123,33 @@ clean:
 
 vclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
-	rm -f fcron*tar.gz MANIFEST doc/*.html
 
-need_make_doc:
-# force to do a part each time it is called if placed in its depencies.
+%.html: %
+	groff -Thtml -mandoc $* > ./tmp
+	sed "s:<body>:<body BGCOLOR="\#000000" TEXT="\#FFFFFF">\
+	    <h1>$(*F)</h1><br>:I" < ./tmp > $@
+	rm -f ./tmp
 
-doc: need_make_doc
-	@echo -e "\nupdating docs ...\n"
-
-	./script/gen-doc $(VERSION)
-
-	@echo -e "\n...done\n"
+updatedoc: doc/*.html
+	script/gen-doc $(VERSION)
 
 
-tar: vclean doc
+tar: vclean updatedoc
 
 	@echo -e "\ncreating archive ...\n"
 
 	echo $(VERSION) > ./VERSION
 
-	@(find ./ -type f ! -regex '.*RCS.*' ! -name "*html" -exec ci -l {} \;)
+	@(find ./ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOLOG)" \
+             -exec ci -l {} \;)
 
-	@(find ./ -type f ! -regex '.*RCS.*' | sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
+	@(find ./ -type f ! -regex '.*RCS.*' | \
+             sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
 	@(cd ..; ln -s fcron fcron-$(VERSION))
 	(cd ..; tar -czvf fcron-$(VERSION).src.tar.gz `cat fcron/MANIFEST`)
 	@(cd ..; rm -f fcron-$(VERSION))
 
-	@(cd ..; cp -f fcron-$(VERSION).src.tar.gz old-fcron-pkg/)
+	@(cd ..; mv -f fcron-$(VERSION).src.tar.gz old-fcron-pkg/)
 
 	@echo -e "\n...done\n"
 
