@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.24 2000-08-28 17:58:19 thib Exp $ */
+ /* $Id: fcron.c,v 1.25 2000-09-03 13:15:46 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.24 2000-08-28 17:58:19 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.25 2000-09-03 13:15:46 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -277,8 +277,11 @@ sighup_handler(int x)
 {
     signal(SIGHUP, sighup_handler);
     siginterrupt(SIGHUP, 0);
-    debug("");
-    explain("SIGHUP signal received");
+    /* we don't call syslog() (by debug and explain) here anymore, because
+     * it may cause a crash if the signal is received during another call
+     * of syslog() */
+/*      debug(""); */
+/*      explain("SIGHUP signal received"); */
     /* we don't call the synchronize_dir() function directly,
        because it may cause some problems if this signal
        is not received during the sleep
@@ -290,8 +293,11 @@ void
 sigchild_handler(int x)
   /* call wait_chld() to take care of finished jobs */
 {
-    debug("");
-    debug("SIGCHLD signal received.");
+    /* we don't call syslog() (by debug and explain) here anymore, because
+     * it may cause a crash if the signal is received during another call
+     * of syslog() */
+/*      debug(""); */
+/*      debug("SIGCHLD signal received."); */
     
     sig_chld = 1;
 
@@ -306,8 +312,11 @@ sigusr1_handler(int x)
 {
     signal(SIGUSR1, sigusr1_handler);
     siginterrupt(SIGUSR1, 0);
-    debug("");
-    explain("SIGUSR1 signal received");
+    /* we don't call syslog() (by debug and explain) here anymore, because
+     * it may cause a crash if the signal is received during another call
+     * of syslog() */
+/*      debug(""); */
+/*      explain("SIGUSR1 signal received"); */
     /* we don't call the synchronize_dir() function directly,
        because it may cause some problems if this signal
        is not received during the sleep
