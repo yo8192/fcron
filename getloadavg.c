@@ -33,7 +33,6 @@
 
 #include <kstat.h>
 
-/* Copyright 2000-2001 Thomas Whateley <Thomas_Whateley@health.qld.gov.au> */
 int
 getloadavg(double *result, int n)
 /* return the current load average as a floating point number,
