@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.59 2002-08-30 20:04:49 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.60 2002-09-07 13:10:50 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -47,7 +47,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.59 2002-08-30 20:04:49 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.60 2002-09-07 13:10:50 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -182,7 +182,8 @@ int
 copy(char *orig, char *dest)
     /* copy orig file to dest */
 {
-    FILE *from = NULL, *to = NULL;
+    FILE *from = NULL;
+    int to_fd;
     int c;
 
     if ( (from = fopen(orig, "r")) == NULL) {
@@ -202,7 +203,8 @@ copy(char *orig, char *dest)
 	    error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
     }
 #endif
-    if ((to = fopen(dest, "w")) == NULL) {
+    to_fd = open(dest, O_CREAT | O_TRUNC | O_SYNC);
+    if (to_fd == -1) {
 	error_e("copy: dest");
 	return ERR;
     }
@@ -211,20 +213,22 @@ copy(char *orig, char *dest)
 	die_e("seteuid(uid[%d])", uid);
 #endif
     if (asuid == ROOTUID ) {
-	if ( fchmod(fileno(to), S_IWUSR | S_IRUSR) != 0 )
+	if ( fchmod(to_fd, S_IWUSR | S_IRUSR) != 0 )
 	    error_e("Could not fchmod %s to 600", dest);
-	if ( fchown(fileno(to), ROOTUID, fcrontab_gid) != 0 )
+	if ( fchown(to_fd, ROOTUID, fcrontab_gid) != 0 )
 	    error_e("Could not fchown %s to root", dest);
     }
 
     while ( (c = getc(from)) != EOF )
-	if ( putc(c, to) == EOF ) {
+	if ( write(to_fd, &c, 1) != 1 ) {
 	    error("Error while copying file. Aborting.\n");
+	    fclose(from);
+	    close(to_fd);
 	    return ERR;
 	}
 
     fclose(from);
-    fclose(to);
+    close(to_fd);
     
     return OK;
 }
@@ -236,7 +240,7 @@ remove_fcrontab(char rm_orig)
     /* note : the binary fcrontab is removed by fcron */
 {
     int return_val = OK;
-    FILE *f;
+    int fd;
 
     if ( rm_orig )
 	explain("removing %s's fcrontab", user);
@@ -262,8 +266,10 @@ remove_fcrontab(char rm_orig)
     /* finally create a file in order to tell the daemon
      * a file was removed, and launch a signal to daemon */
     snprintf(buf, sizeof(buf), "rm.%s", user);
-    f = fopen(buf, "w");
-    fclose(f);
+    fd = open(buf, O_CREAT | O_TRUNC);
+    if ( fd == -1 )
+	error_e("Can't create file %s", buf);
+    close(fd);
     
     need_sig = 1;
 
@@ -441,7 +447,13 @@ edit_file(char *buf)
 		    goto exiterr;
 		}
 	    }
-
+	    else {
+		/* Some programs, like perl, require gid=egid : */
+		if ( setgid(getgid()) < 0 ) {
+		    error_e("setgid(getgid())");
+		    goto exiterr;
+		}
+	    }
 	    snprintf(editorcmd, sizeof(editorcmd), "%s %s", cureditor, tmp_str);
 	    execlp(shell, shell, "-c", editorcmd, tmp_str, NULL);
 	    error_e("Error while running \"%s\"", cureditor);
@@ -483,7 +495,7 @@ edit_file(char *buf)
 		close(fd);
 		goto exiterr;
 	    }
-	    if ( fchown(fd, ROOTUID, ROOTGID) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ) {
+	    if ( fchown(fd, ROOTUID, ROOTGID) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ){
 		fprintf(stderr, "Can't chown or chmod %s.\n", tmp_str);
 		close(fd);
 		goto exiterr;
@@ -744,7 +756,7 @@ parseopt(int argc, char *argv[])
 	    usage(); break;
 
 	case 'u':
-	    if (getuid() != ROOTUID) {
+	    if (uid != ROOTUID) {
 		fprintf(stderr, "must be privileged to use -u\n");
 		xexit(EXIT_ERR);
 	    }
@@ -833,7 +845,7 @@ parseopt(int argc, char *argv[])
 	else
 	    usage();
 
-	if (getuid() != ROOTUID) {
+	if (uid != ROOTUID) {
 	    fprintf(stderr, "must be privileged to use -u\n");
 	    xexit(EXIT_ERR);
 	}
@@ -843,7 +855,7 @@ parseopt(int argc, char *argv[])
 	if ( list_opt + rm_opt + edit_opt + reinstall_opt == 0 )
 	    file_opt = optind;
 	else {
-	    if (getuid() != ROOTUID) {
+	    if (uid != ROOTUID) {
 		fprintf(stderr, "must be privileged to use [user|-u user]\n");
 		xexit(EXIT_ERR);
 	    }
