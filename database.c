@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.63 2002-07-19 19:38:56 thib Exp $ */
+ /* $Id: database.c,v 1.64 2002-08-25 17:26:26 thib Exp $ */
 
 #include "fcron.h"
 
@@ -1143,11 +1143,7 @@ check_lavg(time_t lim)
 #else
 
     register int i = 0;
-    double l_avg[3];
-
-    l_avg[0] = 0;
-    l_avg[1] = 0;
-    l_avg[2] = 0;
+    double l_avg[3]= {0, 0, 0};
 
     /* first, check if some lines must be executed because of until */
     while ( i < lavg_num )
