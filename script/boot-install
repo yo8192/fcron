@@ -2,9 +2,10 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.7 2000-06-21 10:42:19 thib Exp $
+# $Id: boot-install,v 1.8 2000-09-03 18:55:04 thib Exp $
 
-# take one arguments : the name of the BSD-like install program
+# take 2 arguments : the name of the BSD-like install program
+#                    and the DESTSBIN directory
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
