@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.15 2002-08-29 17:35:29 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.16 2002-08-30 20:06:10 thib Exp $ -->
 
 <sect1 id="changes">
     <title>Changes</title>
@@ -20,6 +20,10 @@ A copy of the license is included in gfdl.sgml.
 	</listitem>
 	<listitem>
 	    <para>mailto can now be set to a non-real user (for ex., an alias).</para>
+	</listitem>
+	<listitem>
+	    <para>Added a system fcrontab. Root can access it with fcrontab by using
+"-u systab".</para>
 	</listitem>
 	<listitem>
 	    <para>fcron now calls shutdown() when a connection from fcrondyn is closed.
