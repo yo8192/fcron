@@ -2,7 +2,7 @@
 # fcron's Makefile  ########
 ############################
 
-# $Id: Makefile.in,v 1.6 2000-05-16 20:03:26 thib Exp $
+# $Id: Makefile.in,v 1.7 2000-05-17 19:20:46 thib Exp $
 
 # ********************************************************* #
 # *** Begin of configurable stuffs ************************ #
@@ -89,8 +89,6 @@ allow.o:  allow.c $(HEADERS)
 
 install: all
 
-	@echo -e "\ninstalling ...\n"
-
 	$(INSTALL) -m 111 -o root -s fcron $(DESTSBIN)/
 	$(INSTALL) -m 4111 -o root -s fcrontab $(DESTBIN)/
 	$(INSTALL) -m 700 -o root files/fcron.allow $(ETC)/
@@ -105,8 +103,6 @@ install: all
 		 /usr/doc/fcron-$(VERSION)/
 	mkdir -p $(FCRONTABS)
 	chmod 700 $(FCRONTABS)
-
-	@echo -e "\n...done\n"
 
 
 uninstall:
