@@ -1,11 +1,12 @@
 #!/bin/sh
 #
-# description : fcron is a scheduler especially useful for people
+# chkconfig: 2345 40 60
+# description : fcron is a scheduler especially useful for people \
 #               who are not running their system all the time.
 # processname: fcron
+# pidfile: /var/run/fcron.pid
 # config: /var/spool/fcron/*
-
-# $Id: sysVinit-launcher,v 1.2 2000-05-15 18:28:27 thib Exp $
+# $Id: sysVinit-launcher,v 1.3 2000-09-03 18:55:25 thib Exp $
 
 FUNCTION=0
 
