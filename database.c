@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.49 2001-02-27 20:50:22 thib Exp $ */
+ /* $Id: database.c,v 1.50 2001-04-21 08:50:46 thib Exp $ */
 
 #include "fcron.h"
 
@@ -407,13 +407,10 @@ wait_chld(void)
 		else
 		    exe_array[i].e_line = NULL;
 		
-		goto nextloop;
+		break;
 	    }
 	    i++;
 	}
-	/* execution shouldn't come here */
-	debug("not in exe_array !");
-      nextloop:
     }
 
 }
@@ -453,13 +450,10 @@ wait_all(int *counter)
 		else
 		    exe_array[i].e_line = NULL;
 		
-		goto nextloop;
+		break;
 	    }
 	    i++;
 	}
-	/* execution shouldn't come here */
-	debug("not in exe_array !");
-      nextloop:
     }    
     
 }
