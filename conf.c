@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.20 2000-08-30 09:06:18 thib Exp $ */
+ /* $Id: conf.c,v 1.21 2000-09-03 13:13:48 thib Exp $ */
 
 #include "fcron.h"
 
@@ -536,43 +536,107 @@ delete_file(const char *user_name)
     env_t *cur_env = NULL;
     struct job *j = NULL;
     struct job *prev_j;
+    int i, k;
+    struct CL **s_a = NULL;
 
     file = file_base;
     while ( file != NULL) {
-	if (strcmp(user_name, file->cf_user) == 0) {
-
-	    /* free lines */
-	    cur_line = file->cf_line_base;
-	    while ( (line = cur_line) != NULL) {
-		cur_line = line->cl_next;
-
-		/* remove line from the lists */
-		prev_j = NULL;
-		for ( j = queue_base; j != NULL; j = j->j_next )
-		    if ( j->j_line == line ) {
-			if (prev_j != NULL) 
-			    prev_j->j_next = j->j_next;
-			else
-			    queue_base = j->j_next;
-			free(j);
-			break;
-		    }
-		    else
-			prev_j = j;
-
-		/* free line itself */
-		free(line->cl_shell);
-		free(line);
-	    }
-	    /* delete_file() MUST remove only the first occurrence :
-	     * this is needed by synchronize_file() */
-	    break ;
-	} else {
+	if (strcmp(user_name, file->cf_user) != 0) {
 	    prev_file = file;
 	    file = file->cf_next;
+	    continue;
 	}
+
+	/* free lines */
+	cur_line = file->cf_line_base;
+	while ( (line = cur_line) != NULL) {
+	    cur_line = line->cl_next;
+
+	    /* remove line from the lists */
+	    if ( line->cl_pid == -1 ) {
+		if ( is_lavg(line->cl_option) ) {
+		    for ( i = 0; i < lavg_num; i++ )
+			if ( lavg_array[i].l_line == line ) {
+			    debug("removing '%s' from lavg queue",
+				  lavg_array[i].l_line->cl_shell);
+			    if (i < --lavg_num) {
+				lavg_array[i] = lavg_array[lavg_num];
+				lavg_array[lavg_num].l_line = NULL;
+			    }
+			    else
+				lavg_array[i].l_line = NULL;	
+			    break;
+			}
+		}
+		else if ( is_serial(line->cl_option) 
+			  || is_serial_once(line->cl_option) ) {
+
+		    /* there is somewhere a bug ...
+		     * don't be too much frightened, this is temporary */
+		    while ( serial_num > 0 )
+			run_serial_job();
+		    goto endofserial;
+
+		    if ( ! s_a )
+			s_a = calloc(serial_array_size, sizeof(CL *));
+		    i = serial_array_index;
+		    if ( (k = serial_array_index + serial_num)
+			 >= serial_array_size )
+			k -= serial_array_size;
+		    while (i != k) {
+			if ( serial_array[i] == line ) {
+			    debug("removing '%s' from serial queue",
+				  serial_array[i]->cl_shell);
+			    serial_array[i] = NULL;
+			    break;
+			}
+			if ( ++i >= serial_array_size )
+			    i -= serial_array_size;
+		    }
+		    serial_num--;
+		}
+	    }
+	  endofserial:
+	    prev_j = NULL;
+	    for ( j = queue_base; j != NULL; j = j->j_next )
+		if ( j->j_line == line ) {
+		    if (prev_j != NULL) 
+			prev_j->j_next = j->j_next;
+		    else
+			queue_base = j->j_next;
+		    free(j);
+		    break;
+		}
+		else
+		    prev_j = j;
+
+	    /* free line itself */
+	    free(line->cl_shell);
+	    free(line);
+	}
+	/* delete_file() MUST remove only the first occurrence :
+	 * this is needed by synchronize_file() */
+	break ;
     }
-    
+    /* remove from queue and move the rest of the jobs to get
+     * a queue in order without empty entries */
+    if ( s_a ) {
+	for ( i = k = 0; i < serial_array_size; i++) {
+	    if ( serial_array_index + i < serial_array_size ) {
+		if ( (s_a[k] = serial_array[serial_array_index + i]) != NULL)
+		    k++;
+	    }
+	    else
+		if( (s_a[k] = 
+		     serial_array[serial_array_index + i - serial_array_size])
+		    != NULL)
+		    k++;
+	}
+	memcpy(serial_array, s_a, serial_array_size * sizeof(CL *));
+	free(s_a);
+	serial_array_index = 0;
+    }
+
     if (file == NULL)
 	/* file not in list */
 	return;
