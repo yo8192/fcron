@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.12 2000-06-22 12:34:37 thib Exp $ */
+ /* $Id: global.h,v 1.13 2000-06-25 20:07:00 thib Exp $ */
 
 
 /* 
@@ -57,7 +57,7 @@
 #include "option.h"
 
 
-#define FILEVERSION "006"  /* syntax's version of fcrontabs : 
+#define FILEVERSION "007"  /* syntax's version of fcrontabs : 
 			    * must have a length of 3 characters */
 
 #define ERR     -1           
