@@ -61,7 +61,7 @@ Without sendmail you won't get the output of the jobs by mail
       AC_DEFINE_UNQUOTED(SENDMAIL,"$ac_cv_path_SENDMAIL")
     else
       AC_MSG_ERROR([
-Cannot determine path to sendmail: try option with-sendmail=PATH])
+Cannot determine path to sendmail: try option --with-sendmail=PATH])
     fi
     ;;
   *)
@@ -80,7 +80,7 @@ file $withval does not exist])
      AC_DEFINE_UNQUOTED(SENDMAIL,"$ac_cv_path_SENDMAIL")
   else
      AC_MSG_ERROR([
-Cannot determine path to sendmail: try option with-sendmail=PATH])
+Cannot determine path to sendmail: try option --with-sendmail=PATH])
   fi ]
 )
 
@@ -97,7 +97,7 @@ AC_ARG_WITH(shell,
       AC_DEFINE_UNQUOTED(SHELL,"$ac_cv_path_SHELL")
     else
       AC_MSG_ERROR([
-Cannot determine path to sh: try option with-shell=PATH])
+Cannot determine path to sh: try option --with-shell=PATH])
     fi
     ;;
   *)
@@ -116,7 +116,7 @@ file $withval does not exist])
      AC_DEFINE_UNQUOTED(SHELL,"$ac_cv_path_SHELL")
   else
      AC_MSG_ERROR([
-Cannot determine path to sh: try option with-shell=PATH])
+Cannot determine path to sh: try option --with-shell=PATH])
   fi ]
 )
 
@@ -133,7 +133,7 @@ AC_ARG_WITH(editor,
       AC_DEFINE_UNQUOTED(EDITOR,"$ac_cv_path_EDITOR")
     else
       AC_MSG_ERROR([
-Cannot determine path to vi: try option with-editor=PATH])
+Cannot determine path to vi: try option --with-editor=PATH])
     fi
     ;;
   *)
@@ -152,7 +152,7 @@ file $withval does not exist])
      AC_DEFINE_UNQUOTED(EDITOR,"$ac_cv_path_EDITOR")
   else
      AC_MSG_ERROR([
-Cannot determine path to vi: try option with-editor=PATH])
+Cannot determine path to vi: try option --with-editor=PATH])
   fi ]
 )
 
@@ -164,8 +164,12 @@ AC_ARG_WITH(etcdir,
     AC_MSG_ERROR(Need ETCDIR.)
     ;;
   yes)
-    etcdir=/etc
-    AC_MSG_RESULT(/etc)
+    if test -d "/etc"; then
+      etcdir=/etc
+      AC_MSG_RESULT(/etc)
+    else
+      AC_MSG_ERROR(directory /etc does not exist: try option --with-etcdir=PATH)
+    fi
     ;;
   *)
     if test -d "$withval"; then
@@ -180,7 +184,7 @@ AC_ARG_WITH(etcdir,
     etcdir="/etc"
     AC_MSG_RESULT(/etc)
   else
-    AC_MSG_ERROR(directory $withval does not exist)
+    AC_MSG_ERROR(directory /etc does not exist: try option --with-etcdir=PATH)
   fi
 )
 ETC="$etcdir"
@@ -209,23 +213,20 @@ AC_ARG_WITH(spooldir,
   yes)
     if test -d /var/spool/fcron ; then
         sp=/var/spool/fcron
-        AC_DEFINE(FCRONTABS, "/var/spool/fcron")
         AC_MSG_RESULT(Using existing /var/spool/fcron)
     elif  test -d /var/spool/ ; then
        sp=/var/spool/fcron
-       AC_DEFINE(FCRONTABS, "/var/spool/fcron")
        AC_MSG_RESULT(/var/spool/fcron)
     elif test -d /usr/spool/ ; then
        sp=/usr/spool/fcron
-       AC_DEFINE(FCRONTABS, "/usr/spool/fcron")
        AC_MSG_RESULT(/usr/spool/fcron)
     else
-       AC_MSG_ERROR(Cannot determine value for spool directory)
+       AC_MSG_ERROR(Cannot determine value for spool directory: try option --with-spooldir=PATH)
     fi
     ;;
   *)
     if test -d "$withval"; then
-      AC_DEFINE_UNQUOTED(FCRONTABS, "$withval")
+      sp="$withval"
       AC_MSG_RESULT($withval)
     else
       AC_MSG_ERROR(directory $withval does not exist)
@@ -234,27 +235,25 @@ AC_ARG_WITH(spooldir,
   esac ],
   if test -d /var/spool/fcron ; then
       sp=/var/spool/fcron
-      AC_DEFINE(FCRONTABS, "/var/spool/fcron")
       AC_MSG_RESULT(Using existing /var/spool/fcron)
   elif  test -d /var/spool/ ; then
       sp=/var/spool/fcron
-      AC_DEFINE(FCRONTABS, "/var/spool/fcron")
       AC_MSG_RESULT(/var/spool/fcron)
   elif test -d /usr/spool/ ; then
       sp=/usr/spool/fcron
-      AC_DEFINE(FCRONTABS, "/usr/spool/fcron")
       AC_MSG_RESULT(/usr/spool/fcron)
   else
-      AC_MSG_ERROR(Cannot determine value for spool directory)
+      AC_MSG_ERROR(Cannot determine value for spool directory: try option --with-spooldir=PATH)
   fi
 )
 FCRONTABS="$sp"
+AC_DEFINE(FCRONTABS, "$sp")
 AC_SUBST(FCRONTABS)
 
 if test $getloadavg -eq 0  ; then
 AC_MSG_CHECKING(proc directory)
 AC_ARG_WITH(proc,
-[  --with-proc=PATH    Directory where procfs is mounted (default /proc).],
+[  --with-proc=PATH    Directory where linux procfs is mounted (default /proc).],
 [ case "$withval" in
   no)
     AC_MSG_WARN([
@@ -265,15 +264,14 @@ Without proc, you won't be able to use the lavg* options
   yes)
     if test -f /proc/loadavg ; then
         proc="/proc"
-        AC_DEFINE(PROC, "/proc")
         AC_MSG_RESULT(/proc)
     else
-       AC_MSG_ERROR(Cannot determine value for proc directory)
+       AC_MSG_ERROR(Cannot determine value for proc directory: try option --with-proc=PATH)
     fi
     ;;
   *)
     if test -f "$withval/loadavg"; then
-      AC_DEFINE_UNQUOTED(PROC, "$withval")
+      proc="$withval"
       AC_MSG_RESULT($withval)
     else
       AC_MSG_ERROR(directory $withval does not exist)
@@ -282,13 +280,13 @@ Without proc, you won't be able to use the lavg* options
   esac ],
   if test -f "/proc/loadavg" ; then
       proc="/proc"
-      AC_DEFINE(PROC, "/proc")
       AC_MSG_RESULT(/proc)
   else
-     AC_MSG_ERROR(Cannot determine value for proc directory)
+     AC_MSG_ERROR(Cannot determine value for proc directory try option --with-proc=PATH)
   fi
 )
 PROC="$proc"
+AC_DEFINE(PROC, "$proc")
 AC_SUBST(PROC)
 fi
 
@@ -307,6 +305,7 @@ AC_ARG_WITH(debug,
   esac ],
     CFLAGS="-O2 -Wall"
 )
+
 
 AC_OUTPUT(Makefile)
 
