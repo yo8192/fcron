@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.3 2000-06-19 12:44:33 thib Exp $ */
+ /* $Id: option.h,v 1.4 2000-06-21 13:46:55 thib Exp $ */
 
 /* read and set options of a line */
 
@@ -144,6 +144,18 @@
 	(_bit_set(opt, 6))
 #define clear_zerolength(opt) \
 	(_bit_clear(opt, 6))
+
+
+/*
+  bit 7 : set to 1 : job is being serialized once
+          set to 0 : job is not being serialized once
+*/
+#define	is_serial_once(opt) \
+	(_bit_test(opt, 7))
+#define	set_serial_once(opt) \
+	(_bit_set(opt, 7))
+#define clear_serial_once(opt) \
+	(_bit_clear(opt, 7))
 
 
 #endif /* __OPTIONH__ */
