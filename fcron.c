@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.32 2000-10-08 10:09:50 thib Exp $ */
+ /* $Id: fcron.c,v 1.33 2000-11-10 17:35:40 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.32 2000-10-08 10:09:50 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.33 2000-11-10 17:35:40 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -170,7 +170,6 @@ get_lock()
 	    || ((fp = fdopen(fd, "r+"))) == NULL)
 	    die_e("can't open or create " PIDFILE);
 	
-    
 	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
 	    if ((errno == EAGAIN) || (errno == EACCES))
 		errno = EWOULDBLOCK;
@@ -339,11 +338,10 @@ sigusr1_handler(int x)
 int
 main(int argc, char **argv)
 {
-    int i;
 
-    /* this program belongs to root : we set default permission mode
-     * to  600 for security reasons */
-    umask(066);
+    /* we set it to 022 in order to get a PIDFILE readable by fcrontab
+     * (will be set to 066 later) */
+    umask(022);
 
     /* parse options */
 
@@ -374,7 +372,7 @@ main(int argc, char **argv)
 	 * close unused descriptors
 	 * optional detach from controlling terminal */
 
-	int fd;
+	int fd, i;
 	pid_t pid;
 
 	/* check if another fcron daemon is running */
@@ -414,6 +412,25 @@ main(int argc, char **argv)
      * is running, otherwise update value of pid in lock file */
     get_lock();
     
+    /* become USERNAME : this is needed to be able to be signaled
+     * by fcrontab */
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    {
+	struct passwd *pass;
+
+	if ( ! (pass = getpwnam(USERNAME)) )
+	    die("user '%s' is not in passwd file. Aborting.", USERNAME);
+	if (setregid(pass->pw_gid, 0) != 0 )
+	    die_e("Could not set gid to " GROUPNAME);
+	if (setreuid(pass->pw_uid, 0) != 0 )
+	    die_e("Could not set uid to " USERNAME);
+    }
+#endif
+
+    /* this program belongs to root : we set default permission mode
+     * to  600 for security reasons */
+    umask(066);
+
     explain("%s[%d] " VERSION_QUOTED " started", prog_name, daemon_pid);
 
     signal(SIGTERM, sigterm_handler);
