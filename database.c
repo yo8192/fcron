@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.61 2002-02-02 14:52:29 thib Exp $ */
+ /* $Id: database.c,v 1.62 2002-02-25 18:43:54 thib Exp $ */
 
 #include "fcron.h"
 
@@ -811,10 +811,14 @@ set_next_exe(CL *line, char option)
 
 	ftime.tm_isdst = -1;
 
-	/* to prevent multiple execution in the same minute */
-	ftime.tm_min += 1;
-	ftime.tm_sec = 0;
-	if (line->cl_runfreq==1 && option != NO_GOTO && option != NO_GOTO_LOG)
+	/* to prevent multiple execution of &-jobs in the same minute
+ 	 * (but not if the user has explicitely asked to run jobs immediately) */
+ 	if (first_sleep > 0 || option == STD || line->cl_runfreq != 1) {
+	    ftime.tm_min += 1;
+	    ftime.tm_sec = 0;
+	}
+	    
+	if (line->cl_runfreq == 1 && option != NO_GOTO && option != NO_GOTO_LOG)
 	    goto_non_matching(line, &ftime, STD);
 
       setMonth:
