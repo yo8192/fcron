@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.9 2000-06-15 20:12:38 thib Exp $ */
+ /* $Id: database.c,v 1.10 2000-06-16 11:51:36 thib Exp $ */
 
 #include "fcron.h"
 
@@ -36,7 +36,7 @@ void
 test_jobs(time_t t2)
   /* determine which jobs need to be run, and run them. */
 {
-    struct job *j = NULL;
+    struct job *j;
 
     debug("Looking for jobs to execute ...");
 
@@ -66,16 +66,11 @@ void
 wait_chld(void)
   /* wait_chld() - check for job completion */
 {
-    struct job *j = NULL;
+    struct job *j;
     struct job *jprev = NULL;
     int pid;
-    int status;
 
-    ////////
-//    debug("wait_chld");
-    ///////
-
-    while ( (pid = wait3(&status, WNOHANG, NULL)) > 0 ) {
+    while ( (pid = wait3(NULL, WNOHANG, NULL)) > 0 ) {
 	for (j = exe_base; j != NULL ; j = j->j_next) {
 	    if (pid < 0 || pid == j->j_line->cl_pid) {
 		j->j_line->cl_pid = 0;
@@ -102,14 +97,13 @@ void
 wait_all(int *counter)
    /* return after all jobs completion. */
 {
-    struct job *j = NULL;
+    struct job *j;
     struct job *jprev = NULL;
     int pid;
-    int status;
 
     debug("Waiting for all jobs");
 
-    while ( (*counter > 0) && (pid = wait3(&status, 0, NULL)) > 0 ) {
+    while ( (*counter > 0) && (pid = wait3(NULL, 0, NULL)) > 0 ) {
 	for (j = exe_base; j != NULL ; j = j->j_next) {
 	    if (pid < 0 || pid == j->j_line->cl_pid) {
 
@@ -374,10 +368,10 @@ void
 insert_nextexe(CL *line)
     /* insert a job the queue list */
 {
-    struct job *newjob = NULL;
+    struct job *newjob;
 
     if (queue_base != NULL) {
-	struct job *j = NULL;
+	struct job *j;
 	struct job *jprev = NULL;
 	struct job *old_entry = NULL;
 
