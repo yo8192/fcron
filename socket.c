@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.5 2002-08-22 21:34:15 thib Exp $ */
+ /* $Id: socket.c,v 1.6 2002-08-25 17:27:14 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -57,8 +57,9 @@ char err_others_nallowed_str[] = "You are not allowed to list other users' jobs.
 #define FIELD_RQ 1
 #define FIELD_PID 2
 #define FIELD_SCHEDULE 3
-#define FIELD_UNTIL 4
+#define FIELD_LAVG 4
 #define FIELD_INDEX 5
+#define FIELD_OPTIONS 6
 
 /* the number of char we need (8 bits (i.e. fields) per char) */
 #define FIELD_NUM_SIZE 1
@@ -205,11 +206,12 @@ print_fields(int fd, unsigned char *details)
     /* print a line describing the field types used in print_line() */
 {
     char fields[TERM_LEN];
-    char field_user[] = "   USER";
+    char field_user[] = " USER  ";
     char field_id[] = "ID   ";
     char field_rq[] = " R&Q ";
+    char field_options[] = " OPTIONS  ";
     char field_schedule[] = " SCHEDULE        ";
-    char field_until[] = " UNTIL           ";
+    char field_until[] = " LAVG 1,5,15 UNTIL       STRICT";
     char field_pid[] = " PID    ";
     char field_index[] = " INDEX";
     char field_cmd[] = " CMD";
@@ -223,7 +225,8 @@ print_fields(int fd, unsigned char *details)
     Test_add_field(FIELD_PID, field_pid);
     Test_add_field(FIELD_INDEX, field_index);
     Test_add_field(FIELD_RQ, field_rq);
-    Test_add_field(FIELD_UNTIL, field_until);
+    Test_add_field(FIELD_OPTIONS, field_options);
+    Test_add_field(FIELD_LAVG, field_until);
     Test_add_field(FIELD_SCHEDULE, field_schedule);
     Add_field(field_cmd);
     Add_field(field_endline);
@@ -248,22 +251,39 @@ print_line(int fd, struct CL *line,  unsigned char *details, pid_t pid, int inde
 
     len = snprintf(buf, sizeof(buf), "%-5ld", line->cl_id);
     if ( bit_test(details, FIELD_USER) )
-	len += snprintf(buf+len, sizeof(buf)-len, " %6s", line->cl_file->cf_user);
+	len += snprintf(buf+len, sizeof(buf)-len, " %-6s", line->cl_file->cf_user);
     if ( bit_test(details, FIELD_PID) )
 	len += snprintf(buf+len, sizeof(buf)-len, " %-7d", pid);
     if ( bit_test(details, FIELD_INDEX) )
 	len += snprintf(buf+len, sizeof(buf)-len, " %-5d", index);
     if ( bit_test(details, FIELD_RQ) )
 	len += snprintf(buf+len, sizeof(buf)-len, " %-4d", line->cl_numexe);
-    if ( bit_test(details, FIELD_UNTIL) ) {
+    if ( bit_test(details, FIELD_OPTIONS) ) {
+	char opt[9];
+	int i = 0;
+	if ( is_lavg(line->cl_option) )
+	    i += snprintf(opt+i, sizeof(opt)-i, "L%.*s",
+			  (is_lavg_sev(line->cl_option)) ? 0:1, "O");
+	if ( is_serial(line->cl_option) )
+	    i += snprintf(opt+i, sizeof(opt)-i, "%.*sS%.*s", i, ",",
+			  (is_serial_sev(line->cl_option)) ? 0:1, "O");
+	if ( is_exe_sev(line->cl_option) )
+	    i += snprintf(opt+i, sizeof(opt)-i, "%.*sES", i, ",");
+
+	len += snprintf(buf+len, sizeof(buf)-len, " %-9s", opt);
+    }
+    if ( bit_test(details, FIELD_LAVG) ) {
+	len += snprintf(buf+len, sizeof(buf)-len, " %.1lf,%.1lf,%.1lf",
+			((double)((line->cl_lavg)[0]))/10, ((double)((line->cl_lavg)[1]))/10, ((double)((line->cl_lavg)[2]))/10);
 	if ( until > 0 ) {
 	    ftime = localtime( &until );
-	    len += snprintf(buf+len, sizeof(buf)-len, " %02d/%02d/%d %02d:%02d",
+	    len += snprintf(buf+len, sizeof(buf)-len, " %02d/%02d/%d %02d:%02d %s",
 			    (ftime->tm_mon + 1), ftime->tm_mday, (ftime->tm_year + 1900),
-			    ftime->tm_hour, ftime->tm_min );
+			    ftime->tm_hour, ftime->tm_min,
+			    (is_strict(line->cl_option)) ? "Y":"N");
 	}
 	else
-	    len += snprintf(buf+len, sizeof(buf)-len, " %16s", " (no until set) ");
+	    len += snprintf(buf+len, sizeof(buf)-len, " %18s", " (no until set) ");
     }
     if ( bit_test(details, FIELD_SCHEDULE) ) {
 	ftime = localtime( &(line->cl_nextexe) );
@@ -296,12 +316,16 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
     struct job *j;
     int i;
     unsigned char fields[FIELD_NUM_SIZE];
+
+    for (i = 0; i < FIELD_NUM_SIZE; i++)
+	fields[i] = 0;
     
     switch ( cmd[0] ) {
     case CMD_DETAILS:
 	bit_set(fields, FIELD_SCHEDULE);
 	bit_set(fields, FIELD_RQ);
 	bit_set(fields, FIELD_USER);
+	bit_set(fields, FIELD_OPTIONS);
 	print_fields(fd, fields);
 	for ( j = queue_base; j != NULL; j = j->j_next ) {
 	    if ( cmd[1] == j->j_line->cl_id ) {
@@ -320,8 +344,16 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
     case CMD_LIST_LAVGQ:
     case CMD_LIST_SERIALQ:
     case CMD_LIST_EXEQ:
-	if ( cmd[0] == CMD_LIST_LAVGQ )
-	    bit_set(fields, FIELD_UNTIL);
+	if ( cmd[0] == CMD_LIST_LAVGQ ) {
+	    double lavg[3] = {0, 0, 0};
+	    char lavg_str[TERM_LEN];
+	    getloadavg(lavg, 3);
+	    i = snprintf(lavg_str, sizeof(lavg_str), "Current load average : "
+			 "%.1lf, %.1lf, %.1lf\n", lavg[0], lavg[1], lavg[2]);
+	    send(fd, lavg_str, i, 0);
+
+	    bit_set(fields, FIELD_LAVG);
+	}
 	else
 	    bit_set(fields, FIELD_SCHEDULE);
 
@@ -562,7 +594,6 @@ close_socket(void)
 	    close(client->fcl_sock_fd);
 
 	    client_buf = client->fcl_next;
-	    Flush(client->fcl_cmd);
 	    Flush(client);
 	    fcrondyn_cl_num -= 1;
 	    client = client_buf;
