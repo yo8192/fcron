@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.4 2002-01-03 22:39:50 thib Exp $
+# $Id: Makefile.in,v 1.5 2002-01-04 18:02:06 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -47,7 +47,7 @@ all: doc
 
 doc: HTML/index.html
 
-mandoc: HTML/index.html
+mandoc:
 	@(if test \( ! -f $(DB2MAN_SPEC) \) -o \( ! -x $(NSGMLS) \) -o \( ! -x $(SGMLSPL) \); then \
 	   echo "ERROR: cannot generate man pages." ; \
 	   echo "       Please check if nsgmls, sgmlspl are installed, and " ; \
@@ -147,6 +147,8 @@ vclean: clean
 	rm -f HTML/* man/* txt/*
 
 tar: doc tarclean
-	@(find ./ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
+# we run a "cd .." because it makes appear the path of the file ( ./doc/XXXX )
+# during the ci-ing
+	@(cd ..; find ./doc/ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
              -exec ci -l {} \;)
 
