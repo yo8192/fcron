@@ -4,7 +4,7 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.12 2001-08-17 19:49:38 thib Exp $
+# $Id: user-group,v 1.13 2001-08-20 11:01:35 thib Exp $
 
 # take 4 arguments : 	username
 # 			groupname
@@ -53,7 +53,7 @@ else
     echo "(or choose another groupname with configure script)."
     exit 1
   fi
-  if test $ANSWER -eq 2; then
+  if test "$ANSWER" -eq 2; then
     while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
     do
       echo "Would you like to add $GROUPNAME in /etc/passwd with the following command ?"
@@ -67,7 +67,7 @@ else
         INSTALLED=1
       fi
     fi
-  elif test $ANSWER -eq 1; then
+  elif test "$ANSWER" -eq 1; then
     # automatic answer given by configure script (option --with-answer-all)
     if $CMD; then
       INSTALLED=1
@@ -76,7 +76,7 @@ else
 fi
 
 
-if test $INSTALLED -eq 0; then
+if test "$INSTALLED" -eq 0; then
   echo
   echo "Group \"$GROUPNAME\" does not exist : please create it or choose"
   echo "another groupname with configure script."
@@ -135,10 +135,12 @@ if test "$INSTALLED" -eq 0; then
   echo "username with configure script."
   exit 1
 else
-  (USERGID="`$SRCDIR/script/has_usrgrp.pl -user "$USERNAME" -printgid`" && \
-    GID="`$SRCDIR/script/has_usrgrp.pl -group "$GROUPNAME" -printgid`") || \
-  (echo "Could not check if \"$USERNAME\" is in the group \"$GROUPNAME\" :" &&\
-   echo "please do it manually.")
+  USERGID="`$SRCDIR/script/has_usrgrp.pl -user "$USERNAME" -printgid`"
+  GID="`$SRCDIR/script/has_usrgrp.pl -group "$GROUPNAME" -printgid`"
+  if test \( "$USERGID" = "" \) -o \( "$GID" = "" \); then
+    echo "Could not check if \"$USERNAME\" is in the group \"$GROUPNAME\" :"
+    echo "please do it manually."
+  fi
 
   if test "$GID" -ne "$USERGID"; then
     echo
