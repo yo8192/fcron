@@ -58,6 +58,7 @@ AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
 AC_FUNC_WAIT3
+AC_CHECK_LIB(xnet, shutdown)
 AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
 AC_CHECK_LIB(kstat, kstat_open, [kstat=1], [kstat=0])
 if test $getloadavg -eq 1; then

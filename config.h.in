@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.44 2002-08-25 17:26:45 thib Exp $ */
+ /* $Id: config.h.in,v 1.45 2002-08-29 17:34:14 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -378,3 +378,6 @@
 
 /* Define if you have the shadow library (-lshadow or included in c library).  */
 #undef HAVE_LIBSHADOW
+
+/* Define if you have the xnet library (-lxnet).  */
+#undef HAVE_LIBXNET
