@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.15 2000-06-21 15:01:19 thib Exp $ */
+ /* $Id: job.c,v 1.16 2000-06-22 12:34:55 thib Exp $ */
 
 #include "fcron.h"
 
@@ -83,7 +83,7 @@ run_job(CL *line)
     pid_t pid;
 
     //
-    debug("run_job");
+    //debug("run_job");
     //
 
     /* prepare the job execution */
