@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.37 2003-12-26 00:11:23 thib Exp $
+# $Id: boot-install,v 1.38 2004-01-29 10:36:00 thib Exp $
 
 # takes 6 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -362,7 +362,7 @@ else # test $NEED_UPDATE -eq 0
     exit 0
   fi
   echo "As a matter of fact, you must know that fcrontabs installed by an old"
-  echo "version of fcrontab won't work anymore with this version if you don't"
+  echo "version (<1.1.x) of fcrontab won't work anymore with this version if you don't"
   echo "update their format."
 
   UPDATE="nothing"
