@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.8 2000-06-15 20:18:15 thib Exp $ */
+ /* $Id: job.c,v 1.9 2000-06-16 11:53:24 thib Exp $ */
 
 #include "fcron.h"
 
@@ -88,8 +88,8 @@ run_job(CL *line)
     /* fork(), redirect outputs to a temp file, and execl() the task */ 
 {
 
-    pid_t pid = 0;
-    struct job *j = NULL;
+    pid_t pid;
+    struct job *j;
 
     /* append job to the list of executed job */
     Alloc(j, job);
@@ -106,9 +106,9 @@ run_job(CL *line)
     case 0:
 	/* child */
     {
-	char *shell = NULL;
-	char *home = NULL;
-	env_t *env = NULL;
+	char *shell;
+	char *home;
+	env_t *env;
 	int mailfd = 0;
 	short int mailpos = 0;	/* 'empty mail file' size */
 	int status = 0;
@@ -214,10 +214,6 @@ run_job(CL *line)
     default:
 	/* parent */
 
-	////////
-//	debug("run job - parent");
-	////////
-
 	line->cl_pid = pid;
 
 	line->cl_file->cf_running += 1;
@@ -236,9 +232,6 @@ end_job(CL *line, int status, int mailfd, short mailpos)
     char mail_output;
     char *m;
 
-//////
-    debug("   end_job");
-//////
 
     if ( ( lseek(mailfd, 0, SEEK_END) - strlen (line->cl_shell) ) > mailpos ){
 	if ( line->cl_file->cf_mailto != NULL &&
@@ -281,10 +274,6 @@ launch_mailer(CL *line, int mailfd)
 {
     char *mailto = NULL;
 
-////////
-    debug("   launch mailer");
-////////
-
     foreground = 0;
 
     /* set stdin to the job's output */
@@ -310,7 +299,7 @@ int
 temp_file(void)
     /* Open a temporary file and return its file descriptor */
 {
-    const int max_retries=50;
+    const int max_retries = 50;
     char *name;
     int fd,i;
 

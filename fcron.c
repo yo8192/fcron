@@ -21,11 +21,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.12 2000-06-15 20:12:57 thib Exp $ */
+ /* $Id: fcron.c,v 1.13 2000-06-16 11:52:31 thib Exp $ */
 
 #include "fcron.h"
 
-char rcs_info[] = "$Id: fcron.c,v 1.12 2000-06-15 20:12:57 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.13 2000-06-16 11:52:31 thib Exp $";
 
 void main_loop(void);
 void info(void);
@@ -44,7 +44,6 @@ char foreground = FOREGROUND; /* set to 1 when we are on foreground, else 0 */
 char  *cdir = FCRONTABS;      /* the dir where are stored users' fcrontabs */
 
 /* process identity */
-int daemon_uid;                 
 pid_t daemon_pid;               
 char *prog_name = NULL;         
 
@@ -317,7 +316,11 @@ main(int argc, char **argv)
     if ( strrchr(argv[0], '/') == NULL) prog_name = argv[0];
     else prog_name = strrchr(argv[0], '/') + 1;
 
-    daemon_uid = getuid();
+    {
+	int daemon_uid;                 
+	if ( (daemon_uid = getuid()) != 0 )
+	    die("Fcron must be executed as root");
+    }
 
     /* we have to set daemon_pid before the fork because it's
      * used in die() and die_e() functions */
@@ -434,7 +437,7 @@ void main_loop()
 {
     time_t save;               /* time remaining until next save */
     struct timeval tv;         /* we use usec field to get more precision */
-    time_t stime = 0;          /* time to sleep until next job
+    time_t stime;          /* time to sleep until next job
 		                * execution */
 
     debug("Entering main loop");
