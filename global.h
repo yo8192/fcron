@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.23 2001-01-30 15:52:16 thib Exp $ */
+ /* $Id: global.h,v 1.24 2001-04-21 08:47:26 thib Exp $ */
 
 
 /* 
@@ -32,7 +32,8 @@
 #ifndef __GLOBALH__
 #define __GLOBALH__
 
-/* config.h must be included before every other includes */
+/* config.h must be included before every other includes 
+ * (contains the compilation options) */
 #include "config.h"
 
 
@@ -92,12 +93,12 @@
 #include <limits.h>
 #endif
 
-#include "bitstring.h"         
-#include "option.h"
 
+#include "bitstring.h"     /* bit arrays */
+#include "option.h"        /* manage fcrontab's options */
 
-#define FILEVERSION "017"  /* syntax's version of fcrontabs : 
-			    * must have a length of 3 characters */
+/* constants for fcrontabs needed to load and save the fcrontabs to disk */
+#include "save.h"
 
 /* you should not change this (nor need to do it) */
 #define ERR     -1           
@@ -124,15 +125,20 @@ typedef struct CF {
     int		 cf_running;	/* number of jobs running               */
 } CF;
 
+
+#define OPTION_SIZE 3
+#define LAVG_SIZE 3
 /* warning : do not change the order of the members of this structure
  *   because some tests made are dependent to that order */
+/* warning : if you change a field type, you may have to also make some changes
+ *   in the save/load binary fcrontab functions */
 typedef struct CL {
     struct CL     *cl_next;
     struct CF     *cl_file;       /* the file in which the line is        */
-    unsigned char  cl_option[3];  /* options for that line (see option.h) */
+    unsigned char  cl_option[OPTION_SIZE]; /* line's option (see option.h)*/
     char	  *cl_shell;      /* shell command			  */
     unsigned char  cl_numexe;     /* num of entries in lavg/serial queue  */
-    unsigned char  cl_lavg[3];    /* load averages needed (1, 5, 15 mins) */
+    unsigned char  cl_lavg[LAVG_SIZE];/*load averages needed (1,5,15 mins)*/
     time_t         cl_until;      /* timeout of the wait for a lavg value */
     char           cl_nice;       /* nice value to control priority       */
     char          *cl_runas;      /* determine permissions of the job     */
