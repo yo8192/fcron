@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.5 2000-06-03 20:27:15 thib Exp $ */
+ /* $Id: conf.c,v 1.6 2000-06-11 13:17:29 thib Exp $ */
 
 #include "fcron.h"
 
@@ -193,7 +193,7 @@ synchronize_file(char *file_name)
     if (strchr(file_name, '.') != NULL ) {
 	/* this is a new file : we have to check if there is an old
 	 * version in database in order to keep a maximum of fields
-	 * (cl_remain, cl_nextexe) to their current value */
+	 * (cl_nextexe) to their current value */
 
 	CF *prev = NULL;
 
@@ -216,10 +216,10 @@ synchronize_file(char *file_name)
 	    CL *new_l = NULL;
 	    /* size used when comparing two line : 
 	     * it's the size of all time table (mins, days ...) */
-	    const size_t size=( bitstr_size(60) + bitstr_size(24) + 
+	    const size_t size=( sizeof(time_t) + sizeof(short int) + 
+				bitstr_size(60) + bitstr_size(24) + 
 				bitstr_size(32) + bitstr_size(12) +
-				bitstr_size(7) + sizeof(time_t) + 
-				sizeof(short int) );
+				bitstr_size(7) );
 	    
 	    old = cur_f;
 
@@ -244,7 +244,7 @@ synchronize_file(char *file_name)
 	    }
 	    else 
 		/* this is the first file in the list : no need to move it */
-
+		;
 
 	    /* compare each lines between the new and the old 
 	     * version of the file */
@@ -254,29 +254,23 @@ synchronize_file(char *file_name)
 		    /* compare the shell command and the fields 
 		       from cl_mins down to cl_runfreq or the timefreq */
 		    if ( strcmp(new_l->cl_shell, old_l->cl_shell) == 0 &&
-			 memcmp(new_l->cl_mins, old_l->cl_mins, size) == 0
+			 memcmp( &(new_l->cl_timefreq), &(old_l->cl_timefreq),
+				 size)==0
 			) {
 			
 			new_l->cl_remain = old_l->cl_remain;
-			if ( (new_l->cl_nextexe = old_l->cl_nextexe) > 0 )
-			    insert_nextexe(new_l);
-			else
-			    insert_freq(new_l);
+			new_l->cl_nextexe = old_l->cl_nextexe;
+			insert_nextexe(new_l);
 
 			if (debug_opt) {
-			    if (new_l->cl_nextexe > 0) {
-				struct tm *ftime;
-				ftime = localtime(&new_l->cl_nextexe);
-				debug("  from last conf: %s next exec %d/%d/%d"
-				      " wday:%d %02d:%02d", new_l->cl_shell,
-				      (ftime->tm_mon + 1), ftime->tm_mday,
-				      (ftime->tm_year + 1900), ftime->tm_wday,
-				      ftime->tm_hour, ftime->tm_min);
-			    } 
-			    if (new_l->cl_remain > 0)
-				debug("  from last conf: %s cl_remain: %ld", 
-				      new_l->cl_shell, new_l->cl_remain);
-			}
+			    struct tm *ftime;
+			    ftime = localtime(&new_l->cl_nextexe);
+			    debug("  from last conf: %s next exec %d/%d/%d"
+				  " wday:%d %02d:%02d", new_l->cl_shell,
+				  (ftime->tm_mon + 1), ftime->tm_mday,
+				  (ftime->tm_year + 1900), ftime->tm_wday,
+				  ftime->tm_hour, ftime->tm_min);
+			} 
 			
 			break;
 
@@ -382,7 +376,8 @@ read_file(const char *file_name, CF *cf)
     CL *cl = NULL;
     env_t *env = NULL;
     char buf[LINE_LEN];
-    time_t ti;
+    time_t t_save = 0;
+    time_t slept = 0;
     char c;
     int i;
 
@@ -393,7 +388,6 @@ read_file(const char *file_name, CF *cf)
 	return 1;
     }
 
-    ti = time(NULL);
     debug("User %s Entry", file_name);
     bzero(buf, sizeof(buf));
 
@@ -411,6 +405,12 @@ read_file(const char *file_name, CF *cf)
 	      " using fcrontab.");
 	return 1;
     }    
+
+    /* get the time & date of the saving */
+    if ( fscanf(ff, "%ld", &t_save) != 1 )
+	error("could not get time and date of saving");
+	
+    slept = now - t_save;
 
 
     /* check if there is a mailto field in file */
@@ -447,16 +447,13 @@ read_file(const char *file_name, CF *cf)
 
 	cl->cl_shell = read_str(ff, buf, sizeof(buf));
 
-	debug("  Command '%s'", cl->cl_shell);
-	
 	if ( cl->cl_timefreq == 0 ) {
 	    /* set the time and date of the next execution  */
-	    if ( cl->cl_nextexe <= ti )
+	    if ( cl->cl_nextexe <= now )
 		set_next_exe(cl, 1);
 	} else {
-	    insert_freq(cl);
-	    debug("   remain: %ld  timefreq: %ld", cl->cl_remain,
-		  cl->cl_timefreq);
+	    cl->cl_nextexe += slept;
+	    insert_nextexe(cl);
 	}	    
 
 	/* check if the task has not been stopped during execution */
@@ -465,13 +462,13 @@ read_file(const char *file_name, CF *cf)
 		/* job has terminated normally, but mail has not
 		 * been sent */
 		warn("output of job '%s' has not been mailed "
-			"due to daemon's stop", cl->cl_shell);
+		     "due to daemon's stop", cl->cl_shell);
 		cl->cl_pid = cl->cl_mailfd = cl->cl_mailpid = 0;
 	    } else {
 		/* job has been stopped during execution :
 		 * launch it again */
 		warn("job '%s' has not terminated : will be executed"
-			" again now.", cl->cl_shell);
+		     " again now.", cl->cl_shell);
 		/* we don't set cl_nextexe to 0 because this value is 
 		 * reserved to the entries based on frequency */
 		cl->cl_nextexe = 1;
@@ -480,6 +477,17 @@ read_file(const char *file_name, CF *cf)
 	    }
 	}
 	    
+
+	if (debug_opt) {
+	    struct tm *ftime;
+	    ftime = localtime( &(cl->cl_nextexe) );
+	    debug("  cmd '%s' next exec %d/%d/%d wday:%d %02d:%02d",
+		  cl->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
+		  (ftime->tm_year + 1900), ftime->tm_wday,
+		  ftime->tm_hour, ftime->tm_min); 
+	} 
+	
+
 	cl->cl_next = cf->cf_line_base;
 	cf->cf_line_base = cl;
 	cl->cl_file = cf;
@@ -519,27 +527,15 @@ delete_file(const char *user_name)
 		cur_line = line->cl_next;
 
 		/* remove line from the lists */
-		if( line->cl_timefreq != 0 ) {
-		    for ( j = freq_base; j != NULL; j = j->j_next )
-			if ( j->j_line == line ) {
-			    if (prev_j != NULL) prev_j->j_next = j->j_next;
-			    else 		freq_base = j->j_next;
-			    free(j);
-			    break;
-			}
-			else
-			    prev_j = j;
-		}
-		else
-		    for ( j = queue_base; j != NULL; j = j->j_next )
-			if ( j->j_line == line ) {
-			    if (prev_j != NULL) prev_j->j_next = j->j_next;
-			    else 		queue_base = j->j_next;
-			    free(j);
-			    break;
-			}
-			else
-			    prev_j = j;
+		for ( j = queue_base; j != NULL; j = j->j_next )
+		    if ( j->j_line == line ) {
+			if (prev_j != NULL) prev_j->j_next = j->j_next;
+			else 		queue_base = j->j_next;
+			free(j);
+			break;
+		    }
+		    else
+			prev_j = j;
 
 		/* free line itself */
 		free(line->cl_shell);
@@ -587,13 +583,12 @@ save_file(CF *file, char *path)
      * of tasks at a defined frequency of system's running time */
 {
     CF *cf = NULL;
-    CL *cl= NULL;
+    CL *cl = NULL;
     FILE *f = NULL;
     char check[FNAME_LEN];
     CF *start = NULL;
     int fd = 0;
     env_t *env = NULL;
-
 
     if (file != NULL)
 	start = file;
@@ -625,6 +620,10 @@ save_file(CF *file, char *path)
 	 * a file using a depreciated format generated by an old fcrontab,
 	 * if the syntax has changed */
 	fprintf(f, "fcrontab-" FILEVERSION "\n");
+
+	/* put the time & date of saving : this is use for calcutating 
+	 * the system down time */
+	fprintf(f, "%ld", time(NULL));
 
 	/*   mailto, */
 	if ( cf->cf_mailto != NULL ) {
