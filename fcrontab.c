@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.17 2000-11-10 17:34:02 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.18 2000-11-13 15:45:56 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.17 2000-11-10 17:34:02 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.18 2000-11-13 15:45:56 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -580,13 +580,19 @@ edit_file(char *buf)
     need_sig = 1;
     
   end:
+    if (uid != 0 && setuid(uid) != 0 ) 
+  	die_e("Could not change uid"); 
+
     if ( remove(tmp) != 0 )
-	error("could not remove %s", tmp);
+	error_e("could not remove %s", tmp);
     xexit (EXIT_OK);
 
   exiterr:
+    if (uid != 0 && setuid(uid) != 0 ) 
+  	die_e("Could not change uid"); 
+
     if ( remove(tmp) != 0 )
-	error("could not remove %s", tmp);
+	error_e("could not remove %s", tmp);
     xexit (EXIT_ERR);
 
 }
@@ -606,7 +612,7 @@ install_stdin(void)
 
     sprintf(tmp, "/tmp/fcrontab.%d", getpid());
     if( (tmp_file = fopen(tmp, "w")) == NULL )
-	fprintf(stderr, "Could not open2 '%s': %s\n", tmp,
+	fprintf(stderr, "Could not open '%s': %s\n", tmp,
 		strerror(errno));
 
     while ( (c = getc(stdin)) != EOF )
@@ -639,10 +645,6 @@ reinstall(char *buf)
 
     explain("reinstalling %s's fcrontab", user);
 
-      /* create a temp file with user's permissions */
-/*      if (uid != 0 && setuid(uid) < 0) */
-/*  	die_e("setuid(uid)"); */
-
     if ( (i = open(buf, O_RDONLY)) < 0) {
 	if ( errno == ENOENT ) {
 	    fprintf(stderr, "Could not reinstall: user %s has no fcrontab\n",
@@ -654,10 +656,6 @@ reinstall(char *buf)
 
 	exit (EXIT_ERR);
     }
-/*      if (uid != 0 && setuid(fcrontab_uid) < 0) { */
-/*  	close(i); */
-/*  	die_e("setuid(fcrontab_uid)"); */
-/*      } */
 
     close(0); dup2(i, 0);
     close(i);
