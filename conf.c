@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.49 2001-08-17 19:44:51 thib Exp $ */
+ /* $Id: conf.c,v 1.50 2001-08-20 10:58:13 thib Exp $ */
 
 #include "fcron.h"
 #include "conf.h"
@@ -702,20 +702,20 @@ add_line_to_file(CL *cl, CF *cf, uid_t runas, char *runas_str, time_t t_save)
      * it in lavg or serial queue if it was in one at fcron's stops  */
     if (cl->cl_numexe > 0) {
 	cl->cl_numexe = 0;
-	if ( ! is_strict(cl->cl_option) ) {
-	    if ( is_lavg(cl->cl_option) )
+	if ( is_lavg(cl->cl_option) ) {
+	    if ( ! is_strict(cl->cl_option) )
 		add_lavg_job(cl);
-	    else if ( is_serial(cl->cl_option) 
-		      || is_serial_once(cl->cl_option) )
-		add_serial_job(cl);
-	    else {
-		/* job has been stopped during execution :
-		 * launch it again */
-		warn("job %s did not finish : running it again.",
-		     cl->cl_shell);
-		set_serial_once(cl->cl_option);
-		add_serial_job(cl);
-	    }
+	}
+	else if ( is_serial(cl->cl_option) 
+		  || is_serial_once(cl->cl_option) )
+	    add_serial_job(cl);
+	else {
+	    /* job has been stopped during execution :
+	     * launch it again */
+	    warn("job %s did not finish : running it again.",
+		 cl->cl_shell);
+	    set_serial_once(cl->cl_option);
+	    add_serial_job(cl);
 	}
     }
 
