@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.8 2002-10-05 14:27:50 thib Exp $ */
+ /* $Id: socket.c,v 1.9 2002-10-06 17:10:48 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -32,7 +32,7 @@
 void exe_cmd(struct fcrondyn_cl *client);
 void auth_client(struct fcrondyn_cl *client);
 void print_fields(int fd, unsigned char *details);
-void print_line(int fd, struct CL *line,  unsigned char *details, pid_t pid, int index,
+void print_line(int fd, struct cl_t *line,  unsigned char *details, pid_t pid, int index,
 		time_t until);
 
 fcrondyn_cl *fcrondyn_cl_base; /* list of connected fcrondyn clients */
@@ -240,7 +240,7 @@ print_fields(int fd, unsigned char *details)
 
 
 void
-print_line(int fd, struct CL *line,  unsigned char *details, pid_t pid, int index,
+print_line(int fd, struct cl_t *line,  unsigned char *details, pid_t pid, int index,
 	   time_t until)
     /* print some basic fields of a line, and some more if details == 1 */
 {
@@ -316,7 +316,7 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
     int found = 0;
     int all = (cmd[1] == ALL) ? 1 : 0;
     char *user = NULL;
-    struct job *j;
+    struct job_t *j;
     int i;
     unsigned char fields[FIELD_NUM_SIZE];
 
@@ -412,7 +412,7 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 
 	case CMD_LIST_EXEQ:
 	    for ( i = 0; i < exe_num; i++)
-		Test_line(exe_array[i].e_line, exe_array[i].e_pid, 0, 0);
+		Test_line(exe_array[i].e_line, exe_array[i].e_job_pid, 0, 0);
 	    break;
 
 	case CMD_LIST_LAVGQ:
