@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.36 2001-05-17 00:52:43 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.37 2001-05-24 19:54:48 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -42,7 +42,7 @@
 
 #include "fcrontab.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.36 2001-05-17 00:52:43 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.37 2001-05-24 19:54:48 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -109,8 +109,8 @@ usage(void)
   /*  print a help message about command line options and exit */
 {
     fprintf(stderr, 
-	    "fcrontab [-u user] [-n] file\n"
-	    "fcrontab [-u user] { -l | -r | -e | -z } [-n]\n"
+	    "fcrontab [-n] file [user|-u user]\n"
+	    "fcrontab { -l | -r | -e | -z } [-n] [user|-u user]\n"
 	    "fcrontab -h\n"
 	    "  -u user    specify user name.\n"
 	    "  -l         list user's current fcrontab.\n"
@@ -723,11 +723,11 @@ parseopt(int argc, char *argv[])
 	    usage(); break;
 
 	case 'u':
-	    user = strdup2(optarg) ; 
 	    if (getuid() != 0) {
 		fprintf(stderr, "must be privileged to use -u\n");
 		xexit(EXIT_ERR);
 	    }
+	    user = strdup2(optarg) ; 
 	    break;
 
 	case 'd':
@@ -797,6 +797,37 @@ parseopt(int argc, char *argv[])
 	}
     }
 
+    /* read the file name and/or user and check validity of the arguments */
+    if (argc - optind > 2)
+	usage();
+    else if (argc - optind == 2 ) {
+	if ( list_opt + rm_opt + edit_opt + reinstall_opt == 0 )
+	    file_opt = optind++;
+	else
+	    usage();
+
+	if (getuid() != 0) {
+	    fprintf(stderr, "must be privileged to use -u\n");
+	    xexit(EXIT_ERR);
+	}
+	free(user);
+	user = strdup2(argv[optind]) ; 
+    }
+    else if (argc - optind == 1) {
+	if ( list_opt + rm_opt + edit_opt + reinstall_opt == 0 )
+	    file_opt = optind;
+	else {
+	    if (getuid() != 0) {
+		fprintf(stderr, "must be privileged to use [user|-u user]\n");
+		xexit(EXIT_ERR);
+	    }
+	    free(user);
+	    user = strdup2(argv[optind]); 	    
+	}
+    }
+    else if (list_opt + rm_opt + edit_opt + reinstall_opt != 1)
+	usage();
+
     if ( user == NULL ) {
 	/* get user's name using getpwuid() */
 	if ( ! (pass = getpwuid(uid)) )
@@ -818,9 +849,6 @@ parseopt(int argc, char *argv[])
 	die("User \"%s\" is not allowed to use %s. Aborting.",
 	    user, prog_name);	    
     }
-
-    if (optind < argc)
-	file_opt = optind;
 }
 
 
@@ -885,7 +913,7 @@ main(int argc, char **argv)
     snprintf(buf, sizeof(buf), "%s.orig", user);
 
     /* determine what action should be taken */
-    if ( file_opt && ! list_opt && ! rm_opt && ! edit_opt && ! reinstall_opt) {
+    if ( file_opt ) {
 
 	if ( strcmp(argv[file_opt], "-") == 0 )
 
@@ -907,9 +935,6 @@ main(int argc, char **argv)
 	}
 
     } 
-    else if(list_opt + rm_opt + edit_opt + reinstall_opt != 1 || file_opt != 0)
-	usage();
-
 
     /* remove user's entries */
     if ( rm_opt == 1 ) {
