@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.20 2001-01-07 12:44:58 thib Exp $
+# $Id: boot-install,v 1.21 2001-01-07 20:56:19 thib Exp $
 
 # take 5 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -172,8 +172,16 @@ fi
 echo 
 echo "You should now restart fcron."
 RESTART="nothing"
-PID=`pidof fcron`
-KILL="kill -TERM $PID"
+COMMENT=""
+if PID=`pidof fcron`; then
+  KILL="kill -TERM $PID"
+  KILLSTR="kill -TERM \`pidof fcron\`"
+else
+  KILL="killall -TERM fcron"
+  KILLSTR=$KILL
+  COMMENT="WARNING : this command may not have the desired effect on non-Linux systems.\n"
+  PID="test -z on PID is not need in this case"
+fi
 if test -z "$PID"; then
     echo "Fcron is not running."
     echo "You may start it after having reinstalled the fcrontabs."
@@ -187,7 +195,8 @@ else
   if test $ANSWER -eq 2; then
     while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
     do
-      echo "Would you like to do it with a 'kill -TERM \`pidof fcron\`'"
+      echo "Would you like to do it with a '"$KILLSTR"'"
+      echo -n $COMMENT
       echo "followed by a '"$CMD"' ?"
       read -p "Please answer with 'y' or 'n' (default: 'y'): " RESTART NOTHING
     done
