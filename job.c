@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.24 2000-09-30 11:58:23 thib Exp $ */
+ /* $Id: job.c,v 1.25 2000-11-10 17:37:29 thib Exp $ */
 
 #include "fcron.h"
 
@@ -64,6 +64,14 @@ change_user(uid_t uid)
 
     /* Change running state to the user in question */
 
+#if defined(HAVE_SETREGID) && defined(HAVE_SETREUID)
+    /* we need to become temporary root to do that */
+    if (setreuid(0, 0) != 0 )
+	die_e("Could not set uid to 0");
+    if (setregid(0, 0) != 0 )
+	die_e("Could not set gid to 0");
+
+
     if (initgroups(pas->pw_name, pas->pw_gid) < 0)
 	die_e("initgroups failed: %s", pas->pw_name);
 
@@ -72,6 +80,16 @@ change_user(uid_t uid)
     
     if (setreuid(pas->pw_uid, pas->pw_uid) < 0) 
 	die("setreuid failed: %s %d", pas->pw_name, pas->pw_uid);
+#else
+    if (initgroups(pas->pw_name, pas->pw_gid) < 0)
+	die_e("initgroups failed: %s", pas->pw_name);
+
+    if (setgid(pas->pw_gid) < 0) 
+	die("setgid failed: %s %d", pas->pw_name, pas->pw_gid);
+    
+    if (setuid(pas->pw_uid) < 0) 
+	die("setuid failed: %s %d", pas->pw_name, pas->pw_uid);
+#endif
 
     return(pas->pw_uid);
 }
@@ -116,14 +134,9 @@ run_job(struct exe *exeent)
 	int status = 0;
 
 	foreground = 0;
-	if (change_user(line->cl_runas) < 0)
-	    return ;
 
-	sig_dfl();
-
-	if ( line->cl_nice != 0 && nice(line->cl_nice) != 0 )
-	    error_e("could not set nice value");
-	
+	/* we create the temp file (if needed) before change_user(),
+	 * as temp_file() need the root privileges */
 	if ( ! is_mail(line->cl_option) ) {
 	    if ( (mailfd = open("/dev/null", O_RDWR)) < 0 )
 		die_e("open: /dev/null:");
@@ -141,6 +154,14 @@ run_job(struct exe *exeent)
 	    mailpos = ( lseek(mailfd, 0, SEEK_END) - strlen(line->cl_shell) );
 	}
 
+	if (change_user(line->cl_runas) < 0)
+	    return ;
+
+	sig_dfl();
+
+	if ( line->cl_nice != 0 && nice(line->cl_nice) != 0 )
+	    error_e("could not set nice value");
+	
 	if (dup2(mailfd, 1) != 1 || dup2(1, 2) != 2)
 	    die_e("dup2() error");    /* dup2 also clears close-on-exec flag */
 
@@ -292,9 +313,15 @@ int
 temp_file(void)
     /* Open a temporary file and return its file descriptor */
 {
+    int fd;
+#ifdef HAVE_MKSTEMP
+    char name[PATH_LEN] = "fcrjob-XXXXXX";
+    if ( (fd = mkstemp(name)) == -1 )
+	die_e("Can't find a unique temporary filename");
+#else
     const int max_retries = 50;
     char *name;
-    int fd,i;
+    int i;
 
     i = 0;
     name = NULL;
@@ -307,8 +334,11 @@ temp_file(void)
 	/* I'm not sure we actually need to be so persistent here */
     } while (fd == -1 && errno == EEXIST && i < max_retries);
     if (fd == -1) die_e("Can't open temporary file");
+#endif
     if (unlink(name)) die_e("Can't unlink temporary file");
+#ifndef HAVE_MKSTEMP
     free(name);
+#endif
     fcntl(fd, F_SETFD,1);   /* set close-on-exec flag */
     return fd;
 }
