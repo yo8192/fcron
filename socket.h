@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.h,v 1.2 2002-03-02 17:29:50 thib Exp $ */
+ /* $Id: socket.h,v 1.3 2002-10-28 17:57:17 thib Exp $ */
 
 /* This file describe the communication protocol between fcron and fcrondyn */
 
@@ -29,7 +29,10 @@
 #define __SOCKET_H__
 
 #include "dyncom.h"
-
+#ifdef HAVE_SYS_RESOURCE_H
+/* needed by setpriority() */
+#include <sys/resource.h>
+#endif
 
 /* public var defined by socket.c */
 extern fd_set read_set;
