@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.c,v 1.9 2005-02-26 15:15:10 thib Exp $ */
+ /* $Id: save.c,v 1.10 2005-06-11 22:52:32 thib Exp $ */
 
 #include "global.h"
 #include "save.h"
@@ -239,7 +239,7 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 	Save_str(fd, S_SHELL_T, line->cl_shell, write_buf, &write_buf_used);
 	Save_str(fd, S_RUNAS_T, line->cl_runas, write_buf, &write_buf_used);
 	Save_str(fd, S_MAILTO_T, line->cl_mailto, write_buf, &write_buf_used);
-	Save_strn(fd, S_OPTION_T, line->cl_option, OPTION_SIZE,
+	Save_strn(fd, S_OPTION_T, (char *)line->cl_option, OPTION_SIZE,
 		  write_buf, &write_buf_used);
 
 	/* the following are saved only if needed */
@@ -249,9 +249,9 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 	else
 	    Save_lint(fd, S_NEXTEXE_T, line->cl_nextexe, write_buf, &write_buf_used);
 	if ( line->cl_numexe )
-	    Save_strn(fd, S_NUMEXE_T, &line->cl_numexe, 1, write_buf, &write_buf_used);
+	    Save_strn(fd, S_NUMEXE_T, (char *)&line->cl_numexe, 1, write_buf, &write_buf_used);
 	if ( is_lavg(line->cl_option) )
-	    Save_strn(fd, S_LAVG_T, line->cl_lavg, LAVG_SIZE,
+	    Save_strn(fd, S_LAVG_T, (char *)line->cl_lavg, LAVG_SIZE,
 		      write_buf, &write_buf_used);
 	if ( line->cl_until > 0 )
 	    Save_lint(fd, S_UNTIL_T, line->cl_until, write_buf, &write_buf_used);
@@ -261,6 +261,9 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 	    Save_lint(fd, S_RUNFREQ_T, line->cl_runfreq, write_buf, &write_buf_used);
 	    Save_lint(fd, S_REMAIN_T, line->cl_remain, write_buf, &write_buf_used);
 	}
+	if ( line->cl_tz != NULL ) {
+	    Save_str(fd, S_TZ_T, line->cl_tz, write_buf, &write_buf_used);
+	}
 		     
 	if ( is_freq(line->cl_option) ) {
 	    /* save the frequency to run the line */
@@ -268,15 +271,15 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 	}
 	else {
 	    /* save the time and date bit fields */
-	    Save_strn(fd, S_MINS_T, line->cl_mins, bitstr_size(60),
+	    Save_strn(fd, S_MINS_T, (char *)line->cl_mins, bitstr_size(60),
 		      write_buf, &write_buf_used);
-	    Save_strn(fd, S_HRS_T, line->cl_hrs, bitstr_size(24),
+	    Save_strn(fd, S_HRS_T, (char *)line->cl_hrs, bitstr_size(24),
 		      write_buf, &write_buf_used);
-	    Save_strn(fd, S_DAYS_T, line->cl_days, bitstr_size(32),
+	    Save_strn(fd, S_DAYS_T, (char *)line->cl_days, bitstr_size(32),
 		      write_buf, &write_buf_used);
-	    Save_strn(fd, S_MONS_T, line->cl_mons, bitstr_size(12),
+	    Save_strn(fd, S_MONS_T, (char *)line->cl_mons, bitstr_size(12),
 		      write_buf, &write_buf_used);
-	    Save_strn(fd, S_DOW_T, line->cl_dow, bitstr_size(8),
+	    Save_strn(fd, S_DOW_T, (char *)line->cl_dow, bitstr_size(8),
 		      write_buf, &write_buf_used);
 	}
 
