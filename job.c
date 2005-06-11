@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.63 2005-03-12 12:37:30 thib Exp $ */
+ /* $Id: job.c,v 1.64 2005-06-11 22:43:52 thib Exp $ */
 
 #include "fcron.h"
 
@@ -274,12 +274,16 @@ run_job(struct exe_t *exeent)
 #endif
  
 	/* */
- 	debug("sent output to %s, %s, %s\n", to_stdout ? "stdout" : "file",
+ 	debug("%s, output to %s, %s, %s\n",
+	      is_mail(line->cl_option) || is_mailzerolength(line->cl_option) ?
+	      "mail" : "no mail",
+	      to_stdout ? "stdout" : "file",
  	      foreground ? "running in foreground" : "running in background",
  	      is_stdout(line->cl_option) ? "stdout" : "normal" );
 	/* */
 
-	if ( ! to_stdout && is_mail(line->cl_option) ) {
+	if ( ! to_stdout && 
+	     ( is_mail(line->cl_option) || is_mailzerolength(line->cl_option))){
 	    /* we create the temp file (if needed) before change_user(),
 	     * as temp_file() needs the root privileges */
 	    /* if we run in foreground, stdout and stderr point to the console.
@@ -535,7 +539,14 @@ launch_mailer(cl_t *line, FILE *mailf)
     foreground = 0;
 
     /* set stdin to the job's output */
+
+    /* fseek() should work, but it seems that it is not always the case
+     * (users have reported problems on gentoo and LFS).
+     * For those users, lseek() works, so I have decided to use both,
+     * as I am not sure that lseek(fileno(...)...) will work as expected
+     * on non linux systems. */
     if ( fseek(mailf, 0, SEEK_SET ) != 0) die_e("Can't fseek()");
+    if ( lseek(fileno(mailf), 0, SEEK_SET ) != 0) die_e("Can't lseek()");
     if ( dup2(fileno(mailf), 0) != 0 ) die_e("Can't dup2(fileno(mailf))");
 
     xcloselog();
