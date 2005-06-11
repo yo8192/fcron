@@ -8,10 +8,26 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.38 2005-03-12 12:41:29 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.39 2005-06-11 22:55:00 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
+
+      <itemizedlist>
+	 <title>From version 2.9.6 to 2.9.7</title>
+	       <listitem>
+		  <para>Added time zone support (option timezone).</para>
+	       </listitem>
+	       <listitem>
+		  <para>Better support FreeBSD's users and groups modifications in fcron's install scripts.</para>
+	       </listitem>
+	 <listitem>
+	    <para>Fixed a bug which used to make fcron send empty mails on very recent systems.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Added some casts in fileconf.c and save.c (to avoid some warnings when compiling on HP-UX).</para>
+	 </listitem>
+      </itemizedlist>
 
       <itemizedlist>
 	 <title>From version 2.9.5.1 to 2.9.6</title>

@@ -87,5 +87,7 @@
 <!ENTITY optserialonce '<link linkend="fcrontab.5.serialonce"><varname>serialonce</varname></link>'>
 <!ENTITY optstdout '<link linkend="fcrontab.5.stdout"><varname>stdout</varname></link>'>
 <!ENTITY optstrict '<link linkend="fcrontab.5.strict"><varname>strict</varname></link>'>
+<!ENTITY opttimezone '<link linkend="fcrontab.5.timezone"><varname>timezone</varname></link>'>
+<!ENTITY opttzdiff '<link linkend="fcrontab.5.tzdiff"><varname>tzdiff</varname></link>'>
 <!ENTITY optuntil '<link linkend="fcrontab.5.until"><varname>until</varname></link>'>
 <!ENTITY optvolatile '<link linkend="fcrontab.5.volatile"><varname>volatile</varname></link>'>

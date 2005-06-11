@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.17 2004-09-02 22:07:18 thib Exp $ */
+ /* $Id: socket.c,v 1.18 2005-06-11 22:54:33 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -119,7 +119,7 @@ init_socket(void)
     addr.sun_path[sizeof(addr.sun_path) -1 ] = '\0';
 
     unlink(fifofile);
-    if (bind(listen_fd, (struct sockaddr *) &addr,  sizeof(addr.sun_family)+len) != 0) {
+    if (bind(listen_fd, (struct sockaddr*) &addr, sizeof(addr.sun_family)+len+1) != 0){
 	error_e("Cannot bind socket to '%s'", fifofile);
 	goto err;
     }

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.33 2005-03-12 13:59:40 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.34 2005-06-11 22:54:45 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -25,10 +25,16 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
+	       <para>test the fix for empty mails on non linux systems</para>
+	    </listitem>
+	    <listitem>
 	       <para>NetBSD : bug from Gabor Z. Papp : fifo file created as fcron.fif instead of fcron.fifo ?</para>
 	    </listitem>
 	    <listitem>
 	       <para>bug fix : fcron freezes if the filesystem on which it operates has no space left ? (cannot reproduce it on my linux system)</para>
+	    </listitem>
+	    <listitem>
+	       <para>Add a FAQ entry to explain how to emulate an anacron entry (@volatile,first(xx) BIG-period /your/command</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
@@ -72,6 +78,9 @@ A copy of the license is included in gfdl.sgml.
 	    </listitem>
 	    <listitem>
 	       <para>use readline (if available) for fcrondyn.</para>
+	    </listitem>
+	    <listitem>
+	       <para>add a mailsubject option, for custom mail subjects (for instance, in case of a job containing something secret -- password, etc -- in the command line).</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
