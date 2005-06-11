@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.73 2005-03-12 12:39:21 thib Exp $ */
+ /* $Id: fcron.c,v 1.74 2005-06-11 22:50:02 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.73 2005-03-12 12:39:21 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.74 2005-06-11 22:50:02 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -76,7 +76,8 @@ char *tmp_path = "";
 /* process identity */
 pid_t daemon_pid;
 mode_t saved_umask;           /* default root umask */
-char *prog_name = NULL;         
+char *prog_name = NULL;
+char *orig_tz_envvar = NULL;
 
 /* have we got a signal ? */
 char sig_conf = 0;            /* is 1 when we got a SIGHUP, 2 for a SIGUSR1 */ 
@@ -175,7 +176,8 @@ print_schedule(void)
 	explain(" File %s", cf->cf_user);
 	for (cl = cf->cf_line_base; cl; cl = cl->cl_next) {
 	    ftime = localtime( &(cl->cl_nextexe) );
-	    explain("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d",
+	    explain("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d"
+		    " (system time)",
 		    cl->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
 		    (ftime->tm_year + 1900), ftime->tm_wday,
 		    ftime->tm_hour, ftime->tm_min); 
@@ -222,6 +224,8 @@ xexit(int exit_value)
     remove(pidfile);
     
     free_conf();
+
+    free(orig_tz_envvar);
 
     explain("Exiting with code %d", exit_value);
     exit (exit_value);
@@ -502,6 +506,9 @@ main(int argc, char **argv)
     /* we have to set daemon_pid before the fork because it's
      * used in die() and die_e() functions */
     daemon_pid = getpid();
+
+    /* save the value of the TZ env variable (used for option timezone) */
+    orig_tz_envvar = strdup2(getenv("TZ"));
 
     parseopt(argc, argv);
 

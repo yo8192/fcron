@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.h,v 1.7 2004-08-12 09:50:21 thib Exp $ */
+ /* $Id: database.h,v 1.8 2005-06-11 22:52:27 thib Exp $ */
 
 #ifndef __DATABASE_H__
 #define __DATABASE_H__
@@ -46,5 +46,7 @@ extern void run_normal_job(cl_t *line, int fd);
 extern void add_serial_job(struct cl_t *line, int fd);
 extern void add_lavg_job(struct cl_t *line, int fd);
 extern void run_serial_job(void);
+extern int switch_timezone(const char *orig_tz, const char* dest_tz);
+extern void switch_back_timezone(const char *orig_tz);
 
 #endif /* __DATABASE_H__ */

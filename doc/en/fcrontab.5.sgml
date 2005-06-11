@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.14 2004-01-29 10:37:30 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.15 2005-06-11 22:55:02 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>
@@ -44,7 +44,7 @@ fcrontab file can be either</para>
 		<para>entries based on elapsed system up time,</para>
 	    </listitem>
 	    <listitem>
-		<para>entries based on absolut time (like normal crontab
+		<para>entries based on absolute time (like normal crontab
 entries), or</para>
 	    </listitem>
 	    <listitem>
@@ -678,15 +678,28 @@ not run) or be let there until the system load average allows its execution
 		    </listitem>
 		</varlistentry>
 
+	       <varlistentry id="fcrontab.5.timezone">
+		  <term>timezone</term>
+		  <listitem>
+		     <para><emphasis><type>timezone-name</type></emphasis>(<constant></constant>)</para>
+		     <para>Run the job in the given time zone. timezone-name is a string which is valid for the environment variable TZ : see the documentation of your system for more details. For instance, "Europe/Paris" is valid on a Linux system. This option handles daylight saving time changes correctly.</para>
+		     <para>Please note that if you give an erroneous timezone-name argument, it will be SILENTLY ignored, and the job will run in system's time zone.</para>
+		     <para>WARNING : do *not* use option timezone and option tzdiff simultaneously ! There is no need to do so, and timezone is cleverer than tzdiff.</para>
+		     <para>&seealso; options &opttzdiff;.</para>
+		  </listitem>
+	       </varlistentry>
+
+
 		<varlistentry id="fcrontab.5.tzdiff">
 		    <term>tzdiff</term>
 		    <listitem>
 			<para><emphasis><type>integer</type></emphasis>(<constant>0</constant>)</para>
+		     <para>WARNING : this option is depreciated : use option timezone instead !</para>
 			<para>Time zone difference (in hours, between -24 and
 24) between the system time, and the local real time. This option allows a user
 to define its & and %-lines in the local time. Note that this value is set for a
-whole fcrontab file, and only the last definition is taken into account.</para>
-			<para>&seealso; options &optlavg;, &optstrict;.</para>
+whole fcrontab file, and only the last definition is taken into account. tzdiff is quite stupid : it doesn't handle daylight saving changes, while option timezone does, so you should use the latter.</para>
+			<para>&seealso; options &opttimezone;.</para>
 		    </listitem>
 		</varlistentry>
 

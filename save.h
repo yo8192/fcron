@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.h,v 1.10 2003-12-25 22:52:07 thib Exp $ */
+ /* $Id: save.h,v 1.11 2005-06-11 22:53:10 thib Exp $ */
 
 #ifndef __SAVE_H__
 #define __SAVE_H__
@@ -80,5 +80,6 @@ extern int save_file_safe(cf_t *file, char *final_path, char *prog_name, uid_t o
 #define S_DOW_T        2016  /* dow boolean array */
 #define S_OPTION_T     2017  /* options for that line (see option.h) */
 #define S_FIRST_T      2018  /* wait time before first execution */
+#define S_TZ_T         2019  /* time zone of the line */
 
 #endif /* __SAVE_H__ */

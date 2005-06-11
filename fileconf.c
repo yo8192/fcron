@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.74 2004-07-11 18:08:08 thib Exp $ */
+ /* $Id: fileconf.c,v 1.75 2005-06-11 22:50:41 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -181,6 +181,7 @@ read_file(char *filename)
     default_line.cl_file = cf;
     default_line.cl_runas = strdup2(runas);
     default_line.cl_mailto = strdup2(runas);
+    default_line.cl_tz = NULL;
     set_default_opt(default_line.cl_option);
 
     if ( debug_opt )
@@ -264,6 +265,7 @@ read_file(char *filename)
     
     free(default_line.cl_runas);
     free(default_line.cl_mailto);
+    free(default_line.cl_tz);
 
     if ( ! need_correction )
 	return OK;
@@ -466,6 +468,7 @@ read_opt(char *ptr, cl_t *cl)
 	}
 
 	/* global options for a file */
+
 	if ( strcmp(opt_name, "tzdiff") == 0 ) {
 	    char negative = 0;
 
@@ -486,8 +489,30 @@ read_opt(char *ptr, cl_t *cl)
 		fprintf(stderr, "  Opt : \"%s\" (-)%d\n", opt_name, i);
 	}
 	
-
 	/* options related to a line (or a set of lines) */
+
+	else if ( strcmp(opt_name, "timezone") == 0 ) {
+	    char buf[50];
+	    bzero(buf, sizeof(buf));
+
+	    if( ! in_brackets )
+		Handle_err;
+
+	    i = 0;
+	    while ( *ptr != ')' && i + 1 < sizeof(buf) )
+		buf[i++] = *ptr++;
+	    
+	    if ( strcmp(buf, "\0") == 0 ) {
+		Flush(cl->cl_tz);
+	    }
+	    else {
+		Set(cl->cl_tz, buf);
+	    }
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" \"%s\"\n", opt_name, cl->cl_tz);
+	}
+	
+
 	else if(strcmp(opt_name, "s") == 0 || strcmp(opt_name, "serial") == 0){
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
@@ -550,6 +575,7 @@ read_opt(char *ptr, cl_t *cl)
 		bzero(cl, sizeof(cl_t));
 		Set(cl->cl_runas, runas);
 		Set(cl->cl_mailto, runas);
+		Flush(cl->cl_tz);
 		set_default_opt(cl->cl_option);
 	    }
 	    if (debug_opt)
@@ -1084,6 +1110,8 @@ read_freq(char *ptr, cf_t *cf)
     memcpy(cl, &default_line, sizeof(cl_t));
     cl->cl_runas = strdup2(default_line.cl_runas);
     cl->cl_mailto = strdup2(default_line.cl_mailto);
+    if ( cl->cl_tz != NULL ) 
+	cl->cl_tz = strdup2(default_line.cl_tz);
     cl->cl_first = -1; /* 0 is a valid value, so we have to use -1 to detect unset */
 
     /* skip the @ */
@@ -1182,12 +1210,14 @@ read_arys(char *ptr, cf_t *cf)
     /* read a run freq number plus a normal fcron line */
 {
     cl_t *cl = NULL;
-    unsigned int i = 0;
+    int i = 0;
 
     Alloc(cl, cl_t);
     memcpy(cl, &default_line, sizeof(cl_t));
     cl->cl_runas = strdup2(default_line.cl_runas);
     cl->cl_mailto = strdup2(default_line.cl_mailto);
+    if ( cl->cl_tz != NULL ) 
+	cl->cl_tz = strdup2(default_line.cl_tz);
 
     /* set cl_remain if not specified */
     if ( *ptr == '&' ) {
@@ -1203,7 +1233,7 @@ read_arys(char *ptr, cf_t *cf)
 			    " skipping line.\n", file_name, line);
 		    goto exiterr;
 		}
-		cl->cl_runfreq = i;
+		cl->cl_runfreq = (unsigned short) i;
 	    }
 	}
 	else if ( isalnum( (int) *ptr) )
@@ -1278,6 +1308,8 @@ read_period(char *ptr, cf_t *cf)
     memcpy(cl, &default_line, sizeof(cl_t));
     cl->cl_runas = strdup2(default_line.cl_runas);
     cl->cl_mailto = strdup2(default_line.cl_mailto);
+    if ( cl->cl_tz != NULL ) 
+	cl->cl_tz = strdup2(default_line.cl_tz);
 
     /* skip the % */
     ptr++;
@@ -1619,6 +1651,7 @@ delete_file(const char *user_name)
 		free(line->cl_shell);
 		free(line->cl_mailto);
 		free(line->cl_runas);
+		free(line->cl_tz);
 		free(line);
 	    }
 	    break ;

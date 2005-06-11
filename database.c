@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.75 2005-02-26 15:13:00 thib Exp $ */
+ /* $Id: database.c,v 1.76 2005-06-11 22:52:02 thib Exp $ */
 
 #include "fcron.h"
 
@@ -72,6 +72,34 @@ test_jobs(void)
 }
 
 
+int
+switch_timezone(const char *orig_tz, const char* dest_tz)
+/* check if we have already switched to dest_tz timezone, otherwise do it */
+/* If dest_tz is NULL, this function does nothing */
+/* Returns 1 if this function has switched the timezone, 0 otherwise */
+{
+    char *current_tz = getenv("TZ");
+	if ( dest_tz != NULL && 
+	     (current_tz == NULL || strcmp(dest_tz, current_tz) != 0)) {
+	    setenv("TZ", dest_tz, 1);
+	    return 1;
+	}
+	else
+	    return 0;
+}
+
+void
+switch_back_timezone(const char *orig_tz)
+/* if orig_tz is NULL, unsets TZ
+ * otherwise, sets TZ to orig_tz */
+{
+    if ( orig_tz == NULL)
+	unsetenv("TZ");
+    else
+	setenv("TZ", orig_tz, 1);
+}
+
+
 time_t
 mktime_no_dst(struct tm *t)
 /* same as mktime(), but without daylight saving time (dst) change adjustment
@@ -81,6 +109,10 @@ mktime_no_dst(struct tm *t)
  *          Unfortunately, the behaviour of mktime() with 
  *          tm_isdst set to -1 depends on the unix you run.
  *          In other word, it wouldn't be portable. */
+/*
+ * WARNING : the content of t has to be valide (for instance, 0<=t->tm_hour<=23,
+ *           etc)
+ */
 {
     struct tm t2;
     time_t ti1;
@@ -402,7 +434,16 @@ add_lavg_job(cl_t *line, int info_fd)
 	struct tm *ft;
 	struct tm ftime;
 	time_t begin_of_cur_int, end_of_cur_int = 0;
+	int tz_changed = 0;
 
+	/* Switch to another timezone if necessary. */
+	/* If line should be scheduled in a different time zone
+	 * (ie. cl_tz != NULL),
+	 * switch to that timezone now, do the calculations,
+	 * and switch back to the local timezone at the end 
+	 * of the function. */
+	tz_changed = switch_timezone(orig_tz_envvar, line->cl_tz);
+    
 	/* handle timezone differences */
 	begin_of_cur_int = line->cl_nextexe - (line->cl_file->cf_tzdiff*3600);
 
@@ -423,6 +464,9 @@ add_lavg_job(cl_t *line, int info_fd)
 	    lavg_array[lavg_num].l_until = end_of_cur_int;
 	    clear_run_if_late(line->cl_option);
 	}
+
+	if ( tz_changed > 0 )
+	    switch_back_timezone(orig_tz_envvar);
     }
     else
 	lavg_array[lavg_num].l_until = 
@@ -705,9 +749,10 @@ goto_non_matching(cl_t *line, struct tm *ftime, char option)
 	    if (debug_opt)
 		set_wday(ftime);
 	    debug("   %s beginning of next period %d/%d/%d wday:%d %02d:%02d "
-		  "(tzdiff=%d)", line->cl_shell, (ftime->tm_mon + 1),
+		  "(tzdiff=%d, timezone=%s)", line->cl_shell, (ftime->tm_mon + 1),
 		  ftime->tm_mday, (ftime->tm_year + 1900), ftime->tm_wday,
-		  ftime->tm_hour, ftime->tm_min, line->cl_file->cf_tzdiff);
+		  ftime->tm_hour, ftime->tm_min, line->cl_file->cf_tzdiff,
+		  (line->cl_tz != NULL)? line->cl_tz : "localtime");
 
 	    return;
 	}
@@ -828,11 +873,13 @@ goto_non_matching(cl_t *line, struct tm *ftime, char option)
 	    }
 	}
 	
-	debug("   %s %s %d/%d/%d wday:%d %02d:%02d (tzdiff=%d)",line->cl_shell,
+	debug("   %s %s %d/%d/%d wday:%d %02d:%02d (tzdiff=%d, timezone=%s)",
+	      line->cl_shell,
 	      (option == STD) ? "first non matching" : "end of interval",
 	      (ftime->tm_mon + 1), ftime->tm_mday, (ftime->tm_year + 1900),
 	      ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
-	      line->cl_file->cf_tzdiff);
+	      line->cl_file->cf_tzdiff,
+	      (line->cl_tz != NULL)? line->cl_tz : "localtime");
 	return;
     }
 }
@@ -846,8 +893,17 @@ set_next_exe(cl_t *line, char option, int info_fd)
     time_t basetime;
     struct tm *ft;
     struct tm ftime;
+    int tz_changed = 0;
 
     basetime = (option & FROM_CUR_NEXTEXE) ? line->cl_nextexe : now ;
+
+    /* Switch to another timezone if necessary. */
+    /* If line should be scheduled in a different time zone
+     * (ie. cl_tz != NULL),
+     * switch to that timezone now, do the calculations,
+     * and switch back to the local timezone at the end 
+     * of the function. */
+    tz_changed = switch_timezone(orig_tz_envvar, line->cl_tz);
 
     if ( is_td(line->cl_option) ) {
 
@@ -1011,6 +1067,8 @@ set_next_exe(cl_t *line, char option, int info_fd)
       set_cl_nextexe:
 	/* set cl_nextexe (handle the timezone differences) */
 
+	/* NOTE : the output of mktime does not depend on the timezone,
+	 *        hence, nextexe is correct even if option timezone is used. */
 	nextexe = mktime_no_dst(&ftime);
 
 	if ( is_random(line->cl_option) ) {
@@ -1019,9 +1077,10 @@ set_next_exe(cl_t *line, char option, int info_fd)
 	    time_t intend_int;
 
 	    debug("   cmd: %s begin int exec %d/%d/%d wday:%d %02d:%02d "
-		  "(tzdiff=%d)", line->cl_shell, (ftime.tm_mon + 1),
+		  "(tzdiff=%d, timezone=%s)", line->cl_shell, (ftime.tm_mon + 1),
 		  ftime.tm_mday, (ftime.tm_year + 1900), ftime.tm_wday,
-		  ftime.tm_hour, ftime.tm_min, line->cl_file->cf_tzdiff);
+		  ftime.tm_hour, ftime.tm_min, line->cl_file->cf_tzdiff,
+		  (line->cl_tz != NULL)? line->cl_tz : "localtime");
 
 	    memcpy(&intend, &ftime, sizeof(intend));
 	    goto_non_matching(line, &intend, END_OF_INTERVAL);
@@ -1040,11 +1099,12 @@ set_next_exe(cl_t *line, char option, int info_fd)
 		memcpy(&ftime, ft, sizeof(ftime));
 	    }
 	    send_msg_fd_debug(info_fd, "   cmd: %s next exec %d/%d/%d wday:%d "
-			      "%02d:%02d (tzdiff=%d w/ sys time)", line->cl_shell,
+			      "%02d:%02d (tzdiff=%d, timezone=%s)", line->cl_shell,
 			      (ftime.tm_mon + 1), ftime.tm_mday,
 			      (ftime.tm_year + 1900), ftime.tm_wday,
 			      ftime.tm_hour, ftime.tm_min,
-			      line->cl_file->cf_tzdiff);
+			      line->cl_file->cf_tzdiff,
+			      (line->cl_tz != NULL)? line->cl_tz : "system's");
 	}
 
 	/* 
@@ -1060,11 +1120,10 @@ set_next_exe(cl_t *line, char option, int info_fd)
 	if ( line->cl_nextexe <= now ) {
 	    error("BUG ??? Fcron thinks the next exe time of %s is %ld, "
 		  "hence before now (%ld). To avoid infinite loop, nextexe"
-		  " will be set at now+5s.");
+		  " will be set at now+5s.", line->cl_shell, line->cl_nextexe);
 	    line->cl_nextexe = now + 5;
 	}
 
-	
     }
     else {
 	/* this is a job based on system up time */
@@ -1085,6 +1144,9 @@ set_next_exe(cl_t *line, char option, int info_fd)
     
     insert_nextexe(line);
 
+    if ( tz_changed > 0 )
+	switch_back_timezone(orig_tz_envvar);
+
 }
 
 
@@ -1097,11 +1159,21 @@ set_next_exe_notrun(cl_t *line, char context)
     struct tm *ft = NULL;
     struct tm ftime, last_nextexe;
     char set_next_exe_opt = 0;
+    int tz_changed = 0;
 
 /*  // */
     debug("  set_next_exe_notrun : %s %d", line->cl_shell, context);
 /*  // */
 
+
+    /* Switch to another timezone if necessary. */
+    /* If line should be scheduled in a different time zone
+     * (ie. cl_tz != NULL),
+     * switch to that timezone now, do the calculations,
+     * and switch back to the local timezone at the end 
+     * of the function. */
+    tz_changed = switch_timezone(orig_tz_envvar, line->cl_tz);
+    
     if (context == SYSDOWN) {
 	/* handle timezone differences */
 	previous_period = line->cl_nextexe - (line->cl_file->cf_tzdiff * 3600);
@@ -1130,6 +1202,9 @@ set_next_exe_notrun(cl_t *line, char context)
 	mail_notrun(line, context, &last_nextexe);
     }
 
+    if ( tz_changed > 0 )
+	switch_back_timezone(orig_tz_envvar);
+
 }
 
 void
@@ -1139,6 +1214,7 @@ mail_notrun(cl_t *line, char context, struct tm *since)
     int pid = 0;
     FILE *mailf = 0;
     struct tm *time2 = NULL, time;
+    int tz_changed = 0;
 
     switch ( pid = fork() ) {
     case -1:
@@ -1165,6 +1241,14 @@ mail_notrun(cl_t *line, char context, struct tm *since)
 	return;
     }
 
+    /* Switch to another timezone if necessary. */
+    /* If line should be scheduled in a different time zone
+     * (ie. cl_tz != NULL),
+     * switch to that timezone now, do the calculations,
+     * and switch back to the local timezone at the end 
+     * of the function. */
+    tz_changed = switch_timezone(orig_tz_envvar, line->cl_tz);
+    
     if ( context == QUEUE_FULL )
 	time2 = localtime(&now);
     else
@@ -1177,30 +1261,34 @@ mail_notrun(cl_t *line, char context, struct tm *since)
     switch ( context ) {
     case SYSDOWN:
 	fprintf(mailf, "Line %s has not run since and including "
-		 "%d/%d/%d wday:%d %02d:%02d\ndue to system's down state.\n",
+		"%d/%d/%d wday:%d %02d:%02d (timezone=%s)\n"
+		"due to system's down state.\n",
 		 line->cl_shell, (since->tm_mon + 1), since->tm_mday,
 		 (since->tm_year + 1900), since->tm_wday, since->tm_hour,
-		 since->tm_min);
+		 since->tm_min, (line->cl_tz)? line->cl_tz : "system's");
 	fprintf(mailf, "It will be next executed at %d/%d/%d wday:"
 		 "%d %02d:%02d\n", (time.tm_mon + 1), time.tm_mday,
 		 (time.tm_year+1900), time.tm_wday, time.tm_hour, time.tm_min);
 	break;
     case LAVG:
 	fprintf(mailf, "Line %s has not run since and including "
-		 "%d/%d/%d wday:%d %02d:%02d\n", line->cl_shell,
-		 (since->tm_mon + 1), since->tm_mday, (since->tm_year + 1900),
-		 since->tm_wday, since->tm_hour, since->tm_min);
+		 "%d/%d/%d wday:%d %02d:%02d (timezone=%s)\n",
+		line->cl_shell, (since->tm_mon + 1), since->tm_mday,
+		(since->tm_year + 1900), since->tm_wday, since->tm_hour,
+		since->tm_min, (line->cl_tz)? line->cl_tz : "system's");
 	fprintf(mailf, "due to a too high system load average or "
 		 "too many lavg-serial jobs.\n");
 	fprintf(mailf, "It will be next executed at %d/%d/%d "
-		 "wday:%d %02d:%02d\n", (time.tm_mon + 1), time.tm_mday,
-		 (time.tm_year+1900), time.tm_wday, time.tm_hour, time.tm_min);
+		"wday:%d %02d:%02d (timezone=%s)\n", (time.tm_mon + 1),
+		time.tm_mday, (time.tm_year+1900), time.tm_wday, time.tm_hour,
+		time.tm_min, (line->cl_tz)? line->cl_tz : "system's");
 	break;
     case QUEUE_FULL:
 	fprintf(mailf,"Line %s couldn't be added to lavg or serial queue which"
-		 " is full ( %d/%d/%d wday:%d %02d:%02d ).\n", line->cl_shell,
-		 (time.tm_mon + 1), time.tm_mday, (time.tm_year + 1900),
-		 time.tm_wday, time.tm_hour, time.tm_min);
+		 " is full ( %d/%d/%d wday:%d %02d:%02d (timezone=%s)).\n",
+		line->cl_shell, (time.tm_mon + 1), time.tm_mday,
+		(time.tm_year + 1900), time.tm_wday, time.tm_hour, time.tm_min,
+		(line->cl_tz)? line->cl_tz : "system's");
 	fprintf(mailf, "Consider using options lavgonce, until, strict, "
 		 "serialonce and/or fcron's option -m.\n");
 	fprintf(mailf, "Note that job %s has not run.\n", line->cl_shell);
@@ -1215,7 +1303,7 @@ mail_notrun(cl_t *line, char context, struct tm *since)
     launch_mailer(line, mailf);
     
     /* we should not come here : launch_mailer does not return */
-    error("mail_notrun : launch_mailer failed");
+    die("mail_notrun : launch_mailer failed");
     
 }
 

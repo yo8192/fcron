@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.68 2004-08-12 09:43:41 thib Exp $ */
+ /* $Id: conf.c,v 1.69 2005-06-11 22:51:05 thib Exp $ */
 
 #include "fcron.h"
 
@@ -294,7 +294,8 @@ synchronize_file(char *file_name)
 			    struct tm *ftime;
 			    ftime = localtime(&new_l->cl_nextexe);
 			    debug("  from last conf: %s next exec %d/%d/%d"
-				  " wday:%d %02d:%02d", new_l->cl_shell,
+				  " wday:%d %02d:%02d (system time)",
+				  new_l->cl_shell,
 				  (ftime->tm_mon + 1), ftime->tm_mday,
 				  (ftime->tm_year + 1900), ftime->tm_wday,
 				  ftime->tm_hour, ftime->tm_min);
@@ -590,6 +591,11 @@ read_file(const char *file_name, cf_t *cf)
 	    cf->cf_tzdiff = (signed char) bufi;
 	    break;
 
+	case S_TZ_T:
+	    /* read the timezone (string) in which the line should run */
+	    Read_strn(cl->cl_tz, size, "Error while reading timezone field");
+	    break;
+
 	case S_SHELL_T:
 	    Read_strn(cl->cl_shell, size, "Error while reading shell field");
 	    break;
@@ -827,9 +833,16 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 		    /* set next exe and mail user */
 		    struct tm *since2 = localtime(&cl->cl_nextexe);
 		    struct tm since;
+
+		    int tz_changed = 0;
+		    tz_changed = switch_timezone(orig_tz_envvar, cl->cl_tz);
+
 		    memcpy(&since, since2, sizeof(since));
 		    set_next_exe(cl, NO_GOTO, -1);
 		    mail_notrun(cl, SYSDOWN, &since);
+
+		    if ( tz_changed > 0 )
+			switch_back_timezone(orig_tz_envvar);
 		} 
 		else
 		    set_next_exe(cl, NO_GOTO, -1);
@@ -857,7 +870,8 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
     if (debug_opt) {
 	struct tm *ftime;
 	ftime = localtime( &(cl->cl_nextexe) );
-	debug("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d:%02d",
+	debug("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d:%02d"
+	      " (system time)",
 	      cl->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
 	      (ftime->tm_year + 1900), ftime->tm_wday,
 	      ftime->tm_hour, ftime->tm_min, ftime->tm_sec); 

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.44 2005-03-12 12:39:46 thib Exp $ */
+ /* $Id: global.h,v 1.45 2005-06-11 22:50:54 thib Exp $ */
 
 
 /* 
@@ -197,6 +197,7 @@ typedef struct cl_t {
     char	  *cl_shell;      /* shell command			     */
     char          *cl_runas;      /* determine permissions of the job        */
     char          *cl_mailto;     /* mail output to cl_mailto                */
+    char          *cl_tz;         /* time zone of the line                   */
     long int       cl_id;         /* line's unique id number                 */
     time_t         cl_until;      /* timeout of the wait for a lavg value    */
     time_t         cl_first;      /* initial delay preserved for volatile entries */
