@@ -4,7 +4,7 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.14 2001-08-20 20:03:20 thib Exp $
+# $Id: user-group,v 1.15 2005-06-11 22:53:21 thib Exp $
 
 # take 4 arguments : 	username
 # 			groupname
@@ -93,12 +93,12 @@ if $SRCDIR/script/has_usrgrp.pl -user "$USERNAME"; then
 else
   echo "no."
   CMD=""
-  if useradd -D 2> /dev/null; then
+  if test "$IS_FREEBSD" -eq 1; then
+    CMD="pw useradd $USERNAME -c $USERNAME"
+  elif useradd -D 2> /dev/null; then
     CMD="useradd -c '$USERNAME' -g $GROUPNAME $USERNAME"
   elif adduser -D 2> /dev/null; then
     CMD="adduser -c '$USERNAME' -g $GROUPNAME $USERNAME"
-  elif test "$IS_FREEBSD" -eq 1; then
-    CMD="pw useradd $USERNAME -c $USERNAME"
   fi
   if test -z "$CMD"; then
     echo "Could not determine the command to use to add a user."
