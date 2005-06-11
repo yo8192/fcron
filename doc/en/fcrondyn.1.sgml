@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrondyn.1.sgml,v 1.12 2004-11-13 19:45:31 thib Exp $ -->
+<!-- $Id: fcrondyn.1.sgml,v 1.13 2005-06-11 23:02:07 thib Exp $ -->
 
 <refentry id="fcrondyn.1">
     <refmeta>
@@ -303,7 +303,7 @@ serial or lavg queue.</para>
 	    <varlistentry>
 		<term>SCHEDULE</term>
 		<listitem>
-		    <para>Next run is scheduled at this time and date.</para>
+		    <para>Next run is scheduled at this time and date. Please note that fcrondyn prints the schedule in the time zone of the system (not the time zone of fcrontab option &opttimezone;).</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
