@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.76 2005-06-11 22:52:02 thib Exp $ */
+ /* $Id: database.c,v 1.77 2005-07-19 13:08:20 thib Exp $ */
 
 #include "fcron.h"
 
@@ -39,6 +39,11 @@ void run_serial_job(void);
 void run_lavg_job(int i);
 void run_queue_job(cl_t *line);
 void resize_exe_array(void);
+
+
+#ifndef HAVE_SETENV
+char env_tz[PATH_LEN];
+#endif
 
 void
 test_jobs(void)
@@ -81,7 +86,15 @@ switch_timezone(const char *orig_tz, const char* dest_tz)
     char *current_tz = getenv("TZ");
 	if ( dest_tz != NULL && 
 	     (current_tz == NULL || strcmp(dest_tz, current_tz) != 0)) {
-	    setenv("TZ", dest_tz, 1);
+#ifdef HAVE_SETENV
+	    if ( setenv("TZ", dest_tz, 1) < 0 )
+		error_e("could not set env var TZ to %s", dest_tz);
+#else
+	    snprintf(env_tz, sizeof(env_tz) - 1, "TZ=%s", dest_tz);
+	    env_tz[sizeof(env_tz)-1] = '\0';
+	    if ( putenv(env_tz) < 0 )
+		error_e("could not set env var TZ to %s", dest_tz);
+#endif
 	    return 1;
 	}
 	else
@@ -93,10 +106,26 @@ switch_back_timezone(const char *orig_tz)
 /* if orig_tz is NULL, unsets TZ
  * otherwise, sets TZ to orig_tz */
 {
-    if ( orig_tz == NULL)
+    if ( orig_tz == NULL) {
+#ifdef HAVE_SETENV
 	unsetenv("TZ");
-    else
-	setenv("TZ", orig_tz, 1);
+#else
+	env_tz[0] = '\0';
+	if ( putenv(env_tz) < 0 )
+	    error_e("could not flush env var TZ");	
+#endif
+    }
+    else {
+#ifdef HAVE_SETENV
+	if ( setenv("TZ", orig_tz, 1) < 0 )
+	    error_e("could not set env var TZ to %s", orig_tz);
+#else
+	snprintf(env_tz, sizeof(env_tz) - 1, "TZ=%s", orig_tz);
+	env_tz[sizeof(env_tz)-1] = '\0';
+	if ( putenv(env_tz) < 0 )
+	    error_e("could not set env var TZ to %s", orig_tz);
+#endif
+    }
 }
 
 
