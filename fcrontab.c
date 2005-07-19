@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.66 2005-02-26 15:10:11 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.67 2005-07-19 10:40:07 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -47,7 +47,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.66 2005-02-26 15:10:11 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.67 2005-07-19 10:40:07 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -927,7 +927,7 @@ parseopt(int argc, char *argv[])
     if ( user == NULL ) {
 	/* get user's name using getpwuid() */
 	if ( ! (pass = getpwuid(uid)) )
-	    die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
+	    die_e("user \"%s\" is not in passwd file. Aborting.", USERNAME);
 	/* we need to strdup2 the value given by getpwuid() because we free
 	 * file->cf_user in delete_file */
 	user = strdup2(pass->pw_name);
@@ -948,7 +948,7 @@ parseopt(int argc, char *argv[])
 		asgid = pass->pw_gid;
 	    }
 	    else
-		die("user \"%s\" is not in passwd file. Aborting.", user);
+		die_e("user \"%s\" is not in passwd file. Aborting.", user);
     }
 
     if ( 
@@ -998,7 +998,7 @@ main(int argc, char **argv)
     parseopt(argc, argv);
 
     if ( ! (pass = getpwnam(USERNAME)) )
-	die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
+	die_e("user \"%s\" is not in passwd file. Aborting.", USERNAME);
     fcrontab_uid = pass->pw_uid;
     fcrontab_gid = pass->pw_gid;
 

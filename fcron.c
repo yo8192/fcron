@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.74 2005-06-11 22:50:02 thib Exp $ */
+ /* $Id: fcron.c,v 1.75 2005-07-19 10:40:08 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.74 2005-06-11 22:50:02 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.75 2005-07-19 10:40:08 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -727,14 +727,18 @@ main_loop()
 #ifdef FCRONDYN
 	gettimeofday(&tv, NULL);
 	tv.tv_sec = (stime > 1) ? stime - 1 : 0;
-	tv.tv_usec = 1000000 - tv.tv_usec;
+	/* we set tv_usec to slightly more than necessary to avoid 
+	 * infinite loop */
+	tv.tv_usec = 1001000 - tv.tv_usec;
 	if((retcode = select(set_max_fd+1, &read_set, NULL, NULL, &tv)) < 0 && errno != EINTR)
 	    die_e("select return %d", errno);
 #else
 	if (stime > 1)
 	    sleep(stime - 1);
 	gettimeofday(&tv, NULL);
-	usleep( 1000000 - tv.tv_usec );
+	/* we set tv_usec to slightly more than necessary to avoid 
+	 * infinite loop */
+	usleep( 1001000 - tv.tv_usec );
 #endif /* FCRONDYN */
 #else
 	sleep(stime);

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.34 2005-06-11 22:54:45 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.35 2005-07-19 10:40:12 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -24,6 +24,9 @@ A copy of the license is included in gfdl.sgml.
       <sect2>
 	 <title>High priority</title>
 	 <itemizedlist>
+	    <listitem>
+	       <para>sets TZ= for jobs with a timezone option</para>
+	    </listitem>
 	    <listitem>
 	       <para>test the fix for empty mails on non linux systems</para>
 	    </listitem>
