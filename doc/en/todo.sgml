@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.35 2005-07-19 10:40:12 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.36 2005-07-28 11:07:49 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -25,19 +25,13 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>sets TZ= for jobs with a timezone option</para>
-	    </listitem>
-	    <listitem>
-	       <para>test the fix for empty mails on non linux systems</para>
+	       <para>test the fix for empty mails on non linux systems (solaris seems ok, feedback on BSD ?)</para>
 	    </listitem>
 	    <listitem>
 	       <para>NetBSD : bug from Gabor Z. Papp : fifo file created as fcron.fif instead of fcron.fifo ?</para>
 	    </listitem>
 	    <listitem>
 	       <para>bug fix : fcron freezes if the filesystem on which it operates has no space left ? (cannot reproduce it on my linux system)</para>
-	    </listitem>
-	    <listitem>
-	       <para>Add a FAQ entry to explain how to emulate an anacron entry (@volatile,first(xx) BIG-period /your/command</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
@@ -55,12 +49,6 @@ A copy of the license is included in gfdl.sgml.
 	       <para>Mem footprint reduction : use an/some union(s) in CL struct.</para>
 	    </listitem>
 	    <listitem>
-	       <para>add a timezone option instead of the tzdiff (so it would
-		  look like !timezone(europe/paris)) (-> cf. tzset() and TZ env var :
-		  set TZ before every set_next_exe(), etc)
-	       </para>
-	    </listitem>
-	    <listitem>
 	       <para>For environment settings, make a var substitution.</para>
 	    </listitem>
 	    <listitem>
@@ -69,7 +57,7 @@ A copy of the license is included in gfdl.sgml.
 	    </listitem>
 	    <listitem>
 	       <para>Use directory notifications (FAM), and support a fcrontab 
-	       and a cron.d as Vixie cron does.</para>
+	       and a cron.d as Vixie cron does (directly included in fcron itself, not thanks to a script as now).</para>
 	    </listitem>
 	    <listitem>
 	       <para>PAM support (included in fcron, but needs more tests by

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.12 2005-02-26 15:17:47 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.13 2005-07-28 11:07:48 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
@@ -335,6 +335,16 @@ and set appropriately the paths :</para>
 		  With this script, the behavior of fcron should be very similar
 		  to Vixie cron's one concerning /etc/crontab and /etc/cron.d/.
 	       </para>
+	    </answer>
+	 </qandaentry>
+	 <qandaentry>
+	    <question>
+	       <para>How can I emulate an anacron entry ?</para>
+	    </question>
+	    <answer>
+	       <para>You should use a line similar to the following one :</para>
+	       <para>@volatile,first(xx) BIG-period /your/command</para>
+	       <para>where xx is the time you would have put in your anacron line.</para>
 	    </answer>
 	 </qandaentry>
     </qandaset>
