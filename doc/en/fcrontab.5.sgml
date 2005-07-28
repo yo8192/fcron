@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.16 2005-06-11 23:03:21 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.17 2005-07-28 11:14:57 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>
@@ -694,7 +694,7 @@ not run) or be let there until the system load average allows its execution
 		    <term>tzdiff</term>
 		    <listitem>
 			<para><emphasis><type>integer</type></emphasis>(<constant>0</constant>)</para>
-		     <para>WARNING : this option is depreciated : use option timezone instead !</para>
+		     <para>WARNING : this option is deprecated : use option timezone instead !</para>
 			<para>Time zone difference (in hours, between -24 and
 24) between the system time, and the local real time. This option allows a user
 to define its & and %-lines in the local time. Note that this value is set for a

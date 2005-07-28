@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.40 2005-07-19 13:08:24 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.41 2005-07-28 11:14:57 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -29,6 +29,9 @@ A copy of the license is included in gfdl.sgml.
 	 <listitem>
 	    <para>Added some casts in fileconf.c and save.c (to avoid some
 	       warnings when compiling on HP-UX).</para>
+	 </listitem>
+	 <listitem>
+	    <para>Added a FAQ entry on how to emulate an anacron entry.</para>
 	 </listitem>
       </itemizedlist>
 
