@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.36 2005-07-28 11:07:49 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.37 2005-09-09 21:03:30 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -26,9 +26,6 @@ A copy of the license is included in gfdl.sgml.
 	 <itemizedlist>
 	    <listitem>
 	       <para>test the fix for empty mails on non linux systems (solaris seems ok, feedback on BSD ?)</para>
-	    </listitem>
-	    <listitem>
-	       <para>NetBSD : bug from Gabor Z. Papp : fifo file created as fcron.fif instead of fcron.fifo ?</para>
 	    </listitem>
 	    <listitem>
 	       <para>bug fix : fcron freezes if the filesystem on which it operates has no space left ? (cannot reproduce it on my linux system)</para>

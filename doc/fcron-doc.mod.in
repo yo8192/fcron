@@ -1,4 +1,7 @@
-<!ENTITY % devrelease "INCLUDE">
+<!-- Dev. release :
+<!ENTITY % devrelease "INCLUDE">-->
+<!-- Stable release : -->
+<!ENTITY % devrelease "IGNORE">
 
 <!ENTITY date "@@Date@">
 <!ENTITY version "@@VERSION_QUOTED@">

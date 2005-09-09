@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.21 2003-12-29 15:41:18 thib Exp $
+# $Id: Makefile.in,v 1.22 2005-09-09 21:03:24 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -75,7 +75,7 @@ txtdoc: HTML/index.html
 	  echo "  $$i ..."; \
 	  lynx -dump -nolist HTML/$$i.html > txt/$$i.txt; done )
 
-fcron-doc.mod: fcron-doc.mod.in
+fcron-doc.mod: fcron-doc.mod.in ../configure.in
 	@(echo ; echo "Building fcron-doc.mod"; echo)
 	../script/gen-in.pl fcron-doc.mod.in fcron-doc.mod ../
 

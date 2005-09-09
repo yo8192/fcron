@@ -8,10 +8,20 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.41 2005-07-28 11:14:57 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.42 2005-09-09 21:03:39 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
+
+      <itemizedlist>
+	 <title>From version 2.9.7 to 3.0.0</title>
+	 <listitem>
+	    <para>Added a missing entry in changelog (changes from 2.9.6 to 2.9.7, bug fix for NetBSD).</para>
+	 </listitem>
+	 <listitem>
+	    <para>Merged a patch for the check_system_crontabs script (Security enhancements and cleanups).</para>
+	 </listitem>
+      </itemizedlist>
 
       <itemizedlist>
 	 <title>From version 2.9.6 to 2.9.7</title>
@@ -25,6 +35,9 @@ A copy of the license is included in gfdl.sgml.
 	 <listitem>
 	    <para>Fixed a bug which used to make fcron send empty mails on very
 	       recent systems.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Fixed a bug which prevented fcrondyn to being used on NetBSD (thanks go to Gabor Z. Papp).</para>
 	 </listitem>
 	 <listitem>
 	    <para>Added some casts in fileconf.c and save.c (to avoid some
