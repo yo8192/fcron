@@ -1,8 +1,7 @@
-
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.64 2005-06-11 22:43:52 thib Exp $ */
+ /* $Id: job.c,v 1.65 2006-01-11 00:40:52 thib Exp $ */
 
 #include "fcron.h"
 
@@ -34,6 +33,11 @@ void end_mailer(cl_t *line, int status);
 #ifdef HAVE_LIBPAM
 void die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str);
 #endif
+#define PIPE_READ 0
+#define PIPE_WRITE 1
+int read_write_pipe(int fd, void *buf, size_t size, int action);
+int read_pipe(int fd, void *to, size_t size);
+int write_pipe(int fd, void *buf, size_t size);
 
 #ifndef HAVE_SETENV
 char env_user[PATH_LEN];
@@ -237,6 +241,145 @@ create_mail(cl_t *line, char *subject)
     return mailf;
 }
 
+
+int
+read_write_pipe(int fd, void *buf, size_t size, int action)
+    /* Read/write data from/to pipe.
+     * action can either be PIPE_WRITE or PIPE_READ.
+     * Handles signal interruptions, and read in several passes.
+     * Returns ERR in case of a closed pipe, the errno from errno
+     * for other errors, and OK if everything was read successfully */
+{
+    int size_processed = 0;
+    int ret;
+    
+    while ( size_processed < size ) {
+	if ( action == PIPE_READ )
+	    ret = read(fd, (char *)buf + size_processed, size); 
+	else if ( action == PIPE_WRITE )
+	    ret = write(fd, (char *)buf + size_processed, size);
+	else {
+	    error("Invalid action parameter for function read_write_pipe():"
+		  " %d", action);
+	    return ERR;
+	}
+	if ( ret > 0 )
+	    /* some data read correctly -- we still may need
+	     * one or several calls of read() to read the rest */
+	    size_processed += ret;
+	else if ( ret < 0 && errno == EINTR )
+	    /* interrupted by a signal : let's try again */
+	    continue;
+	else {
+	    /* error */
+
+	    if ( ret == 0 )
+		/* is it really an error when writing ? should we continue
+		 * in this case ? */
+		return ERR;
+	    else
+		return errno;
+	}
+    }
+
+    return OK;
+}
+
+int
+read_pipe(int fd, void *buf, size_t size)
+    /* Read data from pipe. 
+     * Handles signal interruptions, and read in several passes.
+     * Returns ERR in case of a closed pipe, the errno from errno
+     * for other errors, and OK if everything was read successfully */
+{
+    return read_write_pipe(fd, buf, size, PIPE_READ);
+}
+
+int
+write_pipe(int fd, void *buf, size_t size)
+    /* Read data from pipe. 
+     * Handles signal interruptions, and read in several passes.
+     * Returns ERR in case of a closed pipe, the errno from errno
+     * for other errors, and OK if everything was read successfully */
+{
+    return read_write_pipe(fd, buf, size, PIPE_WRITE);
+}
+
+void
+run_job_grand_child_setup_stderr_stdout(cl_t *line, int *pipe_fd)
+    /* setup stderr and stdout correctly so as the mail containing
+     * the output of the job can be send at the end of the job.
+     * Close the pipe (both ways). */
+{
+
+    if (is_mail(line->cl_option) ) {
+	/* we can't dup2 directly to mailfd, since a "cmd > /dev/stderr" in
+	 * a script would erase all previously collected message */
+	if ( dup2( pipe_fd[1], 1) != 1 || dup2(1, 2) != 2 )
+	    die_e("dup2() error");  /* dup2 also clears close-on-exec flag */
+	/* we close the pipe_fd[]s : the resources remain, and the pipe will
+	 * be effectively close when the job stops */
+	close(pipe_fd[0]);
+	close(pipe_fd[1]);
+	/* Standard buffering results in unwanted behavior (some messages,
+	   at least error from fcron process itself, are lost) */
+#ifdef HAVE_SETLINEBUF
+	setlinebuf(stdout);
+	setlinebuf(stderr);
+#else
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
+#endif
+    }
+    else if ( foreground ) {
+	freopen("/dev/null", "w", stdout);
+	freopen("/dev/null", "w", stderr);
+    }
+    
+}
+
+void
+run_job_grand_child_setup_nice(cl_t *line)
+    /* set the nice value for the job */
+{
+    if ( line->cl_nice != 0 ) {
+	errno = 0; /* so that it works with any libc and kernel */
+	if ( nice(line->cl_nice) == -1  &&  errno != 0 )
+	    error_e("could not set nice value");
+    }
+}
+
+
+void
+run_job_grand_child_setup_env_var(cl_t *line, char **curshell)
+{
+    env_t *env;
+    char *home;
+
+    for ( env = line->cl_file->cf_env_base; env; env = env->e_next)
+	if ( putenv(env->e_val) != 0 )
+	    error("could not putenv()");
+
+    if ( (home = getenv("HOME")) != NULL )
+	if (chdir(home) != 0) {
+	    error_e("Could not chdir to HOME dir \"%s\"", home);
+	    if (chdir("/") < 0)
+		die_e("Could not chdir to HOME dir /");
+	}
+
+    if ( (*curshell = getenv("SHELL")) == NULL )
+	*curshell = shell;
+    else if ( access(*curshell, X_OK) != 0 ) {
+	if (errno == ENOENT)
+	    error("shell \"%s\" : no file or directory. SHELL set to %s",
+		  *curshell, shell);
+	else
+	    error_e("shell \"%s\" not valid : SHELL set to %s",
+		    *curshell, shell);
+	*curshell = shell;
+    }
+}
+
 void 
 run_job(struct exe_t *exeent)
     /* fork(), redirect outputs to a temp file, and execl() the task */ 
@@ -245,13 +388,17 @@ run_job(struct exe_t *exeent)
     pid_t pid;
     cl_t *line = exeent->e_line;
     int pipe_pid_fd[2];
-    int i=0, j;
+    int ret = 0;
 
     /* prepare the job execution */
     if ( pipe(pipe_pid_fd) != 0 ) {
 	error_e("pipe(pipe_pid_fd) : setting job_pid to -1");
 	exeent->e_job_pid = -1;
     }
+
+    //
+    debug("run_job(): first pipe created successfully : about to do first fork()");
+    //
 
     switch ( pid = fork() ) {
     case -1:
@@ -262,8 +409,6 @@ run_job(struct exe_t *exeent)
 	/* child */
     {
 	char *curshell;
-	char *home;
-	env_t *env;
 	FILE *mailf = NULL;
 	int status = 0;
  	int to_stdout = foreground && is_stdout(line->cl_option);
@@ -274,7 +419,7 @@ run_job(struct exe_t *exeent)
 #endif
  
 	/* */
- 	debug("%s, output to %s, %s, %s\n",
+ 	debug("run_job(): child: %s, output to %s, %s, %s\n",
 	      is_mail(line->cl_option) || is_mailzerolength(line->cl_option) ?
 	      "mail" : "no mail",
 	      to_stdout ? "stdout" : "file",
@@ -304,80 +449,44 @@ run_job(struct exe_t *exeent)
 
 	sig_dfl();
 
+	//
+	debug("run_job(): child: change_user() done -- about to do 2nd fork()");
+	//
+
 	/* now, run the job */
 	switch ( pid = fork() ) {
 	case -1:
 	    error_e("Fork error : could not exec \"%s\"", line->cl_shell);
+	    if ( write(pipe_pid_fd[1], &pid, sizeof(pid)) < 0 )
+		error_e("could not write child pid to pipe_pid_fd[1]");
+	    close(pipe_fd[1]);
+	    close(pipe_pid_fd[0]);
+	    close(pipe_pid_fd[1]);
+	    exit(EXIT_ERR);
 	    break;
 
 	case 0:
-	    /* child */
-	    if ( ! to_stdout ) {
-		if (is_mail(line->cl_option) ) {
-		    /* we can't dup2 directly to mailfd, since a "cmd > /dev/stderr" in
-		     * a script would erase all previously collected message */
-		    if ( dup2( pipe_fd[1], 1) != 1 || dup2(1, 2) != 2 )
-			die_e("dup2() error");  /* dup2 also clears close-on-exec flag */
-		    /* we close the pipe_fd[]s : the resources remain, and the pipe will
-		     * be effectively close when the job stops */
-		    close(pipe_fd[0]);
-		    close(pipe_fd[1]);
-		    /* Standard buffering results in unwanted behavior (some messages,
-		       at least error from fcron process itself, are lost) */
-#ifdef HAVE_SETLINEBUF
-		    setlinebuf(stdout);
-		    setlinebuf(stderr);
-#else
-		    setvbuf(stdout, NULL, _IONBF, 0);
-		    setvbuf(stderr, NULL, _IONBF, 0);
-#endif
-		}
-		else if ( foreground ) {
-		    freopen("/dev/null", "w", stdout);
-		    freopen("/dev/null", "w", stderr);
-		}
-	    }
+	    /* grand child (child of the 2nd fork) */
+	    
+	    if ( ! to_stdout )
+		/* note : the following closes the pipe */
+		run_job_grand_child_setup_stderr_stdout(line, pipe_fd);
 
 	    foreground = 1; 
 	    /* now, errors will be mailed to the user (or to /dev/null) */
 
-	    if ( line->cl_nice != 0 ) {
-		errno = 0; /* so that we work with any libc and kernel */
-		if ( nice(line->cl_nice) == -1  &&  errno != 0 )
-		    error_e("could not set nice value");
-	    }
+	    run_job_grand_child_setup_nice(line);
 
 	    xcloselog();
 
 	    /* set env variables */
-	    for ( env = line->cl_file->cf_env_base; env; env = env->e_next)
-		if ( putenv(env->e_val) != 0 )
-		    error("could not putenv()");
+	    run_job_grand_child_setup_env_var(line, &curshell);
 
-	    if ( (home = getenv("HOME")) != NULL )
-		if (chdir(home) != 0) {
-		    error_e("Could not chdir to HOME dir \"%s\"", home);
-		    if (chdir("/") < 0)
-			die_e("Could not chdir to HOME dir /");
-		}
-
-	    if ( (curshell = getenv("SHELL")) == NULL )
-		curshell = shell;
-	    else if ( access(curshell, X_OK) != 0 ) {
-		if (errno == ENOENT)
-		    error("shell \"%s\" : no file or directory. SHELL set to %s",
-			  curshell, shell);
-		else
-		    error_e("shell \"%s\" not valid : SHELL set to %s",
-			    curshell, shell);
-		curshell = shell;
-	    }
-
-#ifdef CHECKJOBS
+//#ifdef CHECKJOBS
 	    /* this will force to mail a message containing at least the exact
 	     * and complete command executed for each execution of all jobs */
-	    debug("Execing \"%s -c %s\"", curshell, line->cl_shell);
-#endif /* CHECKJOBS */
+	    debug("run_job(): grand-child: Executing \"%s -c %s\"", curshell, line->cl_shell);
+//#endif /* CHECKJOBS */
 
 #ifdef WITH_SELINUX
 	    if(flask_enabled && setexeccon(line->cl_file->cf_user_context) )
@@ -393,16 +502,35 @@ run_job(struct exe_t *exeent)
 	    /* execution never gets here */
 
 	default:
-	    /* parent */
+	    /* child (parent of the 2nd fork) */
 
 	    /* close unneeded WRITE pipe and READ pipe */
 	    close(pipe_fd[1]);
 	    close(pipe_pid_fd[0]);
 
+	    //
+	    debug("run_job(): child: pipe_fd[1] and pipe_pid_fd[0] closed -- about to write grand-child pid to pipe");
+	    //
+
 	    /* give the pid of the child to the parent (main) fcron process */
-	    if ( write(pipe_pid_fd[1], &pid, sizeof(pid)) < 0 )
-		error_e("could not write child pid to pipe_pid_fd[1]");
-	    close(pipe_pid_fd[1]);
+	    ret = write_pipe(pipe_pid_fd[1], &pid, sizeof(pid));
+	    if ( ret != OK ) {
+		if ( ret == ERR )
+		    error("run_job(): child: Could not write job pid"
+			  " to pipe");
+		else {
+		    errno = ret;
+		    error_e("run_job(): child: Could not write job pid"
+			    " to pipe");
+		}
+		
+		exeent->e_job_pid = -1;
+		break;
+	    }
+	    
+	    //
+	    debug("run_job(): child: grand-child pid written to pipe");
+	    //
 
 	    if ( ! is_nolog(line->cl_option) )
 		explain("Job %s started for user %s (pid %d)", line->cl_shell,
@@ -424,12 +552,36 @@ run_job(struct exe_t *exeent)
 		fclose(pipef); /* (closes also pipe_fd[0]) */
 	    }
 
+	    /* FIXME : FOLLOWING HACK USELESS ? */
+	    /* FIXME : HACK
+	     * this is a try to fix the bug on sorcerer linux (no jobs
+	     * exectued at all, and 
+	     * "Could not read job pid : setting it to -1: No child processes"
+	     * error messages) */
+	    /* use a select() or similar to know when parent has read
+	     * the pid (with a timeout !) */
+	    //
+	    sleep(2);
+	    //
+	    debug("run_job(): child: closing pipe with parent");
+	    close(pipe_pid_fd[1]);
+
 	    /* we use a while because of a possible interruption by a signal */
 	    while ( (pid = wait3(&status, 0, NULL)) > 0)
-		end_job(line, status, mailf, mailpos);
+		//
+		{
+		    debug("run_job(): child: ending job pid %d", pid);
+		    //
+		    end_job(line, status, mailf, mailpos);
+		    //
+		}
+	    //
 
-		/* execution never gets here */
+	    /* execution never gets here */
+	    
 	}
+
+	/* execution never gets here */
     }
 
     default:
@@ -441,18 +593,30 @@ run_job(struct exe_t *exeent)
 	exeent->e_ctrl_pid = pid;
 	line->cl_file->cf_running += 1;
 
+	//
+	debug("run_job(): about to read grand-child pid...");
+	//
+
 	/* read the pid of the job */
-	while ( i < sizeof(pid_t) ) {
-	    j = read(pipe_pid_fd[0], (char*)(&(exeent->e_job_pid))+i, sizeof(pid_t));
-	    if ( j <= 0 && errno != EINTR ) {
+	ret = read_pipe(pipe_pid_fd[0], &(exeent->e_job_pid), sizeof(pid_t));
+	if ( ret != OK ) {
+	    if ( ret == ERR )
+		error("Could not read job pid because of closed pipe:"
+		      " setting it to -1");
+	    else {
+		errno = ret;
 		error_e("Could not read job pid : setting it to -1");
-		exeent->e_job_pid = -1;
-		break;
 	    }
-	    i += j;
+	    
+	    exeent->e_job_pid = -1;
+	    break;
 	}
 	close(pipe_pid_fd[0]);
     }
+
+    //
+    debug("run_job(): finished reading pid of the job -- end of run_job().");
+    //
 
 }
 
