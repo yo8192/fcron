@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.75 2005-07-19 10:40:08 thib Exp $ */
+ /* $Id: fcron.c,v 1.76 2006-01-11 00:52:39 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.75 2005-07-19 10:40:08 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.76 2006-01-11 00:52:39 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -124,7 +124,7 @@ info(void)
 {
     fprintf(stderr,
 	    "fcron " VERSION_QUOTED " - periodic command scheduler\n"
-	    "Copyright 2000-2004 Thibault Godouet <fcron@free.fr>\n"
+	    "Copyright " COPYRIGHT_QUOTED " Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	);
@@ -730,8 +730,9 @@ main_loop()
 	/* we set tv_usec to slightly more than necessary to avoid 
 	 * infinite loop */
 	tv.tv_usec = 1001000 - tv.tv_usec;
+	/* note: read_set is set in socket.c */
 	if((retcode = select(set_max_fd+1, &read_set, NULL, NULL, &tv)) < 0 && errno != EINTR)
-	    die_e("select return %d", errno);
+	    die_e("select returned %d", errno);
 #else
 	if (stime > 1)
 	    sleep(stime - 1);

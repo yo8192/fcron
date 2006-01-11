@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.18 2005-06-11 22:54:33 thib Exp $ */
+ /* $Id: socket.c,v 1.19 2006-01-11 00:58:21 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -44,6 +44,8 @@ void cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index
 		int is_root);
 void cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index);
 void cmd_run(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root);
+void add_to_select_set(int fd, fd_set *set, int *max_fd);
+void remove_from_select_set(int fd, fd_set *set, int *max_fd);
 
 fcrondyn_cl *fcrondyn_cl_base; /* list of connected fcrondyn clients */
 int fcrondyn_cl_num = 0;       /* number of fcrondyn clients currently connected */    
@@ -94,6 +96,38 @@ char err_others_nallowed_str[] = "You are not allowed to list other users' jobs.
 /* the number of char we need (8 bits (i.e. fields) per char) */
 #define FIELD_NUM_SIZE 1
 
+
+void
+add_to_select_set(int fd, fd_set *set, int *max_fd)
+    /* add fd to set, and update max_fd if necessary (for select()) */
+{
+    FD_SET(fd, set);
+    if ( fd > *max_fd )
+	*max_fd = fd;
+}
+
+
+void
+remove_from_select_set(int fd, fd_set *set, int *max_fd)
+    /* remove fd to set, and update max_fd if necessary (for select()) */
+{
+    FD_CLR(fd, set);
+    if ( fd == *max_fd ) {
+	/* find the biggest fd in order to update max_fd */
+	struct fcrondyn_cl *client;
+	int tmp_max_fd = listen_fd;
+	
+	for ( client = fcrondyn_cl_base; client != NULL; client = client->fcl_next) {
+	    if ( client->fcl_sock_fd > tmp_max_fd )
+		tmp_max_fd = client->fcl_sock_fd;
+	}
+
+	/* update max_fd */
+	*max_fd = tmp_max_fd;
+    }
+}
+
+
 void
 init_socket(void)
     /* do everything needed to get a working listening socket */
@@ -142,9 +176,7 @@ init_socket(void)
     }
 
     /* no error */
-    FD_SET(listen_fd, &master_set);
-    if ( listen_fd > set_max_fd )
-	set_max_fd = listen_fd;
+    add_to_select_set(listen_fd, &master_set, &set_max_fd);
     
     /* copy master in read_fs, because read_fs will be modified by select() */
     read_set = master_set;
@@ -703,7 +735,7 @@ and make client points to the next entry */
 {
     shutdown((*client)->fcl_sock_fd, SHUT_RDWR);
     close((*client)->fcl_sock_fd);
-    FD_CLR((*client)->fcl_sock_fd, &master_set);
+    remove_from_select_set((*client)->fcl_sock_fd, &master_set, &set_max_fd);
     debug("connection closed : fd : %d", (*client)->fcl_sock_fd);
     if (prev_client == NULL ) {
 	fcrondyn_cl_base = (*client)->fcl_next;
@@ -764,9 +796,7 @@ check_socket(int num)
 		/* to avoid trying to read from it in this call */
 		avoid_fd = fd;
 		
-		FD_SET(fd, &master_set);
-		if ( fd > set_max_fd )
-		    set_max_fd = fd;
+		add_to_select_set(fd, &master_set, &set_max_fd);
 		fcrondyn_cl_num += 1;
 		
 		debug("Added connection fd : %d - %d connections", fd, fcrondyn_cl_num);

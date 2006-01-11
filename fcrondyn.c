@@ -2,7 +2,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.13 2004-08-17 12:52:45 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.14 2006-01-11 00:48:33 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.13 2004-08-17 12:52:45 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.14 2006-01-11 00:48:33 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -104,7 +104,7 @@ info(void)
 {
     fprintf(stderr,
 	    "fcrondyn " VERSION_QUOTED " - interact dynamically with daemon fcron\n"
-	    "Copyright 2000-2004 Thibault Godouet <fcron@free.fr>\n"
+	    "Copyright " COPYRIGHT_QUOTED " Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	);
