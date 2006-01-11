@@ -1,8 +1,7 @@
-
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.67 2005-07-19 10:40:07 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.68 2006-01-11 00:49:33 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -47,7 +46,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.67 2005-07-19 10:40:07 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.68 2006-01-11 00:49:33 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -105,7 +104,7 @@ info(void)
 {
     fprintf(stderr,
 	    "fcrontab " VERSION_QUOTED " - user interface to daemon fcron\n"
-	    "Copyright 2000-2004 Thibault Godouet <fcron@free.fr>\n"
+	    "Copyright " COPYRIGHT_QUOTED " Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
 	);
@@ -978,9 +977,7 @@ main(int argc, char **argv)
     int    retcode = 0;
     const char * const * env;
 #endif
-#ifdef USE_SETE_ID
     struct passwd *pass;
-#endif
 
     memset(buf, 0, sizeof(buf));
     memset(file, 0, sizeof(file));
@@ -990,17 +987,25 @@ main(int argc, char **argv)
     
     uid = getuid();
 
-    /* get current dir */
-    if ( getcwd(orig_dir, sizeof(orig_dir)) == NULL )
-	die_e("getcwd");
-
-    /* interpret command line options */
-    parseopt(argc, argv);
-
     if ( ! (pass = getpwnam(USERNAME)) )
 	die_e("user \"%s\" is not in passwd file. Aborting.", USERNAME);
     fcrontab_uid = pass->pw_uid;
     fcrontab_gid = pass->pw_gid;
+
+    /* get current dir */
+#ifdef USE_SETE_ID
+    if (seteuid(uid) != 0) 
+	die_e("Could not change euid to %d", uid); 
+#endif
+    if ( getcwd(orig_dir, sizeof(orig_dir)) == NULL )
+	die_e("getcwd");
+#ifdef USE_SETE_ID
+    if (seteuid(fcrontab_uid) != 0) 
+	die_e("Couldn't change euid to fcrontab_uid[%d]",fcrontab_uid);
+#endif
+
+    /* interpret command line options */
+    parseopt(argc, argv);
 
 #ifdef USE_SETE_ID
 
