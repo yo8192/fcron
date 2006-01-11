@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron.8.sgml,v 1.8 2003-12-25 22:59:52 thib Exp $ -->
+<!-- $Id: fcron.8.sgml,v 1.9 2006-01-11 01:02:36 thib Exp $ -->
 
 <refentry id="fcron.8">
     <refmeta>
@@ -20,7 +20,7 @@ A copy of the license is included in gfdl.sgml.
     </refmeta>
     <refnamediv>
 	<refname>fcron</refname>
-	<refpurpose>daemon to execute scheduled commands</refpurpose>
+	<refpurpose>daemon to execute scheduled tasks</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
@@ -72,7 +72,7 @@ and date of each job's next execution, and determines how long it has to sleep,
 and sleeps for this amount of time. When it wakes up, it checks all jobs loaded
 and runs them if needed. When a job is executed, &fcron; forks, changes its user
 and group permissions to match those of the user the job is being done for,
-executes that job and mails the outputs to the user (this can be changed : see
+executes that job and mails the outputs to the user (this can be changed: see
 <link linkend="fcrontab.5">&fcrontab;(5)</link>).</para>
 	<para>
 Informative message about what &fcron; is doing are sent to
@@ -82,7 +82,7 @@ respectively at priority <emphasis>warning</emphasis> and
 <emphasis>error</emphasis>.</para>
 	<para><note>
 		<para>
-&Fcron; sleeps at least &firstsleep; seconds after it has been started before
+&fcron; sleeps at least &firstsleep; seconds after it has been started before
 executing a job to avoid to use too much resources during system boot.</para>
 	    </note></para>
     </refsect1>
@@ -112,8 +112,8 @@ compiled to run in foreground as default.</para>
 		<term><option>--savetime</option>
 <replaceable>time</replaceable></term>
 		<listitem>
-		    <para>Save &fcrontabf;s on disk every t sec (default is
-1800).</para>
+		  <para>Save &fcrontabf;s on disk every 
+		     <replaceable>time</replaceable> sec (default is 1800).</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -121,8 +121,9 @@ compiled to run in foreground as default.</para>
 		<term><option>--maxserial</option>
 <replaceable>num</replaceable></term>
 		<listitem>
-		    <para>Set to n the maximum number of serial jobs which can
-run simultaneously. By default, this value is set to &serialmaxrunning;.</para>
+		  <para>Set to <replaceable>num</replaceable> the maximum number
+		     of serial jobs which can run simultaneously. By default,
+		     this value is set to &serialmaxrunning;.</para>
 		    <para>&seealso; option &optserial; in &fcrontab;(5).</para>
 		</listitem>
 	    </varlistentry>
@@ -152,7 +153,7 @@ different spool dir and pid file from the other processes).</para>
 		<term><option>-o</option></term>
 		<term><option>--once</option></term>
 		<listitem>
-		    <para>Execute all jobs that need to be run at the time fcron
+		    <para>Execute all jobs that need to be run at the time &fcron;
 was started, wait for them, then return. Sets <option>firstsleep</option> to 0.
 May be especially useful when used with options <option>-y</option> and
 <option>-f</option> in a script run, for instance, at dialup connection.</para>
@@ -205,8 +206,8 @@ including its version and the license under which it is distributed.</para>
 		<term><option>-d</option></term>
 		<term><option>--debug</option></term>
 		<listitem>
-		    <para>Run in debug mode (more details on stderr (if option
-<option>-f</option> is set) and in log file)</para>
+		    <para>Run in debug mode (more details on stderr -- if option
+<option>-f</option> is set -- and in log file)</para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
@@ -264,7 +265,7 @@ update (this signal is used by &fcrontab;(5))</para>
 		<term><filename>&etc;/&fcron.conf.location;</filename></term>
 		<listitem>
 		    <para>Configuration file for &fcron;, &fcrontab; and
-&fcrondyn; : contains paths (spool dir, pid file) and default programs to use
+&fcrondyn;: contains paths (spool dir, pid file) and default programs to use
 (editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf;(5)</link>
 for more details.</para>
 		</listitem>
@@ -288,7 +289,7 @@ name per line, special name "all" acts for everyone)</para>
 <filename>&etc;/pam.conf</filename>)</term>
 		<listitem>
 		    <para><productname>PAM</productname> configuration file for
-&fcron;. Take a look at pam(8) for more details.</para>
+&fcron;. Take a look at &pam;(8) for more details.</para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>

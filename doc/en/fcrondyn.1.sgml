@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrondyn.1.sgml,v 1.13 2005-06-11 23:02:07 thib Exp $ -->
+<!-- $Id: fcrondyn.1.sgml,v 1.14 2006-01-11 01:02:21 thib Exp $ -->
 
 <refentry id="fcrondyn.1">
     <refmeta>
@@ -101,13 +101,13 @@ including its version and the license under which it is distributed.</para>
 
     <refsect1 id="fcrondyn.1.cmd.descp">
 	<title>Command description</title>
-	<para>&Fcrondyn;'s command syntax is the following : </para>
+	<para>&Fcrondyn;'s command syntax is the following: </para>
 	<blockquote>
 	    <para><command>command</command> <replaceable>arg1</replaceable>
 <replaceable>arg2</replaceable> [...]</para>
 	</blockquote>
 	<para>An argument of a &fcrondyn; command is of one of the following
-type :</para>
+type:</para>
 	<variablelist>
 	    <title>Argument types of &fcrondyn;'s commands</title>
 	    <varlistentry>
@@ -141,7 +141,7 @@ option).</para>
 	    </varlistentry>
 	</variablelist>
 	<para>Last, but not least, the following commands are recognized
-(optional arguments are between []) :</para>
+(optional arguments are between []):</para>
 	<variablelist>
 	    <title>Valid &fcrondyn;'s commands</title>
 	    <varlistentry>
@@ -267,16 +267,14 @@ job. <emphasis><type>jobid</type></emphasis> is the one given by
 	    <varlistentry>
 		<term>R&amp;Q</term>
 		<listitem>
-		    <para>The job has this number instances running or queued in
-serial or lavg queue.</para>
+		    <para>The job has this number instances of the given task which are either running or queued in the serial or lavg queue.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term>OPTIONS</term>
 		<listitem>
-		    <para>List of main options which are set. L for lavg jobs
-		    (LO if the job is also lavgonce), S for serial (SO if also
-		    serialone), ES for exesev jobs.</para>
+		    <para>List of main options which are set for the task.
+		     L for the jobs which run only under a given system Load average (option &optlavg;, &optlavg1;, &optlavg5; and &optlavg15;), LO (Load average Once) if only at most one instance of the task can be in the load average queue at a given time (option &optlavgonce;), S for serialized jobs (option &optserial;), SO for the jobs which will be serialized only for the next execution (Serial Once), and ES if several instances of the same job can run simultaneously (option &optexesev;).</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -284,7 +282,8 @@ serial or lavg queue.</para>
 		<listitem>
 		    <para>3 values, corresponding to the 1, 5, and 15-minute (in
 		    this order) system load average values below which the job
-		    should be run (see &optlavg; option).</para>
+		    will be run, otherwise it will be queued until the system
+		    load average is appropriate (see &optlavg; option).</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -303,7 +302,7 @@ serial or lavg queue.</para>
 	    <varlistentry>
 		<term>SCHEDULE</term>
 		<listitem>
-		    <para>Next run is scheduled at this time and date. Please note that fcrondyn prints the schedule in the time zone of the system (not the time zone of fcrontab option &opttimezone;).</para>
+		    <para>Next run is scheduled at this time and date. Please note that fcrondyn prints the next execution time and date in the time zone of the system where fcron is running, and not the time zone which can be defined for using option &opttimezone;.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -334,7 +333,7 @@ error.</para>
 		<term><filename>&etc;/&fcron.conf.location;</filename></term>
 		<listitem>
 		    <para>Configuration file for &fcron;, &fcrontab; and
-&fcrondyn; : contains paths (spool dir, pid file) and default programs to use
+&fcrondyn;: contains paths (spool dir, pid file) and default programs to use
 (editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf;(5)</link>
 for more details.</para>
 		</listitem>
