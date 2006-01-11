@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,16 +8,16 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: readme.sgml,v 1.7 2005-02-26 15:18:12 thib Exp $ -->
+<!-- $Id: readme.sgml,v 1.8 2006-01-11 01:03:03 thib Exp $ -->
 
 <sect1 id="readme">
     <title>About fcron</title>
     <sect2>
-	<title>What is fcron ?</title>
+	<title>What is fcron?</title>
 	<para>&Fcron; is a scheduler. It aims at replacing <application>Vixie
 Cron</application>, so it implements most of its functionalities.</para>
 	<para>But contrary to <application>Vixie Cron</application>, &fcron;
-does not need your system to be up 7 days a week, 24 hours a day : it also works
+does not need your system to be up 7 days a week, 24 hours a day: it also works
 well with systems which are not running neither all the time nor regularly
 (contrary to <application>anacrontab</application>).</para>
 	<para>In other words, &fcron; does both the job of <application>Vixie
@@ -27,14 +27,14 @@ and better :)) ...</para>
 	<para>To do so, &fcron; allows you to use the standard mode in which you
 tell it to execute one command at a given date and hour and to make it run a
 command according to its time of execution, which is normally the same as system
-up time. For example :
+up time. For example:
 
             <blockquote>
 		<para>Run the task 'save /home/ directory' every 3h15 of system
 up time.</para>
 	    </blockquote> and, of course, in order to make it really useful, the
 time remaining until next execution is saved each time the system is stopped.
-You can also say :
+You can also say:
 	
             <blockquote>
 		<para>run that command once between 2am and 5am</para>
@@ -77,7 +77,7 @@ in the <link linkend="gpl">gpl</link> file).</para>
 <productname>POSIX</productname> system, but it has been developed on
 <productname>Mandrake</productname> Linux (so it should work without any
 problems on <productname>Redhat</productname>).</para>
-		<para>Fcron has been reported to work correctly on :
+		<para>Fcron has been reported to work correctly on:
 		</para>
 		<itemizedlist>
 		  <listitem><para><productname>Linux Mandrake</productname>

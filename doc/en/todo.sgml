@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.37 2005-09-09 21:03:30 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.38 2006-01-11 01:02:16 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -25,10 +25,13 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>test the fix for empty mails on non linux systems (solaris seems ok, feedback on BSD ?)</para>
+	       <para>test the fix for empty mails on non linux systems (solaris seems ok, feedback on BSD?) (starting from fcron 2.9.7 -- no complain so far, so fixed?)</para>
 	    </listitem>
 	    <listitem>
-	       <para>bug fix : fcron freezes if the filesystem on which it operates has no space left ? (cannot reproduce it on my linux system)</para>
+	       <para>bug fix: what happens if the grand-child cannot be forked or cannot run the job in job.c? + better loop to read/write the pid of grand-child from/by the child (fcron freezes if the filesystem on which it operates has no space left? (cannot reproduce it on my linux system)</para>
+	    </listitem>
+	    <listitem>
+	       <para>set TZ env. var. for jobs for which option tz is used.</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
@@ -36,14 +39,14 @@ A copy of the license is included in gfdl.sgml.
 	 <title>Low priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>code cleaning : create a .c/.h file for data structures
+	       <para>code cleaning: create a .c/.h file for data structures
 		  (file/line lists, serial queue, lavg list, exe list),
 		  and work with them only through functions/macros.
 	       + secure equivalent to str[n]{cat|copy|...}</para>
-	       <para>Note : may introduce bugs, so it will be done in fcron 3.1.x, and needs to be tested thoroughly..</para>
+	       <para>Note: may introduce bugs, so it will be done in fcron 3.1.x, and needs to be tested thoroughly..</para>
 	    </listitem>
 	    <listitem>
-	       <para>Mem footprint reduction : use an/some union(s) in CL struct.</para>
+	       <para>Mem footprint reduction: use an/some union(s) in CL struct.</para>
 	    </listitem>
 	    <listitem>
 	       <para>For environment settings, make a var substitution.</para>
@@ -58,8 +61,8 @@ A copy of the license is included in gfdl.sgml.
 	    </listitem>
 	    <listitem>
 	       <para>PAM support (included in fcron, but needs more tests by
-		  people using PAM - not implemented in fcrondyn : is it needed
-		  in fcrondyn anyway ?)</para>
+		  people using PAM - not implemented in fcrondyn: is it needed
+		  in fcrondyn anyway?)</para>
 	    </listitem>
 	    <listitem>
 	       <para>support for per user serial queue (especially for root)</para>
@@ -76,34 +79,34 @@ A copy of the license is included in gfdl.sgml.
 	 <title>Ideas</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>add a system of modules : at startup, fcron loads some
+	       <para>add a system of modules: at startup, fcron loads some
 		  modules (.so files). Then, when fcron should run the job, it
 		  calls a function of the module, and let it manage the job
-		  (threads ?). (do linux dlopen(), etc exist on other systems ?
-		  - yes : thanks Harring ;) dlopen exists on all POSIX system -
+		  (threads?). (do linux dlopen(), etc exist on other systems?
+		  - yes: thanks Harring ;) dlopen exists on all POSIX system -
 		  even windoze - abait it does not use the same insterface of
 		  function calls. But it can be easily implemented to port to
 		  another system.).</para>
 	    </listitem>
 	    <listitem>
-	       <para>(related to the system of modules ? create a kind of
-		  dependencies ?)  Add a way to run a job only if a command
+	       <para>(related to the system of modules? create a kind of
+		  dependencies?)  Add a way to run a job only if a command
 		  returns true. It would permit, for instance, to run some jobs
 		  on a laptop only if it is on AC power.</para>
 	       <para>and depending on the return value of the command, cancel
 		  the execution, or wait x seconds before trying again, etc. 
-	       In this case, needs change the way the jobs are queued ?</para>
+	       In this case, needs change the way the jobs are queued?</para>
 	    </listitem>
 	    <listitem>
 	       <para>add an option/module to prevent fcron from running a job if the
-		  system is running on battery (anacron does it ?)</para>
+		  system is running on battery (anacron does it?)</para>
 	    </listitem>
 	    <listitem>
 	       <para>Add a way to stop a job (SIGSTOP) if the lavg gets to high,
 		  and restart it (SIGCONT) when the lavg has decreased.</para>
 	    </listitem>
 	    <listitem>
-	       <para>Add a timeout for task completion : if a task takes more
+	       <para>Add a timeout for task completion: if a task takes more
 		  than a specified timeout, then start another script with the
 		  initial task PID as argument.  That would allow a kill with
 		  different signals (-HUP, -TERM -STOP, .... or any other action

@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,10 +8,32 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.42 2005-09-09 21:03:39 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.43 2006-01-11 01:02:56 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
+
+      <itemizedlist>
+	 <title>From version 3.0.0 to 3.0.1</title>
+	 <listitem>
+	    <para>Better handling of the pipes in job.c: this should remove some problems encountered on BSD systems.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Bug fix: set the FDs correctly for select(). Should fix the problem encountered on BSD systems.</para>
+	 </listitem>
+	 <listitem>
+	    <para>fcrontab: access user's directory with user's rights (necessary if user/group fcron has not the right to read the directory).</para>
+	 </listitem>
+	 <listitem>
+	    <para>improvement in check_system_crontabs: more comments, added some help messages, added command line options, cleaner, safer code.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Improved English documentation: clarified some previously-unclear points.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Added French translation of the manual pages (thanks go to Alain Portal)</para>
+	 </listitem>
+      </itemizedlist>
 
       <itemizedlist>
 	 <title>From version 2.9.7 to 3.0.0</title>
@@ -74,7 +96,7 @@ A copy of the license is included in gfdl.sgml.
 	    <para>HP-UX support (needs more tests).</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : restore umask even if fcron runs
+	    <para>bug fix: restore umask even if fcron runs
 	       unprivileged.</para>
 	 </listitem>
       </itemizedlist>
@@ -110,12 +132,12 @@ A copy of the license is included in gfdl.sgml.
 	    <para>Merged debian/ dir for debian package.</para>
 	 </listitem>
 	 <listitem>
-	    <para>Mail reports : put the same username in the To: field than the
+	    <para>Mail reports: put the same username in the To: field than the
 	       one we give as recipient to the MTA. mailto can now also be a
 	       fully qualified email address.</para>
 	 </listitem>
 	 <listitem>
-	    <para>changed a log message : a job which has ended without error is
+	    <para>changed a log message: a job which has ended without error is
 	       reported has "completed" (which is more appropriated than
 	       "terminated").
 	    </para>
@@ -138,7 +160,7 @@ A copy of the license is included in gfdl.sgml.
 	       crash.</para>
 	 </listitem>
 	 <listitem>
-	    <para>Fixed a small bug : scripts were supposing perl was in
+	    <para>Fixed a small bug: scripts were supposing perl was in
 	       /usr/bin.</para>
 	 </listitem>
 	 <listitem>
@@ -159,44 +181,44 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 2.9.3 to 2.9.4</title>
 	 <listitem>
-	    <para>Merged support for SE Linux (patch from Russell Coker : thanks
-	       !)</para>
+	    <para>Merged support for SE Linux (patch from Russell Coker: thanks!)
+	    </para>
 	 </listitem>
 	 <listitem>
 	    <para>Work on the documentation (fixed spelling mistakes, tried to
 	       make things clearer in fcrontab.5) (thanks Bill Wohler for your
-	       help !)</para>
+	       help!)</para>
 	 </listitem>
 	 <listitem>
-	    <para>Changed the subject line of mail reports : it now contains the
+	    <para>Changed the subject line of mail reports: it now contains the
 	       subject line, and is very similar to vixie cron's one.</para>
 	 </listitem>
 	 <listitem>
 	    <para>Added a sum-up at the end of ./configure.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : "makewhatis" bug is fixed -- at last !</para>
+	    <para>bug fix: "makewhatis" bug is fixed -- at last!</para>
 	    <para>In fact, the problems encountered were due to an abusively
 	       ignored signal SIGPIPE.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : possible crash of fcron when trying to save a file
+	    <para>bug fix: possible crash of fcron when trying to save a file
 	       if there was no space left on device.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : we don't consider '-' and '_' as word delimiters for
+	    <para>bug fix: we don't consider '-' and '_' as word delimiters for
 	       a username before the command anymore, since many programs have
 	       one of these characters in their name.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : option first was broken in fcron 2.9.3.</para>
+	    <para>bug fix: option first was broken in fcron 2.9.3.</para>
 	 </listitem>
 	 <listitem>
 	    <para>fixed a little typo in an error message
 	       (could->couldn't)</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : do not ignore the last line of a fcrontab if there
+	    <para>bug fix: do not ignore the last line of a fcrontab if there
 	       is no \n before the end of file.</para>
 	 </listitem>
 	 <listitem>
@@ -210,20 +232,20 @@ A copy of the license is included in gfdl.sgml.
 	       from another directory.</para>
 	 </listitem>
 	 <listitem>
-	    <para>Perf improvement : use buffer for i/o in run_job().</para>
+	    <para>Perf improvement: use buffer for i/o in run_job().</para>
 	 </listitem>
       </itemizedlist>
 
       <itemizedlist>
 	 <title>From version 2.9.2 to 2.9.3</title>
 	 <listitem>
-	    <para>security issue : fcron used not to check the fcrontabs
+	    <para>security issue: fcron used not to check the fcrontabs
 	       installed by root for a standard user. This could make an
 	       inattentive superuser install a user job runas(root)
 	       involontary.</para>
 	 </listitem>
 	 <listitem>
-	    <para>Perf improvement : we now use buffers to write something to
+	    <para>Perf improvement: we now use buffers to write something to
 	       disk (became necessary due to the use of O_SYNC).</para>
 	 </listitem>
 	 <listitem>
@@ -255,17 +277,17 @@ A copy of the license is included in gfdl.sgml.
 	       particular, you can now use address like user@host.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : in 2.9.2, fcrontab and fcron did not set correctly
+	    <para>bug fix: in 2.9.2, fcrontab and fcron did not set correctly
 	       some file modes.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug (introduced in 2.9.1) : when a job stops with an non-zero
+	    <para>bug (introduced in 2.9.1): when a job stops with an non-zero
 	       exit status or because it has been signaled, send a mail to its
 	       owner to inform him (in 2.9.1 and 2.9.2, the mail was sent, but
 	       contained nothing).</para>
 	 </listitem>
 	 <listitem>
-	    <para>code clean : use the same scheme for all struct types, removed
+	    <para>code clean: use the same scheme for all struct types, removed
 	       some code redundancy (save to disk management).</para>
 	 </listitem>
       </itemizedlist>
@@ -298,11 +320,11 @@ A copy of the license is included in gfdl.sgml.
 	       required by some programs (for instance, perl).</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : using DESTDIR with make did not work with the
+	    <para>bug fix: using DESTDIR with make did not work with the
 	       doc.</para>
 	 </listitem>
 	 <listitem>
-	    <para>Code clean : changed macros to make parameters clearly
+	    <para>Code clean: changed macros to make parameters clearly
 	       different from vars.</para>
 	 </listitem>
       </itemizedlist>
@@ -317,28 +339,28 @@ A copy of the license is included in gfdl.sgml.
 	    <para>added configure's option --with-boot-install .</para>
 	 </listitem>
 	 <listitem>
-	    <para>Minor change in the PAM code of fcron : may work better on
+	    <para>Minor change in the PAM code of fcron: may work better on
 	       some systems.</para>
 	 </listitem>
 	 <listitem>
 	    <para>configure script now uses getpwnam() and getgrnam() instead of
-	       reading directly /etc/passwd and /etc/group : this makes easier
+	       reading directly /etc/passwd and /etc/group: this makes easier
 	       the use of NIS, LDAP, etc.</para>
 	 </listitem>
 	 <listitem>
-	    <para>Bug fix : using some "cmd > /dev/stderr" (or stdout) in a
+	    <para>Bug fix: using some "cmd > /dev/stderr" (or stdout) in a
 	       script used to make fcron send a bogus output mail. (rewrite of
 	       the code managing the output of jobs)</para>
 	 </listitem>
 	 <listitem>
-	    <para>Bug fix : typo error prevented fcrontab to be compiled on some
+	    <para>Bug fix: typo error prevented fcrontab to be compiled on some
 	       systems.</para>
 	 </listitem>
 	 <listitem>
 	    <para>Minor bug fix about stdout option.</para>
 	 </listitem>
 	 <listitem>
-	    <para>Minor bug fix : giving fcrontab's option -c a relative path
+	    <para>Minor bug fix: giving fcrontab's option -c a relative path
 	       now works correctly.</para>
 	 </listitem>
       </itemizedlist>
@@ -346,15 +368,15 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 2.1.0 to 2.9.0</title>
 	 <listitem>
-	    <para>Added some new options to fcron : -y, -o, -l ; and some
-	       fcrontab options : stdout and volatile. All these permit to make
+	    <para>Added some new options to fcron: -y, -o, -l; and some
+	       fcrontab options: stdout and volatile. All these permit to make
 	       fcron run in foreground, execute all the pending jobs (mainly
 	       %-jobs), and return. May be used, for instance, in a ppp-up
 	       script with a dialup connection to update a software
 	       regularly.</para>
 	 </listitem>
 	 <listitem>
-	    <para>Added fcrondyn : this software allows users to dialog
+	    <para>Added fcrondyn: this software allows users to dialog
 	       dyn-amically with a running fcron daemon. Currently, it can list
 	       jobs of the user running it (or all jobs for root). In the near
 	       future, it should be able to run a job, change its next time and
@@ -365,7 +387,7 @@ A copy of the license is included in gfdl.sgml.
 	    <para>All the documentation has been ported to SGML DocBook.</para>
 	    <para>It results on a much better HTML version, which I recommand
 	       you use. It is installed by default in fcron documentation
-	       directory (for instance, on my system :
+	       directory (for instance, on my system:
 	       <filename>/usr/share/doc/fcron-X.X.X/</filename>).</para>
 	 </listitem>
 	 <listitem>
@@ -379,18 +401,18 @@ A copy of the license is included in gfdl.sgml.
 	       being run as soon as possible.</para>
 	 </listitem>
 	 <listitem>
-	    <para>added some more checks in fileconf.c : allow user to use
-	       hours, days, hourly, daily, etc options only with %-lines : it is
+	    <para>added some more checks in fileconf.c: allow user to use
+	       hours, days, hourly, daily, etc options only with %-lines: it is
 	       ignored if set for a &-line, which is quite confusing for users
 	       who may type, for instance "&amp;hourly" instead of
 	       "%hourly".</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : you can now use arguments in the var EDITOR and
+	    <para>bug fixed: you can now use arguments in the var EDITOR and
 	       VISUAL.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : fcron used to call sometimes a sleep(-1), which
+	    <para>bug fixed: fcron used to call sometimes a sleep(-1), which
 	       causes a freeze (no crash, but a very very long sleep :) ) under
 	       system using LIBC5, and maybe on some non-linux systems. It was
 	       not causing any problem under GLIBC2. Thanks go to Nick
@@ -401,7 +423,7 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 2.0.0 to 2.1.0</title>
 	 <listitem>
-	    <para>PAM support for fcron and fcrontab (need testing ! - help
+	    <para>PAM support for fcron and fcrontab (need testing! - help
 	       would be appreciated).</para>
 	 </listitem>
 	 <listitem>
@@ -409,9 +431,9 @@ A copy of the license is included in gfdl.sgml.
 	       not be run because of a queue full.</para>
 	 </listitem>
 	 <listitem>
-	    <para>Fcron now compiles on AIX (thank you, John A. Parker !), and a
+	    <para>Fcron now compiles on AIX (thank you, John A. Parker!), and a
 	       few AIX-only bugs have been fixed, but it may remain some
-	       problems to correct.  Please try, and tell me !</para>
+	       problems to correct.  Please try, and tell me!</para>
 	 </listitem>
 	 <listitem>
 	    <para>We now use constants ROOTUID and ROOTGID instead of some
@@ -424,15 +446,15 @@ A copy of the license is included in gfdl.sgml.
 	    <para>code cleaning.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : setting lavg to (0,0,0) used to make the line be
+	    <para>bug fixed: setting lavg to (0,0,0) used to make the line be
 	       added in the lavg queue instead of the serial queue (but the
 	       lavgs were ignored anyway).</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : fcrontab's "-z" option was not ignoring previous
+	    <para>bug fixed: fcrontab's "-z" option was not ignoring previous
 	       user's fcrontab version.</para> </listitem>
 	 <listitem>
-	    <para>bug fixed : on systems using putenv(), the var HOME, USER and
+	    <para>bug fixed: on systems using putenv(), the var HOME, USER and
 	       SHELL wasn't correctly assigned. On system supporting setenv()
 	       (which is the default), the problem did not occur. (thanks go to
 	       Evan A. Zacks).</para>
@@ -448,8 +470,8 @@ A copy of the license is included in gfdl.sgml.
 	       syslog.</para>
 	 </listitem>
 	 <listitem>
-	    <para>fcron behavior on serial and lavg queues overflow has changed
-	       : in previous versions, it used to run a job to make room to put
+	    <para>fcron behavior on serial and lavg queues overflow has changed: 
+	       in previous versions, it used to run a job to make room to put
 	       a new one. As it may conduct to a overwhelming of system
 	       resources, the new job is now refused (and not run). An error
 	       message is also logged through syslog.</para>
@@ -463,26 +485,26 @@ A copy of the license is included in gfdl.sgml.
 	    <para>added a FAQ.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : a midmonthly job executed after the 15th of the
+	    <para>bug fixed: a midmonthly job executed after the 15th of the
 	       month used to cause an endless loop. Thanks go to Guy Geens
-	       (thanks a lot !).</para>
+	       (thanks a lot!).</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : inserting a job in serial queue or running a job
+	    <para>bug fixed: inserting a job in serial queue or running a job
 	       not finished at startup was broken, unless the job was
 	       strict(no).</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : some 1.1.1 changes used to make fcron impossible
+	    <para>bug fixed: some 1.1.1 changes used to make fcron impossible
 	       to compile without sendmail (./configure's option
 	       "--with-sendmail=no").</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed in sysV boot script : we know specify explicitly the
+	    <para>bug fixed in sysV boot script: we know specify explicitly the
 	       path to fcron.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : unresolved error used to occur on some system not
+	    <para>bug fixed: unresolved error used to occur on some system not
 	       defining getopt_long().</para>
 	 </listitem>
       </itemizedlist>
@@ -490,13 +512,13 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 1.1.0 to 1.1.1</title>
 	 <listitem>
-	    <para>security fix : sym link attack against fcrontab. Any user
+	    <para>security fix: sym link attack against fcrontab. Any user
 	       allowed to use fcrontab used to be able to remove any fcrontab,
 	       and potentially to truncate any file to zero-length (under
 	       certain conditions, anyway).</para>
 	 </listitem>
 	 <listitem>
-	    <para>fcron and fcrontab now have a configuration file : fcron.conf.
+	    <para>fcron and fcrontab now have a configuration file: fcron.conf.
 	       It contains the default paths (spool dir, etc) and programs to
 	       use (editor, shell, etc). Thanks to that file, several fcron
 	       processes can run simultaneously if they have a different config
@@ -510,14 +532,14 @@ A copy of the license is included in gfdl.sgml.
 	    <para>added fcron's option "-n" to create a new spool dir.</para>
 	 </listitem>
 	 <listitem>
-	    <para>command line syntax of fcrontab has changed : you can know use
+	    <para>command line syntax of fcrontab has changed: you can know use
 	       "user" (after the file name if any) instead of "-u user". It
 	       should make fcrontab a little more intuitive.</para>
 	 </listitem>
 	 <listitem>
 	    <para>It is now possible to put a user name between the time/date
 	       fields and the shell command of a fcrontab line (for Vixie cron
-	       format compatibility) : it is equivalent to runas(user).</para>
+	       format compatibility): it is equivalent to runas(user).</para>
 	 </listitem>
 	 <listitem>
 	    <para>support of Solaris (and SysV).</para>
@@ -536,13 +558,13 @@ A copy of the license is included in gfdl.sgml.
 	       $prefix/{man|doc}) ($prefix is generally "/usr").</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : fcron used not to add a serial_sev line to
+	    <para>bug corrected: fcron used not to add a serial_sev line to
 	       serial/lavg queue if this line was running, saying "already in
 	       serial queue".</para>
 	 </listitem>
 
 	 <listitem>
-	    <para>bug corrected : a "all" in fcron.allow with no fcron.deny file
+	    <para>bug corrected: a "all" in fcron.allow with no fcron.deny file
 	       was not considered as an allow rule.</para>
 	 </listitem>
       </itemizedlist>
@@ -550,7 +572,7 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 1.0.3 to 1.1.0</title>
 	 <listitem>
-	    <para>The binary format of the binary fcrontabs has changed : there
+	    <para>The binary format of the binary fcrontabs has changed: there
 	       is now no more need to reinstall the fcrontabs when upgrading
 	       fcron (but you need to convert your fcrontabs to the new format
 	       once), and this format should allow extensions without losing any
@@ -569,18 +591,18 @@ A copy of the license is included in gfdl.sgml.
 	       secure).</para>
 	 </listitem>
 	 <listitem>
-	    <para>we now remove unwanted fcrontabs before loading them in memory
-	       : well, it seems to be more logical like that :)) .</para>
+	    <para>we now remove unwanted fcrontabs before loading them in memory: 
+	       well, it seems to be more logical like that :)) .</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : using options first with a &-line may have led to
+	    <para>bug fix: using options first with a &-line may have led to
 	       some problems during the first read by fcron (mail send
 	       erroneously if noticenotrun was used, bad set of the first
 	       execution's time and date or immediate execution if bootrun was
-	       set : in fact, the line was not recognized as a new line).</para>
+	       set: in fact, the line was not recognized as a new line).</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : fcron used not to be able to be compiled from any
+	    <para>bug fix: fcron used not to be able to be compiled from any
 	       directory because of an absent -I. line option for the compiler
 	       (the config.h file was not found).</para>
 	 </listitem>
@@ -593,11 +615,11 @@ A copy of the license is included in gfdl.sgml.
 	       (not only from the source dir).</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix : fcron now sets umask to the value it got at start
+	    <para>bug fix: fcron now sets umask to the value it got at start
 	       before running a job.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : a bug used to make the "truncated" system not
+	    <para>bug corrected: a bug used to make the "truncated" system not
 	       to work correctly, so a too long log message used to make fcron
 	       crash.</para>
 	 </listitem>
@@ -616,14 +638,14 @@ A copy of the license is included in gfdl.sgml.
 	    <para>a boolean value can now also be set by "yes" and "no".</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : bootrun option works again.</para>
+	    <para>bug corrected: bootrun option works again.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : shell variable containing underscore (_) used
+	    <para>bug corrected: shell variable containing underscore (_) used
 	       to be rejected.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : installation script used not to check if user
+	    <para>bug corrected: installation script used not to check if user
 	       fcron was in group fcron, in which case fcrontab doesn't work
 	       correctly (it cannot, in that case, read the fcrontabs for
 	       non-privileged users).</para>
@@ -633,7 +655,7 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 1.0.0 to 1.0.1</title>
 	 <listitem>
-	    <para>security fix : a user used to be able to read a file owned by
+	    <para>security fix: a user used to be able to read a file owned by
 	       root if root runs a "fcrontab -u user -e".</para>
 	 </listitem>
       </itemizedlist>
@@ -648,11 +670,11 @@ A copy of the license is included in gfdl.sgml.
 	    <para>installation scripts now support better FreeBSD and sh.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : configure's options prefix and
+	    <para>bug corrected: configure's options prefix and
 	       without-sendmail used not to work.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : installing an fcrontab by "fcrontab file"
+	    <para>bug corrected: installing an fcrontab by "fcrontab file"
 	       wasn't working correctly with a relative path (a path not
 	       beginning by a "/").</para>
 	 </listitem>
@@ -661,7 +683,7 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 0.9.4 to 0.9.5</title>
 	 <listitem>
-	    <para>security fix : the jobs of a fcrontab reinstalled by root used
+	    <para>security fix: the jobs of a fcrontab reinstalled by root used
 	       to be run as root (until the next action of the owner on the
 	       fcrontab).</para>
 	 </listitem>
@@ -695,7 +717,7 @@ A copy of the license is included in gfdl.sgml.
 	       ./configure script for a better support of exotic systems.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected in make install (script user-group) : the script
+	    <para>bug corrected in make install (script user-group): the script
 	       used not to handle correctly the absence of both useradd and
 	       adduser commands.  This script now checks and tries to add a
 	       group fcron if necessary.</para>
@@ -705,25 +727,25 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 0.9.3 to 0.9.4</title>
 	 <listitem>
-	    <para>security improvement : after the (horrible) root exploit found
+	    <para>security improvement: after the (horrible) root exploit found
 	       in version 0.9.3, I decided to improve fcron/fcrontab's security.
 	       I've included some strong (I hope :)) ) tests in fcron to ensure
 	       that only root can run commands as superuser and use option
 	       runas. Even an corrupted fcrontab should not be able to get
-	       root's privileges. Pretty reassuring, isn't it ?</para>
+	       root's privileges. Pretty reassuring, isn't it?</para>
 	 </listitem>
 	 <listitem>
 	    <para>runfreq(1) lines have been replaced and extended by a new kind
-	       of line : the lines beginning by a "%". It's now possible to tell
+	       of line: the lines beginning by a "%". It's now possible to tell
 	       fcron to run a command once an hour, a week, etc, but only at
-	       some specified moments. For instance : '%weekly * 4-7 echo "foo"'
+	       some specified moments. For instance: '%weekly * 4-7 echo "foo"'
 	       will run the command 'echo "foo"' once a week between 4 and 7 in
 	       the morning. (see "man 5 fcrontab" for more details).</para>
 	 </listitem>
 	 <listitem>
-	    <para>installation process improved : user is now consulted before
+	    <para>installation process improved: user is now consulted before
 	       anything is done about installation in boot scripts, etc. The
-	       default username of fcron is now ... fcron ! (this is more secure
+	       default username of fcron is now ... fcron! (this is more secure
 	       than daemon, which can be used by other programs). </para>
 	 </listitem>
 	 <listitem>
@@ -736,20 +758,20 @@ A copy of the license is included in gfdl.sgml.
 	       as crontab under a "su".</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : a tmp file was not removed after a "fcron
+	    <para>bug fixed: a tmp file was not removed after a "fcron
 	       -z"</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed in fcrontab : an expression of the form "start-stop"
+	    <para>bug fixed in fcrontab: an expression of the form "start-stop"
 	       with start > stop used to be incorrectly managed by fcron.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : when fcron and fcrontab were installed under a
+	    <para>bug fixed: when fcron and fcrontab were installed under a
 	       non-privileged user rights, a normal user used to be not able to
 	       use fcrontab.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fixed : while fcrontab was asking user if he would like to
+	    <para>bug fixed: while fcrontab was asking user if he would like to
 	       correct an erroneous line, the answer was not correctly
 	       handled.</para>
 	 </listitem>
@@ -811,30 +833,30 @@ A copy of the license is included in gfdl.sgml.
 	       root) for basic security reasons.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : fcron used to crash after a file was deleted
+	    <para>bug corrected: fcron used to crash after a file was deleted
 	       from memory in some conditions.</para>
 	 </listitem>
 	 <listitem>
 	    <para>corrected the bug which used to appear when a line was put
-	       several times in the serial queue : in this case, fcron used not
+	       several times in the serial queue: in this case, fcron used not
 	       to count correctly the number of running serial jobs.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : fcrontab used not to remove the temporary file
+	    <para>bug corrected: fcrontab used not to remove the temporary file
 	       it creates if no modification where done to a file after an
 	       edition using the -e option and on errors.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : fcrontab now defines correctly the remain
+	    <para>bug corrected: fcrontab now defines correctly the remain
 	       value of a line based on time and date beginning with a "&" but
 	       without runfreq definition.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : fcron used to not install correctly a file
+	    <para>bug corrected: fcron used to not install correctly a file
 	       edited if a correction was made.</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug corrected : reset option was not working correctly when
+	    <para>bug corrected: reset option was not working correctly when
 	       set to a single line.</para>
 	 </listitem>
       </itemizedlist>
@@ -847,7 +869,7 @@ A copy of the license is included in gfdl.sgml.
 	 </listitem>
 	 <listitem>
 	    <para>the value of the runas and mailto options are now stored
-	       internally as a uid number : you must reinstall all the system's
+	       internally as a uid number: you must reinstall all the system's
 	       fcrontabs if you change the uid of a user.</para>
 	 </listitem>
 	 <listitem>
@@ -891,7 +913,7 @@ A copy of the license is included in gfdl.sgml.
 	 </listitem>
 	 <listitem>
 	    <para>jobs can now be run be run one after the other (option
-	       "serial") : when the job should normally be run, it is added to a
+	       "serial"): when the job should normally be run, it is added to a
 	       queue, which entries are executed one by one. It permits to avoid
 	       the use of a lot of system resources for a brief moment by the
 	       simultaneous execution of several tasks.</para>
@@ -948,14 +970,14 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 0.8.1 to 0.8.2</title>
 	 <listitem>
-	    <para>code has been optimized : The jobs are now queued in order of
+	    <para>code has been optimized: The jobs are now queued in order of
 	       execution. It permits avoid useless tests of all jobs every time
 	       fcron wakes up, speeds up the determination of the time fcron
 	       should sleep, speeds up the processing after the end of a job,
 	       etc. I don't know why I haven't made it before :-) ...</para>
 	 </listitem>
 	 <listitem>
-	    <para>fcrontab has been improved : it is now more stable (many bugs
+	    <para>fcrontab has been improved: it is now more stable (many bugs
 	       which used to make fcrontab crash in case of errors in the
 	       fcrontab has been fixed). Plus, it now asks if you want to make
 	       corrections if needed when editing.</para>

@@ -1,11 +1,11 @@
-<!-- Dev. release :
+<!-- Dev. release:
 <!ENTITY % devrelease "INCLUDE">-->
-<!-- Stable release : -->
+<!-- Stable release: -->
 <!ENTITY % devrelease "IGNORE">
 
 <!ENTITY date "@@Date@">
 <!ENTITY version "@@VERSION_QUOTED@">
-<!ENTITY copyrightdate "2000-2005">
+<!ENTITY copyrightdate "2000-2006">
 <!ENTITY emailadr "fcron@free.fr">
 <!ENTITY selinuxadr "russell@coker.com.au">
 <!ENTITY email "<email>&emailadr;</email>">
@@ -36,7 +36,8 @@
 <!ENTITY sysfcrontab "@@SYSFCRONTAB@">
 
 
-<!ENTITY seealso "<emphasis>See also</emphasis> :">
+<!ENTITY seealso "<emphasis>See also</emphasis>:">
+<!ENTITY voiraussi "<emphasis>Voir aussi</emphasis>&nbsp;:">
 <!ENTITY fcron "<application>fcron</application>">
 <!ENTITY Fcron "<application>Fcron</application>">
 <!ENTITY fcrontab "<application>fcrontab</application>">
@@ -45,6 +46,7 @@
 <!ENTITY Fcrondyn "<application>Fcrondyn</application>">
 <!ENTITY fcrontabf "<systemitem>fcrontab</systemitem>">
 <!ENTITY fcron.conf "<systemitem>fcron.conf</systemitem>">
+<!ENTITY pam "<application>pam</application>">
 
 
 <!ENTITY about SYSTEM "readme.sgml">
