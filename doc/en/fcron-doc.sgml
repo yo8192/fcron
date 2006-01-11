@@ -7,7 +7,7 @@
 
 <!-- 
 Fcron documentation
-Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -15,7 +15,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron-doc.sgml,v 1.7 2003-12-25 22:57:35 thib Exp $ -->
+<!-- $Id: fcron-doc.sgml,v 1.8 2006-01-11 00:59:55 thib Exp $ -->
 
 <book lang="en" id="fcron-doc">
     <bookinfo id="bookinfo">
@@ -47,11 +47,11 @@ url="#backcover">Back Cover Text</ulink>. A copy of the license is included in
 	<abstract>
 	    <para>&Fcron; is distributed under GPL license (please read the
 license in <xref linkend="gpl">).</para>
-	    <para>Project home page : &webpage;</para>
-	    <para>Author : Thibault GODOUET &email;</para>
+	    <para>Project home page: &webpage;</para>
+	    <para>Author: Thibault GODOUET &email;</para>
 	</abstract>
 	<abstract>
-	    <para>You can get the latest HTML version of this document at :
+	    <para>You can get the latest HTML version of this document at:
 &docurl; . The SGML DocBook sources are included with fcron packages.</para>
 	</abstract>
 
@@ -71,7 +71,7 @@ release.
     </bookinfo>
 
     <chapter id="how-and-why">
-	<title>Fcron : how and why ?</title>
+	<title>Fcron: how and why?</title>
 	<para>This chapter will explain you what is &fcron;, why you should need
 it, and how to install it.</para>
 	&about;
