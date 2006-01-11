@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron.conf.5.sgml,v 1.8 2004-11-13 19:44:31 thib Exp $ -->
+<!-- $Id: fcron.conf.5.sgml,v 1.9 2006-01-11 01:00:46 thib Exp $ -->
 
 <refentry id="fcron.conf.5">
     <refmeta>
@@ -31,7 +31,7 @@ of <link linkend="fcrontab.1">&fcrontab;</link>(1), <link
 linkend="fcrondyn.1">&fcrondyn;</link>(1) and <link
 linkend="fcron.8">&fcron;</link>(8).</para>
 	</abstract>
-	<para>Blank lines, line beginning by a pound-sign (#) (which are
+	<para>Blank lines, line beginning by a hash sign (#) (which are
 considered comments), leading blanks and tabs are ignored. Each line in a
 &fcron.conf file is of the form
  <blockquote>
@@ -39,7 +39,7 @@ considered comments), leading blanks and tabs are ignored. Each line in a
 	    </blockquote> where the blanks around equal-sign (=) are ignored and
 optional. Trailing blanks are also ignored.
 </para>
-	<para>The following names are recognized (default value in parentheses) :
+	<para>The following names are recognized (default value in parentheses):
 <variablelist>
 		<title>Valid variables in a fcron.conf file</title>
 		<varlistentry>
@@ -62,7 +62,7 @@ to work properly).</para>
 (<filename>&fcron.fifo;</filename>)</term>
 		    <listitem>
 			<para>Location of &fcron; fifo file (needed by
-&fcrondyn; to communicate with fcron).</para>
+&fcrondyn; to communicate with &fcron;).</para>
 		    </listitem>
 		</varlistentry>
 		<varlistentry>
@@ -109,7 +109,7 @@ send job output.</para>
 system, you must use a different configuration file for each instance. Each
 instance must have a different <varname>fcrontabs</varname>,
 <varname>pidfile</varname> and <varname>fifofile</varname>. Then, use <link
-linkend="fcron.8">fcron</link>(8)'s command line option
+linkend="fcron.8">&fcron;</link>(8)'s command line option
 <parameter>-c</parameter> to select which config file (so which instance) you
 refer to.</para>
     </refsect1>
@@ -121,8 +121,8 @@ refer to.</para>
 		<term><filename>&etc;/&fcron.conf.location;</filename></term>
 		<listitem>
 		    <para>Configuration file for &fcron;, &fcrontab and
-&fcrondyn; : contains paths (spool dir, pid file) and default programs to use
-(editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf(5)</link> for
+&fcrondyn;: contains paths (spool dir, pid file) and default programs to use
+(editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf</link>(5) for
 more details.</para>
 		</listitem>
 	    </varlistentry>
@@ -145,7 +145,7 @@ name per line, special name "all" acts for everyone)</para>
 <filename>&etc;/pam.conf</filename>)</term>
 		<listitem>
 		    <para><productname>PAM</productname> configuration file for
-&fcron;. Take a look at pam(8) for more details.</para>
+&fcron;. Take a look at &pam;(8) for more details.</para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>
