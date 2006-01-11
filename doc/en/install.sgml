@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2004 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,13 +8,13 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: install.sgml,v 1.8 2003-12-25 22:59:16 thib Exp $ -->
+<!-- $Id: install.sgml,v 1.9 2006-01-11 01:01:38 thib Exp $ -->
 
 <sect1 id="install">
     <title>How to install fcron</title>
     <itemizedlist>
 	<listitem>
-	    <para>uncompress the archive :</para>
+	    <para>uncompress the archive:</para>
 	    <screen><prompt>bash$ </prompt><command>
 tar -xzf fcron-X.Y.Z.src.tar.gz</command></screen>
 	</listitem>
@@ -23,7 +23,7 @@ tar -xzf fcron-X.Y.Z.src.tar.gz</command></screen>
 	    <screen><prompt>bash$ </prompt><command>cd fcron-X.Y.Z</command></screen>
 	</listitem>
 	<listitem>
-	    <para>run the <command>configure</command> script :</para>
+	    <para>run the <command>configure</command> script:</para>
 	    <screen><prompt>bash$
 </prompt><command>./configure</command></screen>
 	    <para>
@@ -43,7 +43,7 @@ and/or <option>--with-boot-install</option> (see "<command>./configure</command>
 			    <para>
 				You may also want to change the place where
 &fcron; will be installed: you can use the <command>configure </command>'s
-option <option>--prefix</option> to do that. For instance :
+option <option>--prefix</option> to do that. For instance:
 <command>./configure</command> <option>--prefix=/usr/local</option> (default is
 prefix=/usr)
 			    </para>
@@ -85,7 +85,7 @@ necessary force a value by the options <option>--mandir</option> and
 			    <para>
 				If you get older &fcron;'s man-pages with
 <command>man</command> command after having upgraded, it's probably because
-&fcron; has changed its default man directory : you should remove manually the
+&fcron; has changed its default man directory: you should remove manually the
 outdated man-pages.
 			    </para>
 			</listitem>
@@ -108,12 +108,12 @@ is on the top of the file and clearly delimited).</para>
 	</listitem>
 
 	<listitem>
-	    <para>compile :</para>
+	    <para>compile:</para>
 	    <screen><prompt>bash$ </prompt><command>make</command></screen>
 	</listitem>
 
 	<listitem>
-	    <para>then install binaries as root :</para>
+	    <para>then install binaries as root:</para>
 	    <screen><prompt>bash$ </prompt><command>su root</command></screen>
 	    <screen><prompt>bash# </prompt><command>make install</command></screen>
 	</listitem>
