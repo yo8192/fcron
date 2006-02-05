@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: log.c,v 1.16 2006-01-11 00:48:09 thib Exp $ */
+ /* $Id: log.c,v 1.17 2006-02-05 20:49:35 thib Exp $ */
 
 /* This code is inspired by Anacron's sources of
    Itai Tzur <itzur@actcom.co.il> */
@@ -81,8 +81,9 @@ make_msg(const char *append, char *fmt, va_list args)
      * returns when the buffer overflows.  Hmmm... */
     len = vsnprintf(msg, MAX_MSG + 1, fmt, args);
     if ( append != NULL ) {
-	strncat(msg, ": ", MAX_MSG-len); 
-	strncat(msg, append, MAX_MSG-len);
+	size_t size_to_cat = ( (MAX_MSG-len) > 0) ? (MAX_MSG-len) : 0;
+	strncat(msg, ": ", size_to_cat); 
+	strncat(msg, append, size_to_cat);
 	len += 2 + strlen(append);
     }
     if (len >= MAX_MSG)
