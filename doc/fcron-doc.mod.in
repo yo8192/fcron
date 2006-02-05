@@ -1,5 +1,5 @@
-<!-- Dev. release:
-<!ENTITY % devrelease "INCLUDE">-->
+<!-- Dev. release: -->
+<!--<!ENTITY % devrelease "INCLUDE">-->
 <!-- Stable release: -->
 <!ENTITY % devrelease "IGNORE">
 
@@ -12,7 +12,8 @@
 <!ENTITY selinuxemail "<email>&selinuxadr;</email>">
 <!ENTITY webpageadr "http://fcron.free.fr">
 <!ENTITY webpage '<ulink url="&webpageadr;">&webpageadr;</ulink>'>
-<!ENTITY docurl '<ulink url="&webpageadr/files/fcron-doc-html.tar.gz">&webpageadr/files/fcron-doc-html.tar.gz</ulink>'>
+<!ENTITY docurlEN '<ulink url="&webpageadr/files/fcron-doc-en-html.tar.gz">&webpageadr/files/fcron-doc-html.tar.gz</ulink>'>
+<!ENTITY docurlFR '<ulink url="&webpageadr/files/fcron-doc-fr-html.tar.gz">&webpageadr/files/fcron-doc-html.tar.gz</ulink>'>
 
 <!ENTITY editor "@@EDITOR@">
 <!ENTITY etc "@@ETC@">

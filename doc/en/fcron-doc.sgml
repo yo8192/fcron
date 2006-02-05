@@ -15,7 +15,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron-doc.sgml,v 1.8 2006-01-11 00:59:55 thib Exp $ -->
+<!-- $Id: fcron-doc.sgml,v 1.9 2006-02-05 20:59:40 thib Exp $ -->
 
 <book lang="en" id="fcron-doc">
     <bookinfo id="bookinfo">
@@ -52,7 +52,7 @@ license in <xref linkend="gpl">).</para>
 	</abstract>
 	<abstract>
 	    <para>You can get the latest HTML version of this document at:
-&docurl; . The SGML DocBook sources are included with fcron packages.</para>
+&docurlEN; . The SGML DocBook sources are included with fcron packages.</para>
 	</abstract>
 
 	<![%devrelease; [ 

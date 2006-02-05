@@ -15,14 +15,14 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron-doc.sgml,v 1.1 2006-02-05 19:25:05 thib Exp $ -->
+<!-- $Id: fcron-doc.sgml,v 1.2 2006-02-05 20:59:46 thib Exp $ -->
 
 <book lang="en" id="fcron-doc">
     <bookinfo id="bookinfo">
-	<title>Fcron documentation</title>
+	<title>Documentation de fcron</title>
 	<date>&date;</date>
 	<releaseinfo>Fcron &version; <![%devrelease; [
-(<emphasis>development</emphasis> release)]]></releaseinfo>
+(version de <emphasis>d&eacute;veloppement</emphasis>)]]></releaseinfo>
 	<authorgroup>
 	    <author>
 		<firstname>Thibault</firstname>
@@ -34,7 +34,7 @@ A copy of the license is included in gfdl.sgml.
 	    <holder>Thibault Godouet</holder>
 	</copyright>
 	<legalnotice id="legalnotice">
-	    <para><citetitle>Fcron documentation</citetitle> Copyright &copy;
+	    <para><citetitle>Documentation de fcron</citetitle> Copyright &copy;
 &copyrightdate; Thibault Godouet, &email;</para>
 	    <para>Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -45,24 +45,24 @@ url="#backcover">Back Cover Text</ulink>. A copy of the license is included in
 	</legalnotice>
 
 	<abstract>
-	    <para>&Fcron; is distributed under GPL license (please read the
-license in <xref linkend="gpl">).</para>
-	    <para>Project home page: &webpage;</para>
-	    <para>Author: Thibault GODOUET &email;</para>
+	    <para>&Fcron; est distribu&eacute; sous licence GPL license (merci de lire
+la licence dans l'<xref linkend="gpl">).</para>
+	    <para>Site web du projet: &webpage;</para>
+	    <para>Auteur: Thibault GODOUET &email;</para>
 	</abstract>
 	<abstract>
-	    <para>You can get the latest HTML version of this document at:
-&docurl; . The SGML DocBook sources are included with fcron packages.</para>
+	    <para>Vous pouvez obtenir la derni&egrave;re version HTML de ce document &agrave; :
+&docurlFR; . Les sources SGML DocBook sont incluses dans les paquets sources de fcron.</para>
+	 <para><warning>
+	       <para>Ce document est la traduction fran&ccedil;aise de la documentation anglaise. Pour l'instant, seules les pages de manuel sont traduites. Il est aussi possible que les traductions soient moins &agrave; jour que la documentation anglaise : en cas de doute, reportez-vous &agrave; la documentation anglaise qui fait r&eacute;f&eacute;rence.</para>
+	    </warning></para>
 	</abstract>
 
 	<![%devrelease; [ 
 	<abstract>
 	    <para>
 		<warning>
-		    <para>This release (&version;) - as every version of the
-form x.y.z where y is an odd number -, is a <emphasis>development</emphasis>
-release, so it may contain more bugs (and uglier ones :)) ) than a stable
-release.
+		    <para>Cette version (&version;) - comme toutes les versions la forme x.y.z o&ugrave; y est un chiffre impaire - est une version de <emphasis>d&eacute;veloppement</emphasis>, elle peut donc contenir plus de bogues (et des pires :)) ) qu'une version marqu&eacute;e comme stable.
 		    </para>
 		</warning>
 	    </para>

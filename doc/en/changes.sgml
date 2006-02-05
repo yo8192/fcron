@@ -8,19 +8,13 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.43 2006-01-11 01:02:56 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.44 2006-02-05 20:59:44 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
 
       <itemizedlist>
 	 <title>From version 3.0.0 to 3.0.1</title>
-	 <listitem>
-	    <para>Better handling of the pipes in job.c: this should remove some problems encountered on BSD systems.</para>
-	 </listitem>
-	 <listitem>
-	    <para>Bug fix: set the FDs correctly for select(). Should fix the problem encountered on BSD systems.</para>
-	 </listitem>
 	 <listitem>
 	    <para>fcrontab: access user's directory with user's rights (necessary if user/group fcron has not the right to read the directory).</para>
 	 </listitem>
@@ -32,6 +26,18 @@ A copy of the license is included in gfdl.sgml.
 	 </listitem>
 	 <listitem>
 	    <para>Added French translation of the manual pages (thanks go to Alain Portal)</para>
+	 </listitem>
+	 <listitem>
+	    <para>Better handling of the pipes in job.c: this should remove some problems encountered on BSD systems.</para>
+	 </listitem>
+	 <listitem>
+	    <para>bug fix: do not use a tv_usec > 999999: should fix the problem encountered on BSD systems with select().</para>
+	 </listitem>
+	 <listitem>
+	    <para>bug fix: fixed a bug in make_msg(): the size of a string written to a buffer was not controlled correctly in some cases. This could result in buffer overflow and thus this was security problem. However the bug seems not exploitable as the part of the string which could overflow the buffer could not be freely defined by an attacker (it was either ": " or one of the strings returned by strerror()).</para>
+	 </listitem>
+	 <listitem>
+	    <para>Bug fix: set the FDs correctly for select().</para>
 	 </listitem>
       </itemizedlist>
 
