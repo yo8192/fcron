@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.44 2006-02-05 20:59:44 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.45 2006-02-06 21:31:26 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -26,6 +26,9 @@ A copy of the license is included in gfdl.sgml.
 	 </listitem>
 	 <listitem>
 	    <para>Added French translation of the manual pages (thanks go to Alain Portal)</para>
+	 </listitem>
+	 <listitem>
+	    <para>Removed old documentation from the package.</para>
 	 </listitem>
 	 <listitem>
 	    <para>Better handling of the pipes in job.c: this should remove some problems encountered on BSD systems.</para>
