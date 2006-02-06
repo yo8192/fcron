@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.1.sgml,v 1.1 2006-02-05 19:26:19 thib Exp $ -->
+<!-- $Id: fcrontab.1.sgml,v 1.2 2006-02-06 18:36:01 thib Exp $ -->
 
   <refentry id="fcrontab.1">
     <refmeta>
@@ -275,7 +275,7 @@ A copy of the license is included in gfdl.sgml.
     <refsect1>
       <title>Traduction</title>
       <para>Ce document est une traduction réalisée par Alain Portal
-        &lt;aportal AT univ-montp2 DOT fr&gt;. le xx novembre 2005
+        &lt;aportal AT univ-montp2 DOT fr&gt; le 6 février 2006
       </para>
       <para>L'équipe de traduction a fait le maximum pour réaliser une adaptation
         française de qualité. La version anglaise la plus à jour de ce document
