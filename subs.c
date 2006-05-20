@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.24 2006-01-11 00:57:29 thib Exp $ */
+ /* $Id: subs.c,v 1.25 2006-05-20 16:29:41 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -29,6 +29,8 @@
 void init_conf(void);
 
 extern char debug_opt;
+extern uid_t rootuid;
+extern gid_t rootgid;
 
 /* fcron.conf parameters */
 char *fcronconf = NULL;
@@ -40,6 +42,40 @@ char *fcrondeny = NULL;
 char *shell = NULL;
 char *sendmail = NULL;
 char *editor = NULL;
+
+
+uid_t
+get_user_uid_safe(char *username)
+    /* get the uid of user username, and die on error */
+{
+    struct passwd *pass;
+
+    errno = 0;
+    pass = getpwnam(username);
+    if ( errno != 0 || pass == NULL ) {
+	die_e("Unable to get the uid of user %s (is user in passwd file?)",
+	      username);
+    }
+    
+    return pass->pw_uid;
+
+}
+
+gid_t
+get_group_gid_safe(char *groupname)
+    /* get the gid of group groupname, and die on error */
+{
+    struct group *grp;
+
+    errno = 0;
+    grp = getgrnam(groupname);
+    if ( errno != 0 || grp == NULL ) {
+	die_e("Unable to get the gid of group %s", groupname);
+    }
+    
+    return grp->gr_gid;
+
+}
 
 int
 remove_blanks(char *str)
@@ -116,7 +152,10 @@ init_conf(void)
     fifofile = strdup2(FIFOFILE);
     fcronallow = strdup2(ETC "/" FCRON_ALLOW);
     fcrondeny = strdup2(ETC "/" FCRON_DENY);
-    shell = strdup2(SHELL);
+    /* // */
+    /* shell = strdup2(SHELL); */
+    shell = strdup2("");
+    
 #ifdef SENDMAIL
     sendmail = strdup2(SENDMAIL);
 #endif
@@ -183,7 +222,7 @@ read_conf(void)
     /* check if the file is secure : owner:root, group:fcron,
      * writable only by owner */
     if ( fstat(fileno(f), &st) != 0 
-	 || st.st_uid != ROOTUID || st.st_gid != fcrongid
+	 || st.st_uid != rootuid || st.st_gid != fcrongid
 	 || st.st_mode & S_IWGRP || st.st_mode & S_IWOTH ) {
 	error("Conf file (%s) must be owned by root:" GROUPNAME 
 	      " and (no more than) 644 : ignored", fcronconf, GROUPNAME);
