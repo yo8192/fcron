@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.65 2006-01-11 00:40:52 thib Exp $ */
+ /* $Id: job.c,v 1.66 2006-05-20 16:23:42 thib Exp $ */
 
 #include "fcron.h"
 
@@ -108,7 +108,14 @@ change_user(struct cl_t *cl)
 #ifdef HAVE_SETENV
     setenv("USER", pas->pw_name, 1);
     setenv("HOME", pas->pw_dir, 1);
-    setenv("SHELL", pas->pw_shell, 1);
+    /* To ensure compatibility with Vixie cron, we don't use the shell defined
+     * in /etc/passwd by default, but the default value from fcron.conf instead: */
+    if ( *shell == '\0' )
+	/* shell is empty, ie. not defined: use value from /etc/passwd */
+	setenv("SHELL", pas->pw_shell, 1);
+    else
+	/* default: use value from fcron.conf */
+	setenv("SHELL", shell, 1);
 #else
     {
 	strcpy(env_user, "USER=");
@@ -122,7 +129,14 @@ change_user(struct cl_t *cl)
 	putenv( env_home );
 
 	strcpy(env_shell, "SHELL=");
-	strncat(env_shell, pas->pw_shell, sizeof(env_shell)-6-1);
+	/* To ensure compatibility with Vixie cron, we don't use the shell defined
+	 * in /etc/passwd by default, but the default value from fcron.conf instead: */
+	if ( *shell == '\0' )
+	    /* shell is empty, ie. not defined: use value from /etc/passwd */
+	    strncat(env_shell, pas->pw_shell, sizeof(env_shell)-6-1);
+	else
+	    /* default: use value from fcron.conf */
+	    strncat(env_shell, shell, sizeof(env_shell)-6-1);
 	env_shell[sizeof(env_shell)-1]='\0';
 	putenv( env_shell );
     }
@@ -352,6 +366,8 @@ run_job_grand_child_setup_nice(cl_t *line)
 
 void
 run_job_grand_child_setup_env_var(cl_t *line, char **curshell)
+/* set the env var from the fcrontab, change dir to HOME and check that SHELL is ok 
+ * Return the final value of SHELL in curshell. */
 {
     env_t *env;
     char *home;
@@ -360,6 +376,7 @@ run_job_grand_child_setup_env_var(cl_t *line, char **curshell)
 	if ( putenv(env->e_val) != 0 )
 	    error("could not putenv()");
 
+    /* change dir to HOME */
     if ( (home = getenv("HOME")) != NULL )
 	if (chdir(home) != 0) {
 	    error_e("Could not chdir to HOME dir \"%s\"", home);
@@ -367,6 +384,7 @@ run_job_grand_child_setup_env_var(cl_t *line, char **curshell)
 		die_e("Could not chdir to HOME dir /");
 	}
 
+    /* check that SHELL is valid */
     if ( (*curshell = getenv("SHELL")) == NULL )
 	*curshell = shell;
     else if ( access(*curshell, X_OK) != 0 ) {
@@ -396,9 +414,9 @@ run_job(struct exe_t *exeent)
 	exeent->e_job_pid = -1;
     }
 
-    //
+#ifdef CHECKRUNJOB
     debug("run_job(): first pipe created successfully : about to do first fork()");
-    //
+#endif /* CHECKRUNJOB */
 
     switch ( pid = fork() ) {
     case -1:
@@ -418,14 +436,14 @@ run_job(struct exe_t *exeent)
 	int flask_enabled = is_selinux_enabled();
 #endif
  
-	/* */
+	/* // */
  	debug("run_job(): child: %s, output to %s, %s, %s\n",
 	      is_mail(line->cl_option) || is_mailzerolength(line->cl_option) ?
 	      "mail" : "no mail",
 	      to_stdout ? "stdout" : "file",
  	      foreground ? "running in foreground" : "running in background",
  	      is_stdout(line->cl_option) ? "stdout" : "normal" );
-	/* */
+	/* // */
 
 	if ( ! to_stdout && 
 	     ( is_mail(line->cl_option) || is_mailzerolength(line->cl_option))){
@@ -449,9 +467,9 @@ run_job(struct exe_t *exeent)
 
 	sig_dfl();
 
-	//
+#ifdef CHECKRUNJOB
 	debug("run_job(): child: change_user() done -- about to do 2nd fork()");
-	//
+#endif /* CHECKRUNJOB */
 
 	/* now, run the job */
 	switch ( pid = fork() ) {
@@ -482,11 +500,11 @@ run_job(struct exe_t *exeent)
 	    /* set env variables */
 	    run_job_grand_child_setup_env_var(line, &curshell);
 
-//#ifdef CHECKJOBS
+#if defined(CHECKJOBS) || defined(CHECKRUNJOB)
 	    /* this will force to mail a message containing at least the exact
 	     * and complete command executed for each execution of all jobs */
 	    debug("run_job(): grand-child: Executing \"%s -c %s\"", curshell, line->cl_shell);
-//#endif /* CHECKJOBS */
+#endif /* CHECKJOBS OR CHECKRUNJOB */
 
 #ifdef WITH_SELINUX
 	    if(flask_enabled && setexeccon(line->cl_file->cf_user_context) )
@@ -508,9 +526,10 @@ run_job(struct exe_t *exeent)
 	    close(pipe_fd[1]);
 	    close(pipe_pid_fd[0]);
 
-	    //
-	    debug("run_job(): child: pipe_fd[1] and pipe_pid_fd[0] closed -- about to write grand-child pid to pipe");
-	    //
+#ifdef CHECKRUNJOB
+	    debug("run_job(): child: pipe_fd[1] and pipe_pid_fd[0] closed"
+		  " -- about to write grand-child pid to pipe");
+#endif /* CHECKRUNJOB */
 
 	    /* give the pid of the child to the parent (main) fcron process */
 	    ret = write_pipe(pipe_pid_fd[1], &pid, sizeof(pid));
@@ -528,9 +547,9 @@ run_job(struct exe_t *exeent)
 		break;
 	    }
 	    
-	    //
+#ifdef CHECKRUNJOB
 	    debug("run_job(): child: grand-child pid written to pipe");
-	    //
+#endif /* CHECKRUNJOB */
 
 	    if ( ! is_nolog(line->cl_option) )
 		explain("Job %s started for user %s (pid %d)", line->cl_shell,
@@ -560,22 +579,22 @@ run_job(struct exe_t *exeent)
 	     * error messages) */
 	    /* use a select() or similar to know when parent has read
 	     * the pid (with a timeout !) */
-	    //
+	    /* // */
 	    sleep(2);
-	    //
+	    /* // */
+#ifdef CHECKRUNJOB
 	    debug("run_job(): child: closing pipe with parent");
+#endif /* CHECKRUNJOB */
 	    close(pipe_pid_fd[1]);
 
 	    /* we use a while because of a possible interruption by a signal */
 	    while ( (pid = wait3(&status, 0, NULL)) > 0)
-		//
 		{
+#ifdef CHECKRUNJOB
 		    debug("run_job(): child: ending job pid %d", pid);
-		    //
+#endif /* CHECKRUNJOB */
 		    end_job(line, status, mailf, mailpos);
-		    //
 		}
-	    //
 
 	    /* execution never gets here */
 	    
@@ -593,9 +612,9 @@ run_job(struct exe_t *exeent)
 	exeent->e_ctrl_pid = pid;
 	line->cl_file->cf_running += 1;
 
-	//
+#ifdef CHECKRUNJOB
 	debug("run_job(): about to read grand-child pid...");
-	//
+#endif /* CHECKRUNJOB */
 
 	/* read the pid of the job */
 	ret = read_pipe(pipe_pid_fd[0], &(exeent->e_job_pid), sizeof(pid_t));
@@ -614,9 +633,9 @@ run_job(struct exe_t *exeent)
 	close(pipe_pid_fd[0]);
     }
 
-    //
+#ifdef CHECKRUNJOB
     debug("run_job(): finished reading pid of the job -- end of run_job().");
-    //
+#endif /* CHECKRUNJOB */
 
 }
 
