@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.h,v 1.9 2006-01-11 00:57:59 thib Exp $ */
+ /* $Id: subs.h,v 1.10 2006-05-20 16:31:31 thib Exp $ */
 
 #ifndef __SUBS_H__
 #define __SUBS_H__
@@ -42,6 +42,8 @@ extern char *sendmail;
 /* end of global variables */
 
 /* functions prototypes */
+extern uid_t get_user_uid_safe(char *username);
+extern gid_t get_group_gid_safe(char *groupname);
 extern int remove_blanks(char *str);
 extern char *strdup2(const char *);
 extern int get_word(char **str);
