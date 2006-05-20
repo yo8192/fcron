@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.68 2006-01-11 00:49:33 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.69 2006-05-20 16:26:37 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -46,7 +46,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.68 2006-01-11 00:49:33 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.69 2006-05-20 16:26:37 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -69,6 +69,9 @@ char debug_opt = 1;       /* set to 1 if we are in debug mode */
 char debug_opt = 0;       /* set to 1 if we are in debug mode */
 #endif
 
+/* uid/gid of users/groups 
+ * (we don't use the static UID or GID as we ask for user and group names
+ * in the configure script) */
 char *user = NULL;
 char *runas = NULL;
 uid_t uid = 0;
@@ -76,6 +79,8 @@ uid_t asuid = 0;
 gid_t asgid = 0;
 uid_t fcrontab_uid = 0;
 gid_t fcrontab_gid = 0;
+uid_t rootuid = 0;
+gid_t rootgid = 0;
 
 char need_sig = 0;           /* do we need to signal fcron daemon */
 
@@ -201,9 +206,9 @@ copy_src(char *orig, char *dest)
      * except for root. Root requires filesystem uid root for security
      * reasons */
 #ifdef USE_SETE_ID
-    if (asuid == ROOTUID) {
-	if (seteuid(ROOTUID) != 0)
-	    die_e("seteuid(ROOTUID) : old source file kept");
+    if (asuid == rootuid) {
+	if (seteuid(rootuid) != 0)
+	    die_e("seteuid(rootuid) : old source file kept");
     } 
     else {
     	if (seteuid(fcrontab_uid) != 0)
@@ -226,15 +231,15 @@ copy_src(char *orig, char *dest)
     }
 
 #ifdef USE_SETE_ID
-    if (asuid != ROOTUID && seteuid(uid) != 0)
+    if (asuid != rootuid && seteuid(uid) != 0)
 	die_e("seteuid(uid[%d]) : old source file kept", uid);
 #endif
-    if (asuid == ROOTUID ) {
+    if (asuid == rootuid ) {
 	if ( fchmod(to_fd, S_IWUSR | S_IRUSR) != 0 ) {
 	    error_e("Could not fchmod %s to 600", tmp_filename_str);
 	    goto exiterr;
 	}
-	if ( fchown(to_fd, ROOTUID, fcrontab_gid) != 0 ) {
+	if ( fchown(to_fd, rootuid, fcrontab_gid) != 0 ) {
 	    error_e("Could not fchown %s to root", tmp_filename_str);
 	    goto exiterr;
 	}
@@ -311,7 +316,7 @@ remove_fcrontab(char rm_orig)
 	if ( errno != EEXIST )
 	    error_e("Can't create file %s", buf);
     }
-    else if ( asuid == ROOTUID && fchown(fd, ROOTUID, fcrontab_gid) != 0 )
+    else if ( asuid == rootuid && fchown(fd, rootuid, fcrontab_gid) != 0 )
 	error_e("Could not fchown %s to root", buf);
     close(fd);
     
@@ -488,7 +493,7 @@ edit_file(char *buf)
 	switch ( pid = fork() ) {
 	case 0:
 	    /* child */
-	    if ( uid != ROOTUID ) {
+	    if ( uid != rootuid ) {
 		if (setgid(asgid) < 0) {
 		    error_e("setgid(asgid)");
 		    goto exiterr;
@@ -546,7 +551,7 @@ edit_file(char *buf)
 		close(fd);
 		goto exiterr;
 	    }
-	    if ( fchown(fd, ROOTUID, ROOTGID) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ){
+	    if ( fchown(fd, rootuid, rootgid) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ){
 		fprintf(stderr, "Can't chown or chmod %s.\n", tmp_str);
 		close(fd);
 		goto exiterr;
@@ -814,7 +819,7 @@ parseopt(int argc, char *argv[])
 	    usage(); break;
 
 	case 'u':
-	    if (uid != ROOTUID) {
+	    if (uid != rootuid) {
 		fprintf(stderr, "must be privileged to use -u\n");
 		xexit(EXIT_ERR);
 	    }
@@ -903,7 +908,7 @@ parseopt(int argc, char *argv[])
 	else
 	    usage();
 
-	if (uid != ROOTUID) {
+	if (uid != rootuid) {
 	    fprintf(stderr, "must be privileged to use -u\n");
 	    xexit(EXIT_ERR);
 	}
@@ -913,7 +918,7 @@ parseopt(int argc, char *argv[])
 	if ( list_opt + rm_opt + edit_opt + reinstall_opt == 0 )
 	    file_opt = optind;
 	else {
-	    if (uid != ROOTUID) {
+	    if (uid != rootuid) {
 		fprintf(stderr, "must be privileged to use [user|-u user]\n");
 		xexit(EXIT_ERR);
 	    }
@@ -937,8 +942,8 @@ parseopt(int argc, char *argv[])
 #ifdef SYSFCRONTAB
   	if ( strcmp(user, SYSFCRONTAB) == 0 ) {
 	    is_sysfcrontab = 1;
-	    asuid = ROOTUID;
-	    asgid = ROOTGID;
+	    asuid = rootuid;
+	    asgid = rootgid;
 	}
 	else
 #endif /* def SYSFCRONTAB */ 
@@ -978,6 +983,9 @@ main(int argc, char **argv)
     const char * const * env;
 #endif
     struct passwd *pass;
+
+    rootuid = get_user_uid_safe(ROOTNAME);
+    rootgid = get_group_gid_safe(ROOTGROUP);
 
     memset(buf, 0, sizeof(buf));
     memset(file, 0, sizeof(file));
@@ -1054,10 +1062,10 @@ main(int argc, char **argv)
 
 #else /* USE_SETE_ID */
 
-    if (setuid(ROOTUID) != 0 ) 
-	die_e("Could not change uid to ROOTUID"); 
-    if (setgid(ROOTGID) != 0)
-    	die_e("Could not change gid to ROOTGID");
+    if (setuid(rootuid) != 0 ) 
+	die_e("Could not change uid to rootuid"); 
+    if (setgid(rootgid) != 0)
+    	die_e("Could not change gid to rootgid");
     /* change directory */
     if (chdir(fcrontabs) != 0) {
 	error_e("Could not chdir to %s", fcrontabs);
@@ -1067,7 +1075,7 @@ main(int argc, char **argv)
     
     /* this program is seteuid : we set default permission mode
      * to 640 for a normal user, 600 for root, for security reasons */
-    if ( asuid == ROOTUID )
+    if ( asuid == rootuid )
 	umask(066);  /* octal : '0' + number in octal notation */
     else
 	umask(026);

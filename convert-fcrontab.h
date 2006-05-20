@@ -21,12 +21,17 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.h,v 1.3 2006-01-11 00:54:25 thib Exp $ */
+ /* $Id: convert-fcrontab.h,v 1.4 2006-05-20 16:27:51 thib Exp $ */
 
 #ifndef __CONVERT_FCRONTAB_H__
 #define __CONVERT_FCRONTAB_H__
 
 /* We create a .h (even if empty !)  because we have a generic rule
    in Makefile to create .o files which needs the corresponding .h to exist. */
+
+#include "global.h"
+
+extern uid_t rootuid;
+extern gid_t rootgid;
 
 #endif /* __CONVERT_FCRONTAB_H__ */

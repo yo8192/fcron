@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.76 2006-01-11 00:53:05 thib Exp $ */
+ /* $Id: fileconf.c,v 1.77 2006-05-20 16:27:23 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -186,7 +186,7 @@ read_file(char *filename)
     if ( debug_opt )
 	fprintf(stderr, "FILE %s\n", file_name);
 
-    if (strcmp(runas, "root") == 0)
+    if (strcmp(runas, ROOTNAME) == 0)
 	max_entries = 65535;
 
     /* max_lines acts here as a security counter to avoid endless loop. */
@@ -376,7 +376,7 @@ get_nice(char *ptr, int *nice)
 	return NULL;
 
     if ( negative == 1 ) {
-	if (getuid() != ROOTUID) {
+	if (getuid() != rootuid) {
 	    fprintf(stderr, "must be privileged to use a negative argument "
 		    "with nice: set to 0\n");
 	    need_correction = 1;
@@ -842,7 +842,7 @@ read_opt(char *ptr, cl_t *cl)
 	}
 
 	else if(strcmp(opt_name, "runas") == 0) {
-	    if (getuid() != ROOTUID) {
+	    if (getuid() != rootuid) {
 		fprintf(stderr, "must be privileged to use option runas: "
 			"skipping option\n");
 		need_correction = 1;
@@ -1085,7 +1085,7 @@ check_username(char *ptr, cf_t *cf, cl_t *cl)
         ptr = ptr + indx;	/* move ptr to the next word */
 	Skip_blanks(ptr);
 
-	if (getuid() != ROOTUID) {
+	if (getuid() != rootuid) {
 	    fprintf(stderr, "must be privileged to run as another user : "
 		    "ignoring\n");
 	} else {

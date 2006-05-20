@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.77 2006-02-05 20:59:08 thib Exp $ */
+ /* $Id: fcron.c,v 1.78 2006-05-20 16:27:10 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.77 2006-02-05 20:59:08 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.78 2006-05-20 16:27:10 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -78,6 +78,12 @@ pid_t daemon_pid;
 mode_t saved_umask;           /* default root umask */
 char *prog_name = NULL;
 char *orig_tz_envvar = NULL;
+
+/* uid/gid of user/group root 
+ * (we don't use the static UID or GID as we ask for user and group names
+ * in the configure script) */
+uid_t rootuid = 0;
+gid_t rootgid = 0;
 
 /* have we got a signal ? */
 char sig_conf = 0;            /* is 1 when we got a SIGHUP, 2 for a SIGUSR1 */ 
@@ -391,9 +397,9 @@ create_spooldir(char *dir)
     /* create a new spool dir for fcron : set correctly its mode and owner */
 {
     int dir_fd = -1;
-    struct passwd *pass = NULL;
-    struct group *grp = NULL;
     struct stat st;
+    uid_t useruid = get_user_uid_safe(USERNAME);
+    gid_t usergid = get_group_gid_safe(GROUPNAME);
 
     if ( mkdir(dir, 0) != 0 && errno != EEXIST )
 	die_e("Cannot create dir %s", dir);
@@ -411,13 +417,7 @@ create_spooldir(char *dir)
 	die("%s exists and is not a directory", dir);
     }
 
-    if ( (pass = getpwnam(USERNAME)) == NULL )
-	die_e("Cannot getpwnam(%s)", USERNAME);
-
-    if ( (grp = getgrnam(GROUPNAME)) == NULL )
-	die_e("Cannot getgrnam(%s)", GROUPNAME);
-
-    if ( fchown(dir_fd, pass->pw_uid, grp->gr_gid) != 0 ) {
+    if ( fchown(dir_fd, useruid, usergid) != 0 ) {
 	close(dir_fd);
 	die_e("Cannot fchown dir %s to %s:%s", dir, USERNAME, GROUPNAME);
     }
@@ -488,6 +488,9 @@ int
 main(int argc, char **argv)
 {
 
+    rootuid = get_user_uid_safe(ROOTNAME);
+    rootgid = get_group_gid_safe(ROOTGROUP);
+
     /* we set it to 022 in order to get a pidfile readable by fcrontab
      * (will be set to 066 later) */
     saved_umask = umask(022);
@@ -499,7 +502,7 @@ main(int argc, char **argv)
 
     {
 	uid_t daemon_uid;                 
-	if ( (daemon_uid = getuid()) != ROOTUID )
+	if ( (daemon_uid = getuid()) != rootuid )
 	    die("Fcron must be executed as root");
     }
 

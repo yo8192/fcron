@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.h,v 1.5 2006-01-11 00:49:26 thib Exp $ */
+ /* $Id: fcrondyn.h,v 1.6 2006-05-20 16:26:34 thib Exp $ */
 
 #ifndef __FCRONDYN_H__
 #define __FCRONDYN_H__
@@ -33,7 +33,8 @@
 extern char debug_opt;
 extern char dosyslog;
 extern pid_t daemon_pid;
-
+extern uid_t rootuid;
+extern gid_t rootgid;
 
 /* types def */
 #define MAX_NUM_OPT 4

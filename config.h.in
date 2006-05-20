@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.56 2006-01-11 00:53:50 thib Exp $ */
+ /* $Id: config.h.in,v 1.57 2006-05-20 16:27:43 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -182,8 +182,6 @@
 #undef USE_SETE_ID
 
 /* root uid, gid, name and group */
-#undef ROOTUID
-#undef ROOTGID
 #undef ROOTNAME
 #undef ROOTGROUP
 

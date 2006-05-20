@@ -22,12 +22,12 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.c,v 1.20 2006-01-11 00:54:22 thib Exp $ */
+ /* $Id: convert-fcrontab.c,v 1.21 2006-05-20 16:27:46 thib Exp $ */
 
 #include "convert-fcrontab.h"
 #include "global.h"
 
-char rcs_info[] = "$Id: convert-fcrontab.c,v 1.20 2006-01-11 00:54:22 thib Exp $";
+char rcs_info[] = "$Id: convert-fcrontab.c,v 1.21 2006-05-20 16:27:46 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -41,6 +41,8 @@ char  *cdir = FCRONTABS;      /* the dir where are stored users' fcrontabs */
 char *prog_name = NULL;
 char foreground = 1;
 pid_t daemon_pid = 0;
+uid_t rootuid = 0;
+gid_t rootgid = 0;
 char debug_opt = 0;
 char dosyslog = 1;
 
@@ -54,6 +56,11 @@ info(void)
 	    "Copyright " COPYRIGHT_QUOTED " Thibault Godouet <fcron@free.fr>\n"
 	    "This program is free software distributed WITHOUT ANY WARRANTY.\n"
             "See the GNU General Public License for more details.\n"
+	    "\n"
+	    "WARNING: this program is not supposed to be installed on the "
+	    "system. It is only used at installation time to convert the "
+	    "the binary fcrontabs in the old format (fcron < 1.1.0, which "
+	    "was published in 2001) to the present one."
 	);
 
     exit(EXIT_OK);
@@ -70,6 +77,11 @@ usage()
 	    "convert-fcrontab -V\n"
 	    "convert-fcrontab user\n"
 	    "  Update the fcrontab of \"user\" to fit the new binary format.\n"
+	    "\n"
+	    "WARNING: this program is not supposed to be installed on the "
+	    "system. It is only used at installation time to convert the "
+	    "the binary fcrontabs in the old format (fcron < 1.1.0, which "
+	    "was published in 2001) to the present one."
 	);
     
     exit(EXIT_ERR);
@@ -235,6 +247,9 @@ main(int argc, char *argv[])
     extern char *optarg;
     extern int optind, opterr, optopt;
     char *user_to_update = NULL;
+
+    rootuid = get_user_uid_safe(ROOTNAME);
+    rootgid = get_group_gid_safe(ROOTGROUP);
 
     if ( strrchr(argv[0], '/') == NULL) prog_name = argv[0];
     else prog_name = strrchr(argv[0], '/') + 1;

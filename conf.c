@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.70 2006-01-11 00:53:20 thib Exp $ */
+ /* $Id: conf.c,v 1.71 2006-05-20 16:27:32 thib Exp $ */
 
 #include "fcron.h"
 
@@ -467,9 +467,9 @@ read_file(const char *file_name, cf_t *cf)
 #endif
 
     if ( strncmp(file_name,"new.", 4) == 0 ) {
-	if ( file_stat.st_uid == ROOTUID ) {
-	    /* file is owned by root : no test needed : set runas to ROOTUID */
-	    runas = ROOTUID;
+	if ( file_stat.st_uid == rootuid ) {
+	    /* file is owned by root : no test needed : set runas to rootuid */
+	    runas = rootuid;
 	}
 	else {
 	    /* this is a standard user's new fcrontab : set the runas field to
@@ -486,10 +486,10 @@ read_file(const char *file_name, cf_t *cf)
     else {
 	if(!cf->cf_user)
 	    cf->cf_user = strdup2(file_name);
-	if ( file_stat.st_uid == ROOTUID ) {
+	if ( file_stat.st_uid == rootuid ) {
 	    /* file is owned by root : either this file has already been parsed
 	     * at least once by fcron, or it is root's fcrontab */
-	    runas = ROOTUID;
+	    runas = rootuid;
 	}
 	else {
 	    error("Non-new file %s owned by someone else than root",file_name);
@@ -553,7 +553,7 @@ read_file(const char *file_name, cf_t *cf)
 	error("Cannot read user's name : file ignored");
 	goto err;
     }
-    if ( runas != ROOTUID ) {
+    if ( runas != rootuid ) {
 	/* we use file owner's name for more security (see above) */
 	/* free the value obtained by read_strn() (we need to read it anyway
 	 * to set the file ptr to the next thing to read) */
@@ -759,7 +759,7 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
     }
 
     /* set runas field if necessary (to improve security) */
-    if (runas != ROOTUID) {
+    if (runas != rootuid) {
 	if (strcmp(cl->cl_runas, runas_str) != 0)
 	    warn("warning: runas(%s) is not owner (%s): overridden.",
 		 cl->cl_runas, runas_str);
@@ -1054,7 +1054,7 @@ save_file(cf_t *arg_file)
 	/* save the file safely : save it to a temporary name, then rename() it */
 	/* chown the file to root:root : this file should only be read and
 	 * modified by fcron (not fcrontab) */
-	save_file_safe(file, file->cf_user, "fcron", ROOTUID, ROOTGID, now);
+	save_file_safe(file, file->cf_user, "fcron", rootuid, rootgid, now);
 
 	if (arg_file != NULL)
 	    /* we have to save only a single file */

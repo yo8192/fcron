@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.h,v 1.19 2006-01-11 00:51:17 thib Exp $ */
+ /* $Id: fcrontab.h,v 1.20 2006-05-20 16:26:58 thib Exp $ */
 
 #ifndef __FCRONTAB_H__
 #define __FCRONTAB_H__
@@ -39,5 +39,7 @@ extern uid_t uid;
 extern uid_t asuid;
 extern uid_t fcrontab_uid;
 extern gid_t fcrontab_gid;
+extern uid_t rootuid;
+extern gid_t rootgid;
 
 #endif /* __FCRONTAB_H__ */

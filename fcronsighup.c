@@ -21,13 +21,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.9 2006-01-11 00:40:16 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.10 2006-05-20 16:22:37 thib Exp $ */
 
 #include "fcronsighup.h"
 #include "global.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.9 2006-01-11 00:40:16 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.10 2006-05-20 16:22:37 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
@@ -35,7 +35,8 @@ pid_t read_pid(void);
 
 uid_t uid = 0;
 uid_t fcrontab_uid = 0;
-
+uid_t rootuid = 0;
+gid_t rootgid = 0;
 
 #ifdef DEBUG
 char debug_opt = 1;       /* set to 1 if we are in debug mode */
@@ -97,7 +98,7 @@ sig_daemon(void)
      * some bad users to block daemon by sending it SIGHUP all the time */
 {
     /* we don't need to make root wait */
-    if (uid != ROOTUID) {
+    if (uid != rootuid) {
 	time_t t = 0;
 	int sl = 0;
 	FILE *fp = NULL;
@@ -186,8 +187,8 @@ sig_daemon(void)
     foreground = 1;
 
 #ifdef USE_SETE_ID
-    if (seteuid(ROOTUID) != 0)
-	error_e("seteuid(ROOTUID)");
+    if (seteuid(rootuid) != 0)
+	error_e("seteuid(rootuid)");
 #endif /* USE_SETE_ID */
 
     if ( kill(daemon_pid, SIGHUP) != 0)
@@ -205,14 +206,15 @@ sig_daemon(void)
 int
 main(int argc, char **argv)
 {
-    struct passwd *pass;
+    struct passwd *pass = NULL;
+
+    rootuid = get_user_uid_safe(ROOTNAME);
+    rootgid = get_group_gid_safe(ROOTGROUP);
 
     if (strrchr(argv[0],'/')==NULL) prog_name = argv[0];
     else prog_name = strrchr(argv[0],'/')+1;
 
-    if ( ! (pass = getpwnam(USERNAME)) )
-	die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
-    fcrontab_uid = pass->pw_uid;
+    fcrontab_uid = get_user_uid_safe(USERNAME);
 
 #ifdef USE_SETE_ID
     /* get user's permissions */

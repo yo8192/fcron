@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.14 2006-01-11 00:48:33 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.15 2006-05-20 16:26:17 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.14 2006-01-11 00:48:33 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.15 2006-05-20 16:26:17 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -66,6 +66,12 @@ char *prog_name = NULL;
 char foreground = 1;
 char dosyslog = 1;
 pid_t daemon_pid = 0;
+
+/* uid/gid of user/group root 
+ * (we don't use the static UID or GID as we ask for user and group names
+ * in the configure script) */
+uid_t rootuid = 0;
+gid_t rootgid = 0;
 
 /* misc */
 char *user_str;
@@ -223,7 +229,7 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 	    }
 
 	    /* use default value : currently, works only with CUR_USER */
-	    if ( user_uid == ROOTUID ) {
+	    if ( user_uid == rootuid ) {
 		/* default for root = all */
 		int_buf = ALL;
 		Write_cmd( int_buf );
@@ -291,7 +297,7 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 	    case NICE_VALUE:
 		/* after strtol(), cmd_str will be updated (first non-number char) */
 		if ( (int_buf = strtol(cmd_str, &cmd_str, 10)) > 20 
-		     || (int_buf < 0 && getuid() != ROOTUID) || int_buf < -20
+		     || (int_buf < 0 && getuid() != rootuid) || int_buf < -20
 		     || (! isspace( (int) *cmd_str) && *cmd_str != '\0') ) {
 		    fprintf(stderr, "Error : invalid nice value.\n");
 		    return INVALID_ARG;
@@ -620,6 +626,9 @@ main(int argc, char **argv)
     int return_code = 0;
     int fd = (-1);
     struct passwd *pass = NULL;
+
+    rootuid = get_user_uid_safe(ROOTNAME);
+    rootgid = get_group_gid_safe(ROOTGROUP);
 
     if ( strrchr(argv[0], '/') == NULL) prog_name = argv[0];
     else prog_name = strrchr(argv[0], '/') + 1;
