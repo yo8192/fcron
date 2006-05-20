@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.14 2006-01-11 01:01:18 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.15 2006-05-20 16:32:36 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
@@ -324,7 +324,7 @@ and set appropriately the paths:</para>
 		  but by run-parts, which is independent from fcron).</para>
 	       <para>So if you want to replace transparently Vixie cron by fcron,
 		  all you have to do is creating a /usr/bin/crontab link to
-		  /usr/bin/crontab, and to reinstall the system (f)crontab
+		  /usr/bin/fcrontab, and to reinstall the system (f)crontab
 	       with fcrontab /etc/crontab each time you modify it
 		  (if you find something else to do, please tell me!).</para>
 	       <para>You can also use the script script/check_system_crontabs

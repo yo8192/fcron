@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.38 2006-01-11 01:02:16 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.39 2006-05-20 16:32:49 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -25,13 +25,16 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>test the fix for empty mails on non linux systems (solaris seems ok, feedback on BSD?) (starting from fcron 2.9.7 -- no complain so far, so fixed?)</para>
-	    </listitem>
-	    <listitem>
-	       <para>bug fix: what happens if the grand-child cannot be forked or cannot run the job in job.c? + better loop to read/write the pid of grand-child from/by the child (fcron freezes if the filesystem on which it operates has no space left? (cannot reproduce it on my linux system)</para>
+	       <para>test + update the doc on how SHELL is defined (priority: 1) value from fcrontab file 2) value from fcron.conf if non-zero long string 3) value from /etc/passwd -- default value for SHELL in fcron.conf is now "")</para>
 	    </listitem>
 	    <listitem>
 	       <para>set TZ env. var. for jobs for which option tz is used.</para>
+	    </listitem>
+	    <listitem>
+	       <para>Test (and use ?) docbook2x-man -- xlstproc ? cf http://antoine.ginies.free.fr/docbook/ch09.html</para>
+	    </listitem>
+	    <listitem>
+	       <para>find way to have the non translated pages of the French translation be updated automatically (changes, todo, etc -> copied from the English doc)</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
