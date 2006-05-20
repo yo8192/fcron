@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.25 2006-02-06 18:36:27 thib Exp $
+# $Id: Makefile.in,v 1.26 2006-05-20 16:33:12 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE: some of the following is also defined
@@ -128,12 +128,20 @@ install: clean
 
 uninstall:
 	rm -fR $(DESTDOC)/fcron-$(VERSION)
-	rm -f $(DESTMAN)/man1/fcrontab.1
-	rm -f $(DESTMAN)/man1/fcrondyn.1
-	rm -f $(DESTMAN)/man3/bitstring.3
-	rm -f $(DESTMAN)/man5/fcrontab.5
-	rm -f $(DESTMAN)/man5/fcron.conf.5
-	rm -f $(DESTMAN)/man8/fcron.8
+	@(echo "Removing man pages ...")
+	@(for l in $(LANGUAGES); do \
+		if test "x$$l" = "xen"; then \
+			DIR=$(DESTMAN); \
+		else \
+			DIR=$(DESTMAN)/$$l; \
+		fi ; \
+		rm -f $$DIR/man1/fcrontab.1 ; \
+		rm -f $$DIR/man1/fcrondyn.1 ; \
+		rm -f $$DIR/man3/bitstring.3 ; \
+		rm -f $$DIR/man5/fcrontab.5 ; \
+		rm -f $$DIR/man5/fcron.conf.5 ; \
+		rm -f $$DIR/man8/fcron.8 ; \
+	done )
 
 
 clean:
