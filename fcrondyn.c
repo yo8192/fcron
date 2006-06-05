@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.15 2006-05-20 16:26:17 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.16 2006-06-05 20:00:48 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.15 2006-05-20 16:26:17 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.16 2006-06-05 20:00:48 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -405,17 +405,26 @@ connect_fcron(void)
     int fd = -1;
     struct sockaddr_un addr;
     int len = 0;
+    int sun_len = 0;
 
     if ( (fd = socket(PF_UNIX, SOCK_STREAM, 0)) == -1 )
 	die_e("could not create socket");
 
     addr.sun_family = AF_UNIX;
-    if ( (len = strlen(fifofile)) > sizeof(addr.sun_path) )
-	die("Error : fifo file path too long (max is %d)", sizeof(addr.sun_path));
-    strncpy(addr.sun_path, fifofile, sizeof(addr.sun_path) - 1);
+    len = strlen(fifofile);
+    if ( len > sizeof(addr.sun_path) - 1 )
+	die("Error : fifo file path too long (max is %d)", sizeof(addr.sun_path) - 1);
+    /* length(fifofile) < sizeof(add.sun_path), so strncpy will terminate
+     * the string with at least one \0 (not necessarily required by the OS,
+     * but still a good idea) */
+    strncpy(addr.sun_path, fifofile, sizeof(addr.sun_path));
     addr.sun_path[sizeof(addr.sun_path)-1] = '\0';
+    sun_len = (addr.sun_path - (char *)&addr) + len;
+#if HAVE_SA_LEN
+    addr.sun_len = sun_len;
+#endif
 
-    if ( connect(fd, (struct sockaddr *) &addr, sizeof(addr.sun_family) + len) < 0 )
+    if ( connect(fd, (struct sockaddr *) &addr, sun_len) < 0 )
 	die_e("Cannot connect() to fcron (check if fcron is running)");
 
     if ( authenticate_user(fd) == ERR ) {
