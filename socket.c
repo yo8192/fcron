@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.19 2006-01-11 00:58:21 thib Exp $ */
+ /* $Id: socket.c,v 1.20 2006-06-05 20:03:08 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -134,6 +134,7 @@ init_socket(void)
 {
     struct sockaddr_un addr;
     int len = 0;
+    int sun_len = 0;
 
     /* used in fcron.c:main_loop():select() */
     FD_ZERO(&read_set);
@@ -145,15 +146,20 @@ init_socket(void)
     }
 
     addr.sun_family = AF_UNIX;
-    if ( (len = strlen(fifofile)) > sizeof(addr.sun_path) ) {
-	error("Error : fifo file path too long (max is %d)", sizeof(addr.sun_path));
+    len = strlen(fifofile);
+    if ( len > sizeof(addr.sun_path) - 1 ) {
+	error("Error : fifo file path too long (max is %d)", sizeof(addr.sun_path) - 1);
 	goto err;
     }
-    strncpy(addr.sun_path, fifofile, sizeof(addr.sun_path) - 1);
+    strncpy(addr.sun_path, fifofile, sizeof(addr.sun_path));
     addr.sun_path[sizeof(addr.sun_path) -1 ] = '\0';
+    sun_len = (addr.sun_path - (char *)&addr) + len;
+#if HAVE_SA_LEN
+    addr.sun_len = sun_len;
+#endif
 
     unlink(fifofile);
-    if (bind(listen_fd, (struct sockaddr*) &addr, sizeof(addr.sun_family)+len+1) != 0){
+    if (bind(listen_fd, (struct sockaddr*) &addr, sun_len) != 0){
 	error_e("Cannot bind socket to '%s'", fifofile);
 	goto err;
     }

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.69 2006-05-20 16:26:37 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.70 2006-06-05 20:02:55 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -46,7 +46,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.69 2006-05-20 16:26:37 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.70 2006-06-05 20:02:55 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -1021,6 +1021,10 @@ main(int argc, char **argv)
     /* Open PAM session for the user and obtain any security
        credentials we might need */
 
+#ifdef USE_SETE_ID
+    if (seteuid(uid) != 0) 
+	die_e("Could not change euid to %d", uid); 
+#endif
     debug("username: %s", user);
     retcode = pam_start("fcrontab", user, &apamconv, &pamh);
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM");
@@ -1044,6 +1048,10 @@ main(int argc, char **argv)
     /* Close the log here, because PAM calls openlog(3) and
        our log messages could go to the wrong facility */
     xcloselog();
+#ifdef USE_SETE_ID
+    if (seteuid(fcrontab_uid) != 0) 
+	die_e("Couldn't change euid to fcrontab_uid[%d]",fcrontab_uid);
+#endif
 #endif /* USE_PAM */
 
     if (uid != fcrontab_uid)

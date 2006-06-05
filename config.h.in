@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.57 2006-05-20 16:27:43 thib Exp $ */
+ /* $Id: config.h.in,v 1.58 2006-06-05 20:03:05 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -264,6 +264,9 @@
 
 /* Define if you have the putenv function.  */
 #undef HAVE_PUTENV
+
+/* Define if (struct sockaddr) has an sa_len field.  */
+#undef HAVE_SA_LEN
 
 /* Define if you have the setenv function.  */
 #undef HAVE_SETENV

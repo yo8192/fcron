@@ -127,6 +127,16 @@ if test "$crypt" -eq "1"; then
 fi
 
 
+dnl Check for post-Reno style struct sockaddr
+AC_CACHE_CHECK([for sa_len],
+  ac_cv_sa_len,
+[AC_TRY_COMPILE([#include <sys/types.h>
+#include <sys/socket.h>], [int main(void) {
+ struct sockaddr t;t.sa_len = 0;}],
+  ac_cv_sa_len=yes,ac_cv_sa_len=no)])
+if test $ac_cv_sa_len = yes; then
+  AC_DEFINE(HAVE_SA_LEN)
+fi
 
 dnl ---------------------------------------------------------------------
 dnl Check for fcron more specific stuffs (paths, progs, ...)
