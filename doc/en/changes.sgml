@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.47 2006-06-05 20:03:40 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.48 2006-06-05 21:20:46 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -17,6 +17,9 @@ A copy of the license is included in gfdl.sgml.
 	 <title>From version 3.0.1 to 3.0.2</title>
 	 <listitem>
 	    <para>Use sockaddr's field sa_len/sun_len on system defining it (BSD, ...). It should allow fcrondyn to connect to fcron on these systems.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Run each job in a different session by calling setuid() for each one of them. This is to improve compatibility with Vixie cron.</para>
 	 </listitem>
 	 <listitem>
 	    <para>By default, don't use the shell defined in /etc/passwd by default, but use the default value form fcron.conf instead. This is for compatibility with Vixie cron.</para>
