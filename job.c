@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.66 2006-05-20 16:23:42 thib Exp $ */
+ /* $Id: job.c,v 1.67 2006-06-05 21:19:27 thib Exp $ */
 
 #include "fcron.h"
 
@@ -510,6 +510,10 @@ run_job(struct exe_t *exeent)
 	    if(flask_enabled && setexeccon(line->cl_file->cf_user_context) )
 		die_e("Can't set execute context \"%s\".",
 		      line->cl_file->cf_user_context);
+#else
+	    if (setsid() == -1) {
+		die_e("setsid(): errno %d", errno);
+	    }
 #endif
 	    execl(curshell, curshell, "-c", line->cl_shell, NULL);
 	    /* execl returns only on error */
