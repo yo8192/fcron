@@ -8,13 +8,16 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.46 2006-05-20 16:32:57 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.47 2006-06-05 20:03:40 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
 
       <itemizedlist>
 	 <title>From version 3.0.1 to 3.0.2</title>
+	 <listitem>
+	    <para>Use sockaddr's field sa_len/sun_len on system defining it (BSD, ...). It should allow fcrondyn to connect to fcron on these systems.</para>
+	 </listitem>
 	 <listitem>
 	    <para>By default, don't use the shell defined in /etc/passwd by default, but use the default value form fcron.conf instead. This is for compatibility with Vixie cron.</para>
 	 </listitem>
