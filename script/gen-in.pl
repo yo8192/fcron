@@ -9,14 +9,14 @@
 # ex :  "@@VERSION@"   will be substitute by    "0.8.4"
 #
 #  + substitute "@@Date@" by the current date
-
+#
+# USAGE: gen-in.pl 
 
 %map = ();
 
 
 
 open(CONFIG, "$ARGV[2]/config.h") or print "error while opening config.h\n" and exit;
-
 while ( <CONFIG> ) {
     if ( /^\#define\s+(\w+?)\s+([\w\/-]+?)\s/ ) {
 	$map{$1} = $2;
@@ -26,18 +26,24 @@ while ( <CONFIG> ) {
     }
     
 }
+close(CONFIG);
 
 open(MAKEFILE, "$ARGV[2]/Makefile") or print "error while opening Makefile\n" and exit;
-
 while ( <MAKEFILE> ) {
-    if ( /^\s*?(\w+?)\s*?=\s*?([\w\.\/-]+)\s/ ) {
-	$map{$1} = $2;
+    if ( /^\s*?(\w+?)\s*?=\s*?([^\s]+)\s/ ) {
+	$name = $1;
+	$value = $2;
+
+	# replace all occurrences of Makefile variables of the form ${VAR} by their values
+	$value =~ s/\$\{([^\}]+)\}/$map{$1}/g;
+	
+	$map{$name} = $value;
     }
     if ( /^\#define\s+(\w+?)\s+["](.+)["]\s/ ) {
 	$map{$1} = $2;
     }
-    
 }
+close(MAKEFILE);
 
 chop ($map{Date} = `date +%m/%d/%Y`);
 
@@ -49,3 +55,6 @@ while ( <SRC> ) {
     print DEST $_;
 
 }
+
+close(SRC);
+close(DEST);

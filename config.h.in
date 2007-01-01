@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.58 2006-06-05 20:03:05 thib Exp $ */
+ /* $Id: config.h.in,v 1.59 2007-01-01 18:51:50 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -32,11 +32,6 @@
 /* ****************************************************************** */
 /* beginning of configurable stuff ********************************** */
 
-
-/* fcron allow, deny and conf files are located in directory ETC (see below) */
-#define FCRON_ALLOW      "fcron.allow"
-#define FCRON_DENY       "fcron.deny"
-#define FCRON_CONF       "fcron.conf"
 
 #define SENDMAIL_ARGS	 "-Ffcron", "-odi"   /* args of mail command */
 
@@ -154,20 +149,7 @@
 #undef CFLAGS
 
 /* *** paths *** */
-#undef ETC
-#undef SBINDIREX
-#undef BINDIREX
-#undef FCRONTABS
-#undef SENDMAIL
 #undef PROC
-/* default editor */
-#undef EDITOR
-/* default shell */
-#undef SHELL
-/* where is located pid file ? */
-#undef PIDFILE
-/* where is located fifo file ? */
-#undef FIFOFILE
 
 /* 1 if we want to compile and install fcrondyn */
 #undef FCRONDYN
@@ -181,7 +163,7 @@
 /* Define if we should use sete[ug]id() funcs */
 #undef USE_SETE_ID
 
-/* root uid, gid, name and group */
+/* root name and group */
 #undef ROOTNAME
 #undef ROOTGROUP
 

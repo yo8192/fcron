@@ -4,12 +4,16 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.105 2004-11-14 16:32:36 thib Exp $
+# $Id: Makefile.in,v 1.106 2007-01-01 18:51:34 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
 # in config.h, so you must modify config.h AND Makefile in order
 # to set the same values in the two files.
+
+FCRON_ALLOW	= fcron.allow
+FCRON_DENY	= fcron.deny
+FCRON_CONF	= fcron.conf
 
 SRCDIR		:= @srcdir@
 # Useful to build packages
@@ -17,14 +21,19 @@ SRCDIR		:= @srcdir@
 DESTDIR		:=
 
 # Where should we install it ?
-prefix		:= $(DESTDIR)@prefix@
-# We set exec_prefix to $prefix (if you change this, you should also change
-#  it in configure.in)
-exec_prefix	:= $(DESTDIR)@exec_prefix@
-DESTSBIN	:= @sbindir@
-DESTBIN		:= @bindir@
-FCRONTABS	:= $(DESTDIR)@FCRONTABS@
-ETC		:= $(DESTDIR)@ETC@
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+DESTSBIN	= @sbindir@
+DESTBIN		= @bindir@
+ETC		= @sysconfdir@
+FCRONTABS	= @FCRONTABS@
+PIDDIR		= @PIDDIR@
+FIFODIR		= @FIFODIR@
+PIDFILE		= @PIDFILE@
+FIFOFILE	= @FIFOFILE@
+FCRON_SHELL	= @FCRON_SHELL@
+SENDMAIL	= @SENDMAIL@
+FCRON_EDITOR	= @FCRON_EDITOR@
 OPTIM		:= @CFLAGS@
 LDFLAGS		:= @LDFLAGS@
 CPPFLAGS	:= @CPPFLAGS@ -I. -I${SRCDIR}
@@ -105,47 +114,110 @@ convert-fcrontab: $(OBJCONV)
 	$(CC) $(CFLAGS) -o $@ $(OBJCONV) $(LIBS)
 
 %.o: $(SRCDIR)/%.c $(HEADERSALL) $(SRCDIR)/%.h
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -DPIDFILE="\"${PIDFILE}\"" \
+	-DFIFOFILE="\"${FIFOFILE}\"" -DETC="\"${ETC}\"" \
+	-DFCRON_SHELL="\"${FCRON_SHELL}\"" -DFCRON_CONF="\"${FCRON_CONF}\"" \
+	-DFCRONTABS="\"${FCRONTABS}\"" \
+	-DFCRON_ALLOW="\"${FCRON_ALLOW}\"" -DFCRON_DENY="\"${FCRON_DENY}\"" \
+	-DFCRON_SHELL="\"${FCRON_SHELL}\"" -DSENDMAIL="\"${SENDMAIL}\"" \
+	-DFCRON_EDITOR="\"${FCRON_EDITOR}\"" -DBINDIREX="\"${DESTBIN}\"" \
+	-c $<
 
-install: all
+install: install-staged strip perms
+ifeq ($(BOOTINSTALL), 1)
+	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS) $(ANSWERALL) $(SRCDIR)
+endif
+
+install-staged: all
 
 # needed by boot-install script :
-	echo `fcron -V 2>&1 | grep "^fcron "` > $(SRCDIR)/script/PREVIOUS_VERSION
+	echo `fcron -V 2>&1 | grep "^fcron "` > PREVIOUS_VERSION && chmod a+rw PREVIOUS_VERSION
 
 	$(SRCDIR)/script/user-group $(USERNAME) $(GROUPNAME) $(ANSWERALL) $(SRCDIR)
 
 # check if the directories we use exist, and if not, create them
-	if test ! -d $(DESTSBIN); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTSBIN) ; fi
-	if test ! -d $(DESTBIN); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTBIN) ; fi
-	if test ! -d $(ETC); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(ETC) ; fi
-# create the spool dir (and change its mode if it already exists)
-	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m 770 -d $(FCRONTABS)
+	if test ! -d $(DESTDIR)$(DESTSBIN); then $(INSTALL) -m 755 -d $(DESTDIR)$(DESTSBIN) ; fi
+	if test ! -d $(DESTDIR)$(DESTBIN); then $(INSTALL) -m 755 -d $(DESTDIR)$(DESTBIN) ; fi
+	if test ! -d $(DESTDIR)$(ETC); then $(INSTALL) -m 755 -d $(DESTDIR)$(ETC) ; fi
+	if test ! -d $(DESTDIR)$(PIDDIR); then $(INSTALL) -m 755 -d $(DESTDIR)$(PIDDIR) ; fi
+	if test ! -d $(DESTDIR)$(FIFODIR); then $(INSTALL) -m 755 -d $(DESTDIR)$(FIFODIR) ; fi
+# create the spool dir
+	$(INSTALL) -m 755 -d $(DESTDIR)$(FCRONTABS)
 
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 110 -s fcron $(DESTSBIN)
-	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m $(BINMODE) -s fcrontab $(DESTBIN)
-	$(INSTALL) -g $(GROUPNAME) -o $(ROOTNAME) -m $(BINMODESIGHUP) -s fcronsighup $(DESTBIN)
+	$(INSTALL) -m 755 fcron $(DESTDIR)$(DESTSBIN)
+	$(INSTALL) -m 755 fcrontab $(DESTDIR)$(DESTBIN)
+	$(INSTALL) -m 755 fcronsighup $(DESTDIR)$(DESTBIN)
 ifeq ($(FCRONDYN), 1)
-	$(INSTALL) -g $(GROUPNAME) -o $(USERNAME) -m $(BINMODE) -s fcrondyn $(DESTBIN)
+	$(INSTALL) -m 755 fcrondyn $(DESTDIR)$(DESTBIN)
 endif
-	test -f $(ETC)/fcron.allow || test -f $(ETC)/fcron.deny || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) $(SRCDIR)/files/fcron.allow $(SRCDIR)/files/fcron.deny $(ETC)
-	test -f $(ETC)/fcron.conf || $(INSTALL) -m 640 -o $(ROOTNAME) -g $(GROUPNAME) files/fcron.conf $(ETC)
-ifeq ($(USEPAM), 1)
-	$(SRCDIR)/script/install-pam-conf $(SRCDIR) $(ETC) $(ROOTNAME) $(ROOTGROUP) "$(INSTALL)"
-endif
+	test -f $(DESTDIR)$(ETC)/fcron.allow || test -f $(DESTDIR)$(ETC)/fcron.deny || $(INSTALL) -m 644 $(SRCDIR)/files/fcron.allow $(SRCDIR)/files/fcron.deny $(DESTDIR)$(ETC)
+	test -f $(DESTDIR)$(ETC)/fcron.conf || $(INSTALL) -m 644 files/fcron.conf $(DESTDIR)$(ETC)
 
-	make -C doc install
+	make -C doc install-staged
 
-# in order to get correct rights when upgrading :
+
+perms:
 # Note : we don't use "chown user:group file" because some systems use ":"
 #        and others "." as separator.
-	find $(FCRONTABS) -type f \( -name "*.orig" -a ! -name "$(ROOTNAME).orig" -a ! -name "$(SYSFCRONTAB).orig" \) -exec chown $(USERNAME) {} \; -exec chgrp $(GROUPNAME) {} \; -exec chmod 640 {} \;
-	find $(FCRONTABS) -type f \( -name "$(ROOTNAME).orig" -o -name "$(SYSFCRONTAB).orig" \) -exec chown $(ROOTNAME) {} \; -exec chgrp $(GROUPNAME) {} \; -exec chmod 600 {} \;
-	find $(FCRONTABS) -type f ! -name "*.orig" -exec chown $(ROOTNAME) {} \; -exec chgrp $(ROOTGROUP) {} \; -exec chmod 600 {} \;
-	if test -f $(ETC)/fcron.deny; then chown $(ROOTNAME) $(ETC)/fcron.deny ; chgrp $(GROUPNAME) $(ETC)/fcron.deny ; fi
-	if test -f $(ETC)/fcron.allow; then chown $(ROOTNAME) $(ETC)/fcron.allow ; chgrp $(GROUPNAME) $(ETC)/fcron.allow ; fi
+	chown $(ROOTNAME) $(DESTDIR)$(DESTSBIN) 
+	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTSBIN) 
+	chown $(ROOTNAME) $(DESTDIR)$(DESTBIN) 
+	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTBIN) 
+	chown $(ROOTNAME) $(DESTDIR)$(ETC) 
+	chgrp $(ROOTGROUP) $(DESTDIR)$(ETC) 
+	chown $(ROOTNAME) $(DESTDIR)$(FIFODIR) 
+	chgrp $(ROOTGROUP) $(DESTDIR)$(FIFODIR) 
+	chown $(ROOTNAME) $(DESTDIR)$(PIDDIR) 
+	chgrp $(ROOTGROUP) $(DESTDIR)$(PIDDIR) 
 
-ifeq ($(BOOTINSTALL), 1)
-	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS) $(ANSWERALL) $(SRCDIR)
+# change spool dir mode
+	chown $(USERNAME) $(DESTDIR)$(FCRONTABS)
+	chgrp $(GROUPNAME) $(DESTDIR)$(FCRONTABS)
+	chmod 770 $(DESTDIR)$(FCRONTABS)
+
+	chown $(ROOTNAME) $(DESTDIR)$(DESTSBIN)/fcron
+	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTSBIN)/fcron
+	chmod 110 $(DESTDIR)$(DESTSBIN)/fcron
+
+	chown $(USERNAME) $(DESTDIR)$(DESTBIN)/fcrontab
+	chgrp $(GROUPNAME) $(DESTDIR)$(DESTBIN)/fcrontab
+	chmod $(BINMODE) $(DESTDIR)$(DESTBIN)/fcrontab
+
+	chown $(ROOTNAME) $(DESTDIR)$(DESTBIN)/fcronsighup
+	chgrp $(GROUPNAME) $(DESTDIR)$(DESTBIN)/fcronsighup
+	chmod $(BINMODESIGHUP) $(DESTDIR)$(DESTBIN)/fcronsighup
+
+ifeq ($(FCRONDYN), 1)
+	chown $(USERNAME) $(DESTDIR)$(DESTBIN)/fcrondyn
+	chgrp $(GROUPNAME) $(DESTDIR)$(DESTBIN)/fcrondyn
+	chmod $(BINMODE) $(DESTDIR)$(DESTBIN)/fcrondyn
+endif
+	chown $(ROOTNAME) $(DESTDIR)$(ETC)/fcron.allow $(DESTDIR)$(ETC)/fcron.deny
+	chgrp $(GROUPNAME) $(DESTDIR)$(ETC)/fcron.allow $(DESTDIR)$(ETC)/fcron.deny
+	chmod 640 $(DESTDIR)$(ETC)/fcron.allow $(DESTDIR)$(ETC)/fcron.deny
+
+	chown $(ROOTNAME) $(DESTDIR)$(ETC)/fcron.conf
+	chgrp $(GROUPNAME) $(DESTDIR)$(ETC)/fcron.conf
+	chmod 640 $(DESTDIR)$(ETC)/fcron.conf
+ifeq ($(USEPAM), 1)
+	$(SRCDIR)/script/install-pam-conf $(SRCDIR) $(DESTDIR)$(ETC) $(ROOTNAME) $(ROOTGROUP) "$(INSTALL)"
+endif
+
+# in order to get correct rights when upgrading :
+
+	find $(DESTDIR)$(FCRONTABS) -type f \( -name "*.orig" -a ! -name "$(ROOTNAME).orig" -a ! -name "$(SYSFCRONTAB).orig" \) -exec chown $(USERNAME) {} \; -exec chgrp $(GROUPNAME) {} \; -exec chmod 640 {} \;
+	find $(DESTDIR)$(FCRONTABS) -type f \( -name "$(ROOTNAME).orig" -o -name "$(SYSFCRONTAB).orig" \) -exec chown $(ROOTNAME) {} \; -exec chgrp $(GROUPNAME) {} \; -exec chmod 600 {} \;
+	find $(DESTDIR)$(FCRONTABS) -type f ! -name "*.orig" -exec chown $(ROOTNAME) {} \; -exec chgrp $(ROOTGROUP) {} \; -exec chmod 600 {} \;
+
+	make -C doc perms
+
+# strip executables
+strip:
+	strip $(DESTDIR)$(DESTSBIN)/fcron
+	strip $(DESTDIR)$(DESTBIN)/fcrontab
+	strip $(DESTDIR)$(DESTBIN)/fcronsighup
+ifeq ($(FCRONDYN), 1)
+	strip $(DESTDIR)$(DESTBIN)/fcrondyn
 endif
 
 install-boot: install
@@ -158,24 +230,25 @@ ifeq ($(DEBUG), 1)
 endif
 
 uninstall:
-	rm -f $(DESTSBIN)/fcron
-	rm -f $(DESTBIN)/fcrontab
-	rm -f $(DESTBIN)/fcronsighup
-	rm -f $(DESTBIN)/fcrondyn
+	rm -f $(DESTDIR)$(DESTSBIN)/fcron
+	rm -f $(DESTDIR)$(DESTBIN)/fcrontab
+	rm -f $(DESTDIR)$(DESTBIN)/fcronsighup
+	rm -f $(DESTDIR)$(DESTBIN)/fcrondyn
 	make -C doc uninstall
 	$(SRCDIR)/script/boot-uninstall
 
 clean:
 	rm -f *.o core
 	rm -f fcron fcrontab fcrondyn fcronsighup convert-fcrontab files/fcron.conf
+	make -C doc clean
 
 ciclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
 	rm -fR autom4te*
-	make -C doc clean
 
 vclean: ciclean
-	rm -f config.log config.status config.h config.cache Makefile
+	rm -f config.log config.status config.h config.cache Makefile PREVIOUS_VERSION
+	make -C doc vclean
 
 
 files/fcron.conf: $(SRCDIR)/files/fcron.conf.in config.h

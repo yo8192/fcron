@@ -15,7 +15,7 @@
 <!ENTITY docurlEN '<ulink url="&webpageadr/files/fcron-doc-en-html.tar.gz">&webpageadr/files/fcron-doc-html.tar.gz</ulink>'>
 <!ENTITY docurlFR '<ulink url="&webpageadr/files/fcron-doc-fr-html.tar.gz">&webpageadr/files/fcron-doc-html.tar.gz</ulink>'>
 
-<!ENTITY editor "@@EDITOR@">
+<!ENTITY editor "@@FCRON_EDITOR@">
 <!ENTITY etc "@@ETC@">
 <!ENTITY exiterr "@@EXIT_ERR@">
 <!ENTITY exitok "@@EXIT_OK@">
@@ -33,7 +33,7 @@
 <!ENTITY serialmaxrunning "@@SERIAL_MAX_RUNNING@">
 <!ENTITY serialoncedef "@@SERIAL_ONCE@">
 <!ENTITY serialqueuemax "@@SERIAL_QUEUE_MAX@">
-<!ENTITY shell "@@SHELL@">
+<!ENTITY shell "@@FCRON_SHELL@">
 <!ENTITY sysfcrontab "@@SYSFCRONTAB@">
 
 

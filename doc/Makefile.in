@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.26 2006-05-20 16:33:12 thib Exp $
+# $Id: Makefile.in,v 1.27 2007-01-01 18:53:51 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE: some of the following is also defined
@@ -15,8 +15,8 @@
 SRCDIR		= @srcdir@
 
 prefix		= @prefix@
-DESTMAN		= $(DESTDIR)@mandir@
-DESTDOC		= $(DESTDIR)@DOCDIR@
+DESTMAN		= @mandir@
+DESTDOC		= @DOCDIR@
 
 INSTALL		= @INSTALL@
 JADE 		= @JADE@
@@ -41,7 +41,7 @@ LANGUAGES = en fr
 
 # this is a regular expression:
 # do not ci these files
-RCSNOCI=.*\(bitstring.3\|fcron-doc.ced\|Makefile\|stylesheets/fcron-doc.dsl\|fcron-doc.mod\|HTML.*\|txt.*\|man\/.*\|CVS.*\)
+RCSNOCI=.*\(bitstring.3\|fcron-doc.ced\|Makefile\|${STYLESHEET}\|fcron-doc.mod\|HTML.*\|txt.*\|man\/.*\|CVS.*\)
 
 all: doc
 
@@ -53,7 +53,7 @@ doc:
 	done)
 
 # man/fcron.8 means in fact "build *all* the man pages"
-%/man/fcron.8: %/*.sgml fcron-doc.mod stylesheets/fcron-doc.dsl.in
+%/man/fcron.8: %/*.sgml fcron-doc.mod ${STYLESHEET}.in
 	@(if test -z "$(DB2MAN_BEFORE)"; then \
 	   echo "ERROR: cannot generate man pages." ; \
 	   echo "  Please check if a db2man converter is installed, or if" \
@@ -89,51 +89,89 @@ fcron-doc.mod: fcron-doc.mod.in ../configure.in
 	@(../script/gen-in.pl fcron-doc.mod.in fcron-doc.mod ../)
 
 # HTML/index.html means in fact "build *all* the HTML pages"
-%/HTML/index.html: %/*.sgml fcron-doc.mod stylesheets/fcron-doc.dsl.in
+%/HTML/index.html: %/*.sgml fcron-doc.mod ${STYLESHEET}.in
 	@(echo ; echo "Building $(@D)...")
 	@(rm -fR $(@D)/*.html)
-	@(cd $(@D)/../ ; $(JADE) -D ../ -D ./ -t sgml -i html -d ../stylesheets/fcron-doc.dsl\#html fcron-doc.sgml)
+	@(cd $(@D)/../ ; $(JADE) -D ../ -D ./ -t sgml -i html -d ../${STYLESHEET}\#html fcron-doc.sgml)
 
-install: clean
-	@(echo "Installing man pages in $(DESTMAN)...")
+install: install-staged perms
+
+install-staged: clean
+	@(echo "Installing man pages in $(DESTDIR)$(DESTMAN)...")
 	@(for l in $(LANGUAGES); do \
 		if test "x$$l" = "xen"; then \
-			DIR=$(DESTMAN); \
+			DIR=$(DESTDIR)$(DESTMAN); \
 		else \
-			DIR=$(DESTMAN)/$$l; \
+			DIR=$(DESTDIR)$(DESTMAN)/$$l; \
 		fi ; \
 		for i in 1 3 5 8; do \
 			if test ! -d $$DIR/man$$i; then \
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $$DIR/man$$i ; \
+	$(INSTALL) -m 755 -d $$DIR/man$$i ; \
 			 fi ; \
-	$(INSTALL) -m 644 -o $(ROOTNAME) $(SRCDIR)/$$l/man/*.$$i $$DIR/man$$i ; \
+	$(INSTALL) -m 644 $(SRCDIR)/$$l/man/*.$$i $$DIR/man$$i ; \
 		done ; \
 	done )
 
-	@(echo "Installing documentation files in $(DESTDOC)/fcron-$(VERSION)...")
-	@(if test ! -d $(DESTDOC)/fcron-$(VERSION); then $(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $(DESTDOC)/fcron-$(VERSION) ; fi)
+	@(echo "Installing documentation files in $(DESTDIR)$(DESTDOC)/fcron-$(VERSION)...")
+	@(if test ! -d $(DESTDIR)$(DESTDOC)/fcron-$(VERSION); then $(INSTALL) -m 755 -d $(DESTDIR)$(DESTDOC)/fcron-$(VERSION) ; fi)
 
 	@(for l in $(LANGUAGES); do \
-		DIR=$(DESTDOC)/fcron-$(VERSION) ; \
+		DIR=$(DESTDIR)$(DESTDOC)/fcron-$(VERSION) ; \
 		if test ! -d $$DIR/$$l; then \
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $$DIR/$$l ; \
+	$(INSTALL) -m 755 -d $$DIR/$$l ; \
 		fi ; \
 		for i in txt HTML; do \
 			if test ! -d $$DIR/$$l/$$i; then \
-	$(INSTALL) -g $(ROOTGROUP) -o $(ROOTNAME) -m 755 -d $$DIR/$$l/$$i ; \
+	$(INSTALL) -m 755 -d $$DIR/$$l/$$i ; \
 			 fi ; \
-	$(INSTALL) -m 644 -o $(ROOTNAME) $$l/$$i/* $$DIR/$$l/$$i/ ;\
+	$(INSTALL) -m 644 $(SRCDIR)/$$l/$$i/* $$DIR/$$l/$$i/ ;\
 		done ; \
 	done )
+
+perms:
+	for l in $(LANGUAGES); do \
+		if test "x$$l" = "xen"; then \
+			DIR=$(DESTDIR)$(DESTMAN); \
+		else \
+			DIR=$(DESTDIR)$(DESTMAN)/$$l; \
+		fi ; \
+		chown $(ROOTNAME) $$DIR; \
+		chgrp $(ROOTGROUP) $$DIR; \
+		for i in 1 3 5 8; do \
+			chown $(ROOTNAME) $$DIR/man$$i; \
+			chgrp $(ROOTGROUP) $$DIR/man$$i; \
+		done ; \
+		for f in man1/fcrontab.1 man1/fcrondyn.1 man3/bitstring.3 \
+			man5/fcrontab.5 man5/fcron.conf.5 man8/fcron.8 ; do \
+			chown $(ROOTNAME) $$DIR/$$f; \
+			chgrp $(ROOTGROUP) $$DIR/$$f; \
+		done ; \
+	done
+	chown $(ROOTNAME) $(DESTDIR)$(DESTDOC)
+	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTDOC)
+	chown $(ROOTNAME) $(DESTDIR)$(DESTDOC)/fcron-$(VERSION) 
+	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTDOC)/fcron-$(VERSION) 
+	for l in $(LANGUAGES); do \
+		DIR=$(DESTDIR)$(DESTDOC)/fcron-$(VERSION)/$$l ; \
+		chown $(ROOTNAME) $$DIR ; \
+		chgrp $(ROOTGROUP) $$DIR ; \
+		for i in txt HTML; do \
+			chown $(ROOTNAME) $$DIR/$$i; \
+			chgrp $(ROOTGROUP) $$DIR/$$i; \
+			chown $(ROOTNAME) $$DIR/$$i/*; \
+			chgrp $(ROOTGROUP) $$DIR/$$i/*; \
+		done ; \
+	done
+
 
 uninstall:
 	rm -fR $(DESTDOC)/fcron-$(VERSION)
 	@(echo "Removing man pages ...")
 	@(for l in $(LANGUAGES); do \
 		if test "x$$l" = "xen"; then \
-			DIR=$(DESTMAN); \
+			DIR=$(DESTDIR)$(DESTMAN); \
 		else \
-			DIR=$(DESTMAN)/$$l; \
+			DIR=$(DESTDIR)$(DESTMAN)/$$l; \
 		fi ; \
 		rm -f $$DIR/man1/fcrontab.1 ; \
 		rm -f $$DIR/man1/fcrondyn.1 ; \
@@ -156,10 +194,11 @@ clean:
           done)
 
 tarclean: clean
-	rm -f Makefile stylesheets/fcron-doc.dsl fcron-doc.mod
+	rm -f Makefile ${STYLESHEET} fcron-doc.mod
 
 vclean: clean
-	rm -f */HTML/* */man/* */txt/*
+#	rm -f */HTML/* */man/* */txt/*
+	rm -f Makefile ${STYLESHEET}
 
 ci: clean
 # we run a "cd .." because it makes appear the path of the file ( ./doc/XXXX )
