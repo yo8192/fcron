@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.106 2007-01-01 18:51:34 thib Exp $
+# $Id: Makefile.in,v 1.107 2007-01-01 19:05:06 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -248,7 +248,7 @@ ciclean: clean
 
 vclean: ciclean
 	rm -f config.log config.status config.h config.cache Makefile PREVIOUS_VERSION
-	make -C doc vclean
+	make -C doc clean
 
 
 files/fcron.conf: $(SRCDIR)/files/fcron.conf.in config.h
