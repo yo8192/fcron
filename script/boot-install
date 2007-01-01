@@ -2,7 +2,7 @@
 # Install fcron under SysV system.
 #
 
-# $Id: boot-install,v 1.38 2004-01-29 10:36:00 thib Exp $
+# $Id: boot-install,v 1.39 2007-01-01 18:51:53 thib Exp $
 
 # takes 6 arguments : the name of the BSD-like install program (with "-o" and the correct username)
 #                    the DESTSBIN directory
@@ -50,16 +50,19 @@ fi
 # Check now if there is an old ( < 1.1.x ) version of fcrontab on the system.
 # We do that here because if user say "no" too early, the PREVIOUS_VERSION would
 # not be removed.
-if test -r "$SRCDIR/script/PREVIOUS_VERSION"; then
-  MAJOR=`cat $SRCDIR/script/PREVIOUS_VERSION | awk '{print $2}' | awk -F '.' '{print $1}'`
-  MINOR=`cat $SRCDIR/script/PREVIOUS_VERSION | awk '{print $2}' | awk -F '.' '{print $2}'`
-#  echo "MINOR $MINOR MAJOR $MAJOR"
-  if test \( "$MAJOR" -lt 1 \) -o \( \( "$MINOR" -lt 1 \) -a "$MAJOR" -eq 1 \); then
+if test -r "PREVIOUS_VERSION"; then
+  MAJOR=`cat PREVIOUS_VERSION | awk '{print $2}' | awk -F '.' '{print $1}'`
+  MINOR=`cat PREVIOUS_VERSION | awk '{print $2}' | awk -F '.' '{print $2}'`
+  #echo "MINOR $MINOR MAJOR $MAJOR"
+  if test "x$MAJOR" = "x" -a "x$MINOR" = "x"; then 
+    # we don't have the version: there was no previous fcron installed
+    NEED_UPDATE=0
+  elif test \( "$MAJOR" -lt 1 \) -o \( \( "$MINOR" -lt 1 \) -a "$MAJOR" -eq 1 \); then
     NEED_UPDATE=1
   else
     NEED_UPDATE=0
   fi
-  rm -f $SRCDIR/script/PREVIOUS_VERSION
+  rm -f PREVIOUS_VERSION
 else
   NEED_UPDATE=1
 fi
