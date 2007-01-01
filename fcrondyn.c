@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.16 2006-06-05 20:00:48 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.17 2007-01-01 18:50:38 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.16 2006-06-05 20:00:48 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.17 2007-01-01 18:50:38 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -533,7 +533,8 @@ talk_fcron(char *cmd_str, int fd)
 	    return ERR;
 	}
 	else {
-	    write(STDOUT_FILENO, buf, read_len);
+	    if ( write(STDOUT_FILENO, buf, read_len) < 0 )
+		error_e("unable to write() to STDOUT_FILENO");
 	    if ( read_len >= sizeof(END_STR) &&
 		 strncmp(&buf[read_len-sizeof(END_STR)], END_STR, sizeof(END_STR)) == 0)
 		break;

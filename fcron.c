@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.78 2006-05-20 16:27:10 thib Exp $ */
+ /* $Id: fcron.c,v 1.79 2007-01-01 18:51:15 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.78 2006-05-20 16:27:10 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.79 2007-01-01 18:51:15 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -258,9 +258,12 @@ get_lock()
 	if ( lockf(fileno(daemon_lockfp), F_TLOCK, 0) != 0 )
 #endif /* ! HAVE_FLOCK */
 	    {
-		fscanf(daemon_lockfp, "%d", &otherpid);
-		die_e("can't lock %s, running daemon's pid may be %d",
-		      pidfile, otherpid);
+		if ( fscanf(daemon_lockfp, "%d", &otherpid) >= 1 )
+		    die_e("can't lock %s, running daemon's pid may be %d",
+			  pidfile, otherpid);
+		else
+		    die_e("can't lock %s, and unable to read running"
+			  " daemon's pid", pidfile);
 	    }
 
     fcntl(fd, F_SETFD, 1);
@@ -268,7 +271,8 @@ get_lock()
     rewind(daemon_lockfp);
     fprintf(daemon_lockfp, "%d\n", (int) daemon_pid);
     fflush(daemon_lockfp);
-    ftruncate(fileno(daemon_lockfp), ftell(daemon_lockfp));
+    if ( ftruncate(fileno(daemon_lockfp), ftell(daemon_lockfp)) < 0 )
+	error_e("Unable to ftruncate(fileno(daemon_lockfp), ftell(daemon_lockfp))");
 
     /* abandon fd and daemon_lockfp even though the file is open. we need to
      * keep it open and locked, but we don't need the handles elsewhere.
