@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.3 2006-05-20 16:32:58 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.4 2007-01-01 18:53:47 thib Exp $ -->
 
 <refentry id="fcrontab.5">
   <refmeta>
@@ -36,7 +36,7 @@ A copy of the license is included in gfdl.sgml.
     <para>Les lignes blanches, les lignes débutant par le symbole dièse
       «&nbsp;#&nbsp;» (qui sont considérées comme étant des commentaires),
       les espaces ou les tabulations placées en début de ligne sont ignorées.
-      Chaque ligne d'un fichier &fcrontabf; peut être soit &nbsp;:
+      Chaque ligne d'un fichier &fcrontabf; peut être soit&nbsp;:
     </para>
     <itemizedlist>
       <listitem>
@@ -106,9 +106,10 @@ A copy of the license is included in gfdl.sgml.
       <programlisting>@options fréquence commande</programlisting>
       <para>où fréquence est une valeur de temps de la forme
         valeur*multiplicateur+valeur*multiplicateur+...+valeur-en-minutes
-        comme "12h02" ou "3w2d5h1". La première signifie "12 heures et 2
-        minutes d'exécution de fcron" tant dis que la seconde signifie
-        "3 semaines, 2 jours, 5 heures et 1 minute d'exécution de fcron". Les
+	comme «\&nbsp;12h02\&nbsp;» ou «\&nbsp;3w2d5h1\&nbsp;». La première
+	signifie «\&nbsp;12 heures et 2 minutes d'exécution de fcron\&nbsp;»
+	tant dis que la seconde signifie «\&nbsp;3 semaines, 2 jours, 5 heures
+	et 1 minute d'exécution de fcron\&nbsp;». Les
         multiplicateurs valides sont&nbsp;:
       </para>
       <table>
@@ -173,7 +174,7 @@ A copy of the license is included in gfdl.sgml.
         &optserial;, &optlavg;, &optnice;, &optrunas; (voir plus loin).
       </para>
       <para><example>
-	<title>Quelques exemples de lignes basÉes sur le temps écoulÉ depuis
+	<title>Quelques exemples de lignes basÉes sur le temps ÉcoulÉ depuis
 le dÉmarrage du systÈme</title>
 	<programlisting>
 # Récupérer vos courriels toutes les 30 minutes
@@ -245,7 +246,7 @@ le dÉmarrage du systÈme</title>
         liste.
       </para>
       <para>Les listes sont des nombres ou des intervalles séparés par des
-        virgules «&nbsp;,&nbsp;»). Par exemple&nbsp;: «&nbsp;2,5,15,23&nbsp;».
+        virgules «&nbsp;,&nbsp;». Par exemple&nbsp;: «&nbsp;2,5,15,23&nbsp;».
       </para>
       <para>Les intervalles de nombres sont de la forme
         «&nbsp;<token><replaceable>début</replaceable>-<replaceable>fin</replaceable></token>&nbsp;»,
@@ -402,7 +403,7 @@ le dÉmarrage du systÈme</title>
         </para>
 	<para>lancera la commande une fois par nuit soit entre 21:00 et 23:59,
           soit entre 3:00 et 5:59 (elle sera exécutée aussitôt que
-          possible&nbsp;; Pour modifier ce comportement, utilisez l'option
+          possible&nbsp;; pour modifier ce comportement, utilisez l'option
           &optrandom;) et ne pas envoyer de courriel (étant donné que l'option
           &optmail; a été définie à «&nbsp;no&nbsp;»).
         </para>
@@ -427,7 +428,7 @@ le dÉmarrage du systÈme</title>
 	<para>lancer cette commande unE fois durant CHAQUE intervalle de temps
           spécifié, ignorant les champs suivants le mot-clef dans la définition
           de l'intervalle de temps (un <parameter>hours</parameter> empêche le
-          champ mins d'être considéré comme un intervalle de temps, mais il
+	  champ <parameter>mins</parameter> d'être considéré comme un intervalle de temps, mais il
           sera utilisé pour déterminer quand la ligne devra être lancée au
           cours de l'intervalle&nbsp;: voir la note plus loin)
           (<parameter>dow</parameter> signifie «&nbsp;day of week&nbsp;»).
@@ -470,7 +471,7 @@ le dÉmarrage du systÈme</title>
         déclaration globale de la même option.
       </para>
       <para>Les options sont séparées par des virgules «&nbsp;,&nbsp;» et leurs
-        arguments, s'il y en a, sont placés entre paranthèses «&nbsp;(&nbsp;»
+        arguments, s'il y en a, sont placés entre parenthèses «&nbsp;(&nbsp;»
         et «&nbsp;)&nbsp;». Les espaces ne sont pas permises. Une déclaration
         d'option est de la forme
       </para>
@@ -478,8 +479,8 @@ le dÉmarrage du systÈme</title>
 	<para><replaceable>option</replaceable>[(<replaceable>arg1</replaceable>[,<replaceable>arg2</replaceable>][...])][,<replaceable>option</replaceable>[(<replaceable>arg1</replaceable>[...])]][...]</para>
       </blockquote>
       <para>où <replaceable>option</replaceable> est soit le nom complet de
-        l'option, soit son abbréviation. Les options sont (avec leur valeur
-        par défaut entre paranthèses)&nbsp;:
+        l'option, soit son abréviation. Les options sont (avec leur valeur
+        par défaut entre parenthèses)&nbsp;:
       </para>
       <variablelist>
 	<title>Options valides dans un fichier &fcrontabf;</title>
@@ -871,18 +872,18 @@ le dÉmarrage du systÈme</title>
 	    <para><emphasis><type>booléen</type></emphasis>(<constant>false</constant>)</para>
             <para>Quand cette option est activée, la tâche est basée sur un
               temps «&nbsp;volatile&nbsp;», qu'on pourrait aussi qualifier de
-              «&nbsp;non persistant&nbsp;». Plus précisement, &fcron; ne
+              «&nbsp;non persistant&nbsp;». Plus précisément, &fcron; ne
               «&nbsp;retient&nbsp;» pas le temps écoulé depuis la dernière
               exécution des tâches «&nbsp;volatiles&nbsp;» entre deux
               démarrages de &fcron;, et agit comme si les lignes avaient été
-              fraichement ajoutées à chaque démarrage de &fcron;. Ainsi,
+              fraîchement ajoutées à chaque démarrage de &fcron;. Ainsi,
               l'option &optfirst; s'appliquera par exemple pour les lignes
               «&nbsp;volatiles&nbsp;» à chaque démarrage de fcron. Cette option
               est en particulier utile lorsque &fcron; est lancé à partir d'un
-              script qui tourne, par exemple, seulement pendant une connection
+              script qui tourne, par exemple, seulement pendant une connexion
               à Internet non permanente&nbsp;: l'exécution des tâches
               «&nbsp;volatiles&nbsp;» est alors basée sur le temps depuis le
-              début de la connection et le lancement de &fcron; plutôt que sur
+              début de la connexion et le lancement de &fcron; plutôt que sur
               le temps absolu. Enfin, veuillez noter que cette option s'associe
               bien à l'option &optfirst;.
             </para>
@@ -906,7 +907,7 @@ le dÉmarrage du systÈme</title>
         sur le temps écoulé depuis le démarrage du système&nbsp;»</link>).
       </para>
       <para>Veuillez noter que <varname>dayand</varname> et
-        <varname>dayor</varname> sont en fait la même option&nbsp;: une valeur
+        <varname>dayor</varname> sont, en fait, la même option&nbsp;: une valeur
         «&nbsp;false&nbsp;» pour <varname>dayand</varname> est équivalente à
         une valeur «&nbsp;true&nbsp;» pour <varname>dayor</varname> et
         réciproquement,  une valeur «&nbsp;false&nbsp;» pour
@@ -921,7 +922,7 @@ le dÉmarrage du systÈme</title>
         d'une forte charge système ou d'un quelconque événement extérieur.
         L'option <varname>serialonce</varname> répond à cette question&nbsp;:
         «&nbsp;La nouvelle entrée de cette tâche doit-elle être
-        ignorée&nbsp;?&nbsp;». De cette facon, on peut distinguer d'une part
+        ignorée&nbsp;?&nbsp;». De cette façon, on peut distinguer d'une part
         les tâches sans contrainte forte sur l'heure d'exécution qui doivent
         être exécutées un nombre de fois bien défini (serial(yes),
         serialonce(false)), et d'autre part les tâches toujours sans contrainte
@@ -1069,7 +1070,7 @@ TEXT= " Salut\
 	</listitem>
       </varlistentry>
       <varlistentry>
-	<term><filename>&etc;/pam.d/fcron</filename> (or
+	<term><filename>&etc;/pam.d/fcron</filename> (ou
 <filename>&etc;/pam.conf</filename>)</term>
 	<listitem>
           <para>Fichier de configuration <productname>PAM</productname> pour
@@ -1080,21 +1081,21 @@ TEXT= " Salut\
     </variablelist>
   </refsect1>
 
-    <refsect1>
-      <title>Traduction</title>
-      <para>Ce document est une traduction réalisée par Alain Portal
-        &lt;aportal AT univ-montp2 DOT fr&gt; le 6 février 2006
-      </para>
-      <para>L'équipe de traduction a fait le maximum pour réaliser une adaptation
-        française de qualité. La version anglaise la plus à jour de ce document
-        est toujours consultable via la commande&nbsp;: «&nbsp;<emphasis>LANG=en
-        man 5 fcrontab</emphasis>&nbsp;».
-        N'hésitez pas à signaler à l'auteur ou au traducteur, selon le cas,
-        toute erreur dans cette page de manuel.
-      </para>
-    </refsect1>
-
   &manpage-foot;
+
+  <refsect1>
+    <title>Traduction</title>
+    <para>Ce document est une traduction réalisée par Alain Portal
+      &lt;aportal AT univ-montp2 DOT fr&gt; le 6 février 2006.
+    </para>
+    <para>L'équipe de traduction a fait le maximum pour réaliser une adaptation
+      française de qualité. La version anglaise la plus à jour de ce document
+      est toujours consultable via la commande&nbsp;: «&nbsp;<emphasis>LANG=en
+      man 5 fcrontab</emphasis>&nbsp;».
+      N'hésitez pas à signaler à l'auteur ou au traducteur, selon le cas,
+      toute erreur dans cette page de manuel.
+    </para>
+  </refsect1>
 
 </refentry>
 

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.18 2006-01-11 01:03:01 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.19 2007-01-01 18:53:43 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>
@@ -66,9 +66,9 @@ optional. Trailing blanks are also ignored, but you can place the value in
 quotes (simple or double, but matching) to preserve any blanks in the
 value.</para>
 	    <para>When &fcron; executes a command, it always sets
-<envar>USER</envar>, <envar>HOME</envar>, and <envar>SHELL</envar> as defined in
+<envar>USER</envar>, and <envar>HOME</envar> as defined in
 <filename>/etc/passwd</filename> for the owner of the &fcrontabf; from which the
-command is extracted. <envar>HOME</envar> and <envar>SHELL</envar> may be
+command is extracted. It also defines <envar>SHELL</envar> to the value of the SHELL used to run the command. &Fcron; uses the value of <envar>SHELL</envar> from the fcrontab if any, otherwise it uses the value from <filename>fcron.conf</filename> if any, or in last resort the value from <filename>/etc/passwd</filename>. <envar>HOME</envar> and <envar>SHELL</envar> may be
 overridden by settings in the &fcrontabf;, but <envar>USER</envar> may not.
 Every other environment assignments defined in the user &fcrontabf; are then
 made, and the command is executed.</para>

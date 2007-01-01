@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron.8.sgml,v 1.2 2006-02-06 18:35:47 thib Exp $ -->
+<!-- $Id: fcron.8.sgml,v 1.3 2007-01-01 18:53:45 thib Exp $ -->
 
 <refentry id="fcron.8">
   <refmeta>
@@ -120,8 +120,8 @@ A copy of the license is included in gfdl.sgml.
         <term><option>-s</option> <replaceable>sec</replaceable></term>
         <term><option>--savetime</option> <replaceable>sec</replaceable></term>
         <listitem>
-	  <para>Enregistrer les fichiers &fcrontabf; sur disque toutes les
-	    <replaceable>sec</replaceable> secondes
+          <para>Enregistrer les fichiers &fcrontabf; sur disque toutes les
+            <replaceable>sec</replaceable> secondes
             (la valeur par défaut est 1800).
           </para>
         </listitem>
@@ -142,7 +142,7 @@ A copy of the license is included in gfdl.sgml.
         <term><option>--queuelen</option> <replaceable>n</replaceable></term>
         <listitem>
           <para>Positionner à <replaceable>n</replaceable> le nombre de tâches
-            que les files d'attente sérialisée (Ndt&nbsp;: serial) et charge
+            que les files d'attente sérialisées (Ndt&nbsp;: serial) et charge
             système (Ndt&nbsp;: lavg) peuvent contenir.
           </para>
         </listitem>
@@ -173,7 +173,7 @@ A copy of the license is included in gfdl.sgml.
             Positionne <option>firstsleep</option> à 0. Peut être pratique
             particulièrement lorsqu'elle est utilisée avec les options
             <option>-y</option> et <option>-f</option> dans un script lançant,
-	    par exemple, une connexion par ligne commutée (Ndt&nbsp;: dialup
+            par exemple, une connexion par ligne commutée (Ndt&nbsp;: dialup
             connection).
           </para>
           <para>&voiraussi; les options &optvolatile; et &optstdout; de fcrontab.</para>
@@ -189,12 +189,12 @@ A copy of the license is included in gfdl.sgml.
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><option>-l</option> <replaceable>time</replaceable></term>
-        <term><option>--firstsleep</option> <replaceable>time</replaceable></term>
+        <term><option>-l</option> <replaceable>délai</replaceable></term>
+        <term><option>--firstsleep</option> <replaceable>délai</replaceable></term>
         <listitem>
-          <para>Définir le délai d'attente initial (en secondes) avant
-            qu'une tâche ne soit exécutée, la valeur par défaut est
-            &firstsleep; secondes.
+          <para>Définir le <replaceable>délai</replaceable> d'attente initial
+            (en secondes) avant qu'une tâche ne soit exécutée. La valeur par
+            défaut est &firstsleep; secondes.
           </para>
         </listitem>
       </varlistentry>
@@ -251,7 +251,7 @@ A copy of the license is included in gfdl.sgml.
         <listitem>
           <para>Enregistrer la configuration (temps restant jusqu'à la prochaine
             exécution, date et heure de la prochaine exécution, etc), attendre
-            la fin des toutes les tâches en cours d'exécution et quitter.
+            la fin de toutes les tâches en cours d'exécution et quitter.
           </para>
         </listitem>
       </varlistentry>

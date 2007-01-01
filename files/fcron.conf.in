@@ -16,8 +16,8 @@ fcronallow	=	@@ETC@/@@FCRON_ALLOW@
 fcrondeny	=	@@ETC@/@@FCRON_DENY@
 
 # Location of the programs used by fcron
-shell		=	@@SHELL@
+shell		=	@@FCRON_SHELL@
 sendmail	=	@@SENDMAIL@
 
 # Location of the default editor for "fcrontab -e"
-editor		=	@@EDITOR@
+editor		=	@@FCRON_EDITOR@

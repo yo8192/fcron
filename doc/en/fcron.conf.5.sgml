@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcron.conf.5.sgml,v 1.9 2006-01-11 01:00:46 thib Exp $ -->
+<!-- $Id: fcron.conf.5.sgml,v 1.10 2007-01-01 18:53:33 thib Exp $ -->
 
 <refentry id="fcron.conf.5">
     <refmeta>
@@ -84,7 +84,7 @@ to work properly).</para>
 (<filename>&shell;</filename>)</term>
 		    <listitem>
 			<para>Location of default shell called by &fcron; when
-running a job.</para>
+running a job. When &fcron; runs a job, &ccron; uses the value of <envar>SHELL</envar> from the fcrontab if any, otherwise it uses the value from <filename>fcron.conf</filename> if any, or in last resort the value from <filename>/etc/passwd</filename>.</para>
 		    </listitem>
 		</varlistentry>
 		<varlistentry>
