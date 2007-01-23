@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.71 2006-06-05 21:20:41 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.72 2007-01-23 22:46:21 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -46,7 +46,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.71 2006-06-05 21:20:41 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.72 2007-01-23 22:46:21 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -651,8 +651,8 @@ install_stdin(void)
     while ( (c = getc(stdin)) != EOF )
 	putc(c, tmp_file);
 
+    /* the following closes tmp_fd as well because it was fdopen()ed: */
     fclose(tmp_file);
-    close(tmp_fd);
 
     if ( make_file(tmp_str) == ERR )
 	goto exiterr;
