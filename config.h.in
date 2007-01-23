@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.59 2007-01-01 18:51:50 thib Exp $ */
+ /* $Id: config.h.in,v 1.60 2007-01-23 22:51:22 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -361,9 +361,6 @@
 /* Define if you have the <sys/socket.h> header file.  */
 #undef HAVE_SYS_SOCKET_H
 
-/* Define if you have the <sys/termios.h> header file.  */
-#undef HAVE_SYS_TERMIOS_H
-
 /* Define if you have the <sys/time.h> header file.  */
 #undef HAVE_SYS_TIME_H
 
@@ -378,6 +375,9 @@
 
 /* Define if you have the <syslog.h> header file.  */
 #undef HAVE_SYSLOG_H
+
+/* Define if you have the <termios.h> header file.  */
+#undef HAVE_TERMIOS_H
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
