@@ -8,11 +8,29 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.49 2007-01-01 18:53:42 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.50 2007-01-23 22:52:54 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
 
+      <itemizedlist>
+	 <title>From version 3.0.2 to 3.0.3-rc1</title>
+	 <listitem>
+	    <para>New configure scripts, with more standard default values for paths, etc. This aims at simplifying the packaging of fcron. Thanks go to Patrice Dumas for his patch!</para>
+	 </listitem>
+	 <listitem>
+	    <para>New make targets: perms and strip. This aims at simplifying the packaging of fcron. Thanks go to Patrice Dumas for his patch!</para>
+	 </listitem>
+	 <listitem>
+	    <para>A file was closed twice by fcrontab: removed the duplicate close().</para>
+	 </listitem>
+	 <listitem>
+	    <para>Replaced include sys/termios.h by termios.h.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Fixed a fcrontab bug cause by an return value not handled and resulting in many useless (but pretty much harmless) iteration in a loop.</para>
+	 </listitem>
+      </itemizedlist>
       <itemizedlist>
 	 <title>From version 3.0.1 to 3.0.2</title>
 	 <listitem>

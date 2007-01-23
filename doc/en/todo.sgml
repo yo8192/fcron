@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.40 2007-01-01 18:53:40 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.41 2007-01-23 22:52:52 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -38,6 +38,9 @@ A copy of the license is included in gfdl.sgml.
 	    </listitem>
 	    <listitem>
 	       <para>find way to have the non translated pages of the French translation be updated automatically (changes, todo, etc -> copied from the English doc)</para>
+	    </listitem>
+	    <listitem>
+	       <para>add support Vixie cron's @reboot, @yearly, ... (in fileconf.c:read_file(), add a strncmp() at the beginning of the while() to do s/@reboot/@volatile,first(1) big value/, s/@yearly/0 0 1 1 */, ...) (+ add sthg such as a period of 0 so as a @reboot line can never be run again ?)</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>
