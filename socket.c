@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.20 2006-06-05 20:03:08 thib Exp $ */
+ /* $Id: socket.c,v 1.21 2007-01-23 22:51:31 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -762,7 +762,8 @@ void
 check_socket(int num)
     /* check for new connection, command, connection closed */
 {
-    int fd = -1, avoid_fd = -1, addr_len = sizeof(struct sockaddr_un);
+    int fd = -1, avoid_fd = -1;
+    unsigned int addr_len = sizeof(struct sockaddr_un);
     struct sockaddr_un client_addr;
     long int buf_int[SOCKET_MSG_LEN];
     int read_len = 0;
