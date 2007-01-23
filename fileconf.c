@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.77 2006-05-20 16:27:23 thib Exp $ */
+ /* $Id: fileconf.c,v 1.78 2007-01-23 22:48:15 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -61,6 +61,8 @@ const char *mons_ary[] = {
     NULL
 };
 
+
+#define GET_LINE_EOF 999
 
 char *
 get_string(char *ptr)
@@ -126,7 +128,7 @@ get_line(char *str, size_t size, FILE *file)
 	    *(str + i) = (char) '\0';
 	    /* we couldn't return EOF ( equal to ERR by default ) 
 	     * nor ERR, which is used for another error */
-	    return 999;
+	    return GET_LINE_EOF;
 
 	default:
 	    *(str + i) = (char) c;
@@ -194,7 +196,9 @@ read_file(char *filename)
 
     while ( entries <= max_entries && line <= max_lines ) {
 
-	if ( (ret = get_line(buf, sizeof(buf), file)) == ERR ) {
+	ret = get_line(buf, sizeof(buf), file);
+
+	if ( ret == ERR ) {
 	    fprintf(stderr, "%s:%d: Line is too long (more than %d): skipping line.\n",
 		    file_name, line, sizeof(buf));
 	    continue;
@@ -210,8 +214,7 @@ read_file(char *filename)
 	case '#':
 	case '\0':
 	    /* comments or empty line: skipping */
-	    line++;
-	    continue;
+	    break;
 	case '@':
 	    read_freq(ptr, cf);
 	    entries++;
@@ -243,7 +246,8 @@ read_file(char *filename)
 	line++;	
 
 	if ( ret != OK )
-	    /* in this case, ret == EOF : no more lines */
+	    /* in this case, ret == GET_LINE_EOF : 
+	     * no more lines, so we exit the loop */
 	    break;
 	
     }
