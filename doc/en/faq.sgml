@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: faq.sgml,v 1.15 2006-05-20 16:32:36 thib Exp $ -->
+<!-- $Id: faq.sgml,v 1.16 2007-01-23 22:52:09 thib Exp $ -->
 
 <sect1 id="faq">
     <title>Frequently Asked Questions</title>
@@ -342,9 +342,32 @@ and set appropriately the paths:</para>
 	       <para>How can I emulate an anacron entry?</para>
 	    </question>
 	    <answer>
+	       <para>As anacron, fcron does not assume that the system runs permanently.
+		  Thus, fcron features similar functionalities to anacron, but it
+		  has different means to achieve it, in other words other ways to define
+		  when a job should run. Fcron is in general much more flexible
+		  than anacron. That said,
+		  there is no strict equivalent to an anacron entry: the best would
+		  probably be to have a look at 
+		  <link linkend="fcrontab.5">&fcrontab;(5),</link> and choose the
+		  type of line which is the most appropriate for your needs (this is
+		  likely to be a @-line or a %-line).</para>
+	       <para>If you insist on willing to emulate an anacron entry, as precisely
+		  as possible, you should use a %daily, %monthly or %weekly line. If
+	       this doesn't emulate an anacron entry as closely as you would like,
+	       you may want to try a %hours or %days line, and/or &optrunfreq;.</para>
+	       <para>In any case, you would benefit from using fcron options such as 
+	       &optserial; or &optlavg;.</para>
+	    </answer>
+	 </qandaentry>
+	 <qandaentry>
+	    <question>
+	       <para>How can I emulate a Vixie cron @reboot entry?</para>
+	    </question>
+	    <answer>
 	       <para>You should use a line similar to the following one:</para>
-	       <para>@volatile,first(xx) BIG-period /your/command</para>
-	       <para>where xx is the time you would have put in your anacron line.</para>
+	       <para>@volatile,first(1) BIG-period /your/command</para>
+	       <para>This will run /your/command one minute after every reboot.</para>
 	    </answer>
 	 </qandaentry>
     </qandaset>
