@@ -22,12 +22,11 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: convert-fcrontab.c,v 1.21 2006-05-20 16:27:46 thib Exp $ */
+ /* $Id: convert-fcrontab.c,v 1.22 2007-04-14 17:03:00 thib Exp $ */
 
 #include "convert-fcrontab.h"
-#include "global.h"
 
-char rcs_info[] = "$Id: convert-fcrontab.c,v 1.21 2006-05-20 16:27:46 thib Exp $";
+char rcs_info[] = "$Id: convert-fcrontab.c,v 1.22 2007-04-14 17:03:00 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -185,7 +184,7 @@ convert_file(char *file_name)
     if ((file->cf_user = read_str(f, buf, sizeof(buf))) == NULL)
 	die_e("Cannot read user's name");
 
-    if ( fscanf(f, "%ld", (long int *) &t_save) != 1 )
+    if ( fscanf(f, "%" ATTR_SIZE_TIMET  "d", CAST_TIMET_PTR &t_save) != 1 )
 	error("could not get time and date of saving");
 
     /* read env variables */

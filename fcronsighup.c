@@ -21,13 +21,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.11 2007-01-01 18:49:43 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.12 2007-04-14 16:59:02 thib Exp $ */
 
 #include "fcronsighup.h"
 #include "global.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.11 2007-01-01 18:49:43 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.12 2007-04-14 16:59:02 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
@@ -83,7 +83,7 @@ read_pid(void)
     pid_t pid = 0;
     
     if ((fp = fopen(pidfile, "r")) != NULL) {
-	if ( fscanf(fp, "%d", (int *) &pid) < 1 )
+	if ( fscanf(fp, "%" ATTR_SIZE_PIDT "d", CAST_PIDT_PTR &pid) < 1 )
 	    error("Unable to read fcron daemon's pid (fscanf(fp,...))");
 	fclose(fp);
     }

@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.47 2007-01-23 22:49:03 thib Exp $ */
+ /* $Id: global.h,v 1.48 2007-04-14 17:02:20 thib Exp $ */
 
 
 /* 
@@ -232,6 +232,39 @@ typedef struct exe_t {
     pid_t        e_ctrl_pid; /* pid of the fcron process controling the job */
     pid_t        e_job_pid;  /* pid of the job itself */
 } exe_t;
+
+
+#if SIZEOF_TIME_T == SIZEOF_SHORT_INT
+#define ATTR_SIZE_TIMET "h"
+#define CAST_TIMET_PTR (short int *)
+#elif SIZEOF_TIME_T == SIZEOF_INT
+#define ATTR_SIZE_TIMET ""
+#define CAST_TIMET_PTR (int *)
+#elif SIZEOF_TIME_T == SIZEOF_LONG_INT
+#define ATTR_SIZE_TIMET "l"
+#define CAST_TIMET_PTR (long int *)
+#elif SIZEOF_TIME_T == SIZEOF_LONG_LONG_INT
+#define ATTR_SIZE_TIMET "ll"
+#define CAST_TIMET_PTR (long long int *)
+#else
+#error "SIZEOF_TIME_T does not correspond with a known format."
+#endif
+
+#if SIZEOF_PID_T == SIZEOF_SHORT_INT
+#define ATTR_SIZE_PIDT "h"
+#define CAST_PIDT_PTR (short int *)
+#elif SIZEOF_PID_T == SIZEOF_INT
+#define ATTR_SIZE_PIDT ""
+#define CAST_PIDT_PTR (int *)
+#elif SIZEOF_PID_T == SIZEOF_LONG_INT
+#define ATTR_SIZE_PIDT "l"
+#define CAST_PIDT_PTR (long int *)
+#elif SIZEOF_PID_T == SIZEOF_LONG_LONG_INT
+#define ATTR_SIZE_PIDT "ll"
+#define CAST_PIDT_PTR (long long int *)
+#else
+#error "SIZEOF_PID_T does not correspond with a known format."
+#endif
 
 
 /* local header files : we include here the headers which may use some types defined
