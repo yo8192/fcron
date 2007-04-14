@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.67 2006-06-05 21:19:27 thib Exp $ */
+ /* $Id: job.c,v 1.68 2007-04-14 16:59:56 thib Exp $ */
 
 #include "fcron.h"
 
@@ -41,6 +41,7 @@ int write_pipe(int fd, void *buf, size_t size);
 
 #ifndef HAVE_SETENV
 char env_user[PATH_LEN];
+char env_logname[PATH_LEN];
 char env_home[PATH_LEN];
 char env_shell[PATH_LEN];
 #endif
@@ -107,6 +108,7 @@ change_user(struct cl_t *cl)
     
 #ifdef HAVE_SETENV
     setenv("USER", pas->pw_name, 1);
+    setenv("LOGNAME", pas->pw_name, 1);
     setenv("HOME", pas->pw_dir, 1);
     /* To ensure compatibility with Vixie cron, we don't use the shell defined
      * in /etc/passwd by default, but the default value from fcron.conf instead: */
@@ -122,6 +124,11 @@ change_user(struct cl_t *cl)
 	strncat(env_user, pas->pw_name, sizeof(env_user)-5-1);
 	env_user[sizeof(env_user)-1]='\0';
 	putenv( env_user ); 
+
+	strcpy(env_logname, "LOGNAME=");
+	strncat(env_logname, pas->pw_name, sizeof(env_logname)-8-1);
+	env_logname[sizeof(env_logname)-1]='\0';
+	putenv( env_logname ); 
 
 	strcpy(env_home, "HOME=");
 	strncat(env_home, pas->pw_dir, sizeof(env_home)-5-1);
