@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2007 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.72 2007-01-23 22:46:21 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.73 2007-04-14 18:04:13 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -46,7 +46,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.72 2007-01-23 22:46:21 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.73 2007-04-14 18:04:13 thib Exp $";
 
 void info(void);
 void usage(void);

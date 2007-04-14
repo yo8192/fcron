@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2007 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: relnotes.sgml,v 1.8 2006-01-11 01:01:32 thib Exp $ -->
+<!-- $Id: relnotes.sgml,v 1.9 2007-04-14 18:04:31 thib Exp $ -->
 
 <sect1 id="relnotes">
     <title>Release notes: &fcron; &version;</title>

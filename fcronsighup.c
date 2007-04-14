@@ -1,7 +1,7 @@
 /*
  * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2006 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2007 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,13 +21,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.12 2007-04-14 16:59:02 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.13 2007-04-14 18:04:05 thib Exp $ */
 
 #include "fcronsighup.h"
 #include "global.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.12 2007-04-14 16:59:02 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.13 2007-04-14 18:04:05 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
