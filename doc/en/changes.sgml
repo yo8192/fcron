@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.51 2007-04-14 17:04:13 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.52 2007-04-14 17:46:42 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -31,6 +31,9 @@ A copy of the license is included in gfdl.sgml.
 	    <para>Chmod()ed fcron's fifo file to 777. It was 666 previously, but the exec bit is needed for AIX and apparently ignored on other platforms, so we now set it to.</para>
 	 </listitem>
 	 <listitem>
+	    <para>Set TZ environment variable for lines which uses fcron option timezone.</para>
+	 </listitem>
+	 <listitem>
 	    <para>A file was closed twice by fcrontab: removed the duplicate close().</para>
 	 </listitem>
 	 <listitem>
@@ -40,6 +43,7 @@ A copy of the license is included in gfdl.sgml.
 	    <para>Fixed a fcrontab bug cause by an return value not handled and resulting in many useless (but pretty much harmless) iteration in a loop.</para>
 	 </listitem>
       </itemizedlist>
+
       <itemizedlist>
 	 <title>From version 3.0.1 to 3.0.2</title>
 	 <listitem>
@@ -61,6 +65,7 @@ A copy of the license is included in gfdl.sgml.
 	    <para>Minor spelling fixes in the French documentation.</para>
 	 </listitem>	 
       </itemizedlist>
+
       <itemizedlist>
 	 <title>From version 3.0.0 to 3.0.1</title>
 	 <listitem>

@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.42 2007-04-14 17:04:11 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.43 2007-04-14 17:46:40 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -25,12 +25,6 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>test + update the doc on how SHELL is defined (priority: 1) value from fcrontab file 2) value from fcron.conf if non-zero long string 3) value from /etc/passwd -- default value for SHELL in fcron.conf is now "")</para>
-	    </listitem>
-	    <listitem>
-	       <para>set TZ env. var. for jobs for which option tz is used.</para>
-	    </listitem>
-	    <listitem>
 	       <para>Test (and use ?) docbook2x-man -- xlstproc ? cf http://antoine.ginies.free.fr/docbook/ch09.html</para>
 	    </listitem>
 	    <listitem>
@@ -45,7 +39,7 @@ A copy of the license is included in gfdl.sgml.
 	 <title>Low priority</title>
 	 <itemizedlist>
 	    <listitem>
-	    <para>add logging to a file with configuration in fcron.conf</para>
+	       <para>add logging to a file (instead of syslog) with configuration in fcron.conf</para>
 	    </listitem>
 	    <listitem>
 	       <para>code cleaning: create a .c/.h file for data structures
