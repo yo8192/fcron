@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrondyn.c,v 1.17 2007-01-01 18:50:38 thib Exp $ */
+ /* $Id: fcrondyn.c,v 1.18 2007-04-14 17:00:24 thib Exp $ */
 
 /* fcrondyn : interact dynamically with running fcron process :
  *     - list jobs, with their status, next time of execution, etc
@@ -35,7 +35,7 @@
 #include "allow.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrondyn.c,v 1.17 2007-01-01 18:50:38 thib Exp $";
+char rcs_info[] = "$Id: fcrondyn.c,v 1.18 2007-04-14 17:00:24 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -517,7 +517,7 @@ talk_fcron(char *cmd_str, int fd)
 	return ERR;
     }
 
-    while ( (read_len = recv(fd, buf, sizeof(buf), 0)) >= 0 || errno == EINTR ) {
+    while ( (read_len = (size_t)recv(fd, buf, sizeof(buf), 0)) >= 0 || errno == EINTR ) {
 	if ( errno == EINTR && debug_opt)
 	    fprintf(stderr, "got EINTR ...\n");
 	else if ( read_len > sizeof(buf) ) {
@@ -527,7 +527,7 @@ talk_fcron(char *cmd_str, int fd)
 	}
 	else if ( read_len <= 0 ) {
 	    if ( debug_opt )
-		fprintf(stderr, "read_len = %d\n", read_len);
+		fprintf(stderr, "read_len = %d\n", (int)read_len);
 	    fprintf(stderr, "connection closed by fcron\n");
 	    shutdown(fd, SHUT_RDWR);
 	    return ERR;
