@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.50 2007-01-23 22:52:54 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.51 2007-04-14 17:04:13 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -20,6 +20,15 @@ A copy of the license is included in gfdl.sgml.
 	 </listitem>
 	 <listitem>
 	    <para>New make targets: perms and strip. This aims at simplifying the packaging of fcron. Thanks go to Patrice Dumas for his patch!</para>
+	 </listitem>
+	 <listitem>
+	    <para>Set environment variable LOGNAME when running a job (as Vixie Cron does: thanks Martin McGreal for pointing that out).</para>
+	 </listitem>
+	 <listitem>
+	    <para>Portability work for AIX 5.2 and Solaris 8 and 10 (thanks Martin McGreal).</para>
+	 </listitem>
+	 <listitem>
+	    <para>Chmod()ed fcron's fifo file to 777. It was 666 previously, but the exec bit is needed for AIX and apparently ignored on other platforms, so we now set it to.</para>
 	 </listitem>
 	 <listitem>
 	    <para>A file was closed twice by fcrontab: removed the duplicate close().</para>

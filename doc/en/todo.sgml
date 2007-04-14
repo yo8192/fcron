@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.41 2007-01-23 22:52:52 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.42 2007-04-14 17:04:11 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -24,9 +24,6 @@ A copy of the license is included in gfdl.sgml.
       <sect2>
 	 <title>High priority</title>
 	 <itemizedlist>
-	    <listitem>
-	       <para>Construction "if ! ..." and "if test ... ! ..." in configure.in not portable ??</para>
-	    </listitem>
 	    <listitem>
 	       <para>test + update the doc on how SHELL is defined (priority: 1) value from fcrontab file 2) value from fcron.conf if non-zero long string 3) value from /etc/passwd -- default value for SHELL in fcron.conf is now "")</para>
 	    </listitem>
