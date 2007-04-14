@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.21 2007-01-23 22:51:31 thib Exp $ */
+ /* $Id: socket.c,v 1.22 2007-04-14 17:03:25 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -170,7 +170,9 @@ init_socket(void)
     }
 
     /* */
-    if ( chmod(fifofile, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH) != 0 )
+    /* The exec bit is not necessary and ignored on all systems but AIX, where it is
+     * needed to allow fcrondyn to open the file */
+    if ( chmod(fifofile, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP|S_IROTH|S_IWOTH|S_IXOTH) != 0 )
 	error_e("Cannot chmod() socket file");
     /* */
 	 
@@ -324,7 +326,7 @@ print_line(int fd, struct cl_t *line,  unsigned char *details, pid_t pid, int in
     if ( bit_test(details, FIELD_USER) )
 	len += snprintf(buf+len, sizeof(buf)-len, " %-6s", line->cl_file->cf_user);
     if ( bit_test(details, FIELD_PID) )
-	len += snprintf(buf+len, sizeof(buf)-len, " %-7d", pid);
+	len += snprintf(buf+len, sizeof(buf)-len, " %-7d", (int)pid);
     if ( bit_test(details, FIELD_INDEX) )
 	len += snprintf(buf+len, sizeof(buf)-len, " %-5d", index);
     if ( bit_test(details, FIELD_RQ) )
@@ -763,7 +765,7 @@ check_socket(int num)
     /* check for new connection, command, connection closed */
 {
     int fd = -1, avoid_fd = -1;
-    unsigned int addr_len = sizeof(struct sockaddr_un);
+    socklen_t addr_len = sizeof(struct sockaddr_un);
     struct sockaddr_un client_addr;
     long int buf_int[SOCKET_MSG_LEN];
     int read_len = 0;
