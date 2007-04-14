@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.78 2007-01-23 22:48:15 thib Exp $ */
+ /* $Id: fileconf.c,v 1.79 2007-04-14 17:01:56 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -139,7 +139,7 @@ get_line(char *str, size_t size, FILE *file)
     }
 
     /* line is too long : goto next line and return ERR */
-    while ( ( (char)(c = getc(file)) != EOF ) && ( (char)c != '\n') )
+    while ( ( (c = getc(file)) != EOF ) && ( c != '\n') )
 	;
     line++;
     need_correction = 1;
@@ -200,7 +200,7 @@ read_file(char *filename)
 
 	if ( ret == ERR ) {
 	    fprintf(stderr, "%s:%d: Line is too long (more than %d): skipping line.\n",
-		    file_name, line, sizeof(buf));
+		    file_name, line, (int)sizeof(buf));
 	    continue;
 	}
 
