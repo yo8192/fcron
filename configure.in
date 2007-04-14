@@ -55,6 +55,14 @@ AC_HEADER_TIME
 AC_STRUCT_TM
 AC_TYPE_UID_T
 
+dnl Define sizeof constants
+AC_CHECK_SIZEOF(pid_t)
+AC_CHECK_SIZEOF(time_t)
+AC_CHECK_SIZEOF(short int)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long int)
+AC_CHECK_SIZEOF(long long int)
+
 dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
@@ -475,7 +483,8 @@ AC_ARG_WITH(rootname,
 
 if test $fcron_enable_checks = 'yes'; then
 
-  if ! rootuid=`$srcdir/script/has_usrgrp.pl -user $rootname -printuid`; then
+   rootuid=`$srcdir/script/has_usrgrp.pl -user $rootname -printuid`
+   if test "x$rootuid" = "x"; then
     AC_MSG_ERROR([
 Invalid root's username or cannot determine root's username: try option --with-rootname=USERNAME])
   fi
@@ -516,7 +525,8 @@ Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME])
     fi
   else
     # rootgroup defined: check it
-    if ! rootgid=`$srcdir/script/has_usrgrp.pl -group $rootgroup -printgid`; then
+    rootgid=`$srcdir/script/has_usrgrp.pl -group $rootgroup -printgid`
+    if test "x$rootgid" = "x"; then
 	AC_MSG_ERROR([
 Cannot determine root's groupname: try option --with-rootgroup=GROUPNAME])
     fi
@@ -850,7 +860,7 @@ AC_ARG_WITH(db2man,
     AC_MSG_ERROR(Must be set to PATH or "no".)
     ;;
   *)
-    if ! test -x "$withval"; then
+    if test ! -x "$withval"; then
       AC_MSG_ERROR($withval is not an exe file.)
     fi
     DB2MAN="$withval"
@@ -879,7 +889,7 @@ AC_ARG_WITH(db2man-spec,
     AC_MSG_ERROR(Must be set to PATH or "no".)
     ;;
   *)
-    if ! test -f "$withval"; then
+    if test ! -f "$withval"; then
       AC_MSG_ERROR($withval is not a file.)
     fi
     DB2MAN_SPEC="$withval"
@@ -921,7 +931,7 @@ AC_ARG_WITH(dsssl-dir,
     AC_MSG_ERROR(Must be set to DIR or "no".)
     ;;
   *)
-    if ! test -f "$withval/html/docbook.dsl"; then
+    if test ! -f "$withval/html/docbook.dsl"; then
       AC_MSG_ERROR($withval/html/docbook.dsl does not exist.)
     fi
     DSSSL_DIR="$withval"
@@ -929,7 +939,7 @@ AC_ARG_WITH(dsssl-dir,
     ;;
   esac ],
   AC_MSG_RESULT(default)
-  if ! test -f "$DSSSL_DIR/html/docbook.dsl"; then
+  if test ! -f "$DSSSL_DIR/html/docbook.dsl"; then
     AC_MSG_WARN([
 
 $DSSSL_DIR/html/docbook.dsl does not exist. You will probably not be able to generate the documentation from the DocBook source files.])
