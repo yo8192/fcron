@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.c,v 1.73 2007-04-14 18:04:13 thib Exp $ */
+ /* $Id: fcrontab.c,v 1.74 2007-06-03 17:49:01 thib Exp $ */
 
 /* 
  * The goal of this program is simple : giving a user interface to fcron
@@ -46,7 +46,7 @@
 #include "temp_file.h"
 #include "read_string.h"
 
-char rcs_info[] = "$Id: fcrontab.c,v 1.73 2007-04-14 18:04:13 thib Exp $";
+char rcs_info[] = "$Id: fcrontab.c,v 1.74 2007-06-03 17:49:01 thib Exp $";
 
 void info(void);
 void usage(void);
@@ -947,12 +947,15 @@ parseopt(int argc, char *argv[])
 	}
 	else
 #endif /* def SYSFCRONTAB */ 
-	    if ( (pass = getpwnam(user)) ) {
-		asuid = pass->pw_uid;
-		asgid = pass->pw_gid;
+	    {
+		errno = 0;
+		if ( (pass = getpwnam(user)) ) {
+		    asuid = pass->pw_uid;
+		    asgid = pass->pw_gid;
+		}
+		else
+		    die_e("user \"%s\" is not in passwd file. Aborting.", user);
 	    }
-	    else
-		die_e("user \"%s\" is not in passwd file. Aborting.", user);
     }
 
     if ( 
@@ -995,6 +998,7 @@ main(int argc, char **argv)
     
     uid = getuid();
 
+    errno = 0;
     if ( ! (pass = getpwnam(USERNAME)) )
 	die_e("user \"%s\" is not in passwd file. Aborting.", USERNAME);
     fcrontab_uid = pass->pw_uid;
