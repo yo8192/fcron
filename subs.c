@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.27 2007-04-14 18:04:23 thib Exp $ */
+ /* $Id: subs.c,v 1.28 2007-06-03 17:52:53 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -52,7 +52,7 @@ get_user_uid_safe(char *username)
 
     errno = 0;
     pass = getpwnam(username);
-    if ( errno != 0 || pass == NULL ) {
+    if ( pass == NULL ) {
 	die_e("Unable to get the uid of user %s (is user in passwd file?)",
 	      username);
     }

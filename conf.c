@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.72 2007-04-14 18:04:16 thib Exp $ */
+ /* $Id: conf.c,v 1.73 2007-06-03 17:52:34 thib Exp $ */
 
 #include "fcron.h"
 
@@ -142,6 +142,7 @@ synchronize_dir(const char *dir_name)
     
     /* then add normal files, if any, to database */
     for (list_cur = file_list; list_cur; list_cur = list_cur->next ) {
+	errno = 0;
 	if ( getpwnam(list_cur->str) 
 #ifdef SYSFCRONTAB
 	     || strcmp(list_cur->str, SYSFCRONTAB) == 0
@@ -151,12 +152,13 @@ synchronize_dir(const char *dir_name)
 	    synchronize_file(list_cur->str);
 	}
 	else
-	    error("ignoring file \"%s\" : not in passwd file.", list_cur->str);
+	    error_e("ignoring file \"%s\" : not in passwd file.", list_cur->str);
     }
 
     /* finally add new files */
     for (list_cur = new_list; list_cur; list_cur = list_cur->next ) {
 	 /* len("new.") = 4 : */
+	errno = 0;
 	if ( getpwnam(list_cur->str + 4)
 #ifdef SYSFCRONTAB
 	     || strcmp(list_cur->str + 4, SYSFCRONTAB) == 0
@@ -166,7 +168,7 @@ synchronize_dir(const char *dir_name)
 	    synchronize_file(list_cur->str);  
 	}
 	else
-	    error("ignoring file %s : not in passwd file.", 
+	    error_e("ignoring file %s : not in passwd file.", 
 		 (list_cur->str + 4));
     }
 
@@ -505,9 +507,11 @@ read_file(const char *file_name, cf_t *cf)
      * the user cron job.  It performs an entrypoint
      * permission check for this purpose.
      */
+#ifdef SYSFCRONTAB
     if(!strcmp(cf->cf_user, SYSFCRONTAB))
 	user_name = "system_u";
     else
+#endif /* def SYSFCRONTAB */
 	user_name = cf->cf_user;
     if(flask_enabled)
     {
