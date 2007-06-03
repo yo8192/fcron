@@ -1031,12 +1031,13 @@ fi
 
 echo "prefix:                             $prefix"
 echo "exec_prefix:                        $exec_prefix"
+echo "datarootdir:                        $datarootdir"
 echo "bin dir:                            $bindir"
 echo "sbin dir:                           $sbindir"
 echo "spool dir:                          $sp"
 echo "etc dir:                            $sysconfdir"
 echo "doc dir:                            $docdir"
-echo "man dir:                            $mandir"
+echo "man dir:                            $mandir "
 
 
 echo
