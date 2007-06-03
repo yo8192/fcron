@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.49 2007-04-14 18:04:15 thib Exp $ */
+ /* $Id: global.h,v 1.50 2007-06-03 17:51:50 thib Exp $ */
 
 
 /* 
@@ -162,7 +162,6 @@
             while (*__xx__)      \
               *__xx__++ = '\0';  \
         } while (0)
-
 
 #define debug if(debug_opt) Debug
 

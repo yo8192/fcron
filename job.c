@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.70 2007-04-14 18:04:08 thib Exp $ */
+ /* $Id: job.c,v 1.71 2007-06-03 17:48:23 thib Exp $ */
 
 #include "fcron.h"
 
@@ -104,8 +104,9 @@ change_user(struct cl_t *cl)
 
     /* Obtain password entry and change privileges */
 
+    errno = 0;
     if ((pas = getpwnam(cl->cl_runas)) == NULL) 
-        die("failed to get passwd fields for user \"%s\"", cl->cl_runas);
+        die_e("failed to get passwd fields for user \"%s\"", cl->cl_runas);
     
 #ifdef HAVE_SETENV
     setenv("USER", pas->pw_name, 1);

@@ -8,10 +8,18 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.53 2007-04-14 18:04:35 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.54 2007-06-03 17:54:10 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
+
+      <itemizedlist>
+	 <title>From version 3.0.3-rc1 to 3.0.3</title>
+	 <listitem>
+	    <para>The configure script now check that the make command is GNU make (which is required to build fcron).</para>
+	    <para>Bug fix: better handling of getpwnam() errors (we cannot rely on errno to spot an error). This was causing problems for AIX for instance.</para>
+	 </listitem>
+      </itemizedlist>
 
       <itemizedlist>
 	 <title>From version 3.0.2 to 3.0.3-rc1</title>
