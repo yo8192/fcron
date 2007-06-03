@@ -9,7 +9,7 @@ AC_INIT(allow.c)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.57)
 
-vers="3.0.3-rc1"
+vers="3.0.3"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -26,6 +26,18 @@ dnl ---------------------------------------------------------------------
 
 dnl Checks for programs.
 AC_PROG_CC
+AC_PATH_PROGS(MAKE, $MAKE gmake make, $PATH:/local/bin:/usr/local/bin:/opt/TWWfsw/bin:/opt/sfw/bin)
+AC_MSG_CHECKING(if make is actually GNU Make)
+if test x"$MAKE" = x; then
+  AC_MSG_ERROR(Cannot locate a make utility, 1)
+elif $MAKE --version 2>/dev/null |grep "^GNU Make" >/dev/null; then
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+  AC_MSG_ERROR($MAKE is not GNU Make.
+Please install GNU Make or adjust your PATH so that GNU make can be found
+before any others., 1)
+fi
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
@@ -785,7 +797,7 @@ AC_ARG_WITH(pam,
     AC_MSG_RESULT(no)
   fi    
 )
-if test "$usepam" != "0" && echo "$LIBS" | grep -e "-lpam" > /dev/null ; then
+if test "$usepam" != "0" && echo "$LIBS" | grep -- "-lpam" > /dev/null ; then
   usepam=1
 else
   usepam=0
@@ -1018,6 +1030,9 @@ else
 fi
 
 echo "prefix:                             $prefix"
+echo "exec_prefix:                        $exec_prefix"
+echo "bin dir:                            $bindir"
+echo "sbin dir:                           $sbindir"
 echo "spool dir:                          $sp"
 echo "etc dir:                            $sysconfdir"
 echo "doc dir:                            $docdir"
@@ -1025,6 +1040,6 @@ echo "man dir:                            $mandir"
 
 
 echo
-echo "You can now run 'make' to compile"
-echo "and then (as root) 'make install' to install fcron."
+echo "You can now run '$MAKE' to compile"
+echo "and then (as root) '$MAKE install' to install fcron."
 echo
