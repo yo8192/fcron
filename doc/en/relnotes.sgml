@@ -8,12 +8,13 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: relnotes.sgml,v 1.9 2007-04-14 18:04:31 thib Exp $ -->
+<!-- $Id: relnotes.sgml,v 1.10 2007-06-03 21:41:38 thib Exp $ -->
 
 <sect1 id="relnotes">
     <title>Release notes: &fcron; &version;</title>
     <itemizedlist>
 	 <listitem>
+	    <para>The building process has changed quite significantly from version 3.0.2 to version 3.0.3 to make it more standard and packager-friendly. As a result, fcron won't be installed in the same paths as the previous versions by default: please pay attention to the installation paths displayed at the end of the ./configure output and use ./configure's options to change them if necessary.</para>
 	    <para>PAM support has not been tested thoroughly. Help from a PAM
 	       expert would be appreciated (to audit the PAM code in fcron, and
 	       test it). You can disable PAM use in configure, using
