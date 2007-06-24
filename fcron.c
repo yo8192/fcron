@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.80 2007-04-14 18:04:14 thib Exp $ */
+ /* $Id: fcron.c,v 1.81 2007-06-24 22:01:22 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.80 2007-04-14 18:04:14 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.81 2007-06-24 22:01:22 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -637,7 +637,26 @@ main(int argc, char **argv)
 
     /* initialize random number generator :
      * WARNING : easy to guess !!! */
-    srand(time(NULL));
+    /* we use the hostname and tv_usec in order to get different seeds
+     * on two different machines starting fcron at the same moment */
+    {
+	char hostname[50];
+	int i;
+	unsigned int seed;
+#ifdef HAVE_GETTIMEOFDAY
+	struct timeval tv;     /* we use usec field to get more precision */
+	gettimeofday(&tv, NULL);
+	seed ^= ((unsigned int) tv.tv_usec) ^ ((unsigned int) tv.tv_sec);
+#else
+	seed ^= (unsigned int) time(NULL);
+#endif
+	gethostname(hostname, sizeof(hostname));
+
+	for ( i = 0; i < sizeof(hostname) - sizeof(seed); i += sizeof(seed) )
+	    seed ^= (unsigned int) *(hostname+i);
+
+	srand(seed);
+    }
 
     main_loop();
 
