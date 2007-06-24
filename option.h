@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.25 2007-04-14 18:04:26 thib Exp $ */
+ /* $Id: option.h,v 1.26 2007-06-24 22:03:16 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -80,7 +80,7 @@
   16     should mons field be ignored in goto_non_matching() ?
   17     should dow field be ignored in goto_non_matching() ?
   18     First freq is the freq (*ly) or the first field to take into account ?
-  19     Freq (ie daily) is from middle to middle of interval (ie nightly) ?
+  19     Freq (ie daily) is from middle to middle of period (ie nightly) ?
   20     Should we remove a %-job from lavg queue if the interval is exceeded ?
   21     Should user be mailed if a %-job has not run during a period ?
   22     Should fcron log everything about this job or just errors ?
@@ -358,8 +358,8 @@
 
 
 /*
-  bit 19 : set to 1 : run once from mid-interval to mid-interval (i.e. nightly)
-           set to 0 : run once from begin to the end of interval (i.e. daily)
+  bit 19 : set to 1 : run once from mid-period to mid-period (i.e. nightly)
+           set to 0 : run once from begin to the end of period (i.e. daily)
 */
 #define	is_freq_mid(opt) \
 	(_bit_test(opt, 19))

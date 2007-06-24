@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: global.h,v 1.50 2007-06-03 17:51:50 thib Exp $ */
+ /* $Id: global.h,v 1.51 2007-06-24 22:01:49 thib Exp $ */
 
 
 /* 
@@ -203,7 +203,7 @@ typedef struct cl_t {
     time_t         cl_nextexe;    /* time and date of the next execution     */
     long int       cl_timefreq;   /* Run every n seconds                     */
     unsigned short cl_remain;     /* remaining until next execution          */
-    unsigned short cl_runfreq;    /* Run once every n matches                */
+    unsigned short cl_runfreq;    /* Run once every n matches(=1 for %-lines)*/
     unsigned char  cl_option[OPTION_SIZE]; /* line's option (see option.h)   */
     unsigned char  cl_lavg[LAVG_SIZE];/*load averages needed (1,5,15 mins)   */
     unsigned char  cl_numexe;     /* entries in queues & running processes   */

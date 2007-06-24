@@ -8,10 +8,23 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.54 2007-06-03 17:54:10 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.55 2007-06-24 22:03:19 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
+
+      <itemizedlist>
+	 <title>From version 3.0.3 to 3.0.4</title>
+	 <listitem>
+	    <para>Initialize the random number generator with some values specific to the machine so as two fcron started exactly at the same time on two different machines run their random jobs at different time. This is useful for clusters for instance.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Bug fix: in certain conditions, jobs could be executed outside their interval of execution when using option random on %-lines.</para>
+	 </listitem>
+	 <listitem>
+	    <para></para>
+	 </listitem>
+      </itemizedlist>
 
       <itemizedlist>
 	 <title>From version 3.0.3-rc1 to 3.0.3</title>
