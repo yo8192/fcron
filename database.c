@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.79 2007-04-14 18:04:18 thib Exp $ */
+ /* $Id: database.c,v 1.80 2007-06-24 22:01:54 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,8 +33,10 @@ int is_leap_year(int year);
 int get_nb_mdays(int year, int mon);
 void set_wday(struct tm *date);
 time_t mktime_no_dst(struct tm *t);
-void goto_non_matching(cl_t *line, struct tm *tm, char option);
-#define END_OF_INTERVAL 1    /* goto_non_matching() : option */
+void goto_beginning_next_period_periodical(cl_t *line, struct tm *ftime);
+void move_time_to(int where, cl_t *line, struct tm *ftime);
+#define BEGIN_NEXT_PERIOD 11  /* move_time_to()'s where possible value */
+#define END_OF_INTERVAL 12    /* move_time_to()'s where possible value */
 void run_serial_job(void);
 void run_lavg_job(int i);
 void run_queue_job(cl_t *line);
@@ -133,13 +135,13 @@ time_t
 mktime_no_dst(struct tm *t)
 /* same as mktime(), but without daylight saving time (dst) change adjustment
  * (ie. the returned time_t does not depend on the tm_isdst field) */
-/* Remark : you may think than instead of creating a new function,
+/* Remark : you may think that instead of creating a new function,
  *          it would be easier to set the tm_isdst field to -1.
  *          Unfortunately, the behaviour of mktime() with 
  *          tm_isdst set to -1 depends on the unix you run.
  *          In other word, it wouldn't be portable. */
 /*
- * WARNING : the content of t has to be valide (for instance, 0<=t->tm_hour<=23,
+ * WARNING : the content of t has to be valid (for instance, 0<=t->tm_hour<=23,
  *           etc)
  */
 {
@@ -483,7 +485,7 @@ add_lavg_job(cl_t *line, int info_fd)
 	   ( localtime() is used in the debug() function) */
 	memcpy(&ftime, ft, sizeof(struct tm));
 
-	goto_non_matching(line, &ftime, END_OF_INTERVAL);
+	move_time_to(END_OF_INTERVAL, line, &ftime);
 
 	end_of_cur_int = mktime_no_dst(&ftime) + (line->cl_file->cf_tzdiff * 3600);
 
@@ -670,247 +672,326 @@ set_wday(struct tm *date)
 } 
 
 
-
-
 void
-goto_non_matching(cl_t *line, struct tm *ftime, char option)
-    /* search the first the nearest time and date that does
-     * not match the line */
+goto_beginning_next_period_periodical(cl_t *line, struct tm *ftime)
+    /* From ftime, search the first/nearest time and date of the line's next
+     * period of execution.
+     *
+     * Line must be periodical (i.e. is_freq_periodically(line->cl_option) == TRUE)
+     *
+     * ftime will contain this time and date when this function returns.
+     *
+     * Vocabulary:
+     * interval of execution= a continuous interval of time during which
+     *     the line can be executed.
+     * period of execution= a continuous interval of time during which
+     *     the line is to be executed once and only once. */
 {
-    struct tm next_period;
 
-    if ( is_freq_periodically(line->cl_option) ) {
-	int max = get_nb_mdays(ftime->tm_year, ftime->tm_mon);
-	struct tm ftime_initial;
+    /* sanity check */
+    if ( ! is_freq_periodically(line->cl_option) )
+	die("goto_beginning_next_period() called with a non periodical line");
 
-	if (option == END_OF_INTERVAL)
-	    memcpy(&ftime_initial, ftime, sizeof(ftime_initial));
+    
+    /* number of days in ftime's month */
+    int max = get_nb_mdays(ftime->tm_year, ftime->tm_mon);
 
-	if (is_freq_mid(line->cl_option)) {
-	    if (is_freq_mins(line->cl_option))
-		/* nothing to do : return */
-		return;
-	    else if (is_freq_hrs(line->cl_option)) {
-		if (ftime->tm_min >= 30)
-		    ftime->tm_hour++;
-		ftime->tm_min = 30;
+    /* STEP 1: find the beginning of the next period without ensuring
+     * there is no overflow (min>=60, hour>=24, etc) */
+
+    if (is_freq_mid(line->cl_option)) {
+
+	if (is_freq_mins(line->cl_option))
+	    /* nothing to do : return */
+	    return;
+	else if (is_freq_hrs(line->cl_option)) {
+	    if (ftime->tm_min >= 30)
+		ftime->tm_hour++;
+	    ftime->tm_min = 30;
+	} else {
+	    ftime->tm_min = 0;
+	    if (is_freq_days(line->cl_option)) {
+		if (ftime->tm_hour >= 12)
+		    ftime->tm_mday++;
+		ftime->tm_hour = 12;
 	    } else {
-		ftime->tm_min = 0;
-		if (is_freq_days(line->cl_option)) {
-		    if (ftime->tm_hour >= 12)
-			ftime->tm_mday++;
-		    ftime->tm_hour = 12;
+		ftime->tm_hour = 0;
+		if (is_freq_dow(line->cl_option)) {
+		    int to_add = (ftime->tm_wday >= 4) ? 11-ftime->tm_wday:
+			4 - ftime->tm_wday;
+		    if (ftime->tm_mday + to_add > max) {
+			ftime->tm_mon++;
+			ftime->tm_mday = ftime->tm_mday + to_add - max;
+		    } else
+			ftime->tm_mday += to_add;
 		} else {
-		    ftime->tm_hour = 0;
-		    if (is_freq_dow(line->cl_option)) {
-			int to_add = (ftime->tm_wday >= 4) ? 11-ftime->tm_wday:
-			    4 - ftime->tm_wday;
-			if (ftime->tm_mday + to_add > max) {
+		    if (is_freq_mons(line->cl_option)) {
+			if (ftime->tm_mday >= 15)
 			    ftime->tm_mon++;
+			ftime->tm_mday = 15;
+		    }
+		    else {
+			/* weird : we have the bit freq_mid set, but
+			 * none of freq_{mins|hour|days|dow|mons} is set :
+			 * we do nothing but increase tm_min by 1
+			 * so as we don't return a time in the past */
+			ftime->tm_min++;
+			warn("Line %s doesn't seem correct: consider "
+			     "reinstalling the corresponding fcrontab"); 
+		    }
+		}
+	    }
+	}
+
+    } 
+
+    else { /* is_freq_mid(line->cl_option) */
+
+	if (is_freq_mins(line->cl_option))
+	    /* nothing to do */
+	    return;
+	else {
+	    ftime->tm_min = 0;
+	    if (is_freq_hrs(line->cl_option))
+		ftime->tm_hour++;
+	    else {
+		ftime->tm_hour = 0;
+		if (is_freq_days(line->cl_option))
+		    ftime->tm_mday++;
+		else {
+		    if (is_freq_dow(line->cl_option)) {
+			int to_add=(ftime->tm_wday==0)?1: 8-ftime->tm_wday;
+			if (ftime->tm_mday + to_add > max) {
 			    ftime->tm_mday = ftime->tm_mday + to_add - max;
+			    ftime->tm_mon++;
 			} else
 			    ftime->tm_mday += to_add;
 		    } else {
-			if (is_freq_mons(line->cl_option)) {
-			    if (ftime->tm_mday >= 15)
-				ftime->tm_mon++;
-			    ftime->tm_mday = 15;
-			}
-			else
-			    /* weird : we have the bit freq_mid set, but
-			     * none of freq_{mins|hour|days|dow|mons} is set :
-			     * we does nothing */
-			    ;
+			ftime->tm_mday = 1;
+			if (is_freq_mons(line->cl_option))
+			    ftime->tm_mon++;
 		    }
 		}
 	    }
 	}
-	else { /* is_freq_mid(line->cl_option) */
-	    if (is_freq_mins(line->cl_option))
-		/* nothing to do */
-		return;
-	    else {
-		ftime->tm_min = 0;
-		if (is_freq_hrs(line->cl_option))
-		    ftime->tm_hour++;
-		else {
-		    ftime->tm_hour = 0;
-		    if (is_freq_days(line->cl_option))
-			ftime->tm_mday++;
-		    else {
-			if (is_freq_dow(line->cl_option)) {
-			    int to_add=(ftime->tm_wday==0)?1: 8-ftime->tm_wday;
-			    if (ftime->tm_mday + to_add > max) {
-				ftime->tm_mday = ftime->tm_mday + to_add - max;
-				ftime->tm_mon++;
-			    } else
-				ftime->tm_mday += to_add;
-			} else {
-			    ftime->tm_mday = 1;
-			    if (is_freq_mons(line->cl_option))
-				ftime->tm_mon++;
-			}
-		    }
-		}
-	    }
-	}
-	/* a value may exceed the max value of a field */
-	if (ftime->tm_min >= 60) {
-	    ftime->tm_min = 0;
-	    ftime->tm_hour++;
-	}
-	if (ftime->tm_hour >= 24) {
-	    ftime->tm_hour = 0;
-	    ftime->tm_mday++;
-	}
-	/* the month field may have changed */
-	max = get_nb_mdays((ftime->tm_year + 1900), ftime->tm_mon);
-	if (ftime->tm_mday > max) {
-	    ftime->tm_mday = 1;
-	    ftime->tm_mon++;
-	}
-	if (ftime->tm_mon >= 12) {
-	    ftime->tm_mon = 0;
-	    ftime->tm_year++;
-	}
 
-	if (option != END_OF_INTERVAL) {
-	    if (debug_opt)
-		set_wday(ftime);
-	    debug("   %s beginning of next period %d/%d/%d wday:%d %02d:%02d "
-		  "(tzdiff=%d, timezone=%s)", line->cl_shell, (ftime->tm_mon + 1),
-		  ftime->tm_mday, (ftime->tm_year + 1900), ftime->tm_wday,
-		  ftime->tm_hour, ftime->tm_min, line->cl_file->cf_tzdiff,
-		  (line->cl_tz != NULL)? line->cl_tz : "localtime");
+    } /* is_freq_mid(line->cl_option) */
 
-	    return;
-	}
-	else {
-	    memcpy(&next_period, ftime, sizeof(next_period));
-	    /* set ftime as we get it */
-	    memcpy(ftime, &ftime_initial, sizeof(ftime_initial));
-	}
+    /* we set tm_sec to 0 here and not before to ensure we will never return
+     * a time in the past (case is_freq_mins(line->cl_option)
+     * where we do nothing) */
+    ftime->tm_sec = 0;
+
+    /* STEP 2: fix the overflows.
+     * (a value may exceed the max value of a field: fix it if necessary) */
+
+    if (ftime->tm_min >= 60) {
+	ftime->tm_min = 0;
+	ftime->tm_hour++;
+    }
+    if (ftime->tm_hour >= 24) {
+	ftime->tm_hour = 0;
+	ftime->tm_mday++;
+    }
+    /* the month field may have changed */
+    max = get_nb_mdays((ftime->tm_year + 1900), ftime->tm_mon);
+    if (ftime->tm_mday > max) {
+	ftime->tm_mday = 1;
+	ftime->tm_mon++;
+    }
+    if (ftime->tm_mon >= 12) {
+	ftime->tm_mon = 0;
+	ftime->tm_year++;
     }
 
-    /* if the line is a periodical one without option END_OF_INTERVAL,
-     * execution doesn't come here */
-
-    {
-	/* this line should be run once per interval of the selected field */
-
-	/* to prevent from invinite loop with unvalid lines : */
-	short int year_limit = MAXYEAR_SCHEDULE_TIME;
-	/* we have to ignore the fields containing single numbers */
-	char ignore_mins = (is_freq_mins(line->cl_option)) ? 1:0;
-	char ignore_hrs = (is_freq_hrs(line->cl_option)) ? 1:0;
-	char ignore_days = (is_freq_days(line->cl_option)) ? 1:0;
-	char ignore_mons = (is_freq_mons(line->cl_option)) ? 1:0;
-	char ignore_dow = (is_freq_dow(line->cl_option)) ? 1:0;
+    if (debug_opt)
+	set_wday(ftime);
+    debug("   %s beginning of next period %d/%d/%d wday:%d %02d:%02d "
+	  "(tzdiff=%d, timezone=%s)", line->cl_shell, (ftime->tm_mon + 1),
+	  ftime->tm_mday, (ftime->tm_year + 1900), ftime->tm_wday,
+	  ftime->tm_hour, ftime->tm_min, line->cl_file->cf_tzdiff,
+	  (line->cl_tz != NULL)? line->cl_tz : "localtime");
     
-	if (option == END_OF_INTERVAL)
-	    /* we want to go to the end of the current interval */
-	    ignore_mins=ignore_hrs=ignore_days=ignore_mons=ignore_dow = 0;
+}
 
-	/* */
-	debug("   ignore: %d %d %d %d %d", ignore_mins, ignore_hrs,
-	      ignore_days, ignore_mons, ignore_dow);
-	/* */
 
-	/* check if we are in an interval of execution */    
-	while ((ignore_mins == 1 || bit_test(line->cl_mins, ftime->tm_min)) &&
-	       (ignore_hrs == 1 || bit_test(line->cl_hrs, ftime->tm_hour)) &&
-	       (
-		   (is_dayand(line->cl_option) &&
-		    (ignore_days==1||bit_test(line->cl_days,ftime->tm_mday)) &&
-		    (ignore_dow==1 || bit_test(line->cl_dow, ftime->tm_wday)))
-		   ||
-		   (is_dayor(line->cl_option) &&
-		    (ignore_days==1||bit_test(line->cl_days, ftime->tm_mday) ||
-		     ignore_dow == 1 || bit_test(line->cl_dow,ftime->tm_wday)))
-		   ) &&
-	       (ignore_mons == 1 || bit_test(line->cl_mons, ftime->tm_mon))
-	    ) {
+void
+move_time_to(int where, cl_t *line, struct tm *ftime)
+    /* IF WHERE == BEGIN_NEXT_PERIOD: from ftime, search the first/nearest time and date
+     * of the line's next period of execution.
+     * IF WHERE == END_OF_INTERVAL: search the last time and date
+     * of the line's interval of execution containing ftime.
+     *
+     * ftime will contain this time and date when move_time_to returns.
+     *
+     * Vocabulary:
+     * interval of execution= a continuous interval of time during which
+     *     the line can be executed.
+     * period of execution= a continuous interval of time during which
+     *     the line is to be executed once and only once. */
+{
+    struct tm tm_next_period;
+    time_t timet_ftime;
+    /* by default we set timet_next_period to now + 10 years, which will
+     * always be later than the end of the interval of execution
+     * so as to make the test timet_ftime < timet_next_period always true */
+    time_t timet_next_period = now + 10 * 365 * 24 * 3600; 
+
+    /* to prevent from infinite loop with unvalid lines : */
+    short int year_limit = MAXYEAR_SCHEDULE_TIME;
+    /* Depending on the situation we may need to ignore some fields 
+     * while we walk through time */
+    char ignore_mins, ignore_hrs, ignore_days, ignore_mons, ignore_dow;
+    
+    /* sanity checks */
+    if ( where != BEGIN_NEXT_PERIOD && where != END_OF_INTERVAL )
+	die("move_time_to() called with invalid argument 'where': %d", (int)where);
+
+
+    if ( where == BEGIN_NEXT_PERIOD && is_freq_periodically(line->cl_option) ) {
+	goto_beginning_next_period_periodical(line, ftime);
+	return;
+    }
+
+    /* In all other cases, we will have to walk through time */
+
+    if ( is_freq_periodically(line->cl_option) ) {
+
+	/* In this case we want to make sure we won't go after the end 
+	 * of the period of execution, so we need to set next_period */
+
+	memcpy(&tm_next_period, ftime, sizeof(tm_next_period));
+	goto_beginning_next_period_periodical(line, &tm_next_period);
+	timet_next_period = mktime_no_dst(&tm_next_period);
+
+    }
+
+    timet_ftime = mktime_no_dst(ftime);
+    
+    if (where == BEGIN_NEXT_PERIOD) {
+	/* we have to ignore the fields containing single numbers */
+	ignore_mins = (is_freq_mins(line->cl_option)) ? 1:0;
+	ignore_hrs = (is_freq_hrs(line->cl_option)) ? 1:0;
+	ignore_days = (is_freq_days(line->cl_option)) ? 1:0;
+	ignore_mons = (is_freq_mons(line->cl_option)) ? 1:0;
+	ignore_dow = (is_freq_dow(line->cl_option)) ? 1:0;
+    }
+    else {
+	/* we want to go to the end of the current interval: 
+	 * we don't ignore anything */
+	ignore_mins = ignore_hrs = ignore_days = ignore_mons = ignore_dow = 0;
+    }
+
+    /* */
+    debug("   ignore: %d %d %d %d %d", ignore_mins, ignore_hrs,
+	  ignore_days, ignore_mons, ignore_dow);
+    /* */
+
+    /* while we are in an interval of execution and not in the next period */
+    while ( (ignore_mins == 1 || bit_test(line->cl_mins, ftime->tm_min)) &&
+	    (ignore_hrs == 1 || bit_test(line->cl_hrs, ftime->tm_hour)) &&
+	    (
+	       (is_dayand(line->cl_option) &&
+		(ignore_days==1||bit_test(line->cl_days,ftime->tm_mday)) &&
+		(ignore_dow==1 || bit_test(line->cl_dow, ftime->tm_wday)))
+	       ||
+	       (is_dayor(line->cl_option) &&
+		(ignore_days==1||bit_test(line->cl_days, ftime->tm_mday) ||
+		 ignore_dow == 1 || bit_test(line->cl_dow,ftime->tm_wday)))
+	       ) &&
+	    (ignore_mons == 1 || bit_test(line->cl_mons, ftime->tm_mon))
+	    &&
+	    (timet_ftime < timet_next_period)
+	) {
 	    
-	    if (ignore_mins) ftime->tm_min = 60; 
-	    else {
-		do ftime->tm_min++ ;
-		while ( bit_test(line->cl_mins, ftime->tm_min) 
-			&& (ftime->tm_min < 60) );
-	    }
-	    if (ftime->tm_min >= 60) {
-		ftime->tm_min = 0;
-		if (ignore_hrs && ignore_mins) ftime->tm_hour = 24;
-		else ftime->tm_hour++;
-		if (ftime->tm_hour >= 24) {
-		    ftime->tm_hour = 0;
-		    if (ignore_days && ignore_hrs && ignore_mins && ignore_dow)
-			ftime->tm_mday = 32; /* go to next month */
-		    else ftime->tm_mday++;
-		    if (ftime->tm_mday > 
-			get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
-			ftime->tm_mday = 1;
-			if(ignore_mons && ignore_days && ignore_dow
-			   && ignore_hrs && ignore_mins)
-			    ftime->tm_mon = 12;
-			else ftime->tm_mon++;
-			if (ftime->tm_mon >= 12) {
-			    ftime->tm_mon = 0;
-			    ftime->tm_year++;
-			    if (--year_limit <= 0) {
-				error("Can't found a non matching date for %s "
-				      "in the next %d years. Maybe this line "
-				      "is corrupted : consider reinstalling "
-				      "the fcrontab", line->cl_shell, 
-				      MAXYEAR_SCHEDULE_TIME);
-				return;
-			    }
-			}
-		    }
-		    set_wday(ftime);
-		}
-	    }
-	    
-	    if (option == END_OF_INTERVAL && 
-		is_freq_periodically(line->cl_option) &&
-		ftime->tm_year <= next_period.tm_year &&
-		ftime->tm_mon <= next_period.tm_mon &&
-		ftime->tm_mday <= next_period.tm_mday &&
-		ftime->tm_hour <= next_period.tm_hour &&
-		ftime->tm_min <= next_period.tm_min) {
-		/* we don't want to go in the next period ... */
-		memcpy(ftime, &next_period, sizeof(next_period));
-		break;
-	    }
+	ftime->tm_sec = 0;
+	if (ignore_mins) ftime->tm_min = 60; 
+	else {
+	    do ftime->tm_min++ ;
+	    while ( bit_test(line->cl_mins, ftime->tm_min) 
+		    && (ftime->tm_min < 60) );
 	}
-
-	if (option == END_OF_INTERVAL) {
-	    /* we want the end of the current interval, not the beginning
-	     * of the first non-matching interval */
-	    if (--ftime->tm_min < 0) {
-		ftime->tm_min = 59;
-		if (--ftime->tm_hour < 0) {
-		    ftime->tm_hour = 23;
-		    if (--ftime->tm_mday < 1) {
-			if (--ftime->tm_mon < 0) {
-			    ftime->tm_mon = 11;
-			    ftime->tm_year--;
+	if (ftime->tm_min >= 60) {
+	    ftime->tm_min = 0;
+	    if (ignore_hrs && ignore_mins) ftime->tm_hour = 24;
+	    else ftime->tm_hour++;
+	    if (ftime->tm_hour >= 24) {
+		ftime->tm_hour = 0;
+		if (ignore_days && ignore_hrs && ignore_mins && ignore_dow)
+		    ftime->tm_mday = 32; /* go to next month */
+		else ftime->tm_mday++;
+		if (ftime->tm_mday > 
+		    get_nb_mdays((ftime->tm_year+1900),ftime->tm_mon)) {
+		    ftime->tm_mday = 1;
+		    if(ignore_mons && ignore_days && ignore_dow
+		       && ignore_hrs && ignore_mins)
+			ftime->tm_mon = 12;
+		    else ftime->tm_mon++;
+		    if (ftime->tm_mon >= 12) {
+			ftime->tm_mon = 0;
+			ftime->tm_year++;
+			if (--year_limit <= 0) {
+			    error("Can't found a non matching date for %s "
+				  "in the next %d years. Maybe this line "
+				  "is corrupted : consider reinstalling "
+				  "the fcrontab", line->cl_shell, 
+				  MAXYEAR_SCHEDULE_TIME);
+			    return;
 			}
-			ftime->tm_mday = get_nb_mdays( (ftime->tm_year + 1900),
-						       ftime->tm_mon);
 		    }
 		}
+		set_wday(ftime);
 	    }
 	}
 	
-	debug("   %s %s %d/%d/%d wday:%d %02d:%02d (tzdiff=%d, timezone=%s)",
-	      line->cl_shell,
-	      (option == STD) ? "first non matching" : "end of interval",
-	      (ftime->tm_mon + 1), ftime->tm_mday, (ftime->tm_year + 1900),
-	      ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
-	      line->cl_file->cf_tzdiff,
-	      (line->cl_tz != NULL)? line->cl_tz : "localtime");
-	return;
+	/* // */
+	{
+	    /* set temporarily debug_opt to false to avoid having too many
+	     * messages in the logs */
+	    char debug_opt_previous = debug_opt;
+	    debug_opt = 0;
+
+	    timet_ftime = mktime_no_dst(ftime);
+
+	    debug_opt = debug_opt_previous;
+	}
+	/* // */
+    
     }
+
+    if (timet_ftime > timet_next_period) {
+	/* the end of the interval if after the end of the period:
+	 * we don't want to go in the next period, so we return
+	 * the value of the end of the period. */
+	memcpy(ftime, &tm_next_period, sizeof(tm_next_period));
+    }
+
+    if (where == END_OF_INTERVAL) {
+	/* we want the end of the current interval, not the beginning
+	 * of the first non-matching interval : go back by one minute */
+	if (--ftime->tm_min < 0) {
+	    ftime->tm_min = 59;
+	    if (--ftime->tm_hour < 0) {
+		ftime->tm_hour = 23;
+		if (--ftime->tm_mday < 1) {
+		    if (--ftime->tm_mon < 0) {
+			ftime->tm_mon = 11;
+			ftime->tm_year--;
+		    }
+		    ftime->tm_mday = get_nb_mdays( (ftime->tm_year + 1900),
+						   ftime->tm_mon);
+		}
+	    }
+	}
+    }
+	
+    debug("   %s %s %d/%d/%d wday:%d %02d:%02d (tzdiff=%d, timezone=%s)",
+	  line->cl_shell,
+	  (where == END_OF_INTERVAL) ? "end of interval" : "end of period",
+	  (ftime->tm_mon + 1), ftime->tm_mday, (ftime->tm_year + 1900),
+	  ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
+	  line->cl_file->cf_tzdiff,
+	  (line->cl_tz != NULL)? line->cl_tz : "localtime");
 }
 
 
@@ -963,7 +1044,8 @@ set_next_exe(cl_t *line, char option, int info_fd)
 	}
 	    
 	if (line->cl_runfreq == 1 && option != NO_GOTO && option != NO_GOTO_LOG)
-	    goto_non_matching(line, &ftime, STD);
+	    /* %-line: go to next period */
+	    move_time_to(BEGIN_NEXT_PERIOD, line, &ftime);
 
       setMonth:
 	for (i = ftime.tm_mon; (bit_test(line->cl_mons, i)==0) && (i<12); i++);
@@ -1102,8 +1184,8 @@ set_next_exe(cl_t *line, char option, int info_fd)
 
 	if ( is_random(line->cl_option) ) {
 	    /* run the job at a random time during its interval of execution */
-	    struct tm intend;
-	    time_t intend_int;
+	    struct tm int_end;
+	    time_t int_end_timet;
 
 	    debug("   cmd: %s begin int exec %d/%d/%d wday:%d %02d:%02d "
 		  "(tzdiff=%d, timezone=%s)", line->cl_shell, (ftime.tm_mon + 1),
@@ -1111,12 +1193,12 @@ set_next_exe(cl_t *line, char option, int info_fd)
 		  ftime.tm_hour, ftime.tm_min, line->cl_file->cf_tzdiff,
 		  (line->cl_tz != NULL)? line->cl_tz : "localtime");
 
-	    memcpy(&intend, &ftime, sizeof(intend));
-	    goto_non_matching(line, &intend, END_OF_INTERVAL);
-	    intend_int = mktime_no_dst(&intend);
+	    memcpy(&int_end, &ftime, sizeof(int_end));
+	    move_time_to(END_OF_INTERVAL, line, &int_end);
+	    int_end_timet = mktime_no_dst(&int_end);
 
 	    /* set a random time to add to the first allowed time of execution */
-	    nextexe += ( (i= intend_int - nextexe) > 0) ? 
+	    nextexe += ( (i= int_end_timet - nextexe) > 0) ? 
 		(time_t)(((float)i * (float)rand())/(float)RAND_MAX) : 0;
 	}
 
@@ -1222,7 +1304,7 @@ set_next_exe_notrun(cl_t *line, char context)
     memcpy(&last_nextexe, ft, sizeof(last_nextexe));
     
     ftime.tm_sec = 0;
-    goto_non_matching(line, &ftime, STD);
+    move_time_to(BEGIN_NEXT_PERIOD, line, &ftime);
     next_period = mktime_no_dst(&ftime) + (line->cl_file->cf_tzdiff * 3600);
 
     set_next_exe(line, set_next_exe_opt, -1);
