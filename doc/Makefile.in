@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.28 2007-04-14 17:04:15 thib Exp $
+# $Id: Makefile.in,v 1.29 2007-10-14 15:07:46 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE: some of the following is also defined
@@ -107,9 +107,11 @@ install-staged: clean
 		fi ; \
 		for i in 1 3 5 8; do \
 			if test ! -d $$DIR/man$$i; then \
-	$(INSTALL) -m 755 -d $$DIR/man$$i ; \
+				$(INSTALL) -m 755 -d $$DIR/man$$i ; \
 			 fi ; \
-	$(INSTALL) -m 644 $(SRCDIR)/$$l/man/*.$$i $$DIR/man$$i ; \
+			for m in $(SRCDIR)/$$l/man/*.$$i; do \
+				$(INSTALL) -m 644 $$m $$DIR/man$$i ; \
+			done ; \
 		done ; \
 	done )
 
@@ -123,9 +125,11 @@ install-staged: clean
 		fi ; \
 		for i in txt HTML; do \
 			if test ! -d $$DIR/$$l/$$i; then \
-	$(INSTALL) -m 755 -d $$DIR/$$l/$$i ; \
+				$(INSTALL) -m 755 -d $$DIR/$$l/$$i ; \
 			 fi ; \
-	$(INSTALL) -m 644 $(SRCDIR)/$$l/$$i/* $$DIR/$$l/$$i/ ;\
+			for m in $(SRCDIR)/$$l/$$i/* ; do \
+				$(INSTALL) -m 644 $$m $$DIR/$$l/$$i/ ;\
+			done ; \
 		done ; \
 	done )
 
