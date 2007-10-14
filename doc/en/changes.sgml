@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.55 2007-06-24 22:03:19 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.56 2007-10-14 15:07:45 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -22,7 +22,13 @@ A copy of the license is included in gfdl.sgml.
 	    <para>Bug fix: in certain conditions, jobs could be executed outside their interval of execution when using option random on %-lines.</para>
 	 </listitem>
 	 <listitem>
-	    <para></para>
+	    <para>Fixed bug which prevented the pid of the job to be written to the (grand-)parent process. This was not a major issue but would prevent fcrondyn from working well with the concerned jobs. This bug was caused by a close() function applied twice on a file descriptor, which would trigger the bug in some rare occasions (only one affected linux system reported).</para>
+	 </listitem>
+	 <listitem>
+	    <para>Fixed bug which would stop fcron from running any job any more on the affected system and until fcron was restarted if the bug above occured.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Cleaned-up the closures of file descriptors (check for errors, etc).</para>
 	 </listitem>
       </itemizedlist>
 
