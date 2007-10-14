@@ -40,6 +40,7 @@ before any others., 1)
 fi
 AC_PROG_INSTALL
 AC_PROG_LN_S
+AC_PATH_PROGS(STRIP, $STRIP strip, /usr/css/bin:$PATH:/local/bin:/usr/local/bin:/opt/TWWfsw/bin:/opt/sfw/bin)
 
 dnl Checks for libraries.
 
