@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: save.c,v 1.12 2007-04-14 18:04:22 thib Exp $ */
+ /* $Id: save.c,v 1.13 2007-10-14 14:59:01 thib Exp $ */
 
 #include "global.h"
 #include "save.h"
@@ -286,8 +286,10 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 	Save_type(fd, S_ENDLINE_T, write_buf, &write_buf_used);
     }
 
-    if ( write_buf_to_disk(fd, write_buf, &write_buf_used) == ERR )
+    if ( write_buf_to_disk(fd, write_buf, &write_buf_used) == ERR ) {
+	error("Could not write final buffer content to disk: file %s has not been saved.", file->cf_user);
 	return ERR;
+    }
 
     return OK;
 }
@@ -319,19 +321,22 @@ save_one_file(cf_t *file, char *filename, uid_t own_uid, gid_t own_gid, time_t s
 
     if (fchown(fd, own_uid, own_gid) != 0) {
 	error_e("Could not fchown %s to uid:%d gid:%d", filename, own_uid, own_gid);
-	close(fd);
+	if ( close(fd) < 0 )
+	    error_e("save_one_file(%s): could not close(fd)", filename);
 	remove(filename);
 	return ERR;
     }
 
     /* save file : */
     if ( write_file_to_disk(fd, file, save_date) == ERR ) {
-	close(fd);
+	if ( close(fd) < 0 )
+	    error_e("save_one_file(%s): could not close(fd)", filename);
 	remove(filename);
 	return ERR;
     }
 
-    close(fd);
+    if ( close(fd) < 0 )
+	error_e("save_one_file(%s): could not close(fd)", filename);
 
     return OK;
 }
