@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.107 2007-01-01 19:05:06 thib Exp $
+# $Id: Makefile.in,v 1.108 2007-10-14 14:57:29 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -42,6 +42,7 @@ LIBOBJS		:= @LIBOBJS@
 DEFS		:= @DEFS@ 
 CC		:= @CC@
 INSTALL		:= @INSTALL@
+STRIP		:= @STRIP@
 ROOTNAME	:= @ROOTNAME@
 ROOTGROUP	:= @ROOTGROUP@
 USERNAME 	:= @USERNAME@
@@ -150,8 +151,8 @@ install-staged: all
 ifeq ($(FCRONDYN), 1)
 	$(INSTALL) -m 755 fcrondyn $(DESTDIR)$(DESTBIN)
 endif
-	test -f $(DESTDIR)$(ETC)/fcron.allow || test -f $(DESTDIR)$(ETC)/fcron.deny || $(INSTALL) -m 644 $(SRCDIR)/files/fcron.allow $(SRCDIR)/files/fcron.deny $(DESTDIR)$(ETC)
-	test -f $(DESTDIR)$(ETC)/fcron.conf || $(INSTALL) -m 644 files/fcron.conf $(DESTDIR)$(ETC)
+	if test ! -f $(DESTDIR)$(ETC)/fcron.allow -a ! -f $(DESTDIR)$(ETC)/fcron.deny ; then $(INSTALL) -m 644 $(SRCDIR)/files/fcron.allow $(DESTDIR)$(ETC) ; $(INSTALL) -m 644 $(SRCDIR)/files/fcron.deny $(DESTDIR)$(ETC) ; fi
+	test -f $(DESTDIR)$(ETC)/fcron.conf || $(INSTALL) -m 644 $(SRCDIR)/files/fcron.conf $(DESTDIR)$(ETC)
 
 	make -C doc install-staged
 
