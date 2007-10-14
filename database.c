@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.80 2007-06-24 22:01:54 thib Exp $ */
+ /* $Id: database.c,v 1.81 2007-10-14 14:58:07 thib Exp $ */
 
 #include "fcron.h"
 
@@ -521,8 +521,10 @@ wait_chld(void)
 /*      // */
 
     while ( (pid = wait3(NULL, WNOHANG, NULL)) > 0 ) {
+
 	i = 0;
 	while ( i < exe_num ) {
+
 	    if (pid == exe_array[i].e_ctrl_pid) {
 		if ( exe_array[i].e_line == NULL ) {
 		    /* the corresponding file has been removed from memory */
@@ -558,8 +560,10 @@ wait_chld(void)
 		
 		break;
 	    }
+
 	    i++;
 	}
+
     }
 
 }
@@ -987,7 +991,7 @@ move_time_to(int where, cl_t *line, struct tm *ftime)
 	
     debug("   %s %s %d/%d/%d wday:%d %02d:%02d (tzdiff=%d, timezone=%s)",
 	  line->cl_shell,
-	  (where == END_OF_INTERVAL) ? "end of interval" : "end of period",
+	  (where == END_OF_INTERVAL) ? "end of interval" : "begin of next period",
 	  (ftime->tm_mon + 1), ftime->tm_mday, (ftime->tm_year + 1900),
 	  ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
 	  line->cl_file->cf_tzdiff,
@@ -1210,10 +1214,10 @@ set_next_exe(cl_t *line, char option, int info_fd)
 		memcpy(&ftime, ft, sizeof(ftime));
 	    }
 	    send_msg_fd_debug(info_fd, "   cmd: %s next exec %d/%d/%d wday:%d "
-			      "%02d:%02d (tzdiff=%d, timezone=%s)", line->cl_shell,
+			      "%02d:%02d:%02d (tzdiff=%d, timezone=%s)", line->cl_shell,
 			      (ftime.tm_mon + 1), ftime.tm_mday,
 			      (ftime.tm_year + 1900), ftime.tm_wday,
-			      ftime.tm_hour, ftime.tm_min,
+			      ftime.tm_hour, ftime.tm_min, ftime.tm_sec,
 			      line->cl_file->cf_tzdiff,
 			      (line->cl_tz != NULL)? line->cl_tz : "system's");
 	}
@@ -1248,9 +1252,9 @@ set_next_exe(cl_t *line, char option, int info_fd)
 	memcpy(&ftime, ft, sizeof(struct tm));
 
 	send_msg_fd_debug(info_fd, "   cmd: %s next exec %d/%d/%d wday:%d "
-			  "%02d:%02d (system time)", line->cl_shell,
+			  "%02d:%02d:%02d (system time)", line->cl_shell,
 			  (ftime.tm_mon + 1), ftime.tm_mday, (ftime.tm_year+1900),
-			  ftime.tm_wday, ftime.tm_hour, ftime.tm_min);
+			  ftime.tm_wday, ftime.tm_hour, ftime.tm_min, ftime.tm_sec);
     }
     
     insert_nextexe(line);
