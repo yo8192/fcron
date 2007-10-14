@@ -22,7 +22,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: conf.c,v 1.73 2007-06-03 17:52:34 thib Exp $ */
+ /* $Id: conf.c,v 1.74 2007-10-14 14:56:54 thib Exp $ */
 
 #include "fcron.h"
 
@@ -296,11 +296,11 @@ synchronize_file(char *file_name)
 			    struct tm *ftime;
 			    ftime = localtime(&new_l->cl_nextexe);
 			    debug("  from last conf: %s next exec %d/%d/%d"
-				  " wday:%d %02d:%02d (system time)",
+				  " wday:%d %02d:%02d:%02d (system time)",
 				  new_l->cl_shell,
 				  (ftime->tm_mon + 1), ftime->tm_mday,
 				  (ftime->tm_year + 1900), ftime->tm_wday,
-				  ftime->tm_hour, ftime->tm_min);
+				  ftime->tm_hour, ftime->tm_min, ftime->tm_sec);
 			} 
 			
 			break;
