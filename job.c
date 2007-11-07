@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.72 2007-10-14 12:42:07 thib Exp $ */
+ /* $Id: job.c,v 1.73 2007-11-07 09:15:02 thib Exp $ */
 
 #include "fcron.h"
 
@@ -696,11 +696,23 @@ end_job(cl_t *line, int status, FILE *mailf, short mailpos)
     char mail_output;
     char *m;
 
-    if ( mailf != NULL &&
-	 (is_mailzerolength(line->cl_option) || 
-	  ( ( is_mail(line->cl_option) &&
-	      ( (fseek(mailf, 0, SEEK_END) == 0 && ftell(mailf) > mailpos) ||
-		! (WIFEXITED(status) && WEXITSTATUS(status) == 0) ) ) ) ) )
+    if ( mailf != NULL
+	 && ( 
+	     is_mailzerolength(line->cl_option)
+	     ||
+	     ( 
+		 is_mail(line->cl_option)
+		 && (
+		     /* job wrote some output and we wan't it in any case: */
+		     ( (fseek(mailf, 0, SEEK_END) == 0 && ftell(mailf) > mailpos)
+		       && ! is_erroronlymail(line->cl_option) )
+		     || 
+		     /* or we want an email only if the job returned an error: */
+		     ! (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+		     ) 
+		  ) 
+	     ) 
+	)
 	/* an output exit : we will mail it */
 	mail_output = 1;
     else
