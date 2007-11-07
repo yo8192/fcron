@@ -6,7 +6,7 @@
 # processname: fcron
 # pidfile: /var/run/fcron.pid
 # config: /var/spool/fcron/*
-# $Id: sysVinit-launcher,v 1.11 2007-04-14 17:45:59 thib Exp $
+# $Id: sysVinit-launcher,v 1.12 2007-11-07 09:26:01 thib Exp $
 
 export PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 
@@ -15,7 +15,7 @@ SBIN=@@DESTSBIN@
 
 # Source function library.
 if test -f /etc/init.d/functions; then
-    . /etc/rc.d/init.d/functions
+    . /etc/init.d/functions
     FUNCTION=1
     STARTCMD="daemon $SBIN/fcron -b"
     STOPCMD="killproc fcron"
