@@ -24,7 +24,7 @@
     <stability value='Unstable'/>
     <template>
       <common_name>
-        <loctext xml:lang='C'>French clock daemon (fcron)</loctext>
+        <loctext xml:lang='C'>Periodical command scheduler (fcron)</loctext>
       </common_name>
       <documentation>
         <manpage title='fcron' section='1M' manpath='/usr/local/share/man'/>
