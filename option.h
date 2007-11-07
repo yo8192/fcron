@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: option.h,v 1.26 2007-06-24 22:03:16 thib Exp $ */
+ /* $Id: option.h,v 1.27 2007-11-07 09:23:50 thib Exp $ */
 
 /* This has been inspired from bitstring(3) : here is the original copyright :
  */
@@ -52,7 +52,8 @@
 
 /* WARNING : do not change any option number, nor remove any option, nor change
  *           the meaning of a value (i.e. bit set to 1 -> true).
- *           It can lead to errors with fcrontabs save to disk/load in memory.
+ *           It can lead to errors with fcrontabs already saved to disk
+ *           or loaded in memory.
  */
 
 /*
@@ -87,6 +88,7 @@
   23     Should this job be run asap, or randomly in its allowed interval of execution ?
   24     Should first value be applied at each fcron startup, or before line first exe ?
   25     if fcron is running in foreground, print jobs output to stderr/stdout or mail ?
+  26     should the output of the job be emailed to the user only non-zero exit status ?
 
 */
 
@@ -442,6 +444,18 @@
 #define clear_stdout(opt) \
 	(_bit_clear(opt, 25))
 
+/*
+  bit 26 : set to 1 : The ouput of a job will only be emailed to the user if the job
+                      exited with a non-zero status.
+           set to 0 : The exit-status of the job won't be taken into account to decide
+                      if the output should be emailed to the user.
+*/
+#define	is_erroronlymail(opt) \
+	(_bit_test(opt, 26))
+#define	set_erroronlymail(opt) \
+	(_bit_set(opt, 26))
+#define clear_erroronlymail(opt) \
+	(_bit_clear(opt, 26))
 
 #endif /* __OPTIONH__ */
 
