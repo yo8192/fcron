@@ -70,6 +70,7 @@
 <!ENTITY optbootrun '<link linkend="fcrontab.5.bootrun"><varname>bootrun</varname></link>'>
 <!ENTITY optdayand '<link linkend="fcrontab.5.dayand"><varname>dayand</varname></link>'>
 <!ENTITY optdayor '<link linkend="fcrontab.5.dayor"><varname>dayor</varname></link>'>
+<!ENTITY opterroronlymail '<link linkend="fcrontab.5.erroronlymail"><varname>erroronlymail</varname></link>'>
 <!ENTITY optexesev '<link linkend="fcrontab.5.exesev"><varname>exesev</varname></link>'>
 <!ENTITY optfirst '<link linkend="fcrontab.5.first"><varname>first</varname></link>'>
 <!ENTITY optforcemail '<link linkend="fcrontab.5.forcemail"><varname>forcemail</varname></link>'>

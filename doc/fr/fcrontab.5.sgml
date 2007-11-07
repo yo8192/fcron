@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.4 2007-01-01 18:53:47 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.5 2007-11-07 09:25:03 thib Exp $ -->
 
 <refentry id="fcrontab.5">
   <refmeta>
@@ -546,12 +546,21 @@ le dÉmarrage du systÈme</title>
 	  </listitem>
 	</varlistentry>
 
+	<varlistentry id="fcrontab.5.erroronlymail">
+	  <term>erroronlymail</term>
+	  <listitem>
+	    <para><emphasis><type>booléen</type></emphasis>(<constant>false</constant>)</para>
+	    <para>Envoyer la sortie par courriel uniquement si la tâche a retourné une valeur de sortie autre que zéro.</para>
+	    <para>&voiraussi; options &optmail;, &optmailto;, &optnolog;, &optforcemail;.</para>
+	  </listitem>
+	</varlistentry>
+
 	<varlistentry id="fcrontab.5.forcemail">
 	  <term>forcemail</term>
 	  <listitem>
 	    <para><emphasis><type>booléen</type></emphasis>(<constant>false</constant>)</para>
 	    <para>Envoyer la sortie par courriel même si celle-ci est vide.</para>
-	    <para>&voiraussi; options &optmail;, &optmailto;, &optnolog;.</para>
+	    <para>&voiraussi; options &optmail;, &optmailto;, &opterroronlymail;, &optnolog;.</para>
 	  </listitem>
 	</varlistentry>
 

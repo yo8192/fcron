@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: fcrontab.5.sgml,v 1.21 2007-04-14 18:04:36 thib Exp $ -->
+<!-- $Id: fcrontab.5.sgml,v 1.22 2007-11-07 09:24:43 thib Exp $ -->
 
 <refentry id="fcrontab.5">
     <refmeta>
@@ -434,6 +434,16 @@ day.</para>
 		    </listitem>
 		</varlistentry>
 
+		<varlistentry id="fcrontab.5.erroronlymail">
+		    <term>erroronlymail</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>Mail output only if job exited with a non-zero status.</para>
+			<para>&seealso; options &optmail;, &optmailto;,
+&optforcemail;, &optnolog;.</para>
+		    </listitem>
+		</varlistentry>
+
 		<varlistentry id="fcrontab.5.exesev">
 		    <term>exesev</term>
 		    <listitem>
@@ -464,7 +474,7 @@ useful when used in conjunction with option &optvolatile;.</para>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
 			<para>Mail output even if zero-length.</para>
 			<para>&seealso; options &optmail;, &optmailto;,
-&optnolog;.</para>
+&opterroronlymail;, &optnolog;.</para>
 		    </listitem>
 		</varlistentry>
 
@@ -535,7 +545,7 @@ system load average values.</para>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>true</constant>)</para>
 			<para>Mail output (if any) or not.</para>
 			<para>&seealso; options &optmailto;, &optforcemail;,
-&optnolog;.</para>
+&opterroronlymail;, &optnolog;.</para>
 		    </listitem>
 		</varlistentry>
 
@@ -549,7 +559,7 @@ of file's owner</constant>)</para>
 or a fully qualified email address. A &optmailto; declared and empty (string
 "") is equivalent to "<token>mail(false)</token>".</para>
 			<para>&seealso; options &optmail;, &optforcemail;,
-&optnolog;.</para>
+&opterroronlymail;, &optnolog;.</para>
 		    </listitem>
 		</varlistentry>
 
@@ -573,7 +583,7 @@ option).</para>
 corresponding job(s). May be useful for jobs running very often, and/or to
 reduce disk access on a laptop.</para>
 			<para>&seealso; options &optmail;, &optmailto;,
-&optforcemail;.</para>
+&opterroronlymail;, &optforcemail;.</para>
 		    </listitem>
 		</varlistentry>
 
