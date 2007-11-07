@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.56 2007-10-14 15:07:45 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.57 2007-11-07 09:24:41 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -17,6 +17,9 @@ A copy of the license is included in gfdl.sgml.
 	 <title>From version 3.0.3 to 3.0.4</title>
 	 <listitem>
 	    <para>Initialize the random number generator with some values specific to the machine so as two fcron started exactly at the same time on two different machines run their random jobs at different time. This is useful for clusters for instance.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Added option erroronlymail so as the output of a job is emailed only when the job exited with a non-zero status.</para>
 	 </listitem>
 	 <listitem>
 	    <para>Bug fix: in certain conditions, jobs could be executed outside their interval of execution when using option random on %-lines.</para>

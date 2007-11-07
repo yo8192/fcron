@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: todo.sgml,v 1.45 2007-10-14 15:07:43 thib Exp $ -->
+<!-- $Id: todo.sgml,v 1.46 2007-11-07 09:24:38 thib Exp $ -->
 
    <sect1 id="todo">
       <title>Todo</title>
@@ -38,9 +38,6 @@ A copy of the license is included in gfdl.sgml.
       <sect2>
 	 <title>Low priority</title>
 	 <itemizedlist>
-	    <listitem>
-	       <para>add an option to email the job output only if its exit code is non zero (error)</para>
-	    </listitem>
 	    <listitem>
 	       <para>add logging to a file (instead of syslog) with configuration in fcron.conf</para>
 	    </listitem>
