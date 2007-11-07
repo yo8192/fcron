@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.80 2007-04-14 18:04:15 thib Exp $ */
+ /* $Id: fileconf.c,v 1.81 2007-11-07 09:16:40 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -780,6 +780,17 @@ read_opt(char *ptr, cl_t *cl)
 	    }
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\" \"%s\"\n", opt_name, buf);
+	}
+
+	else if( strcmp(opt_name, "erroronlymail") == 0 ) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		clear_erroronlymail(cl->cl_option);
+	    else
+		set_erroronlymail(cl->cl_option);	
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
 	else if( strcmp(opt_name, "dayand") == 0 ) {
