@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcron.c,v 1.81 2007-06-24 22:01:22 thib Exp $ */
+ /* $Id: fcron.c,v 1.82 2007-11-07 09:15:40 thib Exp $ */
 
 #include "fcron.h"
 
@@ -33,7 +33,7 @@
 #include "socket.h"
 #endif
 
-char rcs_info[] = "$Id: fcron.c,v 1.81 2007-06-24 22:01:22 thib Exp $";
+char rcs_info[] = "$Id: fcron.c,v 1.82 2007-11-07 09:15:40 thib Exp $";
 
 void main_loop(void);
 void check_signal(void);
@@ -646,9 +646,9 @@ main(int argc, char **argv)
 #ifdef HAVE_GETTIMEOFDAY
 	struct timeval tv;     /* we use usec field to get more precision */
 	gettimeofday(&tv, NULL);
-	seed ^= ((unsigned int) tv.tv_usec) ^ ((unsigned int) tv.tv_sec);
+	seed = ((unsigned int) tv.tv_usec) ^ ((unsigned int) tv.tv_sec);
 #else
-	seed ^= (unsigned int) time(NULL);
+	seed = (unsigned int) time(NULL);
 #endif
 	gethostname(hostname, sizeof(hostname));
 
