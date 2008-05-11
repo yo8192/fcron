@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.82 2008-05-11 10:56:28 thib Exp $ */
+ /* $Id: database.c,v 1.83 2008-05-11 15:05:51 thib Exp $ */
 
 #include "fcron.h"
 
@@ -43,7 +43,7 @@ void run_queue_job(cl_t *line);
 void resize_exe_array(void);
 
 
-#if !defined(HAVE_SETENV) || !defined(HAVE_UNSETENV)
+#if ! defined(HAVE_SETENV) || ! defined(HAVE_UNSETENV)
 char env_tz[PATH_LEN];
 #endif
 
@@ -283,8 +283,15 @@ run_queue_job(cl_t *line)
 	resize_exe_array();
 
     exe_array[exe_num].e_line = line;
+    exe_num++;
 
-    run_job(&exe_array[exe_num++]);
+    /* run the job */
+    if ( run_job(&exe_array[exe_num-1]) != OK ) {
+	/* The job could not be run: remove it from the exe_array */
+	exe_array[exe_num-1].e_line->cl_numexe--;
+	exe_array[exe_num-1].e_line = NULL;
+	exe_num--;
+    }
 
 }
 

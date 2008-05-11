@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: job.c,v 1.73 2007-11-07 09:15:02 thib Exp $ */
+ /* $Id: job.c,v 1.74 2008-05-11 15:04:04 thib Exp $ */
 
 #include "fcron.h"
 
@@ -428,9 +428,10 @@ run_job_grand_child_setup_env_var(cl_t *line, char **curshell)
     }
 }
 
-void 
+int 
 run_job(struct exe_t *exeent)
-    /* fork(), redirect outputs to a temp file, and execl() the task */ 
+    /* fork(), redirect outputs to a temp file, and execl() the task.
+     * Return ERR if it could not fork() the first time, OK otherwise. */ 
 {
 
     pid_t pid;
@@ -452,6 +453,7 @@ run_job(struct exe_t *exeent)
     switch ( pid = fork() ) {
     case -1:
 	error_e("Fork error : could not exec \"%s\"", line->cl_shell);
+	return ERR;
 	break;
 
     case 0:
@@ -498,7 +500,7 @@ run_job(struct exe_t *exeent)
 
 #ifndef RUN_NON_PRIVILEGED
 	if (change_user(line) < 0)
-	    return ;
+	    exit(EXIT_ERR);
 #endif
 
 	sig_dfl();
@@ -647,7 +649,8 @@ run_job(struct exe_t *exeent)
 	    
 	}
 
-	/* execution never gets here */
+	/* execution should never gets here, but if it happened we exit with an error */
+	exit(EXIT_ERR);
     }
 
     default:
@@ -680,11 +683,14 @@ run_job(struct exe_t *exeent)
 	}
 	if ( close(pipe_pid_fd[0]) < 0 )
 	    error_e("parent: could not close(pipe_pid_fd[0])");
-    }
 
 #ifdef CHECKRUNJOB
-    debug("run_job(): finished reading pid of the job -- end of run_job().");
+	debug("run_job(): finished reading pid of the job -- end of run_job().");
 #endif /* CHECKRUNJOB */
+
+    }
+
+    return OK;
 
 }
 
