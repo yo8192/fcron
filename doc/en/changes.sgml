@@ -8,10 +8,20 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.57 2007-11-07 09:24:41 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.58 2008-05-11 15:06:02 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
+
+      <itemizedlist>
+	 <title>From version 3.0.4 to 3.0.5</title>
+	 <listitem>
+	    <para>Work on portability (aix, hpux, irix, tru64 unix, solaris). Thanks Peter O'Gorman for his patch!</para>
+	 </listitem>
+	 <listitem>
+	    <para>bug fix: if fcron could not fork() to run a job, then the job would still appear to be running until fcron is restarted (thanks Alexander Y. Fomichev for noticing this bug).</para>
+	 </listitem>
+      </itemizedlist>
 
       <itemizedlist>
 	 <title>From version 3.0.3 to 3.0.4</title>
