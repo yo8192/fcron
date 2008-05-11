@@ -4,7 +4,7 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.108 2007-10-14 14:57:29 thib Exp $
+# $Id: Makefile.in,v 1.109 2008-05-11 10:55:39 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
@@ -208,6 +208,8 @@ endif
 
 	find $(DESTDIR)$(FCRONTABS) -type f \( -name "*.orig" -a ! -name "$(ROOTNAME).orig" -a ! -name "$(SYSFCRONTAB).orig" \) -exec chown $(USERNAME) {} \; -exec chgrp $(GROUPNAME) {} \; -exec chmod 640 {} \;
 	find $(DESTDIR)$(FCRONTABS) -type f \( -name "$(ROOTNAME).orig" -o -name "$(SYSFCRONTAB).orig" \) -exec chown $(ROOTNAME) {} \; -exec chgrp $(GROUPNAME) {} \; -exec chmod 600 {} \;
+	# First, remove the potential fcrontab.sig, or it could not get removed by fcronsighup if it becomes root:root 600
+	rm -f $(DESTDIR)$(FCRONTABS)/fcrontab.sig
 	find $(DESTDIR)$(FCRONTABS) -type f ! -name "*.orig" -exec chown $(ROOTNAME) {} \; -exec chgrp $(ROOTGROUP) {} \; -exec chmod 600 {} \;
 
 	make -C doc perms
