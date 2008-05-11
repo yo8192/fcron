@@ -21,13 +21,13 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcronsighup.c,v 1.13 2007-04-14 18:04:05 thib Exp $ */
+ /* $Id: fcronsighup.c,v 1.14 2008-05-11 10:46:54 thib Exp $ */
 
 #include "fcronsighup.h"
 #include "global.h"
 #include "allow.h"
 
-char rcs_info[] = "$Id: fcronsighup.c,v 1.13 2007-04-14 18:04:05 thib Exp $";
+char rcs_info[] = "$Id: fcronsighup.c,v 1.14 2008-05-11 10:46:54 thib Exp $";
 
 void usage(void);
 void sig_daemon(void);
@@ -151,9 +151,16 @@ sig_daemon(void)
 	foreground = 0;
 
 	/* try to create a lock file */
-	if ((fd = open(sigfile, O_RDWR|O_CREAT, 0644)) == -1
-	    || ((fp = fdopen(fd, "r+")) == NULL) )
-	    die_e("can't open or create %s", sigfile);	
+	/* // */
+	debug("uid: %d, euid: %d, gid: %d, egid: %d", getuid(), geteuid(), getgid(), getegid());
+	/* // */
+	fd = open(sigfile, O_RDWR|O_CREAT, 0644);
+	if ( fd == -1 )
+	    die_e("can't open or create %s", sigfile);
+	fp = fdopen(fd, "r+");
+	if ( fp == NULL )
+	    die_e("can't fdopen %s", sigfile);
+
     
 #ifdef HAVE_FLOCK
 	if ( flock(fd, LOCK_EX|LOCK_NB) != 0 ) {
@@ -174,7 +181,8 @@ sig_daemon(void)
 	fclose(fp);
 	close(fd);
 
-	remove(sigfile);
+	if ( remove(sigfile) < 0 )
+	    error_e("Could not remove %s");
     }
     else
 	/* we are root */
@@ -208,6 +216,7 @@ int
 main(int argc, char **argv)
 {
     struct passwd *pass = NULL;
+    char *cur_user = NULL;
 
     rootuid = get_user_uid_safe(ROOTNAME);
     rootgid = get_group_gid_safe(ROOTGROUP);
@@ -241,8 +250,9 @@ main(int argc, char **argv)
     /* check if user is allowed to use this program */
     if ( ! (pass = getpwuid(uid)) )
 	die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
+    cur_user = strdup(pass->pw_name);
 
-    if ( is_allowed(pass->pw_name) ) {
+    if ( is_allowed(cur_user) ) {
 	/* check if daemon is running */
 	if ( (daemon_pid = read_pid()) != 0 )
 	    sig_daemon();
@@ -252,8 +262,9 @@ main(int argc, char **argv)
     }
     else
 	die("User \"%s\" is not allowed to use %s. Aborting.",
-	    pass->pw_name, prog_name);
+	    cur_user, prog_name);
 
+    if (cur_user) free(cur_user);
     return EXIT_OK;
 
 }
