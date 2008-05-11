@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: database.c,v 1.81 2007-10-14 14:58:07 thib Exp $ */
+ /* $Id: database.c,v 1.82 2008-05-11 10:56:28 thib Exp $ */
 
 #include "fcron.h"
 
@@ -43,7 +43,7 @@ void run_queue_job(cl_t *line);
 void resize_exe_array(void);
 
 
-#ifndef HAVE_SETENV
+#if !defined(HAVE_SETENV) || !defined(HAVE_UNSETENV)
 char env_tz[PATH_LEN];
 #endif
 
@@ -109,10 +109,11 @@ switch_back_timezone(const char *orig_tz)
  * otherwise, sets TZ to orig_tz */
 {
     if ( orig_tz == NULL) {
-#ifdef HAVE_SETENV
+#ifdef HAVE_UNSETENV
 	unsetenv("TZ");
 #else
-	env_tz[0] = '\0';
+	snprintf(env_tz, sizeof(env_tz) - 1, "TZ=");
+	env_tz[sizeof(env_tz)-1] = '\0';
 	if ( putenv(env_tz) < 0 )
 	    error_e("could not flush env var TZ");	
 #endif
@@ -691,6 +692,7 @@ goto_beginning_next_period_periodical(cl_t *line, struct tm *ftime)
      * period of execution= a continuous interval of time during which
      *     the line is to be executed once and only once. */
 {
+    int max = 0;
 
     /* sanity check */
     if ( ! is_freq_periodically(line->cl_option) )
@@ -698,7 +700,7 @@ goto_beginning_next_period_periodical(cl_t *line, struct tm *ftime)
 
     
     /* number of days in ftime's month */
-    int max = get_nb_mdays(ftime->tm_year, ftime->tm_mon);
+    max = get_nb_mdays(ftime->tm_year, ftime->tm_mon);
 
     /* STEP 1: find the beginning of the next period without ensuring
      * there is no overflow (min>=60, hour>=24, etc) */
