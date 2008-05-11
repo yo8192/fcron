@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.c,v 1.28 2007-06-03 17:52:53 thib Exp $ */
+ /* $Id: subs.c,v 1.29 2008-05-11 11:08:23 thib Exp $ */
 
 #include "global.h"
 #include "subs.h"
@@ -65,11 +65,11 @@ gid_t
 get_group_gid_safe(char *groupname)
     /* get the gid of group groupname, and die on error */
 {
-    struct group *grp;
+    struct group *grp = NULL;
 
     errno = 0;
     grp = getgrnam(groupname);
-    if ( errno != 0 || grp == NULL ) {
+    if ( grp == NULL ) {
 	die_e("Unable to get the gid of group %s", groupname);
     }
     
