@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: socket.c,v 1.24 2007-06-03 17:53:30 thib Exp $ */
+ /* $Id: socket.c,v 1.25 2008-05-11 11:09:29 thib Exp $ */
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
@@ -204,7 +204,7 @@ auth_client(struct fcrondyn_cl *client)
     char *pass_sys = NULL;
     char *pass_str = NULL;
 
-#ifdef HAVE_LIBSHADOW
+#ifdef HAVE_GETSPNAM
     struct spwd *pass_sp = NULL;
     if ( (pass_sp = getspnam((char *) client->fcl_cmd )) == NULL ) {
 	error_e("could not getspnam %s", (char *) client->fcl_cmd);
