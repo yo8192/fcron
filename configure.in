@@ -9,7 +9,7 @@ AC_INIT(allow.c)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.57)
 
-vers="3.0.4"
+vers="3.0.5"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -103,7 +103,7 @@ dnl Try to use the /proc/loadavg file ...
   AC_MSG_CHECKING(function to use for lavg* options)  
   AC_MSG_RESULT(/proc/loadavg)
 fi
-AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv gethostname)
+AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv unsetenv gethostname)
 AC_CHECK_FUNCS(getopt_long)
 AC_CHECK_FUNCS(mkstemp)
 AC_CHECK_FUNCS(flock lockf)
@@ -123,16 +123,7 @@ fi
 
 AC_CHECK_FUNCS(setpriority)
 
-AC_CHECK_FUNCS(getspnam, [getspnam=1], [getspnam=0])
-if test "$getspnam" -eq "0"; then
-  AC_CHECK_LIB(getspnam, shadow, [getspnam=1], [getspnam=0])
-  if test "$getspnam" -eq "1"; then
-    LIBS="$LIBS -lshadow"
-  fi
-fi
-if test "$getspnam" -eq "1"; then
-  AC_DEFINE_UNQUOTED(HAVE_LIBSHADOW, 1)
-fi
+AC_SEARCH_LIBS([getspnam],[shadow sec], [AC_DEFINE_UNQUOTED(HAVE_GETSPNAM, 1)], [])
 
 AC_CHECK_FUNCS(crypt, [crypt=1], [crypt=0])
 if test "$crypt" -eq "0"; then
