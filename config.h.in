@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.62 2007-04-14 18:04:19 thib Exp $ */
+ /* $Id: config.h.in,v 1.63 2008-05-11 11:07:36 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -232,6 +232,9 @@
 /* Define if you have the getopt_long function.  */
 #undef HAVE_GETOPT_LONG
 
+/* Define if you have the getspnam function.  */
+#undef HAVE_GETSPNAM
+
 /* Define if you have the gettimeofday function.  */
 #undef HAVE_GETTIMEOFDAY
 
@@ -328,6 +331,9 @@
 /* Define if you have <shadow.h>.  */
 #undef HAVE_SHADOW_H
 
+/* Define if you have the unsetenv function.  */
+#undef HAVE_UNSETENV
+
 /* Define if you have <nlist.h>.  */
 #undef NLIST_STRUCT
 
@@ -387,9 +393,6 @@
 
 /* Define if you have the pam library (-lpam).  */
 #undef HAVE_LIBPAM
-
-/* Define if you have the shadow library (-lshadow or included in c library).  */
-#undef HAVE_LIBSHADOW
 
 /* Have SE Linux support */
 #undef WITH_SELINUX
