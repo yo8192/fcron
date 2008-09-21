@@ -8,7 +8,7 @@ Foundation.
 A copy of the license is included in gfdl.sgml.
 -->
 
-<!-- $Id: changes.sgml,v 1.58 2008-05-11 15:06:02 thib Exp $ -->
+<!-- $Id: changes.sgml,v 1.59 2008-09-21 17:46:45 thib Exp $ -->
 
    <sect1 id="changes">
       <title>Changes</title>
@@ -19,7 +19,13 @@ A copy of the license is included in gfdl.sgml.
 	    <para>Work on portability (aix, hpux, irix, tru64 unix, solaris). Thanks Peter O'Gorman for his patch!</para>
 	 </listitem>
 	 <listitem>
+	    <para>Increased maximum number of fcrontab entries from 256 to 1024.</para>
+	 </listitem>
+	 <listitem>
 	    <para>bug fix: if fcron could not fork() to run a job, then the job would still appear to be running until fcron is restarted (thanks Alexander Y. Fomichev for noticing this bug).</para>
+	 </listitem>
+	 <listitem>
+	    <para>bug fix: fcrontab used to accept MAXENTRIES+1 fcrontab entries</para>
 	 </listitem>
       </itemizedlist>
 
