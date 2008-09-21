@@ -1,0 +1,14 @@
+*.o
+Makefile
+autom4te.cache
+config.h
+config.log
+config.status
+doc/Makefile
+fcron
+fcrondyn
+fcrontab
+fcronsighup
+files/fcron.conf
+convert-fcrontab
+doc/stylesheets/fcron-doc.dsl
