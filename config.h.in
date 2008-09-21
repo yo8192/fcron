@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: config.h.in,v 1.63 2008-05-11 11:07:36 thib Exp $ */
+ /* $Id: config.h.in,v 1.64 2008-09-21 17:44:12 thib Exp $ */
 
 
 /* *********************************************************** */
@@ -88,7 +88,7 @@
 			   * up */
 
 
-#define MAXENTRIES  256  /* max lines in non-root fcrontabs */
+#define MAXENTRIES  1024  /* max lines in non-root fcrontabs */
 
 #define LINE_LEN    1024     /* max line length in user's config file */
 #define USER_NAME_LEN 128    /* max length of a user name */
