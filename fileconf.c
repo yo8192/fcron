@@ -21,7 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fileconf.c,v 1.81 2007-11-07 09:16:40 thib Exp $ */
+ /* $Id: fileconf.c,v 1.82 2008-09-21 17:40:34 thib Exp $ */
 
 #include "fcrontab.h"
 
@@ -194,7 +194,7 @@ read_file(char *filename)
     /* max_lines acts here as a security counter to avoid endless loop. */
     max_lines = (max_entries * 10) + 10;
 
-    while ( entries <= max_entries && line <= max_lines ) {
+    while ( entries < max_entries && line <= max_lines ) {
 
 	ret = get_line(buf, sizeof(buf), file);
 
