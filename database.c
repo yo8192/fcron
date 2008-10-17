@@ -38,9 +38,8 @@ void move_time_to(int where, cl_t *line, struct tm *ftime);
 #define BEGIN_NEXT_PERIOD 11  /* move_time_to()'s where possible value */
 #define END_OF_INTERVAL 12    /* move_time_to()'s where possible value */
 void run_serial_job(void);
-void run_lavg_job(int i);
+void run_lavg_job(lavg_t *l);
 void run_queue_job(cl_t *line);
-void resize_exe_array(void);
 
 
 #if ! defined(HAVE_SETENV) || ! defined(HAVE_UNSETENV)
@@ -209,20 +208,13 @@ run_normal_job(cl_t *line, int info_fd)
 }
 
 void
-run_lavg_job(int i)
+run_lavg_job(lavg_t *l)
 {
 
-    run_queue_job(lavg_array[i].l_line);
+    run_queue_job(l->l_line);
 
-    if ( is_serial(lavg_array[i].l_line->cl_option) )
+    if ( is_serial(l->l_line->cl_option) )
 	lavg_serial_running++;
-
-    if (i < --lavg_num) {
-	lavg_array[i] = lavg_array[lavg_num];
-	lavg_array[lavg_num].l_line = NULL;
-    }
-    else
-	lavg_array[i].l_line = NULL;	
 
 }
 
@@ -250,47 +242,24 @@ run_serial_job(void)
 }
 		    
 
-void 
-resize_exe_array(void)
-    /* make exe_array bigger */
-{
-    struct exe_t *ptr = NULL;
-    short int old_size = exe_array_size;
-
-    debug("Resizing exe_array");
-    exe_array_size = (exe_array_size + EXE_GROW_SIZE);
-	
-    if ( (ptr = calloc(exe_array_size, sizeof(struct exe_t))) == NULL )
-	die_e("could not calloc exe_array");
-
-    memcpy(ptr, exe_array, (sizeof(struct exe_t) * old_size));
-    free(exe_array);
-    exe_array = ptr;
-}
-
-
 void
 run_queue_job(cl_t *line)
     /* run a job */
 {
 
+    exe_t e = { NULL, 0, 0 };
+
 /*      // */
 /*      debug("run_queue_job"); */
 /*      // */
 
-    /* append job to the list of executed job */
-    if ( exe_num >= exe_array_size )
-	resize_exe_array();
-
-    exe_array[exe_num].e_line = line;
-    exe_num++;
+    e.e_line = line;
 
     /* run the job */
-    if ( run_job(&exe_array[exe_num-1]) != OK ) {
-	/* The job could not be run: remove it from the exe_array */
-	exe_array[exe_num-1].e_line->cl_numexe--;
-	exe_array[exe_num-1].e_line = NULL;
-	exe_num--;
+    if ( run_job(&e) == OK ) {
+	/* append job to the list of executed job */
+	exe_list_add(exe_list, &e);
+	line->cl_file->cf_running += 1;
     }
 
 }
@@ -428,6 +397,7 @@ add_lavg_job(cl_t *line, int info_fd)
     /* WARNING : must be run before a set_next_exe() to get the strict option
      * working correctly */
 {
+    lavg_t *lavg_entry = NULL;
 
     /* check if the line is already in the lavg queue
      * (we consider serial jobs currently running as in the queue) */
@@ -441,32 +411,16 @@ add_lavg_job(cl_t *line, int info_fd)
 /*  	// */
 	
     /* append job to the list of lavg job */
-    if ( lavg_num >= lavg_array_size ) {
-	if ( lavg_num >= lavg_queue_max ) {
-  	    error_fd(info_fd, "Could not add job : lavg queue is full (%d jobs)."
-		     " Consider using options lavgonce, until, strict and/or "
-		     "fcron's option -q.", lavg_queue_max, line->cl_shell);
-	    if ( is_notice_notrun(line->cl_option) )
-		mail_notrun(line, QUEUE_FULL, NULL);
-	    return;
-	}
-	else {
-	    struct lavg_t *ptr = NULL;
-	    short int old_size = lavg_array_size;
-		
-	    debug("Resizing lavg_array");
-	    lavg_array_size = (lavg_array_size + LAVG_GROW_SIZE);
-		
-	    if ( (ptr = calloc(lavg_array_size, sizeof(lavg_t))) == NULL )
-		die_e("could not calloc lavg_array");
-		
-	    memcpy(ptr, lavg_array, (sizeof(lavg_t) * old_size));
-	    free(lavg_array);
-	    lavg_array = ptr;
-	}
+    lavg_entry = lavg_list_add_line(lavg_list, line);
+    if ( lavg_entry == NULL ) {
+	error_fd(info_fd, "Could not add job : lavg queue is full (%d jobs)."
+		 " Consider using options lavgonce, until, strict and/or "
+		 "fcron's option -q.", lavg_list->max_entries, line->cl_shell);
+	if ( is_notice_notrun(line->cl_option) )
+	    mail_notrun(line, QUEUE_FULL, NULL);
+	return;
     }
 
-    lavg_array[lavg_num].l_line = line;
     line->cl_numexe += 1;
     set_run_if_late(line->cl_option);
     if ( is_strict(line->cl_option) && line->cl_runfreq == 1) {
@@ -498,9 +452,9 @@ add_lavg_job(cl_t *line, int info_fd)
 	end_of_cur_int = mktime_no_dst(&ftime) + (line->cl_file->cf_tzdiff * 3600);
 
 	if ((line->cl_until > 0) && (line->cl_until + now < end_of_cur_int))
-	    lavg_array[lavg_num].l_until = line->cl_until + now;
+	    lavg_entry->l_until = line->cl_until + now;
 	else {
-	    lavg_array[lavg_num].l_until = end_of_cur_int;
+	    lavg_entry->l_until = end_of_cur_int;
 	    clear_run_if_late(line->cl_option);
 	}
 
@@ -508,10 +462,9 @@ add_lavg_job(cl_t *line, int info_fd)
 	    switch_back_timezone(orig_tz_envvar);
     }
     else
-	lavg_array[lavg_num].l_until = 
+	lavg_entry->l_until = 
 	    (line->cl_until > 0) ? now + line->cl_until : 0;
 
-    lavg_num++;
 }
 
 
@@ -519,10 +472,9 @@ void
 wait_chld(void)
   /* wait_chld() - check for job completion */
 {
-    short int i = 0;
     int pid;
     cl_t *line = NULL;
-
+    exe_t *e = NULL;
 
 /*      // */
 /*      debug("wait_chld"); */
@@ -530,17 +482,16 @@ wait_chld(void)
 
     while ( (pid = wait3(NULL, WNOHANG, NULL)) > 0 ) {
 
-	i = 0;
-	while ( i < exe_num ) {
+	for ( e = exe_list_first(exe_list) ; e != NULL ; e = exe_list_next(exe_list) ) {
 
-	    if (pid == exe_array[i].e_ctrl_pid) {
-		if ( exe_array[i].e_line == NULL ) {
+	    if (pid == e->e_ctrl_pid) {
+		if ( e->e_line == NULL ) {
 		    /* the corresponding file has been removed from memory */
 		    debug("job finished: pid %d", pid);
 		}
 		else {
 		    
-		    line = exe_array[i].e_line;
+		    line = e->e_line;
 /*  		    debug("job finished: %s", line->cl_shell); */
 		    line->cl_numexe -= 1;
 		    line->cl_file->cf_running -= 1;
@@ -559,17 +510,10 @@ wait_chld(void)
 			      is_serial(line->cl_option) )
 			lavg_serial_running--;
 		}
-		if (i < --exe_num) {
-		    exe_array[i] = exe_array[exe_num];
-		    exe_array[exe_num].e_line = NULL;
-		}
-		else
-		    exe_array[i].e_line = NULL;
 		
+		exe_list_remove_cur(exe_list);
 		break;
 	    }
-
-	    i++;
 	}
 
     }
@@ -581,39 +525,32 @@ void
 wait_all(int *counter)
    /* return after all jobs completion. */
 {
-    short int i = 0;
     int pid;
+    exe_t *e = NULL;
     
     debug("Waiting for all jobs");
     
     while ( (*counter > 0) && (pid = wait3(NULL, 0, NULL)) > 0 ) {
-	i = 0;
-	while ( i < exe_num ) {
-	    if (pid == exe_array[i].e_ctrl_pid) {
-		if ( exe_array[i].e_line == NULL ) {
+	for ( e = exe_list_first(exe_list) ; e != NULL ; e = exe_list_next(exe_list) ) {
+	    if (pid == e->e_ctrl_pid) {
+		if ( e->e_line == NULL ) {
 		    /* the corresponding file has been removed from memory */
 		    debug("job finished: pid %d", pid);
 		}
 		else {
 		    
-		    debug("job finished: %s", exe_array[i].e_line->cl_shell);
-		    exe_array[i].e_line->cl_numexe -= 1;
-		    exe_array[i].e_line->cl_file->cf_running -= 1;
+		    debug("job finished: %s", e->e_line->cl_shell);
+		    e->e_line->cl_numexe -= 1;
+		    e->e_line->cl_file->cf_running -= 1;
 		    
-		    if ( is_serial_once(exe_array[i].e_line->cl_option) )
-			clear_serial_once(exe_array[i].e_line->cl_option);
+		    if ( is_serial_once(e->e_line->cl_option) )
+			clear_serial_once(e->e_line->cl_option);
 		    
 		}
-		if (i < --exe_num) {
-		    exe_array[i] = exe_array[exe_num];
-		    exe_array[exe_num].e_line = NULL;
-		}
-		else
-		    exe_array[i].e_line = NULL;
 		
+		exe_list_remove_cur(exe_list);
 		break;
 	    }
-	    i++;
 	}
     }    
     
@@ -1355,13 +1292,9 @@ mail_notrun(cl_t *line, char context, struct tm *since)
 	      line->cl_shell, pid);
 /*  // */
 
-	/* create an entry in exe_array */
-	if ( exe_num >= exe_array_size )
-	    resize_exe_array();
+	/* create an entry in exe_list */
 	/* set line to NULL as this is not a line ... */
-	exe_array[exe_num].e_line = NULL;
-	exe_array[exe_num].e_ctrl_pid = pid;
-	exe_num++;
+	exe_list_add_line(exe_list, NULL);
 	return;
     }
 
@@ -1437,10 +1370,14 @@ check_lavg(time_t lim)
      * and return the time to sleep */
 {
     time_t tts = 0;
+    lavg_t *l = NULL;
 
 #ifdef NOLOADAVG
-    while ( lavg_num > 0 )
-	run_lavg_job(0);
+    for ( l = lavg_list_first(lavg_list) ; l != NULL ; l = lavg_list_next(lavg_list) ) {
+	run_lavg_job(l);
+	lavg_list_remove_cur(lavg_list);
+    }
+
 
     tts = time_to_sleep(lim);
     return tts;
@@ -1450,44 +1387,37 @@ check_lavg(time_t lim)
     double l_avg[3]= {0, 0, 0};
 
     /* first, check if some lines must be executed because of until */
-    while ( i < lavg_num )
-	if ( (lavg_array[i].l_line->cl_until > 0 
-	      || lavg_array[i].l_line->cl_runfreq == 1)
-	     && lavg_array[i].l_until < now){
-	    if ( ! is_run_if_late(lavg_array[i].l_line->cl_option) ) {
-		if ( ! is_nolog(lavg_array[i].l_line->cl_option) )
+    for ( l = lavg_list_first(lavg_list) ; l != NULL ; l = lavg_list_next(lavg_list) )
+	if ( (l->l_line->cl_until > 0 || l->l_line->cl_runfreq == 1)
+	     && l->l_until < now) {
+	    if ( ! is_run_if_late(l->l_line->cl_option) ) {
+		if ( ! is_nolog(l->l_line->cl_option) )
 		    explain("Interval of execution exceeded : %s (not run)",
-			    lavg_array[i].l_line->cl_shell);
+			    l->l_line->cl_shell);
 
 		/* set time of the next execution and send a mail if needed */
-		if ( is_td(lavg_array[i].l_line->cl_option) &&
-		     is_notice_notrun(lavg_array[i].l_line->cl_option) )
-  		    set_next_exe_notrun(lavg_array[i].l_line, LAVG);
+		if ( is_td(l->l_line->cl_option) &&
+		     is_notice_notrun(l->l_line->cl_option) )
+  		    set_next_exe_notrun(l->l_line, LAVG);
 		else
-		    set_next_exe(lavg_array[i].l_line, NO_GOTO_LOG, -1);
+		    set_next_exe(l->l_line, NO_GOTO_LOG, -1);
 
 		/* remove this job from the lavg queue */
-		lavg_array[i].l_line->cl_numexe -= 1;
-		if (i < --lavg_num) {
-		    lavg_array[i] = lavg_array[lavg_num];
-		    lavg_array[lavg_num].l_line = NULL;
-		}
-		else
-		    lavg_array[i].l_line = NULL;
-
+		l->l_line->cl_numexe -= 1;
+		lavg_list_remove_cur(lavg_list);
 	    }
 	    else {
-		debug("until %s %d", lavg_array[i].l_line->cl_shell,
-		      lavg_array[i].l_until);
-		run_lavg_job(i);
+		debug("until %s %d", l->l_line->cl_shell,
+		      l->l_until);
+		run_lavg_job(l);
+		lavg_list_remove_cur(lavg_list);
 	    }
-	} else
-	    i++;
+	}
 
     /* we do this set here as the nextexe of lavg line may change before */
     tts = time_to_sleep(lim);
 
-    if ( lavg_num == 0 )
+    if ( lavg_list->num_entries == 0 )
 	return tts;
 	
     if ( (i = getloadavg(l_avg, 3)) != 3 )
@@ -1497,43 +1427,38 @@ check_lavg(time_t lim)
     l_avg[0] *= 10;
     l_avg[1] *= 10;
     l_avg[2] *= 10;
-    i = 0;
-    while ( i < lavg_num ) {
+    for ( l = lavg_list_first(lavg_list) ; l != NULL ; l = lavg_list_next(lavg_list) ) {
 	/* check if the line should be executed */
 	if ( lavg_serial_running >= serial_max_running && 
-	     is_serial(lavg_array[i].l_line->cl_option) ) {
-	    i++;
+	     is_serial(l->l_line->cl_option) ) {
 	    continue;
 	}
-	if ( ( is_land(lavg_array[i].l_line->cl_option)
-	       && ( l_avg[0] < lavg_array[i].l_line->cl_lavg[0]
-		    || lavg_array[i].l_line->cl_lavg[0] == 0 )
-	       && ( l_avg[1] < lavg_array[i].l_line->cl_lavg[1]
-		    || lavg_array[i].l_line->cl_lavg[1] == 0 )
-	       && ( l_avg[2] < lavg_array[i].l_line->cl_lavg[2]
-		    || lavg_array[i].l_line->cl_lavg[2] == 0 ) 
+	if ( ( is_land(l->l_line->cl_option)
+	       && ( l_avg[0] < l->l_line->cl_lavg[0] || l->l_line->cl_lavg[0] == 0 )
+	       && ( l_avg[1] < l->l_line->cl_lavg[1] || l->l_line->cl_lavg[1] == 0 )
+	       && ( l_avg[2] < l->l_line->cl_lavg[2] || l->l_line->cl_lavg[2] == 0 ) 
 	    )
 	     || 
-	     ( is_lor(lavg_array[i].l_line->cl_option) 
-	       &&  ( l_avg[0] < lavg_array[i].l_line->cl_lavg[0]
-		     || l_avg[1] < lavg_array[i].l_line->cl_lavg[1]
-		     || l_avg[2] < lavg_array[i].l_line->cl_lavg[2] )
+	     ( is_lor(l->l_line->cl_option) 
+	       &&  ( l_avg[0] < l->l_line->cl_lavg[0]
+		     || l_avg[1] < l->l_line->cl_lavg[1]
+		     || l_avg[2] < l->l_line->cl_lavg[2] )
 		 )
 	    ) {
 	    debug("lavg %s %s %.0f:%d %.0f:%d %.0f:%d",
-		  lavg_array[i].l_line->cl_shell,
-		  (is_lor(lavg_array[i].l_line->cl_option)) ? "or" : "and",
-		  l_avg[0], lavg_array[i].l_line->cl_lavg[0],
-		  l_avg[1], lavg_array[i].l_line->cl_lavg[1],
-		  l_avg[2], lavg_array[i].l_line->cl_lavg[2]);
-	    run_lavg_job(i);
+		  l->l_line->cl_shell,
+		  (is_lor(l->l_line->cl_option)) ? "or" : "and",
+		  l_avg[0], l->l_line->cl_lavg[0],
+		  l_avg[1], l->l_line->cl_lavg[1],
+		  l_avg[2], l->l_line->cl_lavg[2]);
+	    run_lavg_job(l);
+	    lavg_list_remove_cur(lavg_list);
 
-	} else
-	    i++;
+	}
     }
 
     
-    if ( lavg_num == 0 )
+    if ( lavg_list->num_entries == 0 )
 	return tts;
     else
 	return (LAVG_SLEEP < tts) ? LAVG_SLEEP : tts;

@@ -50,7 +50,27 @@ doc:
 # Build all the HTML, text and manual pages in all the languages
 	@(for i in $(LANGUAGES); \
 	do \
-		make $$i/HTML/index.html $$i/txt/readme.txt $$i/man/fcron.8 ; \
+		test -d $(SRCDIR)/$$i/HTML || mkdir $(SRCDIR)/$$i/HTML ; \
+		test -d $(SRCDIR)/$$i/txt || mkdir $(SRCDIR)/$$i/txt ; \
+		test -d $(SRCDIR)/$$i/man || mkdir $(SRCDIR)/$$i/man ; \
+		make $(SRCDIR)/$$i/HTML/index.html $(SRCDIR)/$$i/txt/readme.txt \
+			$(SRCDIR)/$$i/man/fcron.8 ; \
+	done)
+
+doc-if-none:
+# Only generate the doc if there is none (e.g. if the sources came from git
+# and not a tarball)
+# The reason we don't try to generate the doc everytime is that we want the user
+# to be able to compile and install fcron without needing all the tools required
+# to generate the documentations.
+#
+# "make doc" will be called once at max, as all the tests will 
+# succeed after the first time "make doc" is called
+	@(for i in $(LANGUAGES); \
+	do \
+		test -f $(SRCDIR)/$$i/HTML/index.html || make doc ; \
+		test -f $(SRCDIR)/$$i/txt/readme.txt || make doc ; \
+		test -f $(SRCDIR)/$$i/man/fcron.8 || make doc ; \
 	done)
 
 # man/fcron.8 means in fact "build *all* the man pages"
@@ -97,7 +117,7 @@ fcron-doc.mod: fcron-doc.mod.in ../configure.in
 
 install: install-staged perms
 
-install-staged: clean
+install-staged: doc-if-none clean
 	@(echo "Installing man pages in $(DESTDIR)$(DESTMAN)...")
 	@(for l in $(LANGUAGES); do \
 		if test "x$$l" = "xen"; then \

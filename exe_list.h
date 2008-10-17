@@ -44,12 +44,14 @@ typedef struct u_list_t exe_list_t;
 
 /* functions prototypes */
 extern exe_list_t *exe_list_init(void);
-/* WARNING: exe_t pointers returned by those functions are only 
- *          valid for as long as the list is not modified (add/remove) */
-extern exe_t *exe_list_add(exe_list_t *list, struct cl_t *line);
+extern exe_t *exe_list_add_line(exe_list_t *list, struct cl_t *line);
+extern exe_t *exe_list_add(exe_list_t *list, exe_t *e);
+/* WARNING: there should always be a unique iteration loop based on
+ *          u_list_first()/u_list_next() running at any one time in the code */
 extern exe_t *exe_list_first(exe_list_t *list);
-extern exe_t *exe_list_next(exe_list_t *list, exe_t *cur_entry);
-extern void exe_list_remove(exe_list_t *list, exe_t *entry);
+extern exe_t *exe_list_next(exe_list_t *list);
+extern void exe_list_end_iteration(exe_list_t *list);
+extern void exe_list_remove_cur(exe_list_t *list);
 extern exe_list_t *exe_list_destroy(exe_list_t *list);
 
 

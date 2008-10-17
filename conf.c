@@ -904,6 +904,8 @@ delete_file(const char *user_name)
     struct job_t *prev_j;
     int i, k;
     struct cl_t **s_a = NULL;
+    exe_t *e = NULL;
+    lavg_t *l = NULL;
 
     file = file_base;
     while ( file != NULL) {
@@ -913,39 +915,29 @@ delete_file(const char *user_name)
 	    continue;
 	}
 
-	for ( i = 0; i < exe_num; i++)
-	    if ( exe_array[i].e_line != NULL && 
-		 exe_array[i].e_line->cl_file == file ) {
+	for ( e = exe_list_first(exe_list) ; e != NULL ; e = exe_list_next(exe_list) )
+	    if ( e->e_line != NULL && 
+		 e->e_line->cl_file == file ) {
 		/* we set the e_line to NULL, as so we know in wait_chld()
 		 * and wait_all() the corresponding file has been removed.
 		 * Plus, we decrement serial_running and lavg_serial_running
 		 * as we won't be able to do it at the end of the job */
-		if ( ( is_serial(exe_array[i].e_line->cl_option) ||
-		       is_serial_once(exe_array[i].e_line->cl_option) ) &&
-		     ! is_lavg(exe_array[i].e_line->cl_option) )
+		if ( ( is_serial(e->e_line->cl_option) ||
+		       is_serial_once(e->e_line->cl_option) ) &&
+		     ! is_lavg(e->e_line->cl_option) )
 		    serial_running--;
-		else if ( is_serial(exe_array[i].e_line->cl_option) &&
-			  is_lavg(exe_array[i].e_line->cl_option) )
+		else if ( is_serial(e->e_line->cl_option) &&
+			  is_lavg(e->e_line->cl_option) )
 		    lavg_serial_running--;
-		exe_array[i].e_line = NULL;
+		e->e_line = NULL;
 	    }
 
 	/* free lavg queue entries */
-	i = 0;
-	while (i < lavg_num)
-	    if ( lavg_array[i].l_line->cl_file == file ) {
-		debug("removing %s from lavg queue",
-		      lavg_array[i].l_line->cl_shell);
-		lavg_array[i].l_line->cl_numexe--;
-		if (i < --lavg_num) {
-		    lavg_array[i] = lavg_array[lavg_num];
-		    lavg_array[lavg_num].l_line = NULL;
-		}
-		else
-		    lavg_array[i].l_line = NULL;
+	for (l = lavg_list_first(lavg_list) ; l != NULL ; l = lavg_list_next(lavg_list))
+	    if ( l->l_line->cl_file == file ) {
+		debug("removing %s from lavg queue", l->l_line->cl_shell);
+		lavg_list_remove_cur(lavg_list);
 	    } 
-	    else
-		i++;
 
 	/* free serial queue entries */
 	for ( i = 0; i < serial_array_size; i++)

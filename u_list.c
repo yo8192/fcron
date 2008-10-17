@@ -60,6 +60,8 @@ u_list_init(size_t entry_size, int init_size, int grow_size)
     l->array_size = init_size;
     l->entry_size = entry_size;
     l->grow_size = grow_size;
+    l->cur_entry = NULL;
+    l->cur_removed = 0;
     l->entries_array = calloc(init_size, entry_size);
     if ( l->entries_array == NULL )
 	die_e("Failed creating a new unordered list: could not calloc array"
@@ -74,6 +76,7 @@ u_list_resize_array(u_list_t *l)
  * Returns OK on success, ERR if the array is already at maximum size */
 {
     u_list_entry_t *e = NULL;
+    int offset = 0;
     int old_size = l->array_size;
 
     /* sanity check */
@@ -84,6 +87,11 @@ u_list_resize_array(u_list_t *l)
 	      l->array_size);
 	return ERR;
     }
+
+    if ( l->cur_entry != NULL )
+	/* Compute cur_entry's offset so as we can set cur_entry to the right place
+	 * after we have allocated a new chunk of memory for the entries_array */
+	offset = (char *) l->cur_entry - (char *) l->entries_array;
 
     l->array_size = (l->array_size + l->grow_size);
     if ( l->max_entries > 0 && l->array_size > l->max_entries )
@@ -98,6 +106,9 @@ u_list_resize_array(u_list_t *l)
     memcpy(e, l->entries_array, (l->entry_size * old_size));
     free_safe(l->entries_array);
     l->entries_array = e;    
+
+    if ( l->cur_entry != NULL )
+	l->cur_entry = (u_list_entry_t *) ( (char *) l->entries_array + offset );
 
     return OK;
 }
@@ -145,54 +156,80 @@ u_list_first(u_list_t *l)
     /* sanity check */
     if ( l == NULL )
 	die("Invalid argument for u_list_first(): list=%d", l);
+    if ( l->cur_entry != NULL )
+	die("u_list_first() called but there is already an iteration");
 
-    return (l->num_entries > 0) ? l->entries_array : NULL;
+    if (l->num_entries > 0) {
+	l->cur_entry = l->entries_array;
+    }
+    
+    return l->cur_entry;
 }
 
 u_list_entry_t * 
-u_list_next(u_list_t *l, u_list_entry_t *e)
+u_list_next(u_list_t *l)
 /* Return the entry after e */
 {
-    /* sanity checks */
-    if (l==NULL||e==NULL)
-	die("Invalid arguments for u_list_next(): list=%d, entry=%d", l, e);
-    if (e < l->entries_array || e > u_list_last(l) )
-	die("u_list_next(): entry out of list! (entries_array: %d, entry: %d,"
-	    "num_entries: %d)", l->entries_array, e, l->num_entries);
+    /* // WHAT IF I CALL _ADD() (+RESIZE?) OR _REMOVE() BETWEEN TWO _NEXT CALLS? */
 
-    /* // */
-    /* Undefined? -- convert soustraction to float and check if result is an int ? */
-/*    if ( ( (char *) e - (char *) l->entries_array ) % l->entry_size != 0 )
-	die("u_list_next(): entry shifted! (entries_array: %d, entry_size: %d, "
-	    "entry: %d", l->entries_array, l->entry_size, e);
-*/
-    if ( e < u_list_last(l) )
-	return (u_list_entry_t *) ( (char *) e + l->entry_size);
-    else 
-	return NULL;
+    /* sanity checks */
+    if ( l == NULL )
+	die("Invalid arguments for u_list_next(): list=%d", l);
+    if ( l->cur_entry == NULL )
+	die("u_list_next() called outside an iteration: l->cur_entry=%d", l->cur_entry);
+
+    if ( l->cur_removed > 0 ) {
+	l->cur_removed = 0;
+	/* the current entry has just been removed and replaced by another one:
+	 * we can return the same pointer again. 
+	 * However if the removed entry was the last one then we reached the end
+	 * of the list */
+	 if ( l->cur_entry > u_list_last(l) )
+	     l->cur_entry = NULL;
+    }
+    else {
+	/* cur_entry *not* removed (standard behavior) */
+
+	if ( l->cur_entry < u_list_last(l) )
+	    l->cur_entry = (u_list_entry_t *) ( (char *) l->cur_entry + l->entry_size);
+	else
+	    /* reached the end of the list */
+	    l->cur_entry = NULL;
+    }
+
+    return l->cur_entry;
 }
 
 void
-u_list_remove(u_list_t *l, u_list_entry_t *e)
+u_list_end_iteration(u_list_t *list)
+    /* Stop an iteration before _next() reached the end of the list by itself */
 {
+    list->cur_entry = NULL;
+    list->cur_removed = 0;
+}
+
+
+void
+u_list_remove_cur(u_list_t *l)
+{
+    /* // MANAGE L->NEXT_ENTRY (+ SPECIAL CASE FIRST/LAST ENTRY) */
     u_list_entry_t *last = NULL;
 
     /* sanity checks */
-    if ( l == NULL || e == NULL )
-	die("Invalid arguments for u_list_remove(): list=%d, entry=%d", l, e);
-    if (e < l->entries_array || e > u_list_last(l) )
-	die("u_list_next(): entry out of list! (entries_array: %d, entry: %d,"
-	    "num_entries: %d)", l->entries_array, e, l->num_entries);
+    if ( l == NULL )
+	die("Invalid arguments for u_list_remove(): list=%d", l);
+    if ( l->cur_entry == NULL )
+	die("u_list_remove_cur() called outside of an iteration");
 
     last = u_list_last(l);
-    if ( e < last ) {
+    if ( l->cur_entry < last ) {
 	/* Override e with the last entry */
-	memcpy(e, last, l->entry_size);
+	memcpy(l->cur_entry, last, l->entry_size);
     }
     /* erase the last entry and update the number of entries */
     memset(last, 0, l->entry_size);
     l->num_entries--;
-    
+    l->cur_removed = 1;
 
 }
 

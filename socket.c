@@ -40,9 +40,9 @@ void print_fields(int fd, unsigned char *details);
 void print_line(int fd, struct cl_t *line,  unsigned char *details, pid_t pid, int index,
 		time_t until);
 void cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root);
-void cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index,
+void cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t *e,
 		int is_root);
-void cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index);
+void cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t *e);
 void cmd_run(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root);
 void add_to_select_set(int fd, fd_set *set, int *max_fd);
 void remove_from_select_set(int fd, fd_set *set, int *max_fd);
@@ -393,6 +393,8 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
     struct job_t *j;
     int i;
     unsigned char fields[FIELD_NUM_SIZE];
+    exe_t *e = NULL;
+    lavg_t *l = NULL;
 
     for (i = 0; i < FIELD_NUM_SIZE; i++)
 	fields[i] = 0;
@@ -482,23 +484,22 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 	    break;
 
 	case CMD_LIST_EXEQ:
-	    for ( i = 0; i < exe_num; i++) {
-		if ( exe_array[i].e_line == NULL ) {
+	    for (e = exe_list_first(exe_list); e != NULL; e = exe_list_next(exe_list)) {
+		if ( e->e_line == NULL ) {
 		    if ( is_root ) {
 			send_msg_fd(fd, "job no more in an fcrontab: pid %d", 
-				    exe_array[i].e_job_pid);
+				    e->e_job_pid);
 			found = 1;
 		    }
 		}
 		else
-		    Test_line(exe_array[i].e_line, exe_array[i].e_job_pid,
-			      0, 0)
+		    Test_line(e->e_line, e->e_job_pid, 0, 0)
 	    }
 	    break;
 
 	case CMD_LIST_LAVGQ:
-	    for ( i = 0; i < lavg_num; i++)
-		Test_line(lavg_array[i].l_line, 0, 0, lavg_array[i].l_until);
+	    for (l=lavg_list_first(lavg_list); l!=NULL; l=lavg_list_next(lavg_list))
+		Test_line(l->l_line, 0, 0, l->l_until);
 	    break;
 
 	case CMD_LIST_SERIALQ:
@@ -530,21 +531,20 @@ void
 cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 /* common code to all cmds working on jobs in the exeq */
 {
-    int exe_index;
     int found = 0;
     char *err_str = NULL;
+    exe_t *e = NULL;
 
     /* find the corresponding job */
-    for ( exe_index = 0 ; exe_index < exe_num; exe_index++ ) {
-	if ( exe_array[exe_index].e_line != NULL 
-	     && cmd[2] == exe_array[exe_index].e_line->cl_id ) {
+    for (e = exe_list_first(exe_list); e != NULL; e = exe_list_next(exe_list)) {
+	if ( e->e_line != NULL 
+	     && cmd[2] == e->e_line->cl_id ) {
 
 	    found = 1;
 
 	    /* check if the request is valid */
 	    if ( ! is_root &&
-		 strcmp(client->fcl_user,
-			exe_array[exe_index].e_line->cl_file->cf_user) != 0 ) {
+		 strcmp(client->fcl_user, e->e_line->cl_file->cf_user) != 0 ) {
 
 		if ( cmd[0] == CMD_RENICE )
 		    err_str = "%s tried to renice to %ld job id %ld for %s : "
@@ -564,9 +564,9 @@ cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 		/* request is valid : do it */
 
 		if ( cmd[0] == CMD_SEND_SIGNAL )
-		    cmd_send_signal(client, cmd, fd, exe_index);
+		    cmd_send_signal(client, cmd, fd, e);
 		else if ( cmd[0] == CMD_RENICE )
-		    cmd_renice(client, cmd, fd, exe_index, is_root);
+		    cmd_renice(client, cmd, fd, e, is_root);
 		else {
 		    Send_err_msg_end(fd, err_cmd_unknown_str);
 		    return;
@@ -598,36 +598,36 @@ cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 
 
 void 
-cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index, int is_root)
+cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t *e, int is_root)
 /* change nice value of a running job */
 {
 
 #ifdef HAVE_SETPRIORITY
     /* check if arguments are valid */
-    if ( exe_array[exe_index].e_job_pid <= 0 || ((int)cmd[1] < 0 && ! is_root)
+    if ( e->e_job_pid <= 0 || ((int)cmd[1] < 0 && ! is_root)
 	|| (int)cmd[1] > 20 || (int)cmd[1] < -20 ) {
 	warn("renice: invalid args : pid: %d nice_value: %d user: %s.",
-	     exe_array[exe_index].e_job_pid, (int)cmd[1], client->fcl_user);	
+	     e->e_job_pid, (int)cmd[1], client->fcl_user);	
 	Send_err_msg_end(fd, err_invalid_args_str);
 	return;
     }
 
     /* ok, now setpriority() the job */
-    if ( setpriority(PRIO_PROCESS, exe_array[exe_index].e_job_pid, (int)cmd[1]) != 0) {
+    if ( setpriority(PRIO_PROCESS, e->e_job_pid, (int)cmd[1]) != 0) {
 	error_e("could not setpriority(PRIO_PROCESS, %d, %d)",
-		exe_array[exe_index].e_job_pid, (int)cmd[1]);
+		e->e_job_pid, (int)cmd[1]);
 	Send_err_msg_end(fd, err_unknown_str);
 	return;
     }
     else {
 	send_msg_fd(fd, "Command successfully completed on process %d.",
-		    exe_array[exe_index].e_job_pid);
+		    e->e_job_pid);
 	return;
     }
 
 #else /* HAVE_SETPRIORITY */
     warn("System has no setpriority() : cannot renice. pid: %d nice_value: %d user: %s.",
-	 exe_array[exe_index].e_job_pid, (int)cmd[1], client->fcl_user);	
+	 e->e_job_pid, (int)cmd[1], client->fcl_user);	
     Send_err_msg_end(fd, err_cmd_unknown_str);    
 
 #endif /* HAVE_SETPRIORITY */
@@ -635,25 +635,25 @@ cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index, int
 
 
 void
-cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, int exe_index)
+cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t *e)
 /* send a signal to a running job */
 {
-    if ( exe_array[exe_index].e_job_pid <= 0 || (int)cmd[1] <= 0 ) {
+    if ( e->e_job_pid <= 0 || (int)cmd[1] <= 0 ) {
 	warn("send_signal: invalid args : pid: %d signal: %d user: %s",
-	     exe_array[exe_index].e_job_pid, (int)cmd[1], client->fcl_user);	
+	     e->e_job_pid, (int)cmd[1], client->fcl_user);	
 	Send_err_msg_end(fd, err_invalid_args_str);
 	return;
     }
 
     /* ok, now kill() the job */
-    if ( kill(exe_array[exe_index].e_job_pid, (int)cmd[1]) != 0) {
-	error_e("could not kill(%d, %d)", exe_array[exe_index].e_job_pid, (int)cmd[1]);
+    if ( kill(e->e_job_pid, (int)cmd[1]) != 0) {
+	error_e("could not kill(%d, %d)", e->e_job_pid, (int)cmd[1]);
 	Send_err_msg_end(fd, err_unknown_str);
 	return;
     }
     else {
 	send_msg_fd(fd, "Command successfully completed on process %d.",
-		    exe_array[exe_index].e_job_pid);
+		    e->e_job_pid);
 	return;
     }
 }

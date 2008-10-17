@@ -40,12 +40,18 @@ lavg_list_t *lavg_list_init(void)
 }
 
 lavg_t *
-lavg_list_add(lavg_list_t *list, struct cl_t *line)
+lavg_list_add_line(lavg_list_t *list, struct cl_t *line)
 {
     lavg_t e = { NULL, 0};
     e.l_line = line; /* ANSI C does not allow us to directly replace NULL by line above*/
 
     return (lavg_t *) u_list_add( (u_list_t *) list, (u_list_entry_t *) &e);
+}
+
+lavg_t *
+lavg_list_add(lavg_list_t *list, lavg_t *entry)
+{
+    return (lavg_t *) u_list_add( (u_list_t *) list, (u_list_entry_t *) entry);
 }
 
 lavg_t *
@@ -55,15 +61,21 @@ lavg_list_first(lavg_list_t *list)
 }
 
 lavg_t *
-lavg_list_next(lavg_list_t *list, lavg_t *cur_entry)
+lavg_list_next(lavg_list_t *list)
 {
-    return (lavg_t *) u_list_next((u_list_t *) list, (u_list_entry_t *) cur_entry);
+    return (lavg_t *) u_list_next((u_list_t *) list);
 }
 
 void
-lavg_list_remove(lavg_list_t *list, lavg_t *entry)
+lavg_list_end_iteration(lavg_list_t *list)
 {
-    u_list_remove((u_list_t *) list, (u_list_entry_t *) entry);
+    u_list_end_iteration((u_list_t *) list);
+}
+
+void
+lavg_list_remove_cur(lavg_list_t *list)
+{
+    u_list_remove_cur((u_list_t *) list);
 }
 
 lavg_list_t *

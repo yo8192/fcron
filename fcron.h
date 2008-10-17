@@ -27,6 +27,8 @@
 #define __FCRON_H__
 
 #include "global.h"
+#include "exe_list.h"
+#include "lavg_list.h"
 
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
@@ -83,12 +85,8 @@ extern short int serial_running;
 extern short int serial_max_running; 
 extern short int serial_queue_max;
 extern short int lavg_queue_max;
-extern struct exe_t *exe_array;
-extern short int exe_array_size;
-extern short int exe_num;
-extern struct lavg_t *lavg_array;
-extern short int lavg_array_size;
-extern short int lavg_num;
+extern exe_list_t *exe_list;
+extern lavg_list_t *lavg_list;
 extern short int lavg_serial_running;
 /* end of global variables */
 

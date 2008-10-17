@@ -123,6 +123,13 @@ strdup2(const char *str)
     return(ptr);
 }
 
+void
+free_safe(void *ptr)
+    /* free() p and set it to NULL to prevent errors if it is free()ed again */
+{
+    free(ptr);
+    ptr = NULL;
+}
 
 int
 get_word(char **str)
@@ -166,15 +173,15 @@ void
 free_conf(void)
 /* free() the memory allocated in init_conf() */
 {
-    free(fcronconf);
-    free(fcrontabs);
-    free(pidfile);
-    free(fifofile);
-    free(fcronallow);
-    free(fcrondeny);
-    free(shell);
-    free(sendmail);
-    free(editor);
+    free_safe(fcronconf);
+    free_safe(fcrontabs);
+    free_safe(pidfile);
+    free_safe(fifofile);
+    free_safe(fcronallow);
+    free_safe(fcrondeny);
+    free_safe(shell);
+    free_safe(sendmail);
+    free_safe(editor);
 }
 
 

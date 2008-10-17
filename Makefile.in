@@ -73,7 +73,7 @@ CFLAGS += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
 ifeq ($(FCRONDYN), 1)
 LIBOBJS := socket.o $(LIBOBJS)
 endif
-OBJSD := fcron.o subs.o save.o temp_file.o log.o database.o job.o conf.o $(LIBOBJS)
+OBJSD := fcron.o subs.o save.o temp_file.o log.o database.o job.o conf.o u_list.o exe_list.o lavg_list.o $(LIBOBJS)
 OBJSTAB := fcrontab.o subs.o save.o temp_file.o  log.o fileconf.o allow.o read_string.o
 OBJSDYN := fcrondyn.o subs.o log.o allow.o read_string.o
 OBJCONV := convert-fcrontab.o subs.o save.o log.o
@@ -113,6 +113,9 @@ fcronsighup: $(OBJSIG)
 
 convert-fcrontab: $(OBJCONV)
 	$(CC) $(CFLAGS) -o $@ $(OBJCONV) $(LIBS)
+
+exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
+	$(CC) $(CFLAGS) -o $@  exe_list.o u_list.o exe_list_test.o log.o subs.o $(LIBS)
 
 %.o: $(SRCDIR)/%.c $(HEADERSALL) $(SRCDIR)/%.h
 	$(CC) $(CFLAGS) -DPIDFILE="\"${PIDFILE}\"" \

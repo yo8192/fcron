@@ -38,12 +38,18 @@ exe_list_t *exe_list_init(void)
 }
 
 exe_t *
-exe_list_add(exe_list_t *list, struct cl_t *line)
+exe_list_add_line(exe_list_t *list, struct cl_t *line)
 {
     exe_t e = { NULL, 0, 0};
     e.e_line = line; /* ANSI C does not allow us to directly replace NULL by line above*/
 
     return (exe_t *) u_list_add( (u_list_t *) list, (u_list_entry_t *) &e);
+}
+
+exe_t *
+exe_list_add(exe_list_t *list, exe_t *e)
+{
+    return (exe_t *) u_list_add( (u_list_t *) list, (u_list_entry_t *) e);
 }
 
 exe_t *
@@ -53,15 +59,21 @@ exe_list_first(exe_list_t *list)
 }
 
 exe_t *
-exe_list_next(exe_list_t *list, exe_t *cur_entry)
+exe_list_next(exe_list_t *list)
 {
-    return (exe_t *) u_list_next((u_list_t *) list, (u_list_entry_t *) cur_entry);
+    return (exe_t *) u_list_next((u_list_t *) list);
 }
 
 void
-exe_list_remove(exe_list_t *list, exe_t *entry)
+exe_list_end_iteration(exe_list_t *list)
 {
-    u_list_remove((u_list_t *) list, (u_list_entry_t *) entry);
+    u_list_end_iteration((u_list_t *) list);
+}
+
+void
+exe_list_remove_cur(exe_list_t *list)
+{
+    u_list_remove_cur((u_list_t *) list);
 }
 
 exe_list_t *

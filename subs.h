@@ -46,6 +46,7 @@ extern uid_t get_user_uid_safe(char *username);
 extern gid_t get_group_gid_safe(char *groupname);
 extern int remove_blanks(char *str);
 extern char *strdup2(const char *);
+extern void free_safe(void *ptr);
 extern int get_word(char **str);
 extern int temp_file(char **name);
 extern void read_conf(void);

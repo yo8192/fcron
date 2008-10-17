@@ -661,7 +661,6 @@ run_job(struct exe_t *exeent)
 	    error_e("parent: could not close(pipe_pid_fd[1])");
 
 	exeent->e_ctrl_pid = pid;
-	line->cl_file->cf_running += 1;
 
 #ifdef CHECKRUNJOB
 	debug("run_job(): about to read grand-child pid...");

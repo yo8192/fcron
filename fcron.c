@@ -104,16 +104,12 @@ short int serial_running;     /* number of running serial jobs */
 /* do not run more than this number of serial job simultaneously */
 short int serial_max_running = SERIAL_MAX_RUNNING; 
 short int serial_queue_max   = SERIAL_QUEUE_MAX;
-short int lavg_queue_max     = LAVG_QUEUE_MAX;
 
-struct lavg_t *lavg_array;      /* jobs waiting for a given system load value */
-short int lavg_array_size;    /* size of lavg_array */
-short int lavg_num;           /* number of job being queued */
+lavg_list_t *lavg_list;      /* jobs waiting for a given system load value */
+short int lavg_queue_max = LAVG_QUEUE_MAX;
 short int lavg_serial_running;/* number of serialized lavg job being running */
 
-struct exe_t *exe_array;        /* jobs which are executed */
-short int exe_array_size;     /* size of exe_array */
-short int exe_num;            /* number of job being executed */
+exe_list_t *exe_list;        /* jobs which are executed */
 
 time_t begin_sleep;           /* the time at which sleep began */
 time_t now;                   /* the current time */
@@ -610,10 +606,7 @@ main(int argc, char **argv)
     next_id = 0;
 
     /* initialize exe_array */
-    exe_num = 0;
-    exe_array_size = EXE_INITIAL_SIZE;
-    if ( (exe_array = calloc(exe_array_size, sizeof(struct exe_t))) == NULL )
-	die_e("could not calloc exe_array");
+    exe_list = exe_list_init();
 
     /* initialize serial_array */
     serial_running = 0;
@@ -624,11 +617,9 @@ main(int argc, char **argv)
 	die_e("could not calloc serial_array");
 
     /* initialize lavg_array */
-    lavg_num = 0;
+    lavg_list = lavg_list_init();
+    lavg_list->max_entries = lavg_queue_max;
     lavg_serial_running = 0;
-    lavg_array_size = LAVG_INITIAL_SIZE;
-    if ( (lavg_array = calloc(lavg_array_size, sizeof(lavg_t))) == NULL )
-	die_e("could not calloc lavg_array");
 
 #ifdef FCRONDYN
     /* initialize socket */

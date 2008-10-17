@@ -43,12 +43,14 @@ typedef struct u_list_t lavg_list_t;
 
 /* functions prototypes */
 extern lavg_list_t *lavg_list_init(void);
-/* WARNING: lavg_t pointers returned by those functions are only 
- *          valid for as long as the list is not modified (add/remove) */
-extern lavg_t *lavg_list_add(lavg_list_t *list, struct cl_t *line);
+extern lavg_t *lavg_list_add_line(lavg_list_t *list, struct cl_t *line);
+extern lavg_t *lavg_list_add(lavg_list_t *list, lavg_t *entry);
+/* WARNING: there should always be a unique iteration loop based on
+ *          u_list_first()/u_list_next() running at any one time in the code */
 extern lavg_t *lavg_list_first(lavg_list_t *list);
-extern lavg_t *lavg_list_next(lavg_list_t *list, lavg_t *cur_entry);
-extern void lavg_list_remove(lavg_list_t *list, lavg_t *entry);
+extern lavg_t *lavg_list_next(lavg_list_t *list);
+extern void lavg_list_end_iteration(lavg_list_t *list);
+extern void lavg_list_remove_cur(lavg_list_t *list);
 extern lavg_list_t *lavg_list_destroy(lavg_list_t *list);
 
 

@@ -221,17 +221,6 @@ typedef struct job_t {
     struct job_t   *j_next;
 } job_t;
 
-typedef struct lavg_t {
-    struct cl_t *l_line;  
-    time_t       l_until;   /* the timeout of the wait for load averages */
-} lavg_t;
-
-typedef struct exe_t {
-    struct cl_t *e_line;
-    pid_t        e_ctrl_pid; /* pid of the fcron process controling the job */
-    pid_t        e_job_pid;  /* pid of the job itself */
-} exe_t;
-
 
 #if SIZEOF_TIME_T == SIZEOF_SHORT_INT
 #define ATTR_SIZE_TIMET "h"
