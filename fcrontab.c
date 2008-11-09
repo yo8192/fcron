@@ -511,7 +511,7 @@ edit_file(char *buf)
 		}
 	    }
 	    snprintf(editorcmd, sizeof(editorcmd), "%s %s", cureditor, tmp_str);
-	    chdir(tmp_path);
+	    chdir(tmp_path); /* to make sure the editor can stat() the cur dir */
 	    execlp(shell, shell, "-c", editorcmd, tmp_str, NULL);
 	    error_e("Error while running \"%s\"", cureditor);
 	    goto exiterr;
