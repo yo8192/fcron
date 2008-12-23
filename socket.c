@@ -569,6 +569,7 @@ cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 		    cmd_renice(client, cmd, fd, e, is_root);
 		else {
 		    Send_err_msg_end(fd, err_cmd_unknown_str);
+		    exe_list_end_iteration(exe_list);
 		    return;
 		}
 	    }

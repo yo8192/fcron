@@ -512,6 +512,7 @@ wait_chld(void)
 		}
 		
 		exe_list_remove_cur(exe_list);
+		exe_list_end_iteration(exe_list);
 		break;
 	    }
 	}
@@ -549,6 +550,7 @@ wait_all(int *counter)
 		}
 		
 		exe_list_remove_cur(exe_list);
+		exe_list_end_iteration(exe_list);
 		break;
 	    }
 	}
