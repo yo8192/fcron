@@ -5,6 +5,7 @@ autom4te.cache
 config.h
 config.log
 config.status
+configure
 doc/Makefile
 fcron
 fcrondyn
