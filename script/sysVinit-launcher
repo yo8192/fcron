@@ -6,27 +6,47 @@
 # processname: fcron
 # pidfile: /var/run/fcron.pid
 # config: /var/spool/fcron/*
+
+### BEGIN INIT INFO
+# Provides:          fcron
+# Required-Start:    $remote_fs $syslog $time
+# Required-Stop:     $remote_fs $syslog
+# Should-Start:
+# Should-Stop: 
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Fcron job service
+# Description:       Fcron job service
+### END INIT INFO
+
 # $Id: sysVinit-launcher,v 1.12 2007-11-07 09:26:01 thib Exp $
 
-export PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
+export PATH="/sbin:/usr/sbin:/bin:/usr/bin"
 
 FUNCTION=0
 SBIN=@@DESTSBIN@
 
+EXEC="$SBIN/fcron"
+
+TARGETS="{start|stop|status|restart|reload|force-reload}"
+
 # Source function library.
+# the 'status' function is considered to be here only if $FUNCTION = 1 and
+# the condrestart action is only implemented in that case
 if test -f /etc/init.d/functions; then
     . /etc/init.d/functions
     FUNCTION=1
-    STARTCMD="daemon $SBIN/fcron -b"
+    STARTCMD="daemon $EXEC -b"
     STOPCMD="killproc fcron"
     FINALECHO="echo"
+    TARGETS="{start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
 elif start-stop-daemon --version > /dev/null; then
-    STARTCMD="start-stop-daemon --start --quiet --exec $SBIN/fcron -- -b"
-    STOPCMD="start-stop-daemon --stop --quiet --exec $SBIN/fcron"
+    STARTCMD="start-stop-daemon --start --quiet --exec $EXEC -- -b"
+    STOPCMD="start-stop-daemon --stop --quiet --exec $EXEC"
     FINALECHO="echo ."
 else
-    STARTCMD="$SBIN/fcron -b"
-    STOPCMD="killall -TERM $SBIN/fcron"
+    STARTCMD="$EXEC -b"
+    STOPCMD="killall -TERM $EXEC"
     FINALECHO="echo ."
 fi
 
@@ -36,6 +56,10 @@ RETVAL=0
 #  See how we were called.
 case "$1" in
   start)
+	if test $FUNCTION -eq 1; then
+	    status fcron >/dev/null 2>&1 && exit 0
+	fi
+	[ -x "$EXEC" ] || exit 5
 	echo -n "Starting fcron"
 	$STARTCMD
 	RETVAL=$?
@@ -45,6 +69,9 @@ case "$1" in
 	$FINALECHO
 	;;
   stop)
+	if test $FUNCTION -eq 1; then
+	    status fcron >/dev/null 2>&1 || exit 0
+	fi
 	echo -n "Shutting down fcron"
 	$STOPCMD
 	RETVAL=$?
@@ -56,8 +83,8 @@ case "$1" in
   status)
 	if test $FUNCTION -eq 1; then
 	    status fcron
+	    RETVAL=$?
 	fi
-	RETVAL=$?
 	;;
   restart)
 	$0 stop
@@ -65,13 +92,26 @@ case "$1" in
 	$0 start
 	RETVAL=$?
 	;;
-  reload)
+  reload|force-reload)
+	if test $FUNCTION -eq 1; then
+	    status fcron >/dev/null 2>&1 || exit 7
+	fi
 	killall -HUP fcron
 	RETVAL=$?
-	;;        
+	;;
+  condrestart|try-restart)
+	if test $FUNCTION -eq 1; then
+	    status fcron >/dev/null 2>&1 || exit 0
+	    $0 restart
+	    RETVAL=$?
+	else
+	    echo "Usage: fcron $TARGETS"
+	    exit 2
+	fi
+	;;
   *)
-	echo "Usage: fcron {start|stop|status|restart}"
-	exit 1
+	echo "Usage: fcron $TARGETS"
+	exit 2
 esac
 
 exit $RETVAL
