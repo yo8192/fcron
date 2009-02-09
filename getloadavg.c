@@ -1,7 +1,7 @@
 /* 
  *  gloadavg.c - get load average for Linux
  *  Copyright (C) 1993  Thomas Koenig
- *  Copyright 2000-2008 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2009 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
