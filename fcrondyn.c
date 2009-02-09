@@ -50,7 +50,7 @@ int interactive_mode(int fd);
 int talk_fcron(char *cmd_str, int fd);
 int parse_cmd(char *cmd_str, long int **cmd, int *cmd_len);
 int connect_fcron(void);
-int authenticate_user(int fd);
+int authenticate_user_password(int fd);
 
 /* command line options */
 #ifdef DEBUG
@@ -359,7 +359,7 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 }
 
 int
-authenticate_user(int fd)
+authenticate_user_password(int fd)
     /* authenticate user */
 {
     char *password = NULL;
@@ -426,12 +426,15 @@ connect_fcron(void)
     if ( connect(fd, (struct sockaddr *) &addr, sun_len) < 0 )
 	die_e("Cannot connect() to fcron (check if fcron is running)");
 
-    if ( authenticate_user(fd) == ERR ) {
-    fprintf(stderr, "Invalid password or too many authentication failures"
+/* Nothing to do on the client side if we use SO_PASSCRED */
+#ifndef SO_PASSCRED
+    if ( authenticate_user_password(fd) == ERR ) {
+        fprintf(stderr, "Invalid password or too many authentication failures"
 	    " (try to connect later).\n(In the later case, fcron rejects all"
 	    " new authentication during %d secs)\n", AUTH_WAIT);	
 	die("Unable to authenticate user");
     }
+#endif /* SO_PASSCRED */
 
     return fd;
 

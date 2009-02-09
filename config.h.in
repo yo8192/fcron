@@ -30,6 +30,7 @@
 
 
 /* ****************************************************************** */
+/* ****************************************************************** */
 /* beginning of configurable stuff ********************************** */
 
 
@@ -133,8 +134,10 @@
 
 /* end of configurable stuff **************************************** */
 /* ****************************************************************** */
+/* ****************************************************************** */
 
 
+/* ****************************************************************** */
 /* ****************************************************************** */
 /* *** options which are set by configure script ******************** */
 
@@ -148,8 +151,13 @@
 
 #undef CFLAGS
 
+/* ****************************************************************** */
 /* *** paths *** */
+
 #undef PROC
+
+/* ****************************************************************** */
+/* *** Compilation options *** */
 
 /* 1 if we want to compile and install fcrondyn */
 #undef FCRONDYN
@@ -173,6 +181,9 @@
 
 /* special user for the system fcrontab */
 #undef SYSFCRONTAB
+
+/* ****************************************************************** */
+/* *** Types *** */
 
 /* Define to empty if the keyword does not work.  */
 #undef const
@@ -207,6 +218,9 @@
 
 /* Define on System V Release 4.  */
 #undef SVR4
+
+/* ****************************************************************** */
+/* *** Functions *** */
 
 /* Define if you have the crypt function.  */
 #undef HAVE_CRYPT
@@ -289,6 +303,9 @@
 /* Define if you have the wait3 system call.  */
 #undef HAVE_WAIT3
 
+/* ****************************************************************** */
+/* *** Headers *** */
+
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS
 
@@ -297,6 +314,9 @@
 
 /* Define if your <sys/time.h> declares struct tm.  */
 #undef TM_IN_SYS_TIME
+
+/* Define if you have the <cred.h> header file.  */
+#undef HAVE_CRED_H
 
 /* Define if you have the <crypt.h> header file.  */
 #undef HAVE_CRYPT_H
@@ -346,6 +366,9 @@
 /* Define if you have the <strings.h> header file.  */
 #undef HAVE_STRINGS_H
 
+/* Define if you have the <sys/cred.h> header file.  */
+#undef HAVE_SYS_CRED_H
+
 /* Define if you have the <sys/dir.h> header file.  */
 #undef HAVE_SYS_DIR_H
 
@@ -373,6 +396,9 @@
 /* Define if you have the <sys/types.h> header file.  */
 #undef HAVE_SYS_TYPES_H
 
+/* Define if you have the <sys/ucred.h> header file.  */
+#undef HAVE_SYS_UCRED_H
+
 /* Define if you have the <sys/un.h> header file.  */
 #undef HAVE_SYS_UN_H
 
@@ -384,6 +410,9 @@
 
 /* Define if you have the <termios.h> header file.  */
 #undef HAVE_TERMIOS_H
+
+/* Define if you have the <ucred.h> header file.  */
+#undef HAVE_UCRED_H
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
@@ -409,6 +438,9 @@
 #ifndef O_SYNC
 #define O_SYNC O_FSYNC
 #endif
+
+/* ****************************************************************** */
+/* *** Size of *** */
 
 /* These SIZEOF_* constants are defined by the AC_CHECK_SIZEOF macro */
 #undef SIZEOF_TIME_T

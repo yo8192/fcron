@@ -112,6 +112,19 @@
 #include <sys/fcntl.h>
 #endif
 
+#ifdef HAVE_CRED_H
+#include <cred.h>
+#endif
+#ifdef HAVE_UCRED_H
+#include <ucred.h>
+#endif
+#ifdef HAVE_SYS_CRED_H
+#include <sys/cred.h>
+#endif
+#ifdef HAVE_SYS_UCRED_H
+#include <sys/ucred.h>
+#endif
+
 #ifdef HAVE_LIBPAM
 #include "pam.h"
 #endif

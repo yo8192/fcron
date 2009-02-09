@@ -34,7 +34,8 @@
 
 void remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client);
 void exe_cmd(struct fcrondyn_cl *client);
-void auth_client(struct fcrondyn_cl *client);
+void auth_client_password(struct fcrondyn_cl *client);
+void auth_client_so_passcred(struct fcrondyn_cl *client);
 void cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root);
 void print_fields(int fd, unsigned char *details);
 void print_line(int fd, struct cl_t *line,  unsigned char *details, pid_t pid, int index,
@@ -196,9 +197,52 @@ init_socket(void)
 
 }
 
+#ifdef SO_PASSCRED
 void
-auth_client(struct fcrondyn_cl *client)
-    /* check client identity */
+auth_client_so_passcred(struct fcrondyn_cl *client)
+    /* check client identity by reading its credentials from the socket
+     * using getsockopt(SO_PASSCRED).
+     * Sets client->fcl_user on success, don't do anything on failure */
+{
+    const int true = 1;
+    /* There is no ucred.h (or equivalent) on linux to define struct ucred (!!)
+     * so we do it here */
+#if ! ( defined(HAVE_CRED_H) && defined(HAVE_UCRED_H) \
+		&& defined(HAVE_SYS_CRED_H) && defined(HAVE_SYS_UCRED_H) )
+    struct ucred {
+        pid_t pid;
+        uid_t uid;
+        gid_t gid;
+    };
+#endif
+    struct ucred cred;
+    socklen_t cred_size = sizeof(cred);
+    struct passwd *p_entry = NULL;
+    
+    setsockopt(client->fcl_sock_fd, SOL_SOCKET, SO_PASSCRED, &true, sizeof(true));
+    if ( getsockopt(client->fcl_sock_fd, SOL_SOCKET, SO_PEERCRED,
+			    &cred, &cred_size) != 0) {
+        error_e("Could not get client credentials using getsockopt(SO_PEERCRED)");
+	return;
+    }
+
+    p_entry = getpwuid(cred.uid);
+    if ( p_entry == NULL ) {
+        error_e("Could not find password entry for uid %d", cred.uid);
+	return;
+    }
+
+    /* Successfully identified user: */
+    client->fcl_user = strdup2(p_entry->pw_name);
+
+    explain("Client's pid=%d, uid=%d, gid=%d username=%s\n", cred.pid, cred.uid, cred.gid, client->fcl_user);
+
+}
+#endif /* SO_PASSCRED */
+
+void
+auth_client_password(struct fcrondyn_cl *client)
+    /* check client identity by asking him to input his password */
 {
     char *pass_cry = NULL;
     char *pass_sys = NULL;
@@ -224,7 +268,7 @@ auth_client(struct fcrondyn_cl *client)
 #endif
 
     /* */
-    debug("auth_client() : socket : %d", client->fcl_sock_fd);
+    debug("auth_client_password() : socket : %d", client->fcl_sock_fd);
     /* */
 
     /* we need to limit auth failures : otherwise fcron may be used to "read"
@@ -239,7 +283,7 @@ auth_client(struct fcrondyn_cl *client)
 	return;    
     }
 
-    /* password is stored after user name */
+    /* the password is stored after the user name */
     pass_str = &( (char *)client->fcl_cmd ) [ strlen( (char*)client->fcl_cmd ) + 1 ];
     if ( (pass_cry = crypt(pass_str, pass_sys)) == NULL ) {
 	error_e("could not crypt()");
@@ -781,7 +825,8 @@ check_socket(int num)
 
     if ( FD_ISSET(listen_fd, &read_set) ) {
 	debug("got new connection ...");
-	if ((fd = accept(listen_fd, (struct sockaddr *)&client_addr, &addr_len)) == -1) {
+	fd = accept(listen_fd, (struct sockaddr *)&client_addr, &addr_len);
+	if ( fd  == -1 ) {
 	    error_e("could not accept new connection : isset(listen_fd = %d) = %d",
 		    listen_fd, FD_ISSET(listen_fd, &read_set));
 	}
@@ -811,6 +856,10 @@ check_socket(int num)
 		fcrondyn_cl_num += 1;
 		
 		debug("Added connection fd : %d - %d connections", fd, fcrondyn_cl_num);
+
+#ifdef SO_PASSCRED
+		auth_client_so_passcred(client);
+#endif /* SO_PASSCRED */
 	    }
 	}
     }
@@ -853,7 +902,7 @@ check_socket(int num)
 	    client->fcl_cmd = buf_int;
 	    if ( client->fcl_user == NULL )
 		/* not authenticated yet */
-		auth_client(client);
+		auth_client_password(client);
 	    else {
 		/* we've just read a command ... */
 		client->fcl_idle_since = now;

@@ -16,7 +16,7 @@ AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
 VERSION="$vers"
 AC_SUBST(VERSION)
 
-copyright_quoted="\"2000-2008\""
+copyright_quoted="\"2000-2009\""
 AC_DEFINE_UNQUOTED(COPYRIGHT_QUOTED, $copyright_quoted)
 
 
@@ -137,6 +137,7 @@ if test "$crypt" -eq "1"; then
 fi
 
 
+dnl --- sockets
 dnl Check for post-Reno style struct sockaddr
 AC_CACHE_CHECK([for sa_len],
   ac_cv_sa_len,
@@ -147,6 +148,10 @@ AC_CACHE_CHECK([for sa_len],
 if test $ac_cv_sa_len = yes; then
   AC_DEFINE(HAVE_SA_LEN)
 fi
+
+dnl --- Socket authentication
+AC_CHECK_HEADERS(cred.h sys/cred.h ucred.h sys/ucred.h)
+AC_CHECK_FUNCS(getpeerucred)
 
 dnl ---------------------------------------------------------------------
 dnl Check for fcron more specific stuffs (paths, progs, ...)
