@@ -34,8 +34,12 @@
 
 void remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client);
 void exe_cmd(struct fcrondyn_cl *client);
+#ifdef SO_PEERCRED /* linux */
+void auth_client_so_peercred(struct fcrondyn_cl *client);
+#elif defined(HAVE_GETPEERUCRED) || defined(HAVE_GETPEEREID) /* resp. solaris 10 and Free/OpenBSD) */
+void auth_client_getpeer(struct fcrondyn_cl *client);
+#endif
 void auth_client_password(struct fcrondyn_cl *client);
-void auth_client_so_passcred(struct fcrondyn_cl *client);
 void cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root);
 void print_fields(int fd, unsigned char *details);
 void print_line(int fd, struct cl_t *line,  unsigned char *details, pid_t pid, int index,
@@ -197,12 +201,64 @@ init_socket(void)
 
 }
 
-#ifdef SO_PASSCRED
+#if defined(HAVE_GETPEERUCRED) || defined(HAVE_GETPEEREID)
+
+/*
+ * WARNING: UNTESTED CODE !!!
+ */
+
 void
-auth_client_so_passcred(struct fcrondyn_cl *client)
+auth_client_getpeer(struct fcrondyn_cl *client)
     /* check client identity by reading its credentials from the socket
-     * using getsockopt(SO_PASSCRED).
-     * Sets client->fcl_user on success, don't do anything on failure */
+     * using getpeerucred() (Solaris 10 onward) or getpeereid(open/freeBSD).
+     * Sets client->fcl_user on success, don't do anything on failure
+     * so that the client stays unauthenticated */
+{
+    struct passwd *p_entry = NULL;
+#ifdef GETPEERUCRED
+    ucred_t *ucred = NULL;
+#elif defined(HAVE_GETPEEREID)
+    uid_t euid = -1;
+    gid_t egid = -1;
+#endif 
+  
+#ifdef GETPEERUCRED
+    if (getpeerucred(client->fcl_sock_fd, &ucred) < 0) {
+        error_e("Could not get client credentials using getpeerucred()");
+        return;
+    }
+#elif defined(HAVE_GETPEEREID)
+    if (getpeereid(client->fcl_sock_fd, &euid, &egid) < 0) {
+        error_e("Could not get client credentials using getpeereid()");
+        return;
+    }
+#else
+#  error "No authentication method in auth_client_getpeer()!"
+#endif 
+
+    p_entry = getpwuid(cred.uid);
+    if ( p_entry == NULL ) {
+        error_e("Could not find password entry for uid %d", cred.uid);
+	return;
+    }
+
+    /* Successfully identified user: */
+    client->fcl_user = strdup2(p_entry->pw_name);
+
+    explain("Client's pid=%d, uid=%d, gid=%d username=%s\n", cred.pid, cred.uid, cred.gid, client->fcl_user);
+
+}
+#endif /* HAVE_GETPEERUCRED || HAVE_GETPEEREID */
+
+
+
+#ifdef SO_PEERCRED
+void
+auth_client_so_peercred(struct fcrondyn_cl *client)
+    /* check client identity by reading its credentials from the socket
+     * using getsockopt(SO_PEERCRED) (Linux)
+     * Sets client->fcl_user on success, don't do anything on failure
+     * so that the client stays unauthenticated */
 {
     const int true = 1;
     /* There is no ucred.h (or equivalent) on linux to define struct ucred (!!)
@@ -214,7 +270,7 @@ auth_client_so_passcred(struct fcrondyn_cl *client)
         uid_t uid;
         gid_t gid;
     };
-#endif
+#endif /* struct ucred not defined */
     struct ucred cred;
     socklen_t cred_size = sizeof(cred);
     struct passwd *p_entry = NULL;
@@ -238,7 +294,7 @@ auth_client_so_passcred(struct fcrondyn_cl *client)
     explain("Client's pid=%d, uid=%d, gid=%d username=%s\n", cred.pid, cred.uid, cred.gid, client->fcl_user);
 
 }
-#endif /* SO_PASSCRED */
+#endif /* SO_PEERCRED */
 
 void
 auth_client_password(struct fcrondyn_cl *client)
@@ -857,9 +913,11 @@ check_socket(int num)
 		
 		debug("Added connection fd : %d - %d connections", fd, fcrondyn_cl_num);
 
-#ifdef SO_PASSCRED
-		auth_client_so_passcred(client);
-#endif /* SO_PASSCRED */
+#ifdef SO_PEERCRED
+		auth_client_so_peercred(client);
+#elif defined(HAVE_GETPEERUCRED) || defined(HAVE_GETPEEREID)
+		auth_client_getpeer(client);
+#endif /* SO_PEERCRED */
 	    }
 	}
     }

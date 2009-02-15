@@ -246,6 +246,12 @@
 /* Define if you have the getopt_long function.  */
 #undef HAVE_GETOPT_LONG
 
+/* Define if you have the getpeereid function.  */
+#undef HAVE_GETPEEREID
+
+/* Define if you have the getpeerucred function.  */
+#undef HAVE_GETPEERUCRED
+
 /* Define if you have the getspnam function.  */
 #undef HAVE_GETSPNAM
 
