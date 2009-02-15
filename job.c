@@ -784,7 +784,7 @@ void
 launch_mailer(cl_t *line, FILE *mailf)
     /* mail the output of a job to user */
 {
-#ifdef SENDMAIL
+#ifdef USE_SENDMAIL
     foreground = 0;
 
     /* set stdin to the job's output */
@@ -808,7 +808,7 @@ launch_mailer(cl_t *line, FILE *mailf)
     error_e("Can't find \"%s\". Trying a execlp(\"sendmail\")", sendmail);
     execlp("sendmail", "sendmail", SENDMAIL_ARGS, line->cl_mailto, NULL);
     die_e("Can't exec " SENDMAIL);
-#else /* defined(SENDMAIL) */
+#else /* defined(USE_SENDMAIL) */
     exit(EXIT_OK);
 #endif
 }

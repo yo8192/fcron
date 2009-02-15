@@ -179,8 +179,6 @@ dnl ---------------------------------------------------------------------
 dnl Programs ...
 
 AC_PATH_PROG(FOUND_SENDMAIL, sendmail, , $PATH:/usr/lib:/usr/sbin )
-SENDMAIL=
-fcron_use_sendmail=yes
 AC_MSG_CHECKING(sendmail)
 AC_ARG_WITH(sendmail,
 [  --with-sendmail=PATH	Path to sendmail.],
@@ -190,14 +188,20 @@ AC_ARG_WITH(sendmail,
 
 Without sendmail you won't get the output of the jobs by mail
 ])
-    fcron_use_sendmail=no
-    SENDMAIL=no
     ;;
   yes)
+    if test "$FOUND_SENDMAIL" = "" ; then
+       AC_MSG_ERROR([
+Cannot determine path to sendmail: try option --with-sendmail=PATH])
+    fi
+    SENDMAIL=$FOUND_SENDMAIL
+    USE_SENDMAIL=1
     ;;
   *)
-    SENDMAIL=$withval
-    if test $fcron_enable_checks = 'yes' -a ! -x "$withval"; then
+    if test -x $withval ; then
+      SENDMAIL=$withval
+      USE_SENDMAIL=1
+    else
       AC_MSG_ERROR([
 File $withval is not an executable file])
     fi
@@ -205,16 +209,13 @@ File $withval is not an executable file])
   esac ]
 )
 
-if test $fcron_use_sendmail = yes -a x"$SENDMAIL" = x ; then
-  SENDMAIL=$FOUND_SENDMAIL
-  if test "$FOUND_SENDMAIL" = "" ; then
-     AC_MSG_ERROR([
-Cannot determine path to sendmail: try option --with-sendmail=PATH])
-  fi
-fi
-
-AC_MSG_RESULT([$SENDMAIL])
 AC_SUBST([SENDMAIL])
+if test x"$USE_SENDMAIL" != x ; then
+  AC_DEFINE([USE_SENDMAIL])
+  AC_MSG_RESULT([$SENDMAIL])
+else
+  AC_MSG_RESULT([disabled])
+fi
 
 AC_PATH_PROG(FOUND_FCRON_SHELL, sh, , $PATH)
 FCRON_SHELL=

@@ -159,6 +159,7 @@
 /* ****************************************************************** */
 /* *** Compilation options *** */
 
+#undef USE_SENDMAIL
 /* 1 if we want to compile and install fcrondyn */
 #undef FCRONDYN
 #undef NOLOADAVG

@@ -1188,7 +1188,7 @@ read_freq(char *ptr, cf_t *cf)
 	goto exiterr;
     }
 
-#ifndef SENDMAIL
+#ifndef USE_SENDMAIL
     clear_mail(cl->cl_option);
 #endif
 
@@ -1293,7 +1293,7 @@ read_arys(char *ptr, cf_t *cf)
 	goto exiterr;
     }
 
-#ifndef SENDMAIL
+#ifndef USE_SENDMAIL
     clear_mail(cl->cl_option);
 #endif
 
@@ -1431,7 +1431,7 @@ read_period(char *ptr, cf_t *cf)
     }
 
   ok:
-#ifndef SENDMAIL
+#ifndef USE_SENDMAIL
     clear_mail(cl->cl_option);
 #endif
 
