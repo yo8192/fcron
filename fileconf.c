@@ -904,6 +904,14 @@ read_opt(char *ptr, cl_t *cl)
 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
+	else if( strcmp(opt_name, "jitter") == 0 ) {
+	    if(!in_brackets ||(ptr=get_num(ptr, &i, UCHAR_MAX, 0, NULL))==NULL)
+		Handle_err;
+	    cl->cl_jitter = i;
+ 	    if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+	}
+
 	/* handle %-line : we check if we are really in a %-line (which we do not do
 	 * for other options), because writing "&hourly" in a fcrontab results in an
 	 * error (hourly ignored) hard to find, and, in any case, annoying. */

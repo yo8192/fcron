@@ -81,5 +81,6 @@ extern int save_file_safe(cf_t *file, char *final_path, char *prog_name, uid_t o
 #define S_OPTION_T     2017  /* options for that line (see option.h) */
 #define S_FIRST_T      2018  /* wait time before first execution */
 #define S_TZ_T         2019  /* time zone of the line */
+#define S_JITTER_T     2020  /* jitter of the line */
 
 #endif /* __SAVE_H__ */

@@ -661,6 +661,12 @@ read_file(const char *file_name, cf_t *cf)
 	    cl->cl_timefreq = (time_t) bufi;
 	    break;
 
+	case S_JITTER_T:
+	    /* read the jitter (uchar) to use to set next execution time */
+	    Read(bufi, size, "Error while reading jitter field");
+	    cl->cl_jitter = (unsigned char) bufi;
+	    break;
+
 	case S_MINS_T:
 	    Read(cl->cl_mins, size, "Error while reading mins field");
 	    break;
