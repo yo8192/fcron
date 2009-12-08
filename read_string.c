@@ -86,7 +86,7 @@ char *read_string(int echo, const char *prompt)
 	    } else {
 		line[nc] = '\0';
 	    }
-	    input = ( (line) ? strdup(line):NULL );
+	    input = ( (line[0]) ? strdup(line):NULL );
 	    Overwrite(line);
 
 	    return input;                  /* return malloc()ed string */
