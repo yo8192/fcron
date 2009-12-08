@@ -221,6 +221,7 @@ typedef struct cl_t {
     unsigned char  cl_lavg[LAVG_SIZE];/*load averages needed (1,5,15 mins)   */
     unsigned char  cl_numexe;     /* entries in queues & running processes   */
     char           cl_nice;       /* nice value to control priority          */
+    unsigned char  cl_jitter;     /* run randomly late up to jitter seconds  */
     /* see bitstring(3) man page for more details */
     bitstr_t	   bit_decl(cl_mins, 60); /* 0-59		             */
     bitstr_t	   bit_decl(cl_hrs, 24);  /* 0-23			     */

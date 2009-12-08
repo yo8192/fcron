@@ -1153,6 +1153,13 @@ set_next_exe(cl_t *line, char option, int info_fd)
 	    nextexe += ( (i= int_end_timet - nextexe) > 0) ? 
 		(time_t)(((float)i * (float)rand())/(float)RAND_MAX) : 0;
 	}
+	else if (is_td(line->cl_option) && line->cl_runfreq != 1 && line->cl_jitter > 0){
+	    /* &-lines only:
+	     * run the command between nextexe and nextexe+jitter seconds,
+	     * as a way not to have 100 jobs all starting exactly at 
+	     * the second 0 of the minute they should run */
+	    nextexe += (time_t)(((float)line->cl_jitter * (float)rand())/(float)RAND_MAX);
+	}
 
 	line->cl_nextexe = nextexe + (line->cl_file->cf_tzdiff * 3600);
 

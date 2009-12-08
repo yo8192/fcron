@@ -74,6 +74,7 @@
 <!ENTITY optexesev '<link linkend="fcrontab.5.exesev"><varname>exesev</varname></link>'>
 <!ENTITY optfirst '<link linkend="fcrontab.5.first"><varname>first</varname></link>'>
 <!ENTITY optforcemail '<link linkend="fcrontab.5.forcemail"><varname>forcemail</varname></link>'>
+<!ENTITY optjitter '<link linkend="fcrontab.5.jitter"><varname>jitter</varname></link>'>
 <!ENTITY optlavg '<link linkend="fcrontab.5.lavg"><varname>lavg</varname></link>'>
 <!ENTITY optlavg1 '<link linkend="fcrontab.5.lavgX"><varname>lavg1</varname></link>'>
 <!ENTITY optlavg5 '<link linkend="fcrontab.5.lavgX"><varname>lavg5</varname></link>'>

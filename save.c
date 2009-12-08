@@ -263,6 +263,9 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 	if ( line->cl_tz != NULL ) {
 	    Save_str(fd, S_TZ_T, line->cl_tz, write_buf, &write_buf_used);
 	}
+	if ( line->cl_jitter > 0 ) {
+	    Save_lint(fd, S_JITTER_T, line->cl_jitter, write_buf, &write_buf_used);
+	}
 		     
 	if ( is_freq(line->cl_option) ) {
 	    /* save the frequency to run the line */

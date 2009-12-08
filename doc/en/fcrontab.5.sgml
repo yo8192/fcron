@@ -478,6 +478,15 @@ useful when used in conjunction with option &optvolatile;.</para>
 		    </listitem>
 		</varlistentry>
 
+		<varlistentry id="fcrontab.5.jitter">
+		    <term>jitter</term>
+		    <listitem>
+			<para><emphasis><type>integer</type></emphasis>(<constant>0</constant>)</para>
+			<para>Run the task between 0 and jitter seconds later than it should have been run. This options only applies to &-lines and is intended for systems where many jobs are supposed to be started at the same minute: the jitter option will randomly spread the start of all those jobs across the first jitter seconds of the minute instead of starting all of them at the first second of the minute. The argument must be between 0 and 255 (inclusive).</para>
+			<para>&seealso; option &optrandom;.</para>
+		    </listitem>
+		</varlistentry>
+
 		<varlistentry id="fcrontab.5.lavg">
 		    <term>lavg</term>
 		    <listitem>
@@ -611,6 +620,7 @@ execution interval. Besides, you must know that the random scheme may be quite
 easy to guess for skilled people: thus, you shouldn't rely on this option
 to make important things secure. However, it shouldn't be a problem
 for most uses.</para>
+			<para>&seealso; option &optjitter;.</para>
 		    </listitem>
 		</varlistentry>
 
