@@ -28,7 +28,7 @@
  */
 
 #include "global.h"
-#include "fcron.h"
+#include "log.h"
 #include "u_list.h"
 
 /* private functions: */
@@ -70,12 +70,35 @@ u_list_init(size_t entry_size, int init_size, int grow_size)
     return l;
 }
 
+u_list_t *
+u_list_copy(u_list_t *list)
+{
+    u_list_t *new_list = NULL;
+
+    if ( list == NULL )
+        return NULL;
+
+    new_list = (1, sizeof(struct u_list_t));
+    if ( l == NULL )
+	die_e("Failed copying unordered list: could not calloc() u_list_t "
+	      "(entry_size: %d)", entry_size);
+    memcpy(new_list, list, sizeof(struct u_list_t));
+
+    new_list->cur_entry = NULL;
+
+    new_list->entries_array = calloc(list->array_size, list->entry_size);
+    memcpy(new_list->entries_array, list->entries_array,
+           (list->array_size * list->entry_size));
+
+    return new_list;
+}
+
+
 int
 u_list_resize_array(u_list_t *l)
 /* Resize l's entries_array up to l->max_entries
  * Returns OK on success, ERR if the array is already at maximum size */
 {
-    u_list_entry_t *e = NULL;
     int offset = 0;
     int old_size = l->array_size;
 
@@ -99,13 +122,12 @@ u_list_resize_array(u_list_t *l)
 
     debug("Resizing u_list_t (old size: %d, new size: %d)...", old_size, l->array_size);
 	
-    if ( (e = calloc(l->array_size, l->entry_size)) == NULL )
-	die_e("Could not calloc u_list_t to grow entries_array "
+    if ( (l->entries_array = realloc(l->entries_array, (l->array_size * l->entry_size))) == NULL )
+	die_e("Could not realloc u_list_t to grow entries_array "
 	      "(old size: %d, new size: %d)...", old_size, l->array_size);
-
-    memcpy(e, l->entries_array, (l->entry_size * old_size));
-    free_safe(l->entries_array);
-    l->entries_array = e;    
+    /* allocate newly allocated memory */
+    memset((char *) l->entries_array+(old_size * l->entry_size), '\0',
+           (l->array_size-old_size)*l->entry_size);
 
     if ( l->cur_entry != NULL )
 	l->cur_entry = (u_list_entry_t *) ( (char *) l->entries_array + offset );
@@ -147,6 +169,16 @@ u_list_add(u_list_t *l, u_list_entry_t *e)
     memcpy(new, e, l->entry_size);
 
     return new;
+}
+
+int
+u_list_is_iterating(u_list_t *l)
+{
+    /* sanity check */
+    if ( l == NULL )
+	die("Invalid argument for u_list_first(): list=%d", l);
+
+    return ( l->cur_entry != NULL );
 }
 
 u_list_entry_t * 
