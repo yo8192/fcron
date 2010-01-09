@@ -430,8 +430,6 @@ read_file(const char *file_name, cf_t *cf)
 {
     FILE *ff = NULL;
     cl_t *cl = NULL;
-    env_t *env = NULL;
-    char buf[LINE_LEN];
     long int bufi = 0;
     time_t t_save = 0;
     uid_t runas = 0;
@@ -531,7 +529,6 @@ read_file(const char *file_name, cf_t *cf)
 #endif
 
     debug("User %s Entry", file_name);
-    bzero(buf, sizeof(buf));
 
     /* get version of fcrontab file: it permits to daemon not to load
      * a file which he won't understand the syntax, for example
@@ -573,6 +570,9 @@ read_file(const char *file_name, cf_t *cf)
 	goto err;
     }
 	
+    if ( cf->cf_env_list == NULL )
+        cf->cf_env_list = env_list_init();
+
     Alloc(cl, cl_t);
     /* main loop : read env variables, and lines */
     while ( read_type(fileno(ff), &type, &size) == OK ) {
@@ -581,12 +581,24 @@ read_file(const char *file_name, cf_t *cf)
 
 	case S_ENVVAR_T:
 	    /* read a env variable and add it to the env var list */
-	    Alloc(env, env_t);
-	    Read_strn(env->e_val, size, "Error while reading env var");
-	    /* Read_strn go to "err" on error */
-	    debug("  Env: \"%s\"", env->e_val );
-	    env->e_next = cf->cf_env_base;
-	    cf->cf_env_base = env;	    
+            {
+                char *envvar = NULL;
+
+                /* Read_strn go to "err" on error */
+                Read_strn(envvar, size, "Error while reading env var");
+                debug("  Env: \"%s\"", envvar );
+                /* we do not allow USER or LOGNAME assignment.
+                 * this was already checked by fcrontab, but we check again
+                 * just in case... */
+                if ( strcmp_until(envvar, "USER", '=') == 0
+                        || strcmp_until(envvar, "LOGNAME", '=') == 0 ) {
+                    error("USER or LOGNAME assignement is not allowed: ignored.");
+                }
+                else {
+                    env_list_putenv(cf->cf_env_list, envvar, 1);
+                }
+                free(envvar);
+            }
 	    break;
 
 	case S_TZDIFF_T:
@@ -904,8 +916,6 @@ delete_file(const char *user_name)
     cf_t *prev_file = NULL;
     cl_t *line;
     cl_t *cur_line;
-    env_t *env = NULL;
-    env_t *cur_env = NULL;
     struct job_t *j = NULL;
     struct job_t *prev_j;
     int i, k;
@@ -1021,12 +1031,7 @@ delete_file(const char *user_name)
 	prev_file->cf_next = file->cf_next;
 
     /* free env variables */
-    cur_env = file->cf_env_base;
-    while  ( (env = cur_env) != NULL ) {
-	cur_env = env->e_next;
-	free(env->e_val);
-	free(env);
-    }
+    env_list_destroy(file->cf_env_list);
 
     /* finally free file itself */
     free(file->cf_user);

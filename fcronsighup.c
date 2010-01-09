@@ -38,12 +38,6 @@ uid_t fcrontab_uid = 0;
 uid_t rootuid = 0;
 gid_t rootgid = 0;
 
-#ifdef DEBUG
-char debug_opt = 1;       /* set to 1 if we are in debug mode */
-#else
-char debug_opt = 0;       /* set to 1 if we are in debug mode */
-#endif
-
 /* needed by log part : */
 char *prog_name = NULL;
 char foreground = 1;
@@ -250,7 +244,7 @@ main(int argc, char **argv)
     /* check if user is allowed to use this program */
     if ( ! (pass = getpwuid(uid)) )
 	die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
-    cur_user = strdup(pass->pw_name);
+    cur_user = strdup2(pass->pw_name);
 
     if ( is_allowed(cur_user) ) {
 	/* check if daemon is running */

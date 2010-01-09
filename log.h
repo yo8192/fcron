@@ -26,6 +26,8 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
+extern char debug_opt;
+
 /* functions prototypes */
 extern void xcloselog(void);
 extern void explain(char *fmt, ...);

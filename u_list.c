@@ -47,14 +47,14 @@ u_list_init(size_t entry_size, int init_size, int grow_size)
 
     /* sanity check */
     if ( entry_size < 1 || init_size < 1 || grow_size < 1 )
-	die("Invalid arguments for u_list_init(): entry_size=%d, init_size=%d, "
-	    "grow_size=%d", entry_size, init_size, grow_size);
+        die("Invalid arguments for u_list_init(): entry_size=%d, init_size=%d, "
+                "grow_size=%d", entry_size, init_size, grow_size);
 
     /* Allocate the list structure: */
     l = calloc(1, sizeof(struct u_list_t));
     if ( l == NULL )
-	die_e("Failed creating a new unordered list: could not calloc() u_list_t "
-	      "(entry_size: %d)", entry_size);
+        die_e("Failed creating a new unordered list: could not calloc() u_list_t "
+                "(entry_size: %d)", entry_size);
 
     /* Initialize the structure and allocate the array: */
     l->array_size = init_size;
@@ -64,8 +64,8 @@ u_list_init(size_t entry_size, int init_size, int grow_size)
     l->cur_removed = 0;
     l->entries_array = calloc(init_size, entry_size);
     if ( l->entries_array == NULL )
-	die_e("Failed creating a new unordered list: could not calloc array"
-	      "(entry_size: %d, init_size: %d)", entry_size, init_size);
+        die_e("Failed creating a new unordered list: could not calloc array"
+                "(entry_size: %d, init_size: %d)", entry_size, init_size);
 
     return l;
 }
@@ -78,10 +78,9 @@ u_list_copy(u_list_t *list)
     if ( list == NULL )
         return NULL;
 
-    new_list = (1, sizeof(struct u_list_t));
-    if ( l == NULL )
-	die_e("Failed copying unordered list: could not calloc() u_list_t "
-	      "(entry_size: %d)", entry_size);
+    new_list = calloc(1, sizeof(struct u_list_t));
+    if ( new_list == NULL )
+	die_e("Failed copying unordered list: could not calloc() u_list_t");
     memcpy(new_list, list, sizeof(struct u_list_t));
 
     new_list->cur_entry = NULL;
@@ -176,7 +175,7 @@ u_list_is_iterating(u_list_t *l)
 {
     /* sanity check */
     if ( l == NULL )
-	die("Invalid argument for u_list_first(): list=%d", l);
+	die("Invalid argument for u_list_iterating(): list=%d", l);
 
     return ( l->cur_entry != NULL );
 }

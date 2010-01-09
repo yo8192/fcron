@@ -27,9 +27,10 @@
 #define __JOB_H__
 
 /* functions prototypes */
-extern int change_user(struct cl_t *cl);
+extern void change_user_setup_env(struct cl_t *cl, char ***sendmailenv,
+                        char ***jobenv, char **curshell, char **curhome);
 extern int run_job(struct exe_t *exeent);
-extern FILE *create_mail(struct cl_t *line, char *subject);
-extern void launch_mailer(struct cl_t *line, FILE *mailf);
+extern FILE *create_mail(struct cl_t *line, char *subject, char **env);
+extern void launch_mailer(struct cl_t *line, FILE *mailf, char **env);
 
 #endif /* __JOB_H__ */

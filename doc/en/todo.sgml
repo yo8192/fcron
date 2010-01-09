@@ -25,6 +25,12 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
+	       <para>replace all free() by free_safe()</para>
+	    </listitem>
+	    <listitem>
+	       <para>check fcron for memory leaks using library</para>
+	    </listitem>
+	    <listitem>
 	       <para>Test (and use ?) docbook2x-man -- xlstproc ? cf http://antoine.ginies.free.fr/docbook/ch09.html</para>
 	    </listitem>
 	    <listitem>
@@ -129,4 +135,4 @@ mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
 End:
 -->
-   
+

@@ -53,11 +53,6 @@ int connect_fcron(void);
 int authenticate_user_password(int fd);
 
 /* command line options */
-#ifdef DEBUG
-char debug_opt = 1;       /* set to 1 if we are in debug mode */
-#else
-char debug_opt = 0;       /* set to 1 if we are in debug mode */
-#endif
 char *cmd_str = NULL;
 
 /* needed by log part : */

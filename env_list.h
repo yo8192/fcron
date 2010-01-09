@@ -33,10 +33,9 @@
 
 #include "u_list.h"
 
-/* Entry to describe one job being executed */
+/* One environment variable assignation */
 typedef struct env_t {
-    char *e_name;
-    char *e_value;
+    char *e_envvar;
 } env_t;
 
 typedef struct u_list_t env_list_t;
@@ -44,13 +43,14 @@ typedef struct u_list_t env_list_t;
 /* functions prototypes */
 extern env_list_t *env_list_init(void);
 extern env_list_t *env_list_copy(env_list_t *list);
-extern env_t *env_list_setenv(env_list_t *list, char *name, char *value, int overwrite);
-extern env_t *env_list_add(env_list_t *list, env_t *e);
 /* WARNING: - These functions are NOT re-entrant.
  *            i.e. there should always be a unique iteration loop based on
  *            u_list_first()/u_list_next() running at any one time in the code
- *          - add_replace() and export_envp()  use an iteration internally
+ *          - setenv, putenv, getenv  use an iteration internally
  *            so they cannot be called when already iterating */
+extern env_t *env_list_setenv(env_list_t *list, char *name, char *value, int overwrite);
+extern env_t *env_list_putenv(env_list_t *list, char *envvar, int overwrite);
+extern char *env_list_getenv(env_list_t *list, char *name);
 extern env_t *env_list_first(env_list_t *list);
 extern env_t *env_list_next(env_list_t *list);
 extern void env_list_end_iteration(env_list_t *list);

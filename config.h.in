@@ -34,6 +34,8 @@
 /* beginning of configurable stuff ********************************** */
 
 
+#define DEFAULT_JOB_PATH "/usr/bin:/bin" /* Default PATH to use when running jobs*/
+
 #define SENDMAIL_ARGS	 "-Ffcron", "-odi"   /* args of mail command */
 
 /* *** time *** */
@@ -57,9 +59,16 @@
                              * to prevent infinite loop on corrupted lines */
 
 /* *** memory *** */
+#define ENVVAR_INITIAL_SIZE 10 /* initial number of possible env var for a job
+			        * if more env var are required,
+			        * fcron will have to realloc() more memory */
+#define ENVVAR_GROW_SIZE 5 /* this is the number of entries that will be
+			    * added to env_list each time it has to grow
+			    * up */
+
 #define EXE_INITIAL_SIZE 6 /* initial number of possible running job 
 			    * if more jobs have to be run simultaneously,
-			    * fcron will have to calloc() more memory */
+			    * fcron will have to realloc() more memory */
 #define EXE_GROW_SIZE 5 /* this is the number of entries that will be
 			 * added to exe_array each time it has to grow
 			 * up */
@@ -69,7 +78,7 @@
 			     * non-serially each time a serial job is added */
 #define SERIAL_INITIAL_SIZE 10 /* initial number of possible serial job. If
 				* more jobs have to be in queue simultaneously,
-				* fcron will have to calloc() more memory */
+				* fcron will have to realloc() more memory */
 #define SERIAL_GROW_SIZE 10 /* this is the number of entries that will be
 			     * added to serial queue each time it has to grow
 			     * up */

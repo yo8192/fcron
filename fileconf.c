@@ -178,6 +178,7 @@ read_file(char *filename)
     }
 
     Alloc(cf, cf_t);
+    cf->cf_env_list = env_list_init();
     cf->cf_user = strdup2(user);
     default_line.cl_file = cf;
     default_line.cl_runas = strdup2(runas);
@@ -283,7 +284,6 @@ read_env(char *ptr, cf_t *cf)
      * (remove blanks) */
 {
     char name[LINE_LEN];
-    env_t *env = NULL;
     int j=0;
     char *val = NULL;
 
@@ -297,7 +297,7 @@ read_env(char *ptr, cf_t *cf)
     }
     name[j] = '\0';
 
-    if ( name == '\0' )
+    if ( name[0] == '\0' )
 	goto error;
 
     /* skip '=' and spaces around */
@@ -322,9 +322,9 @@ read_env(char *ptr, cf_t *cf)
     if (debug_opt)
 	fprintf(stderr, "  Env : '%s=%s'\n", name, val);
 
-    /* we ignore USER's assignment */
-    if ( strcmp(name, "USER") == 0 ) {
-	fprintf(stderr, "%s:%d: USER assignement is not allowed: ignored.\n",
+    /* we ignore USER/LOGNAME's assignment */
+    if ( strcmp(name, "USER") == 0 || strcmp(name, "LOGNAME") == 0 ) {
+	fprintf(stderr, "%s:%d: USER or LOGNAME assignement is not allowed: ignored.\n",
 		file_name, line);	
 	return;
     }
@@ -342,18 +342,11 @@ read_env(char *ptr, cf_t *cf)
 	    
     }
     else {
-
-	Alloc(env, env_t);	
-
-	strncat(name, "=", sizeof(name) - strlen(name) - 1);
-	name[sizeof(name)-1]='\0';
-	strncat(name,val,sizeof(name)-strlen(name)-1);
-	name[sizeof(name)-1]='\0';
-	env->e_val = strdup2( name );
-	env->e_next = cf->cf_env_base;
-	cf->cf_env_base = env;
+        env_list_setenv(cf->cf_env_list, name, val, 1);
     }
     
+    free_safe(val);
+
     return;
 
   error:
@@ -1659,8 +1652,6 @@ delete_file(const char *user_name)
     cf_t *prev_file = NULL;
     cl_t *line = NULL;
     cl_t *cur_line = NULL;
-    env_t *env = NULL;
-    env_t *cur_env = NULL;
 
     file = file_base;
     while ( file != NULL) {
@@ -1695,12 +1686,7 @@ delete_file(const char *user_name)
 	prev_file->cf_next = file->cf_next;
 
     /* free env variables */
-    cur_env = file->cf_env_base;
-    while  ( (env = cur_env) != NULL ) {
-	cur_env = env->e_next;
-	free(env->e_val);
-	free(env);
-    }
+    env_list_destroy(file->cf_env_list);
 
     /* finally free file itself */
     free(file->cf_user);

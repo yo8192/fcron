@@ -34,6 +34,13 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#ifdef DEBUG
+char debug_opt = 1;       /* set to 1 if we are in debug mode */
+#else
+char debug_opt = 0;       /* set to 1 if we are in debug mode */
+#endif
+
+
 static void xopenlog(void);
 char* make_msg(const char *append, char *fmt, va_list args);
 void log_syslog_str(int priority, char *msg);

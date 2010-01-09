@@ -62,7 +62,6 @@
 
 /* global variables */
 extern time_t now;
-extern char debug_opt;
 extern char foreground;
 extern char dosyslog;
 extern time_t first_sleep;

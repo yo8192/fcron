@@ -41,11 +41,6 @@ void run_serial_job(void);
 void run_lavg_job(lavg_t *l);
 void run_queue_job(cl_t *line);
 
-
-#if ! defined(HAVE_SETENV) || ! defined(HAVE_UNSETENV)
-char env_tz[PATH_LEN];
-#endif
-
 void
 test_jobs(void)
   /* determine which jobs need to be run, and run them. */
@@ -85,21 +80,14 @@ switch_timezone(const char *orig_tz, const char* dest_tz)
 /* Returns 1 if this function has switched the timezone, 0 otherwise */
 {
     char *current_tz = getenv("TZ");
-	if ( dest_tz != NULL && 
-	     (current_tz == NULL || strcmp(dest_tz, current_tz) != 0)) {
-#ifdef HAVE_SETENV
-	    if ( setenv("TZ", dest_tz, 1) < 0 )
-		error_e("could not set env var TZ to %s", dest_tz);
-#else
-	    snprintf(env_tz, sizeof(env_tz) - 1, "TZ=%s", dest_tz);
-	    env_tz[sizeof(env_tz)-1] = '\0';
-	    if ( putenv(env_tz) < 0 )
-		error_e("could not set env var TZ to %s", dest_tz);
-#endif
-	    return 1;
-	}
-	else
-	    return 0;
+
+    if ( dest_tz != NULL &&
+         (current_tz == NULL || strcmp(dest_tz, current_tz) != 0)) {
+        my_setenv_overwrite("TZ", dest_tz);
+	return 1;
+    }
+    else
+        return 0;
 }
 
 void
@@ -108,25 +96,10 @@ switch_back_timezone(const char *orig_tz)
  * otherwise, sets TZ to orig_tz */
 {
     if ( orig_tz == NULL) {
-#ifdef HAVE_UNSETENV
-	unsetenv("TZ");
-#else
-	snprintf(env_tz, sizeof(env_tz) - 1, "TZ=");
-	env_tz[sizeof(env_tz)-1] = '\0';
-	if ( putenv(env_tz) < 0 )
-	    error_e("could not flush env var TZ");	
-#endif
+        my_unsetenv("TZ");
     }
     else {
-#ifdef HAVE_SETENV
-	if ( setenv("TZ", orig_tz, 1) < 0 )
-	    error_e("could not set env var TZ to %s", orig_tz);
-#else
-	snprintf(env_tz, sizeof(env_tz) - 1, "TZ=%s", orig_tz);
-	env_tz[sizeof(env_tz)-1] = '\0';
-	if ( putenv(env_tz) < 0 )
-	    error_e("could not set env var TZ to %s", orig_tz);
-#endif
+        my_setenv_overwrite("TZ", orig_tz);
     }
 }
 
@@ -1285,6 +1258,7 @@ mail_notrun(cl_t *line, char context, struct tm *since)
     FILE *mailf = 0;
     struct tm *time2 = NULL, time;
     int tz_changed = 0;
+    char **sendmailenv = NULL;
 
     switch ( pid = fork() ) {
     case -1:
@@ -1322,7 +1296,7 @@ mail_notrun(cl_t *line, char context, struct tm *since)
     memcpy(&time, time2, sizeof(time));
 
     /* create a temp file, and write in it the message to send */
-    mailf = create_mail(line, "Non-execution of fcron job");
+    mailf = create_mail(line, "Non-execution of fcron job", NULL);
 
     switch ( context ) {
     case SYSDOWN:
@@ -1362,11 +1336,10 @@ mail_notrun(cl_t *line, char context, struct tm *since)
     }
     
     /* become user (for security reasons) */
-    if (change_user(line) < 0)
-	return ;
+    change_user_setup_env(line, &sendmailenv, NULL, NULL, NULL);
 
     /* then, send mail */
-    launch_mailer(line, mailf);
+    launch_mailer(line, mailf, sendmailenv);
     
     /* we should not come here : launch_mailer does not return */
     die("mail_notrun : launch_mailer failed");

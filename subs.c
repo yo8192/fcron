@@ -105,6 +105,26 @@ remove_blanks(char *str)
     
 }
 
+int
+strcmp_until(const char *left, const char *right, char until)
+/* compare two strings up to a given char (copied from Vixie cron) */
+/* Copyright 1988,1990,1993,1994 by Paul Vixie */
+/* Copyright (c) 2004 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 1997,2000 by Internet Software Consortium, Inc.  */
+
+{
+    while (*left != '\0' && *left != until && *left == *right) {
+        left++;
+        right++;
+    }
+
+    if ((*left == '\0' || *left == until)
+            && (*right == '\0' || *right == until)) {
+        return (0);
+    }
+    return (*left - *right);
+}
+
 
 char *
 strdup2(const char *str)
@@ -114,12 +134,11 @@ strdup2(const char *str)
     if ( str == NULL )
 	return NULL;
 
-    ptr = malloc(strlen(str) + 1);
+    ptr = strdup(str);
     
     if ( ! ptr)
-	die_e("Could not calloc");
+        die_e("Could not strdup()");
 
-    strcpy(ptr, str);
     return(ptr);
 }
 
@@ -296,3 +315,59 @@ read_conf(void)
     fclose(f);
 
 }
+
+void
+my_unsetenv(const char *name)
+/* call unsetenv() if available, otherwise call putenv("var=").
+ * Check for errors and log them. */
+{
+
+#ifdef HAVE_UNSETENV
+    if ( unsetenv(name) < 0 )
+        error_e("could not flush env var %s with unsetenv()", name);
+#else
+    char buf[PATH_LEN];
+    snprintf(buf, sizeof(buf) - 1, "%s=", name);
+    buf[sizeof(buf)-1] = '\0';
+    if ( putenv(buf) < 0 )
+        error_e("could not flush env var %s with putenv()", name);
+#endif
+
+}
+
+void
+my_setenv_overwrite(const char *name, const char *value)
+/* call setenv(x, x, 1) if available, otherwise call putenv() with the appropriate
+ * constructed string.
+ * Check for errors and log them. */
+
+{
+
+#ifdef HAVE_SETENV
+
+    /* // */
+    debug("Calling setenv(%s, %s, 1)", name, value);
+    /* // */
+    if ( setenv(name, value, 1) != 0 )
+        error_e("setenv(%s, %s, 1) failed", name, value);
+
+#else
+    char buf[PATH_LEN];
+
+    snprintf(buf, sizeof(buf) - 1, "%s=%s", name, value)
+
+    /* The final \0 may not have been copied because of lack of space:
+     * add it to make sure */
+    buf[sizeof(buf)-1]='\0';
+
+    /* // */
+    debug("Calling putenv(%s)", buf);
+    /* // */
+    if ( putenv(buf) != 0 )
+        error_e("putenv(%s) failed", buf);
+
+#endif
+
+}
+
+

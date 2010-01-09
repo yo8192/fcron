@@ -29,7 +29,6 @@
 #include "global.h"
 
 /* global variables */
-extern char debug_opt;
 extern pid_t daemon_pid;
 extern char dosyslog;
 extern struct cf_t *file_base;
