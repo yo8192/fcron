@@ -180,22 +180,22 @@ synchronize_dir(const char *dir_name)
 	next = rm_list;
 	while( (l = next) != NULL ) {
 	    next = l->next;
-	    free(l->str);
-	    free(l);
+	    free_safe(l->str);
+	    free_safe(l);
 	}
 	    
 	next = new_list;
 	while( (l = next) != NULL ) {
 	    next = l->next;
-	    free(l->str);
-	    free(l);
+	    free_safe(l->str);
+	    free_safe(l);
 	}
 
 	next = file_list;
 	while( (l = next) != NULL ) {
 	    next = l->next;
-	    free(l->str);
-	    free(l);
+	    free_safe(l->str);
+	    free_safe(l);
 	}
 
     }
@@ -382,8 +382,7 @@ read_strn(int fd, char **str, short int size)
 
   err:
     if (*str)
-	free(*str);
-    *str = NULL;
+	free_safe(*str);
     return ERR;
     
 }
@@ -549,7 +548,7 @@ read_file(const char *file_name, cf_t *cf)
     }
     /* get the owner's name */
     /* we set cf->cf_user before for SE Linux, so we need to free it here */
-    free(cf->cf_user);
+    free_safe(cf->cf_user);
     if ( read_strn(fileno(ff), &cf->cf_user, size) != OK ) {
 	error("Cannot read user's name : file ignored");
 	goto err;
@@ -558,7 +557,7 @@ read_file(const char *file_name, cf_t *cf)
 	/* we use file owner's name for more security (see above) */
 	/* free the value obtained by read_strn() (we need to read it anyway
 	 * to set the file ptr to the next thing to read) */
-	free(cf->cf_user);
+	free_safe(cf->cf_user);
 	cf->cf_user = runas_str;
     } 
 
@@ -597,7 +596,7 @@ read_file(const char *file_name, cf_t *cf)
                 else {
                     env_list_putenv(cf->cf_env_list, envvar, 1);
                 }
-                free(envvar);
+                free_safe(envvar);
             }
 	    break;
 
@@ -721,7 +720,7 @@ read_file(const char *file_name, cf_t *cf)
     }
 
     /* free last cl Alloc : unused */
-    free(cl);
+    free_safe(cl);
 
     /* check for an error */
     if ( ferror(ff) != 0 )
@@ -738,10 +737,10 @@ read_file(const char *file_name, cf_t *cf)
 
     if ( cl != NULL && cl->cl_next == NULL ) {
 	/* line is not yet in the line list of the file : free it */
-	if ( cl->cl_shell ) free(cl->cl_shell);
-	if ( cl->cl_runas) free(cl->cl_runas);
-	if ( cl->cl_mailto) free(cl->cl_mailto);
-	free(cl);
+	if ( cl->cl_shell ) free_safe(cl->cl_shell);
+	if ( cl->cl_runas) free_safe(cl->cl_runas);
+	if ( cl->cl_mailto) free_safe(cl->cl_mailto);
+	free_safe(cl);
     }
 
     /* check if we have started to read the lines and env var */
@@ -756,7 +755,7 @@ read_file(const char *file_name, cf_t *cf)
 	
     }
     else if (cf->cf_user != NULL)
-	free(cf->cf_user);
+	free_safe(cf->cf_user);
 
     return ERR;
 
@@ -774,9 +773,9 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 	error("Line is not valid (empty shell, runas or mailto field)"
 	      " : ignored");
 	bzero(cl, sizeof(cl));
-	if (cl->cl_shell) free(cl->cl_shell);
-	if (cl->cl_runas) free(cl->cl_runas);
-	if (cl->cl_mailto) free(cl->cl_mailto);
+	if (cl->cl_shell) free_safe(cl->cl_shell);
+	if (cl->cl_runas) free_safe(cl->cl_runas);
+	if (cl->cl_mailto) free_safe(cl->cl_mailto);
 	return 1;
     }
 
@@ -797,8 +796,7 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 			   strcspn(cl->cl_mailto, " \t\n") != strlen(cl->cl_mailto) ) ) {
 	error("mailto field \'%s\' is not valid : set to owner %s.", cl->cl_mailto,
 	      cl->cl_file->cf_user);
-	free(cl->cl_mailto);
-	cl->cl_mailto = strdup2(cl->cl_file->cf_user);
+	Set(cl->cl_mailto,cl->cl_file->cf_user);
     }
 
     /* check if the job hasn't been stopped during execution and insert
@@ -958,8 +956,9 @@ delete_file(const char *user_name)
 	/* free serial queue entries */
 	for ( i = 0; i < serial_array_size; i++)
 	    if (serial_array[i] != NULL && serial_array[i]->cl_file == file ) {
-		if ( ! s_a )
-		    s_a = calloc(serial_array_size, sizeof(cl_t *));
+		if ( ! s_a ) {
+		    s_a = alloc_safe(serial_array_size*sizeof(cl_t *), "serial queue");
+                }
 		debug("removing %s from serial queue",
 		      serial_array[i]->cl_shell);
 		serial_num--;
@@ -984,7 +983,7 @@ delete_file(const char *user_name)
 		    != NULL)
 		    k++;
 	}
-	free(serial_array);
+	free_safe(serial_array);
 	serial_array = s_a;
 	serial_array_index = 0;
 
@@ -1003,17 +1002,17 @@ delete_file(const char *user_name)
 			prev_j->j_next = j->j_next;
 		    else
 			queue_base = j->j_next;
-		    free(j);
+		    free_safe(j);
 		    break;
 		}
 		else
 		    prev_j = j;
 
 	    /* free line itself */
-	    free(line->cl_shell);
-	    free(line->cl_runas);
-	    free(line->cl_mailto);
-	    free(line);
+	    free_safe(line->cl_shell);
+	    free_safe(line->cl_runas);
+	    free_safe(line->cl_mailto);
+	    free_safe(line);
 	}
 	/* delete_file() MUST remove only the first occurrence :
 	 * this is needed by synchronize_file() */
@@ -1034,8 +1033,8 @@ delete_file(const char *user_name)
     env_list_destroy(file->cf_env_list);
 
     /* finally free file itself */
-    free(file->cf_user);
-    free(file);
+    free_safe(file->cf_user);
+    free_safe(file);
 
 }
 

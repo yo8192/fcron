@@ -159,12 +159,6 @@
           VAR = strdup2(VALUE); \
         }
 
-#define Flush(VAR) \
-        { \
-          free(VAR); \
-          VAR = NULL; \
-	}
-
 #define Skip_blanks(PTR) \
         while((*(PTR) == ' ') || (*(PTR) == '\t')) \
 	    (PTR)++;

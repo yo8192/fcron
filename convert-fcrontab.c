@@ -119,18 +119,18 @@ delete_file(cf_t *file)
     cur_line = file->cf_line_base;
     while ( (line = cur_line) != NULL) {
 	cur_line = line->cl_next;
-	free(line->cl_shell);
-	free(line->cl_mailto);
-	free(line->cl_runas);
-	free(line);
+	free_safe(line->cl_shell);
+	free_safe(line->cl_mailto);
+	free_safe(line->cl_runas);
+	free_safe(line);
     }
 
     /* free env variables */
     env_list_destroy(file->cf_env_list);
 
     /* finally free file itself */
-    free(file->cf_user);
-    free(file);
+    free_safe(file->cf_user);
+    free_safe(file);
 
 }
 
@@ -208,7 +208,7 @@ convert_file(char *file_name)
 
     }
 
-    free(line);
+    free_safe(line);
 
     fclose(f);
 

@@ -267,9 +267,9 @@ read_file(char *filename)
 
     fclose(file);
     
-    free(default_line.cl_runas);
-    free(default_line.cl_mailto);
-    free(default_line.cl_tz);
+    free_safe(default_line.cl_runas);
+    free_safe(default_line.cl_mailto);
+    free_safe(default_line.cl_tz);
 
     if ( ! need_correction )
 	return OK;
@@ -499,7 +499,7 @@ read_opt(char *ptr, cl_t *cl)
 		buf[i++] = *ptr++;
 	    
 	    if ( strcmp(buf, "\0") == 0 ) {
-		Flush(cl->cl_tz);
+		free_safe(cl->cl_tz);
 	    }
 	    else {
 		Set(cl->cl_tz, buf);
@@ -571,7 +571,7 @@ read_opt(char *ptr, cl_t *cl)
 		bzero(cl, sizeof(cl_t));
 		Set(cl->cl_runas, runas);
 		Set(cl->cl_mailto, runas);
-		Flush(cl->cl_tz);
+		free_safe(cl->cl_tz);
 		set_default_opt(cl->cl_option);
 	    }
 	    if (debug_opt)
@@ -1185,7 +1185,7 @@ read_freq(char *ptr, cf_t *cf)
     if ( strcmp(cl->cl_shell, "\0") == 0 ) {
 	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
 		file_name, line);
-	free(cl->cl_shell);
+	free_safe(cl->cl_shell);
 	goto exiterr;
     }
 
@@ -1203,7 +1203,7 @@ read_freq(char *ptr, cf_t *cf)
     return;
 
   exiterr:
-    free(cl);
+    free_safe(cl);
     need_correction = 1;
     return;
 }
@@ -1216,7 +1216,7 @@ read_freq(char *ptr, cf_t *cf)
           fprintf(stderr, "\n"); \
       fprintf(stderr, "%s:%d: Error while reading " DESCRP " field: " \
              "skipping line.\n", file_name, line); \
-      free(cl); \
+      free_safe(cl); \
       return; \
   }
 
@@ -1307,7 +1307,7 @@ read_arys(char *ptr, cf_t *cf)
 
   exiterr:
     need_correction = 1;
-    free(cl);
+    free_safe(cl);
     return;
 
 }
@@ -1445,7 +1445,7 @@ read_period(char *ptr, cf_t *cf)
 
   exiterr:
     need_correction = 1;
-    free(cl);
+    free_safe(cl);
     return;
 
 }
@@ -1661,11 +1661,11 @@ delete_file(const char *user_name)
 	    cur_line = file->cf_line_base;
 	    while ( (line = cur_line) != NULL) {
 		cur_line = line->cl_next;
-		free(line->cl_shell);
-		free(line->cl_mailto);
-		free(line->cl_runas);
-		free(line->cl_tz);
-		free(line);
+		free_safe(line->cl_shell);
+		free_safe(line->cl_mailto);
+		free_safe(line->cl_runas);
+		free_safe(line->cl_tz);
+		free_safe(line);
 	    }
 	    break ;
 
@@ -1689,8 +1689,8 @@ delete_file(const char *user_name)
     env_list_destroy(file->cf_env_list);
 
     /* finally free file itself */
-    free(file->cf_user);
-    free(file);
+    free_safe(file->cf_user);
+    free_safe(file);
 
 }
 

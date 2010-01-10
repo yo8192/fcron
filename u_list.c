@@ -51,10 +51,7 @@ u_list_init(size_t entry_size, int init_size, int grow_size)
                 "grow_size=%d", entry_size, init_size, grow_size);
 
     /* Allocate the list structure: */
-    l = calloc(1, sizeof(struct u_list_t));
-    if ( l == NULL )
-        die_e("Failed creating a new unordered list: could not calloc() u_list_t "
-                "(entry_size: %d)", entry_size);
+    l = alloc_safe(sizeof(struct u_list_t), "new u_list_t");
 
     /* Initialize the structure and allocate the array: */
     l->array_size = init_size;
@@ -62,10 +59,7 @@ u_list_init(size_t entry_size, int init_size, int grow_size)
     l->grow_size = grow_size;
     l->cur_entry = NULL;
     l->cur_removed = 0;
-    l->entries_array = calloc(init_size, entry_size);
-    if ( l->entries_array == NULL )
-        die_e("Failed creating a new unordered list: could not calloc array"
-                "(entry_size: %d, init_size: %d)", entry_size, init_size);
+    l->entries_array = alloc_safe(init_size*entry_size, "new u_list_t array");
 
     return l;
 }
@@ -78,14 +72,13 @@ u_list_copy(u_list_t *list)
     if ( list == NULL )
         return NULL;
 
-    new_list = calloc(1, sizeof(struct u_list_t));
-    if ( new_list == NULL )
-	die_e("Failed copying unordered list: could not calloc() u_list_t");
+    new_list = alloc_safe(sizeof(struct u_list_t), "u_list_t copy");
     memcpy(new_list, list, sizeof(struct u_list_t));
 
     new_list->cur_entry = NULL;
 
-    new_list->entries_array = calloc(list->array_size, list->entry_size);
+    new_list->entries_array = alloc_safe(list->array_size*list->entry_size,
+                                            "u_list_t copy (array)");
     memcpy(new_list->entries_array, list->entries_array,
            (list->array_size * list->entry_size));
 
@@ -121,9 +114,7 @@ u_list_resize_array(u_list_t *l)
 
     debug("Resizing u_list_t (old size: %d, new size: %d)...", old_size, l->array_size);
 	
-    if ( (l->entries_array = realloc(l->entries_array, (l->array_size * l->entry_size))) == NULL )
-	die_e("Could not realloc u_list_t to grow entries_array "
-	      "(old size: %d, new size: %d)...", old_size, l->array_size);
+    l->entries_array = realloc_safe(l->entries_array, (l->array_size * l->entry_size), "larger u_list_t array");
     /* allocate newly allocated memory */
     memset((char *) l->entries_array+(old_size * l->entry_size), '\0',
            (l->array_size-old_size)*l->entry_size);

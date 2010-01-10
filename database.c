@@ -334,8 +334,7 @@ add_serial_job(cl_t *line, int info_fd)
 	    debug("Resizing serial_array");
 	    serial_array_size = (serial_array_size + SERIAL_GROW_SIZE);
 	
-	    if ( (ptr = calloc(serial_array_size, sizeof(cl_t *))) == NULL )
-		die_e("could not calloc serial_array");
+	    ptr = alloc_safe(serial_array_size*sizeof(cl_t *), "serial_array");
 
 	    /* copy lines in order to have the first line at the index 0 */
 	    memcpy(ptr + serial_array_index, serial_array,
@@ -343,7 +342,7 @@ add_serial_job(cl_t *line, int info_fd)
 	    memcpy(ptr, serial_array + (old_size - serial_array_index),
 		   (sizeof(cl_t*) * serial_array_index));
 	    serial_array_index = 0;
-	    free(serial_array);
+	    free_safe(serial_array);
 	    serial_array = ptr;
 	}
     }

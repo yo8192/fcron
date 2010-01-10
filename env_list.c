@@ -73,9 +73,7 @@ env_list_setenv(env_list_t *list, char *name, char *value, int overwrite)
             /* variable already set: overwrite the value if asked
              * and return that entry */
             if ( overwrite == 1 ) {
-                c->e_envvar = realloc(c->e_envvar, len);
-                if ( c->e_envvar == NULL )
-                    die_e("Could not allocate memory to modify env var");
+                c->e_envvar = realloc_safe(c->e_envvar, len, "new env var value");
                 snprintf(c->e_envvar, len, "%s=%s", name, value);
             }
             env_list_end_iteration(list);
@@ -84,7 +82,7 @@ env_list_setenv(env_list_t *list, char *name, char *value, int overwrite)
     }
 
     /* if we're here we didn't find a var called 'name': add it */
-    e.e_envvar = calloc(1, len);
+    e.e_envvar = alloc_safe(len, "new env var");
     snprintf(e.e_envvar, len, "%s=%s", name, value);
     return (env_t *) u_list_add( (u_list_t *) list, (u_list_entry_t *) &e);
 }
@@ -106,9 +104,7 @@ env_list_putenv(env_list_t *list, char *envvar, int overwrite)
             /* variable already set: overwrite the value if asked
              * and return that entry */
             if ( overwrite == 1 ) {
-                c->e_envvar = realloc(c->e_envvar, len);
-                if ( c->e_envvar == NULL )
-                    die_e("Could not allocate memory to modify env var");
+                c->e_envvar = realloc_safe(c->e_envvar, len, "new env var value");
                 memcpy(c->e_envvar, envvar, len); /* includes the final '\0' */
             }
             env_list_end_iteration(list);
@@ -184,15 +180,12 @@ env_list_export_envp(env_list_t *list)
     int i = 0;
     char **envp = NULL;
 
-    envp = calloc(list->num_entries + 1, sizeof(char *)); /* +1 for the end-of-list NULL */
-    if ( envp == NULL )
-	    die_e("Could not allocate memory for the environment");
+    /* +1 for the end-of-list NULL */
+    envp = alloc_safe((list->num_entries + 1)*sizeof(char *), "environment export");
 
     for ( c=env_list_first(list), i=0 ; c != NULL && i < list->num_entries ;
             c=env_list_next(list), i++ ) {
         envp[i] = strdup2(c->e_envvar);
-        if ( envp[i] == NULL )
-            die_e("Could not allocate memory for an environment entry");
     }
     /* add a NULL as a end-of-list marker */
     envp[ (list->num_entries + 1 ) - 1] = NULL;

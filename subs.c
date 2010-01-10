@@ -142,6 +142,34 @@ strdup2(const char *str)
     return(ptr);
 }
 
+void *
+alloc_safe(size_t len, const char * desc)
+/* allocate len-bytes of memory, and return the pointer.
+ * Die with a log message if there is any error */
+{
+    void *ptr = NULL;
+
+    ptr = calloc(1, len);
+    if ( ptr == NULL ) {
+        die_e("Could not allocate %d bytes of memory%s%s", len, (desc)? "for " : "", desc);
+    }
+    return ptr;
+}
+
+void *
+realloc_safe(void *cur, size_t len, const char * desc)
+/* allocate len-bytes of memory, and return the pointer.
+ * Die with a log message if there is any error */
+{
+    void *new = NULL;
+
+    new = realloc(cur, len);
+    if ( new == NULL ) {
+        die_e("Could not reallocate %d bytes of memory%s%s", len, (desc)? "for " : "", desc);
+    }
+    return new;
+}
+
 void
 free_safe(void *ptr)
     /* free() p and set it to NULL to prevent errors if it is free()ed again */
@@ -279,22 +307,14 @@ read_conf(void)
 	while ( isspace( (int) *ptr2 ) ) ptr2++;
 
 	/* find which var the line refers to and update it */
-	if ( strncmp(ptr1, "fcrontabs", namesize) == 0 )
-	    fcrontabs = strdup2(ptr2);
-	else if ( strncmp(ptr1, "pidfile", namesize) == 0 )
-	    pidfile = strdup2(ptr2);
-	else if ( strncmp(ptr1, "fifofile", namesize) == 0 )
-	    fifofile = strdup2(ptr2);
-	else if ( strncmp(ptr1, "fcronallow", namesize) == 0 )
-	    fcronallow = strdup2(ptr2);
-	else if ( strncmp(ptr1, "fcrondeny", namesize) == 0 )
-	    fcrondeny = strdup2(ptr2);
-	else if ( strncmp(ptr1, "shell", namesize) == 0 )
-	    shell = strdup2(ptr2);
-	else if ( strncmp(ptr1, "sendmail", namesize) == 0 )
-	    sendmail = strdup2(ptr2);
-	else if ( strncmp(ptr1, "editor", namesize) == 0 )
-	    editor = strdup2(ptr2);
+	if ( strncmp(ptr1, "fcrontabs", namesize) == 0 ) { Set(fcrontabs, ptr2); }
+	else if ( strncmp(ptr1, "pidfile", namesize) == 0 ) { Set(pidfile, ptr2); }
+	else if ( strncmp(ptr1, "fifofile", namesize) == 0 ) { Set(fifofile , ptr2); }
+	else if ( strncmp(ptr1, "fcronallow", namesize) == 0 ) { Set(fcronallow , ptr2); }
+	else if ( strncmp(ptr1, "fcrondeny", namesize) == 0 ) { Set(fcrondeny , ptr2); }
+	else if ( strncmp(ptr1, "shell", namesize) == 0 ) { Set(shell , ptr2); }
+	else if ( strncmp(ptr1, "sendmail", namesize) == 0 ) { Set(sendmail , ptr2); }
+	else if ( strncmp(ptr1, "editor", namesize) == 0 ) { Set(editor , ptr2); }
 	else
 	    error("Unknown var name at line %s : line ignored", buf);
 

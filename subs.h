@@ -47,6 +47,8 @@ extern gid_t get_group_gid_safe(char *groupname);
 extern int remove_blanks(char *str);
 extern int strcmp_until(const char *left, const char *right, char until);
 extern char *strdup2(const char *);
+extern void *alloc_safe(size_t len, const char * desc);
+extern void *realloc_safe(void *ptr, size_t len, const char * desc);
 extern void free_safe(void *ptr);
 extern int get_word(char **str);
 extern int temp_file(char **name);

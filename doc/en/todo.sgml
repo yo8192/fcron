@@ -25,7 +25,10 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>replace all free() by free_safe()</para>
+	       <para>move fcron.conf stuff from subs.{c} to a new fcronconf.{c|h}</para>
+	    </listitem>
+	    <listitem>
+	       <para>change copyright to ...,2008,2009,2010</para>
 	    </listitem>
 	    <listitem>
 	       <para>check fcron for memory leaks using library</para>

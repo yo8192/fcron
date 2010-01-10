@@ -222,7 +222,7 @@ xexit(int exit_value)
     lavg_list_destroy(lavg_list);
     free_conf();
 
-    free(orig_tz_envvar);
+    free_safe(orig_tz_envvar);
 
     explain("Exiting with code %d", exit_value);
     exit (exit_value);
@@ -608,8 +608,7 @@ main(int argc, char **argv)
     serial_array_index = 0;
     serial_num = 0;
     serial_array_size = SERIAL_INITIAL_SIZE;
-    if ( (serial_array = calloc(serial_array_size, sizeof(cl_t *))) == NULL )
-	die_e("could not calloc serial_array");
+    serial_array = alloc_safe(serial_array_size*sizeof(cl_t *), "serial_array");
 
     /* initialize lavg_array */
     lavg_list = lavg_list_init();
