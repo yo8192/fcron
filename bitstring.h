@@ -24,6 +24,8 @@ typedef	unsigned char bitstr_t;
 
 /* internal macros */
 				/* byte of the bitstring bit is in */
+/* in other words, _bit_byte(bitnum) is the index (starting from 0) of the byte
+ * which contain the bit number 'bitnum' */
 #define	_bit_byte(bit) \
 	((bit) >> 3)
 
