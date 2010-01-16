@@ -29,6 +29,7 @@
 #include "global.h"
 #include "exe_list.h"
 #include "lavg_list.h"
+#include "fcronconf.h"
 
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
@@ -62,7 +63,6 @@
 
 /* global variables */
 extern time_t now;
-extern char debug_opt;
 extern char foreground;
 extern char dosyslog;
 extern time_t first_sleep;

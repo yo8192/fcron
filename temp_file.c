@@ -39,9 +39,7 @@ temp_file(char **name)
     int fd;
 #ifdef HAVE_MKSTEMP
     char name_local[PATH_LEN] = "";
-    strncpy(name_local, tmp_path, sizeof(name_local) - 1);
-    name_local[sizeof(name_local)-1] = '\0';
-    strcat(name_local, "fcr-XXXXXX");
+    snprintf(name_local, sizeof(name_local), "%sfcr-XXXXXX", tmp_path);
     if ( (fd = mkstemp(name_local)) == -1 )
 	die_e("Can't find a unique temporary filename");
     /* we must set the file mode to 600 (some versions of mkstemp may set it

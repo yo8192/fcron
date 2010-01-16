@@ -26,9 +26,10 @@
 #include "fcron.h"
 
 #include "job.h"
+#include "temp_file.h"
 
 void sig_dfl(void);
-void end_job(cl_t *line, int status, FILE *mailf, short mailpos);
+void end_job(cl_t *line, int status, FILE *mailf, short mailpos, char **sendmailenv);
 void end_mailer(cl_t *line, int status);
 #ifdef HAVE_LIBPAM
 void die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str);
@@ -39,31 +40,22 @@ int read_write_pipe(int fd, void *buf, size_t size, int action);
 int read_pipe(int fd, void *to, size_t size);
 int write_pipe(int fd, void *buf, size_t size);
 
-#ifndef HAVE_SETENV
-char env_user[PATH_LEN];
-char env_logname[PATH_LEN];
-char env_home[PATH_LEN];
-char env_shell[PATH_LEN];
-char env_tz[PATH_LEN];
-#endif
-
 #ifdef WITH_SELINUX
 extern char **environ;
 #endif
 
 #ifdef HAVE_LIBPAM
 void
-die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str)
+die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str, env_list_t *env)
 /* log an error in syslog, mail user if necessary, and die */
 {
     char buf[MAX_MSG];
 
-    strncpy(buf, str, sizeof(buf)-1);
-    strncat(buf, " for '%s'", sizeof(buf)-strlen(buf)-1);
-    buf[sizeof(buf)-1]='\0';
+    snprintf(buf, sizeof(buf), "%s for user '%s'", str, pas->pw_name);
 
     if (is_mail(cl->cl_option)) {
-	FILE *mailf = create_mail(cl, "Could not run fcron job");
+        char **envp = env_list_export_envp(env);
+	FILE *mailf = create_mail(cl, "Could not run fcron job", NULL, envp);
 
 	/* print the error in both syslog and a file, in order to mail it to user */
 	if (dup2(fileno(mailf), 1) != 1 || dup2(1, 2) != 2)
@@ -76,16 +68,9 @@ die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str)
 
 	pam_end(pamh, pamerrno);  
 
-	/* Change running state to the user in question : it's safer to run the mail 
-	 * as user, not root */
-	if (initgroups(pas->pw_name, pas->pw_gid) < 0)
-	    die_e("initgroups failed: %s", pas->pw_name);
-	if (setgid(pas->pw_gid) < 0) 
-	    die("setgid failed: %s %d", pas->pw_name, pas->pw_gid);
-	if (setuid(pas->pw_uid) < 0) 
-	    die("setuid failed: %s %d", pas->pw_name, pas->pw_uid);
+        become_user(cl, pas, "/")
 
-	launch_mailer(cl, mailf);
+	launch_mailer(cl, mailf, envp);
 	/* launch_mailer() does not return : we never get here */
     }
     else
@@ -93,74 +78,78 @@ die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str)
 }
 #endif
 
-int
-change_user(struct cl_t *cl)
+void
+become_user(struct cl_t *cl, struct passwd *pas, char *home)
+/* Become the user who owns the job: change privileges, check PAM authorization,
+ * and change dir to HOME. */
 {
-    struct passwd *pas;
+
+#ifndef RUN_NON_PRIVILEGED
+    if (pas == NULL)
+        die("become_user() called with a NULL struct passwd");
+
+   /* Change running state to the user in question */
+    if (initgroups(pas->pw_name, pas->pw_gid) < 0)
+        die_e("initgroups failed: %s", pas->pw_name);
+
+    if (setgid(pas->pw_gid) < 0)
+        die("setgid failed: %s %d", pas->pw_name, pas->pw_gid);
+
+    if (setuid(pas->pw_uid) < 0)
+        die("setuid failed: %s %d", pas->pw_name, pas->pw_uid);
+#endif /* not RUN_NON_PRIVILEGED */
+
+    /* make sure HOME is defined and change dir to it */
+    if (chdir(home) != 0) {
+        error_e("Could not chdir to HOME dir '%s'. Trying to chdir to '/'.", home);
+        if (chdir("/") < 0)
+            die_e("Could not chdir to HOME dir /");
+    }
+
+}
+
+void
+setup_user_and_env(struct cl_t *cl, struct passwd *pas,
+                   char ***sendmailenv, char ***jobenv, char **curshell, char **curhome)
+/* Check PAM authorization, and setup the environment variables
+ * to run sendmail and to run the job itself. Change dir to HOME and check if SHELL is ok */
+/* (*curshell) and (*curhome) will be allocated and should thus be freed
+ * if curshell and curhome are not NULL. */
+/* Return the the two env var sets, the shell to use to execle() commands and the home dir */
+
+{
+    env_list_t *env_list = env_list_init();
+    env_t *e = NULL;
+    char *path = NULL;
+    char *myshell = NULL;
 #ifdef HAVE_LIBPAM
     int    retcode = 0;
     const char * const * env;
 #endif
 
-    /* Obtain password entry and change privileges */
+    if (pas == NULL)
+        die("setup_user_and_env() called with a NULL struct passwd");
 
-    errno = 0;
-    if ((pas = getpwnam(cl->cl_runas)) == NULL) 
-        die_e("failed to get passwd fields for user \"%s\"", cl->cl_runas);
-    
-#ifdef HAVE_SETENV
-    setenv("USER", pas->pw_name, 1);
-    setenv("LOGNAME", pas->pw_name, 1);
-    setenv("HOME", pas->pw_dir, 1);
+    env_list_setenv(env_list, "USER", pas->pw_name, 1);
+    env_list_setenv(env_list, "LOGNAME", pas->pw_name, 1);
+    env_list_setenv(env_list, "HOME", pas->pw_dir, 1);
+    /* inherit fcron's PATH for sendmail. We will later change it to DEFAULT_JOB_PATH
+     * or a user defined PATH for the job itself */
+    path = getenv("PATH");
+    env_list_setenv(env_list, "PATH", ( path != NULL ) ? path : DEFAULT_JOB_PATH, 1);
+
     if (cl->cl_tz != NULL)
-	setenv("TZ", cl->cl_tz, 1);
+        env_list_setenv(env_list, "TZ", cl->cl_tz, 1);
     /* To ensure compatibility with Vixie cron, we don't use the shell defined
      * in /etc/passwd by default, but the default value from fcron.conf instead: */
-    if ( *shell == '\0' )
-	/* shell is empty, ie. not defined: use value from /etc/passwd */
-	setenv("SHELL", pas->pw_shell, 1);
+    if ( shell != NULL && shell[0] != '\0' )
+        /* default: use value from fcron.conf */
+        env_list_setenv(env_list, "SHELL", shell, 1);
     else
-	/* default: use value from fcron.conf */
-	setenv("SHELL", shell, 1);
-#else
-    {
-	strcpy(env_user, "USER=");
-	strncat(env_user, pas->pw_name, sizeof(env_user)-5-1);
-	env_user[sizeof(env_user)-1]='\0';
-	putenv( env_user ); 
+        /* shell is empty, ie. not defined: fail back to /etc/passwd's value */
+        env_list_setenv(env_list, "SHELL", pas->pw_shell, 1);
 
-	strcpy(env_logname, "LOGNAME=");
-	strncat(env_logname, pas->pw_name, sizeof(env_logname)-8-1);
-	env_logname[sizeof(env_logname)-1]='\0';
-	putenv( env_logname ); 
-
-	strcpy(env_home, "HOME=");
-	strncat(env_home, pas->pw_dir, sizeof(env_home)-5-1);
-	env_home[sizeof(env_home)-1]='\0';
-	putenv( env_home );
-
-	if (cl->cl_tz != NULL) {
-	    strcpy(env_tz, "TZ=");
-	    strncat(env_tz, pas->pw_dir, sizeof(env_tz)-3-1);
-	    env_tz[sizeof(env_tz)-1]='\0';
-	    putenv( env_tz );
-	}
-
-	strcpy(env_shell, "SHELL=");
-	/* To ensure compatibility with Vixie cron, we don't use the shell defined
-	 * in /etc/passwd by default, but the default value from fcron.conf instead: */
-	if ( *shell == '\0' )
-	    /* shell is empty, ie. not defined: use value from /etc/passwd */
-	    strncat(env_shell, pas->pw_shell, sizeof(env_shell)-6-1);
-	else
-	    /* default: use value from fcron.conf */
-	    strncat(env_shell, shell, sizeof(env_shell)-6-1);
-	env_shell[sizeof(env_shell)-1]='\0';
-	putenv( env_shell );
-    }
-#endif /* HAVE_SETENV */
-
-#ifdef HAVE_LIBPAM
+#if ( ! defined(RUN_NON_PRIVILEGED)) && defined(HAVE_LIBPAM)
     /* Open PAM session for the user and obtain any security
        credentials we might need */
 
@@ -172,41 +161,94 @@ change_user(struct cl_t *cl)
      * we must set auth to pam_permit. */
     retcode = pam_authenticate(pamh, PAM_SILENT);
     if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas,
-					      "Could not authenticate PAM user");
+					      "Could not authenticate PAM user", env_list);
     retcode = pam_acct_mgmt(pamh, PAM_SILENT); /* permitted access? */
     if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas,
-					      "Could not init PAM account management");
+					      "Could not init PAM account management", env_list);
     retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED | PAM_SILENT);
     if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas, 
-					      "Could not set PAM credentials");
+					      "Could not set PAM credentials", env_list);
     retcode = pam_open_session(pamh, PAM_SILENT);
     if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas,
-					      "Could not open PAM session");
+					      "Could not open PAM session", env_list);
 
-    env = (const char * const *) pam_getenvlist(pamh);
-    while (env && *env) {
-	if (putenv((char*) *env)) die_e("Could not copy PAM environment");
-	env++;
+    for (env = (const char * const *)pam_getenvlist(pamh); env && *env; env++) {
+        env_list_putenv(env_list, *env, 1);
     }
 
     /* Close the log here, because PAM calls openlog(3) and
        our log messages could go to the wrong facility */
     xcloselog();
-#endif /* USE_PAM */
+#endif /* ( ! defined(RUN_NON_PRIVILEGED)) && defined(HAVE_LIBPAM) */
 
-    /* Change running state to the user in question */
-    if (initgroups(pas->pw_name, pas->pw_gid) < 0)
-	die_e("initgroups failed: %s", pas->pw_name);
+    /* export the environment for sendmail before we apply user customization */
+    if (sendmailenv != NULL)
+        *sendmailenv = env_list_export_envp(env_list);
 
-    if (setgid(pas->pw_gid) < 0) 
-	die("setgid failed: %s %d", pas->pw_name, pas->pw_gid);
-    
-    if (setuid(pas->pw_uid) < 0) 
-	die("setuid failed: %s %d", pas->pw_name, pas->pw_uid);
+    /* Now add user customizations to the environment to form jobenv */
 
-    return(pas->pw_uid);
+    if (jobenv != NULL) {
+
+        /* Make sure we don't keep fcron daemon's PATH (which we used for sendmail) */
+        env_list_setenv(env_list, "PATH", DEFAULT_JOB_PATH, 1);
+
+        for ( e = env_list_first(cl->cl_file->cf_env_list); e != NULL;
+                e = env_list_next(cl->cl_file->cf_env_list) ) {
+            env_list_putenv(env_list, e->e_envvar, 1);
+        }
+
+        /* make sure HOME is defined */
+        env_list_putenv(env_list, "HOME=/", 0); /* don't overwrite if already defined */
+        if ( curhome != NULL ) {
+            (*curhome) = strdup2(env_list_getenv(env_list, "HOME"));
+        }
+
+        /* check that SHELL is valid */
+        myshell = env_list_getenv(env_list, "SHELL");
+        if ( myshell == NULL || myshell[0] == '\0' ) {
+            myshell = shell;
+        }
+        else if ( access(myshell, X_OK) != 0 ) {
+            if (errno == ENOENT)
+                error("shell \"%s\" : no file or directory. SHELL set to %s",
+                        myshell, shell);
+            else
+                error_e("shell \"%s\" not valid : SHELL set to %s",
+                        myshell, shell);
+
+            myshell = shell;
+        }
+        env_list_setenv(env_list, "SHELL", myshell, 1);
+        if  ( curshell != NULL )
+            *curshell = strdup2(myshell);
+
+        if (jobenv != NULL)
+            *jobenv = env_list_export_envp(env_list);
+
+        env_list_destroy(env_list);
+
+    }
+
 }
 
+void
+change_user_setup_env(struct cl_t *cl,
+                   char ***sendmailenv, char ***jobenv, char **curshell, char **curhome)
+/* call setup_user_and_env() and become_user().
+ * As a result, *curshell and *curhome will be allocated and should thus be freed
+ * if curshell and curhome are not NULL. */
+{
+    struct passwd *pas;
+
+    errno = 0;
+    pas = getpwnam(cl->cl_runas);
+    if ( pas == NULL )
+        die_e("failed to get passwd fields for user \"%s\"", cl->cl_runas);
+
+    setup_user_and_env(cl, pas, sendmailenv, jobenv, curshell, curhome);
+    become_user(cl, pas, *curhome);
+    free_safe(*curhome);
+}
 
 void
 sig_dfl(void)
@@ -222,7 +264,7 @@ sig_dfl(void)
 
 
 FILE *
-create_mail(cl_t *line, char *subject) 
+create_mail(cl_t *line, char *subject, char **env)
     /* create a temp file and write in it a mail header */
 {
     /* create temporary file for stdout and stderr of the job */
@@ -230,14 +272,11 @@ create_mail(cl_t *line, char *subject)
     FILE *mailf = fdopen(mailfd, "r+");
     char hostname[USER_NAME_LEN];
     /* is this a complete mail address ? (ie. with a "@", not only a username) */
-    char complete_adr = 0;
-    int i;
+    char add_hostname = 0;
+    int i = 0;
 
     if ( mailf == NULL )
 	die_e("Could not fdopen() mailfd");
-
-    /* write mail header */
-    fprintf(mailf, "To: %s", line->cl_mailto);
 
 #ifdef HAVE_GETHOSTNAME
     if (gethostname(hostname, sizeof(hostname)) != 0) {
@@ -249,26 +288,44 @@ create_mail(cl_t *line, char *subject)
 	hostname[USER_NAME_LEN-1] = '\0';
 
 	/* check if mailto is a complete mail address */
-	for ( i = 0 ; line->cl_mailto[i] != '\0' ; i++ ) {
-	    if ( line->cl_mailto[i] == '@' ) {
-		complete_adr = 1;
-		break;
-	    }
-	}
-	if ( ! complete_adr )
-	    fprintf(mailf, "@%s", hostname);
+	add_hostname = ( strchr(line->cl_mailto, '@') == NULL ) ? 1 : 0;
     }
-#else
+#else /* HAVE_GETHOSTNAME */
     hostname[0] = '\0';
 #endif /* HAVE_GETHOSTNAME */
 
+    /* write mail header */
+    if ( add_hostname )
+        fprintf(mailf, "To: %s@%s\n", line->cl_mailto, hostname);
+    else
+        fprintf(mailf, "To: %s\n", line->cl_mailto);
+
     if (subject)
-	fprintf(mailf, "\nSubject: fcron <%s@%s> %s: %s\n\n", line->cl_file->cf_user,
+	fprintf(mailf, "Subject: fcron <%s@%s> %s: %s\n", line->cl_file->cf_user,
 		( hostname[0] != '\0')? hostname:"?" , subject, line->cl_shell);
     else
-	fprintf(mailf, "\nSubject: fcron <%s@%s> %s\n\n", line->cl_file->cf_user,
+	fprintf(mailf, "Subject: fcron <%s@%s> %s\n", line->cl_file->cf_user,
 		( hostname[0] != '\0')? hostname:"?" , line->cl_shell);
 
+    /* Add headers so as automated systems can identify that this message
+     * is an automated one sent by fcron.
+     * That's useful for example for vacation auto-reply systems: no need
+     * to send such an automated response to fcron! */
+
+    /* The Auto-Submitted header is
+     * defined (and suggested by) RFC3834. */
+    fprintf(mailf, "Auto-Submitted: auto-generated\n");
+
+    /* See environ(7) and execle(3) to get documentation on environ:
+     * it is an array of NULL-terminated strings, whose last entry is NULL */
+    if ( env != NULL ) {
+        for ( i = 0 ; env[i] != NULL ; i++ ) {
+            fprintf(mailf, "X-Cron-Env: <%s>\n", env[i]);
+        }
+    }
+
+    /* Final line return to end the header section: */
+    fprintf(mailf, "\n");
 
     return mailf;
 }
@@ -393,41 +450,6 @@ run_job_grand_child_setup_nice(cl_t *line)
     }
 }
 
-
-void
-run_job_grand_child_setup_env_var(cl_t *line, char **curshell)
-/* set the env var from the fcrontab, change dir to HOME and check that SHELL is ok 
- * Return the final value of SHELL in curshell. */
-{
-    env_t *env;
-    char *home;
-
-    for ( env = line->cl_file->cf_env_base; env; env = env->e_next)
-	if ( putenv(env->e_val) != 0 )
-	    error("could not putenv()");
-
-    /* change dir to HOME */
-    if ( (home = getenv("HOME")) != NULL )
-	if (chdir(home) != 0) {
-	    error_e("Could not chdir to HOME dir \"%s\"", home);
-	    if (chdir("/") < 0)
-		die_e("Could not chdir to HOME dir /");
-	}
-
-    /* check that SHELL is valid */
-    if ( (*curshell = getenv("SHELL")) == NULL )
-	*curshell = shell;
-    else if ( access(*curshell, X_OK) != 0 ) {
-	if (errno == ENOENT)
-	    error("shell \"%s\" : no file or directory. SHELL set to %s",
-		  *curshell, shell);
-	else
-	    error_e("shell \"%s\" not valid : SHELL set to %s",
-		    *curshell, shell);
-	*curshell = shell;
-    }
-}
-
 int 
 run_job(struct exe_t *exeent)
     /* fork(), redirect outputs to a temp file, and execl() the task.
@@ -459,16 +481,20 @@ run_job(struct exe_t *exeent)
     case 0:
 	/* child */
     {
-	char *curshell;
-	FILE *mailf = NULL;
-	int status = 0;
- 	int to_stdout = foreground && is_stdout(line->cl_option);
-	int pipe_fd[2];
-	short int mailpos = 0;	/* 'empty mail file' size */
+        struct passwd *pas = NULL;
+        char **jobenv = NULL;
+        char **sendmailenv = NULL;
+        char *curshell = NULL;
+        char *curhome = NULL;
+        FILE *mailf = NULL;
+        int status = 0;
+        int to_stdout = foreground && is_stdout(line->cl_option);
+        int pipe_fd[2];
+        short int mailpos = 0;	/* 'empty mail file' size */
 #ifdef WITH_SELINUX
-	int flask_enabled = is_selinux_enabled();
+        int flask_enabled = is_selinux_enabled();
 #endif
- 
+
 	/* // */
  	debug("run_job(): child: %s, output to %s, %s, %s\n",
 	      is_mail(line->cl_option) || is_mailzerolength(line->cl_option) ?
@@ -478,6 +504,13 @@ run_job(struct exe_t *exeent)
  	      is_stdout(line->cl_option) ? "stdout" : "normal" );
 	/* // */
 
+        errno = 0;
+        pas = getpwnam(line->cl_runas);
+        if ( pas == NULL )
+            die_e("failed to get passwd fields for user \"%s\"", line->cl_runas);
+
+        setup_user_and_env(line, pas, &sendmailenv, &jobenv, &curshell, &curhome);
+
 	/* close unneeded READ fd */
 	if ( close(pipe_pid_fd[0]) < 0 )
 	    error_e("child: could not close(pipe_pid_fd[0])");
@@ -486,22 +519,20 @@ run_job(struct exe_t *exeent)
 	if ( ! to_stdout && 
 	     ( is_mail(line->cl_option) || is_mailzerolength(line->cl_option))){
 	    /* we create the temp file (if needed) before change_user(),
-	     * as temp_file() needs the root privileges */
+	     * as temp_file() needs root privileges */
 	    /* if we run in foreground, stdout and stderr point to the console.
 	     * Otherwise, stdout and stderr point to /dev/null . */
-	    mailf = create_mail(line, NULL);
+	    mailf = create_mail(line, NULL, jobenv);
 	    mailpos = ftell(mailf);
 	    if (pipe(pipe_fd) != 0) 
 		die_e("could not pipe() (job not executed)");
 	}
 
-	/* First, restore umask to default */
-	umask (saved_umask);
+        become_user(line, pas, curhome);
+        free_safe(curhome);
 
-#ifndef RUN_NON_PRIVILEGED
-	if (change_user(line) < 0)
-	    exit(EXIT_ERR);
-#endif
+	/* restore umask to default */
+	umask (saved_umask);
 
 	sig_dfl();
 
@@ -528,12 +559,12 @@ run_job(struct exe_t *exeent)
 	    /* grand child (child of the 2nd fork) */
 	    
 	    /* the grand child does not use this pipe: close remaining fd */
-	    if ( close(pipe_pid_fd[1]) < 0 )
-		error_e("grand child: could not close(pipe_pid_fd[1])");
+            if ( close(pipe_pid_fd[1]) < 0 )
+                error_e("grand child: could not close(pipe_pid_fd[1])");
 
-	    if ( ! to_stdout )
-		/* note : the following closes the pipe */
-		run_job_grand_child_setup_stderr_stdout(line, pipe_fd);
+            if ( ! to_stdout )
+            /* note : the following closes the pipe */
+                run_job_grand_child_setup_stderr_stdout(line, pipe_fd);
 
 	    foreground = 1; 
 	    /* now, errors will be mailed to the user (or to /dev/null) */
@@ -541,9 +572,6 @@ run_job(struct exe_t *exeent)
 	    run_job_grand_child_setup_nice(line);
 
 	    xcloselog();
-
-	    /* set env variables */
-	    run_job_grand_child_setup_env_var(line, &curshell);
 
 #if defined(CHECKJOBS) || defined(CHECKRUNJOB)
 	    /* this will force to mail a message containing at least the exact
@@ -560,11 +588,9 @@ run_job(struct exe_t *exeent)
 		die_e("setsid(): errno %d", errno);
 	    }
 #endif
-	    execl(curshell, curshell, "-c", line->cl_shell, NULL);
-	    /* execl returns only on error */
-	    error_e("Can't find \"%s\". Trying a execlp(\"sh\",...)",curshell);
-	    execlp("sh", "sh",  "-c", line->cl_shell, NULL);
-	    die_e("execl() \"%s -c %s\" error", curshell, line->cl_shell);
+	    execle(curshell, curshell, "-c", line->cl_shell, NULL, jobenv);
+	    /* execle returns only on error */
+	    die_e("Couldn't exec shell '%s'",curshell);
 
 	    /* execution never gets here */
 
@@ -582,75 +608,73 @@ run_job(struct exe_t *exeent)
 
 	    /* give the pid of the child to the parent (main) fcron process */
 	    ret = write_pipe(pipe_pid_fd[1], &pid, sizeof(pid));
-	    if ( ret != OK ) {
-		if ( ret == ERR )
-		    error("run_job(): child: Could not write job pid"
-			  " to pipe");
-		else {
-		    errno = ret;
-		    error_e("run_job(): child: Could not write job pid"
-			    " to pipe");
-		}
-	    }
-	    
+            if ( ret != OK ) {
+                if ( ret == ERR )
+                    error("run_job(): child: Could not write job pid to pipe");
+                else {
+                    errno = ret;
+                    error_e("run_job(): child: Could not write job pid to pipe");
+                }
+            }
+
 #ifdef CHECKRUNJOB
 	    debug("run_job(): child: grand-child pid written to pipe");
 #endif /* CHECKRUNJOB */
 
 	    if ( ! is_nolog(line->cl_option) )
-		explain("Job %s started for user %s (pid %d)", line->cl_shell,
-			line->cl_file->cf_user, pid);
+            explain("Job %s started for user %s (pid %d)", line->cl_shell,
+                    line->cl_file->cf_user, pid);
 
-	    if ( ! to_stdout && is_mail(line->cl_option ) ) {
-		/* user wants a mail : we use the pipe */
-		char mailbuf[TERM_LEN];
-		FILE *pipef = fdopen(pipe_fd[0], "r");
+            if ( ! to_stdout && is_mail(line->cl_option ) ) {
+                /* user wants a mail : we use the pipe */
+                char mailbuf[TERM_LEN];
+                FILE *pipef = fdopen(pipe_fd[0], "r");
 
-		if ( pipef == NULL )
-		    die_e("Could not fdopen() pipe_fd[0]");
+                if ( pipef == NULL )
+                    die_e("Could not fdopen() pipe_fd[0]");
 
-		mailbuf[sizeof(mailbuf)-1] = '\0';
-		while ( fgets(mailbuf, sizeof(mailbuf), pipef) != NULL )
-		    if ( fputs(mailbuf, mailf) < 0 )
-			warn("fputs() failed to write to mail file for job %s (pid %d)",
-			     line->cl_shell, pid);
-		/* (closes also pipe_fd[0]): */
-		if ( fclose(pipef) != 0 )
-		    error_e("child: Could not fclose(pipef)");
-	    }
+                mailbuf[sizeof(mailbuf)-1] = '\0';
+                while ( fgets(mailbuf, sizeof(mailbuf), pipef) != NULL )
+                    if ( fputs(mailbuf, mailf) < 0 )
+                        warn("fputs() failed to write to mail file for job %s (pid %d)",
+                                line->cl_shell, pid);
+                /* (closes also pipe_fd[0]): */
+                if ( fclose(pipef) != 0 )
+                    error_e("child: Could not fclose(pipef)");
+            }
 
-	    /* FIXME : FOLLOWING HACK USELESS ? */
-	    /* FIXME : HACK
-	     * this is a try to fix the bug on sorcerer linux (no jobs
-	     * exectued at all, and 
-	     * "Could not read job pid : setting it to -1: No child processes"
-	     * error messages) */
-	    /* use a select() or similar to know when parent has read
-	     * the pid (with a timeout !) */
-	    /* // */
-	    sleep(2);
-	    /* // */
+            /* FIXME : FOLLOWING HACK USELESS ? */
+            /* FIXME : HACK
+             * this is a try to fix the bug on sorcerer linux (no jobs
+             * exectued at all, and
+             * "Could not read job pid : setting it to -1: No child processes"
+             * error messages) */
+            /* use a select() or similar to know when parent has read
+             * the pid (with a timeout !) */
+            /* // */
+            sleep(2);
+            /* // */
 #ifdef CHECKRUNJOB
-	    debug("run_job(): child: closing pipe with parent");
+            debug("run_job(): child: closing pipe with parent");
 #endif /* CHECKRUNJOB */
-	    if ( close(pipe_pid_fd[1]) < 0 )
-		error_e("child: could not close(pipe_pid_fd[1])");
+            if ( close(pipe_pid_fd[1]) < 0 )
+                error_e("child: could not close(pipe_pid_fd[1])");
 
-	    /* we use a while because of a possible interruption by a signal */
-	    while ( (pid = wait3(&status, 0, NULL)) > 0)
-		{
+            /* we use a while because of a possible interruption by a signal */
+            while ( (pid = wait3(&status, 0, NULL)) > 0)
+            {
 #ifdef CHECKRUNJOB
-		    debug("run_job(): child: ending job pid %d", pid);
+                debug("run_job(): child: ending job pid %d", pid);
 #endif /* CHECKRUNJOB */
-		    end_job(line, status, mailf, mailpos);
-		}
+                end_job(line, status, mailf, mailpos, sendmailenv);
+            }
 
-	    /* execution never gets here */
-	    
-	}
+            /* execution never gets here */
 
-	/* execution should never gets here, but if it happened we exit with an error */
-	exit(EXIT_ERR);
+        }
+
+        /* execution should never gets here, but if it happened we exit with an error */
+        exit(EXIT_ERR);
     }
 
     default:
@@ -694,7 +718,7 @@ run_job(struct exe_t *exeent)
 }
 
 void 
-end_job(cl_t *line, int status, FILE *mailf, short mailpos)
+end_job(cl_t *line, int status, FILE *mailf, short mailpos, char **sendmailenv)
     /* if task have made some output, mail it to user */
 {
 
@@ -767,7 +791,7 @@ end_job(cl_t *line, int status, FILE *mailf, short mailpos)
 #endif
 
     if (mail_output == 1) {
-	launch_mailer(line, mailf);
+	launch_mailer(line, mailf, sendmailenv);
 	/* never reached */
 	die_e("Internal error: launch_mailer returned");
     }
@@ -781,7 +805,7 @@ end_job(cl_t *line, int status, FILE *mailf, short mailpos)
 }
 
 void
-launch_mailer(cl_t *line, FILE *mailf)
+launch_mailer(cl_t *line, FILE *mailf, char **sendmailenv)
     /* mail the output of a job to user */
 {
 #ifdef USE_SENDMAIL
@@ -804,10 +828,11 @@ launch_mailer(cl_t *line, FILE *mailf)
 	die_e("Could not chdir to /");
 
     /* run sendmail with mail file as standard input */
-    execl(sendmail, sendmail, SENDMAIL_ARGS, line->cl_mailto, NULL);
-    error_e("Can't find \"%s\". Trying a execlp(\"sendmail\")", sendmail);
-    execlp("sendmail", "sendmail", SENDMAIL_ARGS, line->cl_mailto, NULL);
-    die_e("Can't exec " SENDMAIL);
+    /* // */
+    debug("execle(%s, %s, %s, %s, NULL, sendmailenv)", sendmail, sendmail, SENDMAIL_ARGS, line->cl_mailto);
+    /* // */
+    execle(sendmail, sendmail, SENDMAIL_ARGS, line->cl_mailto, NULL, sendmailenv);
+    die_e("Couldn't exec '%s'", sendmail);
 #else /* defined(USE_SENDMAIL) */
     exit(EXIT_OK);
 #endif

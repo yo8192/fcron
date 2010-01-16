@@ -26,24 +26,6 @@
 #include "global.h"
 #include "subs.h"
 
-void init_conf(void);
-
-extern char debug_opt;
-extern uid_t rootuid;
-extern gid_t rootgid;
-
-/* fcron.conf parameters */
-char *fcronconf = NULL;
-char *fcrontabs = NULL;
-char *pidfile = NULL;
-char *fifofile = NULL;
-char *fcronallow = NULL;
-char *fcrondeny = NULL;
-char *shell = NULL;
-char *sendmail = NULL;
-char *editor = NULL;
-
-
 uid_t
 get_user_uid_safe(char *username)
     /* get the uid of user username, and die on error */
@@ -105,6 +87,26 @@ remove_blanks(char *str)
     
 }
 
+int
+strcmp_until(const char *left, const char *right, char until)
+/* compare two strings up to a given char (copied from Vixie cron) */
+/* Copyright 1988,1990,1993,1994 by Paul Vixie */
+/* Copyright (c) 2004 by Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (c) 1997,2000 by Internet Software Consortium, Inc.  */
+
+{
+    while (*left != '\0' && *left != until && *left == *right) {
+        left++;
+        right++;
+    }
+
+    if ((*left == '\0' || *left == until)
+            && (*right == '\0' || *right == until)) {
+        return (0);
+    }
+    return (*left - *right);
+}
+
 
 char *
 strdup2(const char *str)
@@ -114,13 +116,40 @@ strdup2(const char *str)
     if ( str == NULL )
 	return NULL;
 
-    ptr = malloc(strlen(str) + 1);
+    ptr = strdup(str);
     
     if ( ! ptr)
-	die_e("Could not calloc");
+        die_e("Could not strdup()");
 
-    strcpy(ptr, str);
     return(ptr);
+}
+
+void *
+alloc_safe(size_t len, const char * desc)
+/* allocate len-bytes of memory, and return the pointer.
+ * Die with a log message if there is any error */
+{
+    void *ptr = NULL;
+
+    ptr = calloc(1, len);
+    if ( ptr == NULL ) {
+        die_e("Could not allocate %d bytes of memory%s%s", len, (desc)? "for " : "", desc);
+    }
+    return ptr;
+}
+
+void *
+realloc_safe(void *cur, size_t len, const char * desc)
+/* allocate len-bytes of memory, and return the pointer.
+ * Die with a log message if there is any error */
+{
+    void *new = NULL;
+
+    new = realloc(cur, len);
+    if ( new == NULL ) {
+        die_e("Could not reallocate %d bytes of memory%s%s", len, (desc)? "for " : "", desc);
+    }
+    return new;
 }
 
 void
@@ -148,151 +177,57 @@ get_word(char **str)
 }
 
 void
-init_conf(void)
-/* initialises config with compiled in constants */
+my_unsetenv(const char *name)
+/* call unsetenv() if available, otherwise call putenv("var=").
+ * Check for errors and log them. */
 {
-    /* set fcronconf if cmd line option -c has not been used */
-    if (fcronconf == NULL)
-	fcronconf = strdup2(ETC "/" FCRON_CONF);
-    fcrontabs = strdup2(FCRONTABS);
-    pidfile = strdup2(PIDFILE);
-    fifofile = strdup2(FIFOFILE);
-    fcronallow = strdup2(ETC "/" FCRON_ALLOW);
-    fcrondeny = strdup2(ETC "/" FCRON_DENY);
-    /* // */
-    /* shell = strdup2(FCRON_SHELL); */
-    shell = strdup2("");
-    
-#ifdef SENDMAIL
-    sendmail = strdup2(SENDMAIL);
+
+#ifdef HAVE_UNSETENV
+    if ( unsetenv(name) < 0 )
+        error_e("could not flush env var %s with unsetenv()", name);
+#else
+    char buf[PATH_LEN];
+    snprintf(buf, sizeof(buf) - 1, "%s=", name);
+    buf[sizeof(buf)-1] = '\0';
+    if ( putenv(buf) < 0 )
+        error_e("could not flush env var %s with putenv()", name);
 #endif
-    editor = strdup2(FCRON_EDITOR);
+
 }
 
 void
-free_conf(void)
-/* free() the memory allocated in init_conf() */
+my_setenv_overwrite(const char *name, const char *value)
+/* call setenv(x, x, 1) if available, otherwise call putenv() with the appropriate
+ * constructed string.
+ * Check for errors and log them. */
+
 {
-    free_safe(fcronconf);
-    free_safe(fcrontabs);
-    free_safe(pidfile);
-    free_safe(fifofile);
-    free_safe(fcronallow);
-    free_safe(fcrondeny);
-    free_safe(shell);
-    free_safe(sendmail);
-    free_safe(editor);
+
+#ifdef HAVE_SETENV
+
+    /* // */
+    debug("Calling setenv(%s, %s, 1)", name, value);
+    /* // */
+    if ( setenv(name, value, 1) != 0 )
+        error_e("setenv(%s, %s, 1) failed", name, value);
+
+#else
+    char buf[PATH_LEN];
+
+    snprintf(buf, sizeof(buf) - 1, "%s=%s", name, value)
+
+    /* The final \0 may not have been copied because of lack of space:
+     * add it to make sure */
+    buf[sizeof(buf)-1]='\0';
+
+    /* // */
+    debug("Calling putenv(%s)", buf);
+    /* // */
+    if ( putenv(buf) != 0 )
+        error_e("putenv(%s) failed", buf);
+
+#endif
+
 }
 
 
-
-void
-read_conf(void)
-/* reads in a config file and updates the necessary global variables */
-{
-    FILE *f = NULL;
-    struct stat st;
-    char buf[LINE_LEN];
-    char *ptr1 = NULL, *ptr2 = NULL;
-    short namesize = 0;
-    char err_on_enoent = 0;
-    struct group *gr = NULL;
-    gid_t fcrongid = -1;
-
-    if (fcronconf != NULL)
-	/* fcronconf has been set by -c option : file must exist */
-	err_on_enoent = 1;
-	
-    init_conf();
-
-    if ( (f = fopen(fcronconf, "r")) == NULL ) {
-	if ( errno == ENOENT ) {
-	    if ( err_on_enoent )
-		die_e("Could not read %s", fcronconf);
-	    else
-		/* file does not exist, it is not an error  */
-		return;
-	}
-	else {
-	    error_e("Could not read %s : config file ignored", fcronconf);
-	    return;
-	}
-    }
-
-    /* get fcrongid */
-    gr = getgrnam(GROUPNAME);
-    if ( gr == NULL ) {
-	die_e("Unable to find %s in /etc/group", GROUPNAME);
-    }
-    fcrongid = gr->gr_gid;
-
-    /* check if the file is secure : owner:root, group:fcron,
-     * writable only by owner */
-    if ( fstat(fileno(f), &st) != 0 
-	 || st.st_uid != rootuid || st.st_gid != fcrongid
-	 || st.st_mode & S_IWGRP || st.st_mode & S_IWOTH ) {
-	error("Conf file (%s) must be owned by root:" GROUPNAME 
-	      " and (no more than) 644 : ignored", fcronconf, GROUPNAME);
-	fclose(f);
-	return;
-    }
-    
-    while ( (ptr1 = fgets(buf, sizeof(buf), f)) != NULL ) {
-
-	Skip_blanks(ptr1); /* at the beginning of the line */
-	
-	/* ignore comments and blank lines */
-	if ( *ptr1 == '#' || *ptr1 == '\n' || *ptr1 == '\0')
-	    continue;
-
-	remove_blanks(ptr1); /* at the end of the line */
-
-	/* get the name of the var */
-	if ( ( namesize = get_word(&ptr1) ) == 0 )
-	    /* name is zero-length */
-	    error("Zero-length var name at line %s : line ignored", buf);
-
-	ptr2 = ptr1 + namesize;
-
-	/* skip the blanks and the "=" and go to the value */
-	while ( isspace( (int) *ptr2 ) ) ptr2++;
-	if ( *ptr2 == '=' ) ptr2++;
-	while ( isspace( (int) *ptr2 ) ) ptr2++;
-
-	/* find which var the line refers to and update it */
-	if ( strncmp(ptr1, "fcrontabs", namesize) == 0 )
-	    fcrontabs = strdup2(ptr2);
-	else if ( strncmp(ptr1, "pidfile", namesize) == 0 )
-	    pidfile = strdup2(ptr2);
-	else if ( strncmp(ptr1, "fifofile", namesize) == 0 )
-	    fifofile = strdup2(ptr2);
-	else if ( strncmp(ptr1, "fcronallow", namesize) == 0 )
-	    fcronallow = strdup2(ptr2);
-	else if ( strncmp(ptr1, "fcrondeny", namesize) == 0 )
-	    fcrondeny = strdup2(ptr2);
-	else if ( strncmp(ptr1, "shell", namesize) == 0 )
-	    shell = strdup2(ptr2);
-	else if ( strncmp(ptr1, "sendmail", namesize) == 0 )
-	    sendmail = strdup2(ptr2);
-	else if ( strncmp(ptr1, "editor", namesize) == 0 )
-	    editor = strdup2(ptr2);
-	else
-	    error("Unknown var name at line %s : line ignored", buf);
-
-    }
-
-    if (debug_opt) {
-	debug("  fcronconf=%s", fcronconf);
-/*  	debug("  fcronallow=%s", fcronallow); */
-/*  	debug("  fcrondeny=%s", fcrondeny); */
-/*  	debug("  fcrontabs=%s", fcrontabs); */
-/*  	debug("  pidfile=%s", pidfile); */
-/*   	debug("  fifofile=%s", fifofile); */
-/*  	debug("  editor=%s", editor); */
-/*  	debug("  shell=%s", shell); */
-/*  	debug("  sendmail=%s", sendmail); */
-    }
-
-    fclose(f);
-
-}

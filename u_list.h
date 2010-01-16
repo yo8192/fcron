@@ -54,16 +54,18 @@ typedef struct u_list_t {
 
 /* functions prototypes */
 extern u_list_t *u_list_init(size_t entry_size, int init_size, int grow_size);
+extern u_list_t *u_list_copy(u_list_t *list);
 extern u_list_entry_t *u_list_add(u_list_t *list, u_list_entry_t *entry);
-/* WARNING: - there should always be a unique iteration loop based on
+/* WARNING: - the iteration functions are not re-entrant,
+ *            i.e. there should always be a unique iteration loop based on
  *            u_list_first()/u_list_next() running at any one time in the code
- *          - the u_list_entry_t* returned by _first() and _next() should not 
+ *          - the u_list_entry_t* returned by _first() and _next() should not
  *            be used anymore after a _add() or a _remove_cur() */
+extern int u_list_is_iterating(u_list_t *list);
 extern u_list_entry_t *u_list_first(u_list_t *list);
 extern u_list_entry_t *u_list_next(u_list_t *list);
 extern void u_list_end_iteration(u_list_t *list);
 extern void u_list_remove_cur(u_list_t *list);
 extern u_list_t *u_list_destroy(u_list_t *list);
-
 
 #endif /* __U_LIST_H__ */

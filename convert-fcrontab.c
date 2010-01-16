@@ -42,7 +42,6 @@ char foreground = 1;
 pid_t daemon_pid = 0;
 uid_t rootuid = 0;
 gid_t rootgid = 0;
-char debug_opt = 0;
 char dosyslog = 1;
 
 void
@@ -114,31 +113,24 @@ delete_file(cf_t *file)
 {
     cl_t *line = NULL;
     cl_t *cur_line = NULL;
-    env_t *env = NULL;
-    env_t *cur_env = NULL;
 
     
     /* free lines */
     cur_line = file->cf_line_base;
     while ( (line = cur_line) != NULL) {
 	cur_line = line->cl_next;
-	free(line->cl_shell);
-	free(line->cl_mailto);
-	free(line->cl_runas);
-	free(line);
+	free_safe(line->cl_shell);
+	free_safe(line->cl_mailto);
+	free_safe(line->cl_runas);
+	free_safe(line);
     }
 
     /* free env variables */
-    cur_env = file->cf_env_base;
-    while  ( (env = cur_env) != NULL ) {
-	cur_env = env->e_next;
-	free(env->e_val);
-	free(env);
-    }
+    env_list_destroy(file->cf_env_list);
 
     /* finally free file itself */
-    free(file->cf_user);
-    free(file);
+    free_safe(file->cf_user);
+    free_safe(file);
 
 }
 
@@ -150,7 +142,7 @@ convert_file(char *file_name)
 {
     cf_t *file = NULL;
     cl_t *line = NULL;
-    env_t *env = NULL;
+    char *env = NULL;
     FILE *f = NULL;
     char buf[LINE_LEN];
     time_t t_save = 0;
@@ -188,14 +180,10 @@ convert_file(char *file_name)
 	error("could not get time and date of saving");
 
     /* read env variables */
-    Alloc(env, env_t);
-    while( (env->e_val = read_str(f, buf, sizeof(buf))) != NULL ) {
-	env->e_next = file->cf_env_base;
-	file->cf_env_base = env;
-	Alloc(env, env_t);
+    while( (env = read_str(f, buf, sizeof(buf))) != NULL ) {
+        env_list_putenv(file->cf_env_list, env, 1);
+        free_safe(env);
     }
-    /* free last alloc : unused */
-    free(env);
 
     /* read lines */
     Alloc(line, cl_t);
@@ -220,7 +208,7 @@ convert_file(char *file_name)
 
     }
 
-    free(line);
+    free_safe(line);
 
     fclose(f);
 

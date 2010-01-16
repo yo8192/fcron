@@ -131,6 +131,7 @@
 
 #include "bitstring.h"     /* bit arrays */
 #include "option.h"        /* manage fcrontab's options */
+#include "env_list.h"      /* manage fcrontab's environment variable lists */
 
 /* you should not change this (nor need to do it) */
 #define ERR     -1           
@@ -158,12 +159,6 @@
           VAR = strdup2(VALUE); \
         }
 
-#define Flush(VAR) \
-        { \
-          free(VAR); \
-          VAR = NULL; \
-	}
-
 #define Skip_blanks(PTR) \
         while((*(PTR) == ' ') || (*(PTR) == '\t')) \
 	    (PTR)++;
@@ -178,16 +173,11 @@
 
 #define debug if(debug_opt) Debug
 
-typedef struct env_t {
-    char         *e_val;        /* env value                            */
-    struct env_t *e_next;
-} env_t ;
-
 typedef struct cf_t {
     struct cf_t  *cf_next;
     struct cl_t  *cf_line_base;
     char	 *cf_user;	/* user-name			             */
-    struct env_t *cf_env_base;  /* list of all env variables to set          */
+    env_list_t   *cf_env_list;  /* list of all parsed env var                */
     int		  cf_running;	/* number of jobs running                    */
     signed char	  cf_tzdiff;    /* time diff between system and local hour   */
 #ifdef WITH_SELINUX

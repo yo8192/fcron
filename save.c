@@ -228,8 +228,11 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 	Save_lint(fd, S_TZDIFF_T, file->cf_tzdiff, write_buf, &write_buf_used);
 
     /*   env variables, */
-    for (env = file->cf_env_base; env; env = env->e_next)
-	Save_str(fd, S_ENVVAR_T, env->e_val, write_buf, &write_buf_used);
+    for (env = env_list_first(file->cf_env_list);
+         env != NULL;
+         env = env_list_next(file->cf_env_list)) {
+        Save_str(fd, S_ENVVAR_T, env->e_envvar, write_buf, &write_buf_used);
+    }
 	
     /*   then, lines. */
     for (line = file->cf_line_base; line; line = line->cl_next) {

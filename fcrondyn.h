@@ -28,9 +28,9 @@
 
 #include "global.h"
 #include "dyncom.h"
+#include "fcronconf.h"
 
 /* global variables */
-extern char debug_opt;
 extern char dosyslog;
 extern pid_t daemon_pid;
 extern uid_t rootuid;

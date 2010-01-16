@@ -30,6 +30,7 @@
 #include "socket.h"
 #include "getloadavg.h"
 #include "database.h"
+#include "fcronconf.h"
 
 
 void remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client);
@@ -849,14 +850,14 @@ and make client points to the next entry */
     debug("connection closed : fd : %d", (*client)->fcl_sock_fd);
     if (prev_client == NULL ) {
 	fcrondyn_cl_base = (*client)->fcl_next;
-	Flush((*client)->fcl_user);
-	Flush(*client);
+	free_safe((*client)->fcl_user);
+	free_safe(*client);
 	*client = fcrondyn_cl_base;
     }
     else {
 	prev_client->fcl_next = (*client)->fcl_next;
-	Flush((*client)->fcl_user);
-	Flush(*client);
+	free_safe((*client)->fcl_user);
+	free_safe(*client);
 	*client = prev_client->fcl_next;
     }
     fcrondyn_cl_num -= 1;
@@ -994,7 +995,7 @@ close_socket(void)
 	    close(client->fcl_sock_fd);
 
 	    client_buf = client->fcl_next;
-	    Flush(client);
+	    free_safe(client);
 	    fcrondyn_cl_num -= 1;
 	    client = client_buf;
 	}

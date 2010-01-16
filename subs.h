@@ -27,29 +27,17 @@
 #define __SUBS_H__
 
 
-/* global variables */
-
-/* fcron.conf parameters */
-extern char *fcronconf;
-extern char *fcronallow;
-extern char *fcrondeny;
-extern char *fcrontabs;
-extern char *pidfile;
-extern char *fifofile;
-extern char *editor;
-extern char *shell;
-extern char *sendmail;
-/* end of global variables */
-
 /* functions prototypes */
 extern uid_t get_user_uid_safe(char *username);
 extern gid_t get_group_gid_safe(char *groupname);
 extern int remove_blanks(char *str);
+extern int strcmp_until(const char *left, const char *right, char until);
 extern char *strdup2(const char *);
+extern void *alloc_safe(size_t len, const char * desc);
+extern void *realloc_safe(void *ptr, size_t len, const char * desc);
 extern void free_safe(void *ptr);
 extern int get_word(char **str);
-extern int temp_file(char **name);
-extern void read_conf(void);
-extern void free_conf(void);
+extern void my_unsetenv(const char *name);
+extern void my_setenv_overwrite(const char *name, const char *value);
 
 #endif /* __SUBS_H__ */

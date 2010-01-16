@@ -29,6 +29,7 @@
 #include "conf.h"
 #include "job.h"
 #include "temp_file.h"
+#include "fcronconf.h"
 #ifdef FCRONDYN
 #include "socket.h"
 #endif
@@ -49,14 +50,7 @@ int parseopt(int argc, char *argv[]);
 void get_lock(void);
 void create_spooldir(char *dir);
 
-
-
 /* command line options */
-#ifdef DEBUG
-char debug_opt = 1;       /* set to 1 if we are in debug mode */
-#else
-char debug_opt = 0;       /* set to 1 if we are in debug mode */
-#endif
 
 #ifdef FOREGROUND
 char foreground = 1; /* set to 1 when we are on foreground, else 0 */
@@ -225,9 +219,11 @@ xexit(int exit_value)
 
     remove(pidfile);
     
+    exe_list_destroy(exe_list);
+    lavg_list_destroy(lavg_list);
     free_conf();
 
-    free(orig_tz_envvar);
+    free_safe(orig_tz_envvar);
 
     explain("Exiting with code %d", exit_value);
     exit (exit_value);
@@ -613,8 +609,7 @@ main(int argc, char **argv)
     serial_array_index = 0;
     serial_num = 0;
     serial_array_size = SERIAL_INITIAL_SIZE;
-    if ( (serial_array = calloc(serial_array_size, sizeof(cl_t *))) == NULL )
-	die_e("could not calloc serial_array");
+    serial_array = alloc_safe(serial_array_size*sizeof(cl_t *), "serial_array");
 
     /* initialize lavg_array */
     lavg_list = lavg_list_init();

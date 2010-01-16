@@ -160,7 +160,7 @@ dnl ---------------------------------------------------------------------
 
 fcron_enable_checks=yes
 AC_ARG_ENABLE(checks,
-[  --disable-checks   Don't verify that programs exist on the host ],
+[  --disable-checks   Don't verify that programs exist on the host ], dnl '
 [ case "$enableval" in 
    no)
      fcron_enable_checks=no
@@ -178,48 +178,38 @@ AC_ARG_ENABLE(checks,
 dnl ---------------------------------------------------------------------
 dnl Programs ...
 
-AC_PATH_PROG(FOUND_SENDMAIL, sendmail, , $PATH:/usr/lib:/usr/sbin )
-AC_MSG_CHECKING(sendmail)
-AC_ARG_WITH(sendmail,
-[  --with-sendmail=PATH	Path to sendmail.],
+AC_PATH_PROG(SENDMAIL, sendmail, , $PATH:/usr/lib:/usr/sbin )
+USE_SENDMAIL=1
+AC_MSG_CHECKING([actual sendmail to use])
+AC_ARG_WITH(sendmail, [  --with-sendmail=PATH	Path to sendmail.],
 [ case "$withval" in
-  no)
-    AC_MSG_WARN([
-
-Without sendmail you won't get the output of the jobs by mail
-])
-    ;;
-  yes)
-    if test "$FOUND_SENDMAIL" = "" ; then
-       AC_MSG_ERROR([
-Cannot determine path to sendmail: try option --with-sendmail=PATH])
-    fi
-    SENDMAIL=$FOUND_SENDMAIL
-    USE_SENDMAIL=1
-    ;;
-  *)
-    if test -x $withval ; then
-      SENDMAIL=$withval
-      USE_SENDMAIL=1
-    else
-      AC_MSG_ERROR([
-File $withval is not an executable file])
-    fi
-    ;;
-  esac ]
+  no)  USE_SENDMAIL=0 ;;
+  yes) ;;
+  *)   SENDMAIL=$withval ;;
+  esac ],
 )
+
+if test "$USE_SENDMAIL" != "1" ; then
+  AC_MSG_RESULT([disabled])
+  AC_MSG_WARN([Without sendmail you will not get the output of the jobs by mail])
+elif test -z "$SENDMAIL" ; then
+  AC_MSG_RESULT([not found])
+  AC_MSG_ERROR([Empty sendmail path or cannot determine path to sendmail: try option --with-sendmail=PATH])
+elif test ! -x "$SENDMAIL" ; then
+  AC_MSG_RESULT([$SENDMAIL])
+  AC_MSG_ERROR([File $SENDMAIL is not an executable file])
+else
+  AC_MSG_RESULT([$SENDMAIL])
+fi
 
 AC_SUBST([SENDMAIL])
 if test x"$USE_SENDMAIL" != x ; then
   AC_DEFINE([USE_SENDMAIL])
-  AC_MSG_RESULT([$SENDMAIL])
-else
-  AC_MSG_RESULT([disabled])
 fi
 
 AC_PATH_PROG(FOUND_FCRON_SHELL, sh, , $PATH)
 FCRON_SHELL=
-AC_MSG_CHECKING(shell)
+AC_MSG_CHECKING([default shell to use to run a job])
 AC_ARG_WITH(shell,
 [  --with-shell=PATH	Path to default shell (by default, path to sh).],
 [ case "$withval" in
@@ -250,7 +240,7 @@ AC_SUBST([FCRON_SHELL])
 
 AC_PATH_PROG(FOUND_FCRON_EDITOR, vi)
 FCRON_EDITOR=
-AC_MSG_CHECKING(editor)
+AC_MSG_CHECKING([editor to use for fcrontab])
 AC_ARG_WITH(editor,
 [  --with-editor=PATH	Path to default editor (by default, path to vi).],
 [ case "$withval" in

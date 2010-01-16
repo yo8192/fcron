@@ -63,12 +63,6 @@ char reinstall_opt = 0;
 char ignore_prev = 0;
 int file_opt = 0;
 
-#ifdef DEBUG
-char debug_opt = 1;       /* set to 1 if we are in debug mode */
-#else
-char debug_opt = 0;       /* set to 1 if we are in debug mode */
-#endif
-
 /* uid/gid of users/groups 
  * (we don't use the static UID or GID as we ask for user and group names
  * in the configure script) */

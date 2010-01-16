@@ -52,10 +52,7 @@ fifo_list_init(size_t entry_size, int init_size, int grow_size)
 	    "grow_size=%d", entry_size, init_size, grow_size);
 
     /* Allocate the list structure: */
-    l = calloc(1, sizeof(struct fifo_list_t));
-    if ( l == NULL )
-	die_e("Failed creating a new fifo list: could not calloc() fifo_list_t "
-	      "(entry_size: %d)", entry_size);
+    l = alloc_safe(sizeof(struct fifo_list_t), "new fifo_list_t");
 
     /* Initialize the structure and allocate the array: */
     l->max_entries = l->num_entries = 0;
@@ -63,10 +60,7 @@ fifo_list_init(size_t entry_size, int init_size, int grow_size)
     l->entry_size = entry_size;
     l->grow_size = grow_size;
     l->first_entry = l->cur_entry = NULL;
-    l->entries_array = calloc(init_size, entry_size);
-    if ( l->entries_array == NULL )
-	die_e("Failed creating a new fifo list: could not calloc array"
-	      "(entry_size: %d, init_size: %d)", entry_size, init_size);
+    l->entries_array = alloc_safe(init_size*entry_size, "new fifo_list_t array");
 
     return l;
 }
@@ -115,10 +109,7 @@ fifo_list_resize_array(fifo_list_t *l)
 
     debug("Resizing fifo_list_t (old size: %d, new size: %d)...", old_size, l->array_size);
 	
-    if ( (e = calloc(l->array_size, l->entry_size)) == NULL )
-	die_e("Could not calloc fifo_list_t to grow entries_array "
-	      "(old size: %d, new size: %d)...", old_size, l->array_size);
-
+    e = alloc_safe(l->array_size*l->entry_size, "larger fifo_list_t array");
     memcpy(e, l->entries_array, (l->entry_size * old_size));
     free_safe(l->entries_array);
     l->entries_array = e;    

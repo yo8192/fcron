@@ -53,11 +53,6 @@ int connect_fcron(void);
 int authenticate_user_password(int fd);
 
 /* command line options */
-#ifdef DEBUG
-char debug_opt = 1;       /* set to 1 if we are in debug mode */
-#else
-char debug_opt = 0;       /* set to 1 if we are in debug mode */
-#endif
 char *cmd_str = NULL;
 
 /* needed by log part : */
@@ -153,7 +148,7 @@ void
 xexit(int exit_val)
     /* clean & exit */
 {
-    Flush(cmd_str);
+    free_safe(cmd_str);
 
     exit(exit_val);
 }
@@ -350,9 +345,7 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
 	fprintf(stderr, "Warning : too much arguments : '%s' ignored.\n", cmd_str);
 
     /* This is a valid command ... */
-    if ( (*cmd = calloc(*cmd_len, sizeof(long int))) == NULL )
-	die_e("Could not calloc.");
-
+    *cmd = alloc_safe(*cmd_len*sizeof(long int), "command string");
     memcpy(*cmd, buf, *cmd_len * sizeof(long int));
 
     return OK;
@@ -377,7 +370,7 @@ authenticate_user_password(int fd)
     send(fd, buf, len, 0);
     Overwrite(buf);
     Overwrite(password);
-    free(password);
+    free_safe(password);
     
     tv.tv_sec = MAX_WAIT_TIME;
     tv.tv_usec = 0;
@@ -507,7 +500,7 @@ talk_fcron(char *cmd_str, int fd)
 	return ERR;
 
     send(fd, cmd, cmd_len * sizeof(long int), 0);
-    Flush(cmd);
+    free_safe(cmd);
     cmd_len = 0;
 
     tv.tv_sec = MAX_WAIT_TIME;
@@ -604,7 +597,7 @@ parseopt(int argc, char *argv[])
 	    break;
 
 	case 'i':
-	    Flush(cmd_str);
+	    free_safe(cmd_str);
 	    break;
 
 	case 'x':
