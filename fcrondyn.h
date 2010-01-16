@@ -28,6 +28,7 @@
 
 #include "global.h"
 #include "dyncom.h"
+#include "fcronconf.h"
 
 /* global variables */
 extern char dosyslog;

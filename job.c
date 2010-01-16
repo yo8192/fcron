@@ -26,6 +26,7 @@
 #include "fcron.h"
 
 #include "job.h"
+#include "temp_file.h"
 
 void sig_dfl(void);
 void end_job(cl_t *line, int status, FILE *mailf, short mailpos, char **sendmailenv);

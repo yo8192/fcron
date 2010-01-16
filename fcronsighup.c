@@ -26,6 +26,7 @@
 #include "fcronsighup.h"
 #include "global.h"
 #include "allow.h"
+#include "fcronconf.h"
 
 char rcs_info[] = "$Id: fcronsighup.c,v 1.14 2008-05-11 10:46:54 thib Exp $";
 

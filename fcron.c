@@ -29,6 +29,7 @@
 #include "conf.h"
 #include "job.h"
 #include "temp_file.h"
+#include "fcronconf.h"
 #ifdef FCRONDYN
 #include "socket.h"
 #endif

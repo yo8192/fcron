@@ -29,6 +29,7 @@
 #include "global.h"
 #include "exe_list.h"
 #include "lavg_list.h"
+#include "fcronconf.h"
 
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>

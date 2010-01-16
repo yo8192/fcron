@@ -1,5 +1,5 @@
 /*
- * FCRON - periodic command scheduler 
+ * FCRON - periodic command scheduler
  *
  *  Copyright 2000-2009 Thibault Godouet <fcron@free.fr>
  *
@@ -12,34 +12,37 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- * 
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  *  The GNU General Public License can also be found in the file
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: fcrontab.h,v 1.21 2007-04-14 18:04:13 thib Exp $ */
+ /* $Id: subs.h,v 1.11 2007-04-14 18:04:23 thib Exp $ */
 
-#ifndef __FCRONTAB_H__
-#define __FCRONTAB_H__
+#ifndef __FCRONCONF_H__
+#define __FCRONCONF_H__
 
-#include "global.h"
-#include "fcronconf.h"
 
 /* global variables */
-extern pid_t daemon_pid;
-extern char dosyslog;
-extern struct cf_t *file_base;
-extern char *user;
-extern char *runas;
-extern uid_t uid;
-extern uid_t asuid;
-extern uid_t fcrontab_uid;
-extern gid_t fcrontab_gid;
-extern uid_t rootuid;
-extern gid_t rootgid;
 
-#endif /* __FCRONTAB_H__ */
+/* fcron.conf parameters */
+extern char *fcronconf;
+extern char *fcronallow;
+extern char *fcrondeny;
+extern char *fcrontabs;
+extern char *pidfile;
+extern char *fifofile;
+extern char *editor;
+extern char *shell;
+extern char *sendmail;
+/* end of global variables */
+
+/* functions prototypes */
+extern void read_conf(void);
+extern void free_conf(void);
+
+#endif /* __FCRONCONF_H__ */

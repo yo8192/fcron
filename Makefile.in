@@ -73,11 +73,11 @@ CFLAGS += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
 ifeq ($(FCRONDYN), 1)
 LIBOBJS := socket.o $(LIBOBJS)
 endif
-OBJSD := fcron.o subs.o save.o temp_file.o log.o database.o job.o conf.o u_list.o exe_list.o lavg_list.o env_list.o $(LIBOBJS)
-OBJSTAB := fcrontab.o subs.o save.o temp_file.o  log.o fileconf.o allow.o read_string.o u_list.o env_list.o
-OBJSDYN := fcrondyn.o subs.o log.o allow.o read_string.o
+OBJSD := fcron.o subs.o save.o temp_file.o log.o database.o job.o conf.o u_list.o exe_list.o lavg_list.o env_list.o fcronconf.o $(LIBOBJS)
+OBJSTAB := fcrontab.o subs.o save.o temp_file.o  log.o fileconf.o allow.o read_string.o u_list.o env_list.o fcronconf.o
+OBJSDYN := fcrondyn.o subs.o log.o allow.o read_string.o fcronconf.o
 OBJCONV := convert-fcrontab.o subs.o save.o log.o u_list.o env_list.o
-OBJSIG := fcronsighup.o subs.o log.o allow.o
+OBJSIG := fcronsighup.o subs.o log.o allow.o fcronconf.o
 HEADERSALL := config.h $(SRCDIR)/global.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/save.h $(SRCDIR)/option.h $(SRCDIR)/dyncom.h
 
 # this is a regular expression :

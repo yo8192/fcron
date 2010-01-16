@@ -30,6 +30,7 @@
 #include "socket.h"
 #include "getloadavg.h"
 #include "database.h"
+#include "fcronconf.h"
 
 
 void remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client);
