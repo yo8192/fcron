@@ -31,6 +31,18 @@ A copy of the license is included in gfdl.sgml.
 	       <para>could be worth checking fcron for memory leaks using specialized library (just in case...)</para>
 	    </listitem>
 	    <listitem>
+	       <para>option to put a maximum limit on the execution time of a task + terminate it if not finished yet + send email to let the user know</para>
+	    </listitem>
+	    <listitem>
+	       <para>@reboot: don't run the job the first time it is loaded by fcron after having been created -- otherwise we can't use fcron as a 'rc' start/stop script for users without root privileges</para>
+	    </listitem>
+	    <listitem>
+	       <para>jitter feature: if 100 jobs to be started at the same minute, then make them start at a random second of that minute to limit load spikes (see BSD cron jitter feature)</para>
+	    </listitem>
+	    <listitem>
+	       <para>setting to limit the number of jobs of a single user in the serialq/lavgq to X jobs + make sure root always has Y slots that it can use in those queues (i.e. number of slots used by root + number of free slots >= Y)</para>
+	    </listitem>
+	    <listitem>
 	       <para>Test (and use ?) docbook2x-man -- xlstproc ? cf http://antoine.ginies.free.fr/docbook/ch09.html</para>
 	    </listitem>
 	    <listitem>
@@ -135,4 +147,3 @@ mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
 End:
 -->
-

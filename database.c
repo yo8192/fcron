@@ -42,6 +42,32 @@ void run_lavg_job(lavg_t *l);
 void run_queue_job(cl_t *line);
 
 void
+run_reboot_jobs(void)
+{
+    int reboot = 0;
+    struct job_t *j;
+
+    /* lock exist - skip reboot jobs */
+    if (access(REBOOT_LOCK, F_OK) == 0) {
+        info("@reboot jobs will only be run at computer's startup.");
+        return;
+    }
+    /* lock doesn't exist - create lock, run reboot jobs */
+    if ((reboot = creat(REBOOT_LOCK, S_IRUSR & S_IWUSR)) < 0)
+        error_e("Can't create lock for reboot jobs.");
+    else
+        close(reboot);
+
+    for (u = db->head; u != NULL; u = u->next) {
+        for (e = u->crontab; e != NULL; e = e->next) {
+            if (e->flags & WHEN_REBOOT)
+                job_add(e, u);
+        }
+    }
+    (void) job_runqueue();
+}
+
+void
 test_jobs(void)
   /* determine which jobs need to be run, and run them. */
 {
