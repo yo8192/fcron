@@ -148,7 +148,7 @@ get_line(char *str, size_t size, FILE *file)
 }
 
 int
-read_file(char *filename)
+read_file(char *filename, int fd)
     /* read file "name" and append cf_t list */
 {
     cf_t *cf = NULL;
@@ -168,14 +168,14 @@ read_file(char *filename)
 
     /* open file */
 
-    /* check if user is allowed to read file */
-    if ( access(file_name, R_OK) != 0 )
-	die_e("User %s can't read file \"%s\"", user, file_name);
-    else if ( (file = fopen(file_name, "r")) == NULL ) {
+    if ( (file = fdopen(fd, "r")) == NULL ) {
 	fprintf(stderr, "Could not open \"%s\": %s\n", file_name,
 		strerror(errno));
 	return ERR;
     }
+
+    /* Rewind, just in case */
+    rewind(file);
 
     Alloc(cf, cf_t);
     cf->cf_user = strdup2(user);
@@ -264,7 +264,8 @@ read_file(char *filename)
     cf->cf_next = file_base;
     file_base = cf;
 
-    fclose(file);
+    /* don't close as underlying fd may still be used by calling function */
+    fflush(file);
     
     free(default_line.cl_runas);
     free(default_line.cl_mailto);

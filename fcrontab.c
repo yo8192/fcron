@@ -183,12 +183,12 @@ xexit(int exit_val)
 
 
 int
-copy_src(char *orig, char *dest)
-    /* copy src file from orig to dest */
+copy_src(int from, char *dest)
+    /* copy src file orig (already opened) to dest */
     /* we first copy the file to a temp file name, and then we rename it,
      * so as to avoid data loss if the filesystem is full. */
 {
-    int from = -1, to_fd = -1;
+    int to_fd = -1;
     int nb;
     char *copy_buf[LINE_LEN];
 
@@ -197,10 +197,12 @@ copy_src(char *orig, char *dest)
     char *tmp_suffix_str = ".tmp";
     int max_dest_len = sizeof(tmp_filename_str)- sizeof(tmp_suffix_str);
 
-    if ( (from = open(orig, O_RDONLY)) == -1) {
-	error_e("copy: open(orig) : old source file kept");
-	goto exiterr;
+    if(from < 0) {
+        die("copy_src() called with an invalid 'from' argument");
     }
+
+    /* just in case the file was read in the past... */
+    lseek(from, 0, SEEK_SET);
 
     /* create it as fcrontab_uid (to avoid problem if user's uid changed)
      * except for root. Root requires filesystem uid root for security
@@ -252,9 +254,8 @@ copy_src(char *orig, char *dest)
 	    goto exiterr;
 	}
 
-    close(from);
     close(to_fd);
-    from = to_fd = -1;
+    to_fd = -1;
 
     if ( rename(tmp_filename_str, dest) < 0 ) {
 	error_e("Unable to rename %s to %s : old source file kept",
@@ -265,8 +266,6 @@ copy_src(char *orig, char *dest)
     return OK;
 
   exiterr:
-    if ( from != -1 )
-	close(from);
     if ( to_fd != -1 )
 	close(to_fd);
     return ERR;
@@ -328,7 +327,7 @@ remove_fcrontab(char rm_orig)
 
 
 int
-write_file(char *file)
+write_file(int fd)
 {
     int return_val = OK;
 
@@ -340,7 +339,7 @@ write_file(char *file)
 
     /* copy original file to fcrontabs dir */
     snprintf(buf, sizeof(buf), "%s.orig", user);
-    if ( copy_src(file, buf) == ERR ) {
+    if ( copy_src(fd, buf) == ERR ) {
 	return_val = ERR;
     }
     else {
@@ -363,16 +362,16 @@ write_file(char *file)
 }
 
 int
-make_file(char *file)
+make_file(char *file, int fd)
 {
     explain("installing file %s for user %s", file, user);
 
     /* read file and create a list in memory */
-    switch ( read_file(file) ) {
+    switch ( read_file(file, fd) ) {
     case 2:
     case OK:
 
-	if (write_file(file) == ERR)
+	if (write_file(fd) == ERR)
 	    return ERR;
 	else
 	    /* tell daemon to update the conf */
@@ -420,7 +419,7 @@ list_file(char *file)
 }
 
 void
-edit_file(char *buf)
+edit_file(char *fcron_orig)
     /* copy file to a temp file, edit that file, and install it
        if necessary */
 {
@@ -455,9 +454,9 @@ edit_file(char *buf)
     }
 #endif
     /* copy user's fcrontab (if any) to a temp file */
-    if ( (f = fopen(buf, "r")) == NULL ) {
+    if ( (f = fopen(fcron_orig, "r")) == NULL ) {
 	if ( errno != ENOENT ) {
-	    error_e("could not open file %s", buf);
+	    error_e("could not open file %s", fcron_orig);
 	    goto exiterr;
 	}
 	else
@@ -468,7 +467,7 @@ edit_file(char *buf)
 	/* copy original file to temp file */
 	while ( (c=getc(f)) != EOF ) {
 	    if ( putc(c, fi) == EOF ) {
-		error_e("could not write to file %s", buf);
+		error_e("could not write to file %s", tmp_str);
 		goto exiterr;
 	    }
 	}
@@ -476,17 +475,16 @@ edit_file(char *buf)
 	f = NULL;
     }
 
-    fclose(fi);
+    /* Don't close fi, because we still need the file descriptor 'file' */
+    fflush(fi);
     fi = NULL;
-    close(file);
-    file = -1;
 
     do {
 
-	if ( stat(tmp_str, &st) == 0 )
+	if ( fstat(file, &st) == 0 )
 	    mtime = st.st_mtime;
 	else {
-	    error_e("could not stat \"%s\"", buf);
+	    error_e("could not stat \"%s\"", tmp_str);
 	    goto exiterr;
 	}
 
@@ -534,35 +532,15 @@ edit_file(char *buf)
 	}
 
 #ifndef USE_SETE_ID
-	/* we have chown the tmp file to user's name : user may have
-	 * linked the tmp file to a file owned by root. In that case, as
-	 * fcrontab is setuid root, user may read some informations he is not
-	 * allowed to read :
-	 * we *must* check that the tmp file is not a link. */
-
-	/* open the tmp file, chown it to root and chmod it to avoid race
-	 * conditions */
-	/* make sure that the tmp file is not a link */
-	{
-	    int fd = 0;
-	    if ( (fd = open(tmp_str, O_RDONLY)) <= 0 ||
-		 fstat(fd, &st) != 0 || ! S_ISREG(st.st_mode) ||
-		 S_ISLNK(st.st_mode) || st.st_uid != asuid || st.st_nlink > 1){
-		fprintf(stderr, "%s is not a valid regular file.\n", tmp_str);
-		close(fd);
-		goto exiterr;
-	    }
-	    if ( fchown(fd, rootuid, rootgid) != 0 || fchmod(fd, S_IRUSR|S_IWUSR) != 0 ){
-		fprintf(stderr, "Can't chown or chmod %s.\n", tmp_str);
-		close(fd);
-		goto exiterr;
-	    }
-	    close(fd);
-	}
+	/* chown the file back to rootuid/rootgid */
+        if ( fchown(file, rootuid, rootgid) != 0 || fchmod(file, S_IRUSR|S_IWUSR) != 0 ){
+            fprintf(stderr, "Can't chown or chmod %s.\n", tmp_str);
+            goto exiterr;
+        }
 #endif
 	
 	/* check if file has been modified */
-	if ( stat(tmp_str, &st) != 0 ) {
+	if ( fstat(file, &st) != 0 ) {
 	    error_e("could not stat %s", tmp_str);
 	    goto exiterr;
 	}    
@@ -571,7 +549,7 @@ edit_file(char *buf)
 
 	    correction = 0;
 
-	    switch ( read_file(tmp_str) ) {
+	    switch ( read_file(tmp_str, file) ) {
 	    case ERR:
 		goto exiterr;
 	    case 2:
@@ -603,7 +581,7 @@ edit_file(char *buf)
 
     } while ( correction == 1);
 
-    if ( write_file(tmp_str) != OK )
+    if ( write_file(file) != OK )
 	return_val = EXIT_ERR;
     else
 	/* tell daemon to update the conf */
@@ -614,6 +592,8 @@ edit_file(char *buf)
     delete_file(user);
     
   end:
+    if ( file != -1 && close(file) != 0 )
+	error_e("could not close %s", tmp_str);
     if ( remove(tmp_str) != 0 )
 	error_e("could not remove %s", tmp_str);
     free(tmp_str);
@@ -651,11 +631,13 @@ install_stdin(void)
 
     while ( (c = getc(stdin)) != EOF )
 	putc(c, tmp_file);
+    /* // */
+    debug("Copied stdin to %s, about to parse file %s...", tmp_str, tmp_str); 
 
-    /* the following closes tmp_fd as well because it was fdopen()ed: */
-    fclose(tmp_file);
+    /* don't closes tmp_fd as it will be used for make_file(): */
+    fflush(tmp_file);
 
-    if ( make_file(tmp_str) == ERR )
+    if ( make_file(tmp_str, tmp_fd) == ERR )
 	goto exiterr;
     else
 	goto exit;
@@ -671,19 +653,19 @@ install_stdin(void)
 }
 
 void
-reinstall(char *buf)
+reinstall(char *fcron_orig)
 {
     int i = 0;
 
     explain("reinstalling %s's fcrontab", user);
 
-    if ( (i = open(buf, O_RDONLY)) < 0) {
+    if ( (i = open(fcron_orig, O_RDONLY)) < 0) {
 	if ( errno == ENOENT ) {
 	    fprintf(stderr, "Could not reinstall: user %s has no fcrontab\n",
 		    user);
 	}
 	else
-	    fprintf(stderr, "Could not open \"%s\": %s\n", buf,
+	    fprintf(stderr, "Could not open \"%s\": %s\n", fcron_orig,
 		    strerror(errno));
 
 	xexit(EXIT_ERR);
@@ -1107,6 +1089,7 @@ main(int argc, char **argv)
 	    xexit(install_stdin());
 
 	else {
+            int fd = -1;
 
 	    if ( *argv[file_opt] != '/' )
 		/* this is just the file name, not the path : complete it */
@@ -1116,7 +1099,10 @@ main(int argc, char **argv)
 		file[sizeof(file)-1] = '\0';
 	    }
 
-	    if (make_file(file) == OK)
+            fd = open(file, O_RDONLY);
+            if (fd < 0)
+                die_e("Could not open file %s", file);
+	    if (make_file(file, fd) == OK)
 		xexit(EXIT_OK);
 	    else
 		xexit(EXIT_ERR);
