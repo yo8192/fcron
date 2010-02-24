@@ -75,6 +75,7 @@ char debug_opt = 0;       /* set to 1 if we are in debug mode */
 char *user = NULL;
 char *runas = NULL;
 uid_t uid = 0;
+gid_t gid = 0;
 uid_t asuid = 0;
 gid_t asgid = 0;
 uid_t fcrontab_uid = 0;
@@ -181,6 +182,30 @@ xexit(int exit_val)
 
 }
 
+int
+open_as_user(const char *pathname, int flags, uid_t openuid, gid_t opengid)
+/* Become user and call open(), then revert back to who we were */
+{
+    uid_t orig_euid = geteuid();
+    gid_t orig_egid = getegid();
+    int fd = -1;
+
+    if (seteuid(openuid) < 0)
+        die_e("open_as_user(): could not change euid to %d", uid);
+    if (setegid(opengid) < 0)
+        die_e("open_as_user(): could not change egid to %d", gid);
+
+    fd = open(pathname, flags);
+
+    /* change the effective uid/gid back to original values */
+    if (seteuid(orig_euid) < 0)
+        die_e("open_as_user(): could not revert to euid %d", orig_euid);
+    if (setegid(orig_egid) < 0)
+        die_e("open_as_user(): could not revert to egid %d", orig_egid);
+
+    return fd;
+    
+}
 
 int
 copy_src(int from, char *dest)
@@ -473,10 +498,14 @@ edit_file(char *fcron_orig)
 	}
 	fclose(f);
 	f = NULL;
+
+        if ( ferror(fi) )
+            error_e("Error while writing new fcrontab to %s");
     }
 
     /* Don't close fi, because we still need the file descriptor 'file' */
-    fflush(fi);
+    if ( fflush(fi) != 0 )
+        die_e("Could not fflush(%s)", fi);
     fi = NULL;
 
     do {
@@ -635,7 +664,8 @@ install_stdin(void)
     debug("Copied stdin to %s, about to parse file %s...", tmp_str, tmp_str); 
 
     /* don't closes tmp_fd as it will be used for make_file(): */
-    fflush(tmp_file);
+    if ( fflush(tmp_file) != 0 )
+        die_e("Could not fflush(%s)", tmp_file);
 
     if ( make_file(tmp_str, tmp_fd) == ERR )
 	goto exiterr;
@@ -980,6 +1010,7 @@ main(int argc, char **argv)
     else prog_name = strrchr(argv[0],'/')+1;
     
     uid = getuid();
+    gid = getgid();
 
     errno = 0;
     if ( ! (pass = getpwnam(USERNAME)) )
@@ -1099,7 +1130,7 @@ main(int argc, char **argv)
 		file[sizeof(file)-1] = '\0';
 	    }
 
-            fd = open(file, O_RDONLY);
+            fd = open_as_user(file, O_RDONLY, uid, gid);
             if (fd < 0)
                 die_e("Could not open file %s", file);
 	    if (make_file(file, fd) == OK)

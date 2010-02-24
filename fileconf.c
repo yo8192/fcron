@@ -265,7 +265,8 @@ read_file(char *filename, int fd)
     file_base = cf;
 
     /* don't close as underlying fd may still be used by calling function */
-    fflush(file);
+    if (fflush(file) != 0)
+        error_e("could not fflush() file_name");
     
     free(default_line.cl_runas);
     free(default_line.cl_mailto);
