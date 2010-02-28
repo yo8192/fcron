@@ -2450,7 +2450,7 @@ _ACEOF
 VERSION="$vers"
 
 
-copyright_quoted="\"2000-2008\""
+copyright_quoted="\"2000-2010\""
 cat >>confdefs.h <<_ACEOF
 #define COPYRIGHT_QUOTED $copyright_quoted
 _ACEOF

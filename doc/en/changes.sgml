@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2008 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2010 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -16,7 +16,16 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 3.0.4 to 3.0.5</title>
 	 <listitem>
+	    <para>Security issue: fixed security issue that allowed malicious user to read any file readable by group 'fcron' (in particular fcron's config files and the fcrontabs of non-root users). On systems without seteuid() (i.e. quite exotic systems) then the bug is harder to exploit but any file could be read.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Improved general security of fcrontab and fcrondyn by dropping more privileges.</para>
+	 </listitem>
+	 <listitem>
 	    <para>Work on portability (aix, hpux, irix, tru64 unix, solaris). Thanks Peter O'Gorman for his patch!</para>
+	 </listitem>
+	 <listitem>
+	    <para>Patched startup script to make it more compliant to the LSB.</para>
 	 </listitem>
 	 <listitem>
 	    <para>Increased maximum number of fcrontab entries from 256 to 1024.</para>
@@ -26,6 +35,9 @@ A copy of the license is included in gfdl.sgml.
 	 </listitem>
 	 <listitem>
 	    <para>bug fix: fcrontab used to accept MAXENTRIES+1 fcrontab entries</para>
+	 </listitem>
+	 <listitem>
+	    <para>chdir to /tmp before executing the editor (as some editor needs to be able to read information on the current folder).</para>
 	 </listitem>
       </itemizedlist>
 
