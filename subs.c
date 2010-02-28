@@ -188,11 +188,23 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
      * There will always be a risk of race-condition between the test
      * and the open but that's the best we can realistically do
      * without seteuid()... */
-    stat(pathname, &s);
-    if ( ! ( s.st_mode & S_IROTH
-            || ( s.st_uid == openuid && s.st_mode & S_IRUSR )
-            || ( s.st_gid == opengid && s.st_mode & S_IRGRP ) ) ) {
-        errno = EACCES;
+    if ( stat(pathname, &s) == 0 ) {
+        if ( ! ( s.st_mode & S_IROTH
+                    || ( s.st_uid == openuid && s.st_mode & S_IRUSR )
+                    || ( s.st_gid == opengid && s.st_mode & S_IRGRP ) ) ) {
+            error("open_as_user(): file %s does not pass the security test: "
+                    "uid=%d gid=%d mode=%lo openuid=%d opengid=%d",
+                    pathname, s.st_uid, s.st_gid, s.st_mode, openuid, opengid);
+            errno = EACCES;
+            return -1;
+        }
+    }
+    else if ( errno == ENOENT ) {
+        /* the file doesn't exist so no risk to truncate the wrong file! */
+        ;
+    }
+    else {
+        error_e("open_as_user(): could not stat %s", pathname);
         return -1;
     }
 
@@ -223,7 +235,9 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     if ( ! ( s.st_mode & S_IROTH
             || ( s.st_uid == openuid && s.st_mode & S_IRUSR )
             || ( s.st_gid == opengid && s.st_mode & S_IRGRP ) ) ) {
-        error_e("open_as_user(): file %s does not pass the security test", pathname);
+        error("open_as_user(): file %s does not pass the security test: "
+                "uid=%d gid=%d mode=%lo openuid=%d opengid=%d",
+                pathname, s.st_uid, s.st_gid, s.st_mode, openuid, opengid);
         errno = EACCES;
         goto err;
     }
@@ -247,7 +261,7 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
 err:
     if ( fd >= 0 && close(fd) < 0 )
         error_e("open_as_user: could not close() %s", pathname);
-    return = -1;
+    return -1;
 }
 
 #endif /* def USE_SETE_ID */
@@ -256,11 +270,11 @@ int
 remove_as_user(const char *pathname, uid_t removeuid, gid_t removegid)
 /* Become user and call remove(), then revert back to who we were */
 {
+    int rval = -1;
+#ifdef USE_SETE_ID
     uid_t orig_euid = geteuid();
     gid_t orig_egid = getegid();
-    int rval = -1;
 
-#ifdef USE_SETE_ID
     seteuid_safe(removeuid);
     setegid_safe(removegid);
 #endif /* def USE_SETE_ID */
@@ -279,11 +293,11 @@ int
 rename_as_user(const char *oldpath, const char *newpath, uid_t renameuid, gid_t renamegid)
 /* Become user and call rename(), then revert back to who we were */
 {
+    int rval = -1;
+#ifdef USE_SETE_ID
     uid_t orig_euid = geteuid();
     gid_t orig_egid = getegid();
-    int rval = -1;
 
-#ifdef USE_SETE_ID
     seteuid_safe(renameuid);
     setegid_safe(renamegid);
 #endif /* def USE_SETE_ID */

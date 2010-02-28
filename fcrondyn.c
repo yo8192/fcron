@@ -651,7 +651,9 @@ main(int argc, char **argv)
 
     /* drop suid rights that we don't need, but keep the sgid rights
      * for now as we will need them for read_conf() and is_allowed() */
+#ifdef USE_SETE_ID
     seteuid_safe(user_uid);
+#endif
     if ( setuid(user_uid) < 0 )
         die_e("could not setuid() to %d", user_uid);
 
@@ -667,7 +669,9 @@ main(int argc, char **argv)
     }
 
     /* we don't need anymore special rights : drop remaining ones */
+#ifdef USE_SETE_ID
     setegid_safe(user_gid);
+#endif
     if ( setgid(user_gid) < 0 )
         die_e("could not setgid() to %d", user_gid);
 

@@ -494,7 +494,14 @@ edit_file(char *fcron_orig)
 	    goto exiterr;
 	}
 
-        /* close the file before the user edits it */
+#ifndef USE_SETE_ID
+	/* chown the file (back if correction) to asuid/asgid so as user can edit it */
+        if ( fchown(file, asuid, asgid) != 0 || fchmod(file, S_IRUSR|S_IWUSR) != 0 ){
+            fprintf(stderr, "Can't chown or chmod %s.\n", tmp_str);
+            goto exiterr;
+        }
+#endif
+	        /* close the file before the user edits it */
         close(file);
 
 	switch ( pid = fork() ) {

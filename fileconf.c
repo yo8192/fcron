@@ -1719,8 +1719,13 @@ save_file(char *path)
      * ownership to this user, in order to make fcron check the runas fields.
      * (a malicious user could put a runas(root) and wait for the fcrontab to be
      * installed by root) */
+#ifdef USE_SETE_ID
 	if ( save_file_safe(file, path, "fcrontab", asuid, fcrontab_gid, 0) == ERR )
 	    return ERR;
+#else
+	if ( save_file_safe(file, path, "fcrontab", fcrontab_uid, fcrontab_gid, 0) == ERR )
+	    return ERR;
+#endif
 
     }
 
