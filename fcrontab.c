@@ -74,14 +74,14 @@ char debug_opt = 0;       /* set to 1 if we are in debug mode */
  * in the configure script) */
 char *user = NULL;
 char *runas = NULL;
-uid_t uid = 0;
-gid_t gid = 0;
-uid_t asuid = 0;
-gid_t asgid = 0;
-uid_t fcrontab_uid = 0;
-gid_t fcrontab_gid = 0;
-uid_t rootuid = 0;
-gid_t rootgid = 0;
+uid_t useruid = 0;      /* uid of the user */
+gid_t usergid = 0;      /* gid of the user */
+uid_t asuid = 0;        /* uid of the user whose fcrontab we are working on */
+gid_t asgid = 0;        /* gid of the user whose fcrontab we are working on*/
+uid_t fcrontab_uid = 0; /* uid of the fcron user */
+gid_t fcrontab_gid = 0; /* gid of the fcron user */
+uid_t rootuid = 0;      /* uid of root */
+gid_t rootgid = 0;      /* gid of root */
 
 char need_sig = 0;           /* do we need to signal fcron daemon */
 
@@ -151,19 +151,30 @@ xexit(int exit_val)
 {
     pid_t pid = 0;
 
+    /* WARNING: make sure we never call die_e() or something that could call
+     *          die_e() here, as die_e() would then call xexit() and we could
+     *          go into a loop! */
+
     if ( need_sig == 1 ) {
 	
 	/* fork and exec fcronsighup */
 	switch ( pid = fork() ) {
 	case 0:
 	    /* child */
+            if (getegid() != fcrontab_gid && setegid(fcrontab_gid) != 0) {
+                error_e("could not change egid to fcrontab_gid[%d]", fcrontab_gid);
+                exit(ERR);
+            }
 	    execl(BINDIREX "/fcronsighup", BINDIREX "/fcronsighup",
 		  fcronconf, NULL);
-	    die_e("Could not exec " BINDIREX " fcronsighup");
+
+	    error_e("Could not exec " BINDIREX " fcronsighup");
+            exit(ERR);
 	    break;
 
 	case -1:
-	    die_e("Could not fork (fcron has not been signaled)");
+	    error_e("Could not fork (fcron has not been signaled)");
+            exit(ERR);
 	    break;
 
 	default:
@@ -174,37 +185,17 @@ xexit(int exit_val)
     }
 
 #ifdef HAVE_LIBPAM
+    /* we need those rights for pam to close properly */
+    if (geteuid() != fcrontab_uid && seteuid(fcrontab_uid) != 0)
+        die_e("could not change euid to %d", fcrontab_uid);
+    if (getegid() != fcrontab_gid && setegid(fcrontab_gid) != 0)
+        die_e("could not change egid to %d", fcrontab_gid);
     pam_setcred(pamh, PAM_DELETE_CRED | PAM_SILENT);
     pam_end(pamh, pam_close_session(pamh, PAM_SILENT));
 #endif
 
     exit(exit_val);
 
-}
-
-int
-open_as_user(const char *pathname, int flags, uid_t openuid, gid_t opengid)
-/* Become user and call open(), then revert back to who we were */
-{
-    uid_t orig_euid = geteuid();
-    gid_t orig_egid = getegid();
-    int fd = -1;
-
-    if (seteuid(openuid) < 0)
-        die_e("open_as_user(): could not change euid to %d", uid);
-    if (setegid(opengid) < 0)
-        die_e("open_as_user(): could not change egid to %d", gid);
-
-    fd = open(pathname, flags);
-
-    /* change the effective uid/gid back to original values */
-    if (seteuid(orig_euid) < 0)
-        die_e("open_as_user(): could not revert to euid %d", orig_euid);
-    if (setegid(orig_egid) < 0)
-        die_e("open_as_user(): could not revert to egid %d", orig_egid);
-
-    return fd;
-    
 }
 
 int
@@ -229,38 +220,23 @@ copy_src(int from, char *dest)
     /* just in case the file was read in the past... */
     lseek(from, 0, SEEK_SET);
 
-    /* create it as fcrontab_uid (to avoid problem if user's uid changed)
-     * except for root. Root requires filesystem uid root for security
-     * reasons */
-#ifdef USE_SETE_ID
-    if (asuid == rootuid) {
-	if (seteuid(rootuid) != 0)
-	    die_e("seteuid(rootuid) : old source file kept");
-    } 
-    else {
-    	if (seteuid(fcrontab_uid) != 0)
-	    error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
-    }
-#endif
-
-    /* the temp file must be in the same directory as the dest file */
+   /* the temp file must be in the same directory as the dest file */
     dest_path_len = strlen(dest);
     strncpy(tmp_filename_str, dest, max_dest_len);
     tmp_filename_index = (dest_path_len > max_dest_len) ?
 	max_dest_len : dest_path_len;
     strcpy(&tmp_filename_str[tmp_filename_index], tmp_suffix_str);
 
-    to_fd = open(tmp_filename_str, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC,
-		 S_IRUSR|S_IWUSR|S_IRGRP);
+    /* create it as fcrontab_uid (to avoid problem if user's uid changed)
+     * except for root. Root requires filesystem uid root for security
+     * reasons */
+    to_fd = open_as_user(tmp_filename_str, (asuid==rootuid)?rootuid:fcrontab_uid,
+            fcrontab_gid, O_WRONLY|O_CREAT|O_TRUNC|O_SYNC, S_IRUSR|S_IWUSR|S_IRGRP);
     if ( to_fd < 0 ) {
 	error_e("could not open file %s", tmp_filename_str);
 	goto exiterr;
     }
 
-#ifdef USE_SETE_ID
-    if (asuid != rootuid && seteuid(uid) != 0)
-	die_e("seteuid(uid[%d]) : old source file kept", uid);
-#endif
     if (asuid == rootuid ) {
 	if ( fchmod(to_fd, S_IWUSR | S_IRUSR) != 0 ) {
 	    error_e("Could not fchmod %s to 600", tmp_filename_str);
@@ -282,7 +258,7 @@ copy_src(int from, char *dest)
     close(to_fd);
     to_fd = -1;
 
-    if ( rename(tmp_filename_str, dest) < 0 ) {
+    if ( rename_as_user(tmp_filename_str, dest, useruid, fcrontab_gid) < 0 ) {
 	error_e("Unable to rename %s to %s : old source file kept",
 		tmp_filename_str, dest);
 	goto exiterr;
@@ -309,32 +285,22 @@ remove_fcrontab(char rm_orig)
 	explain("removing %s's fcrontab", user);
 
     /* remove source and formated file */
-    if ( (rm_orig && remove(buf)) != 0 ) {
+    if ( (rm_orig && remove_as_user(buf, fcrontab_uid, fcrontab_gid)) != 0 ) {
 	if ( errno == ENOENT )
 	    return_val = ENOENT;
 	else
 	    error_e("could not remove %s", buf);		
     }
 
-#ifdef USE_SETE_ID
-    if (seteuid(fcrontab_uid) != 0)
-	error_e("seteuid(fcrontab_uid[%d])", fcrontab_uid);
-#endif
-	    
     /* try to remove the temp file in case he has not
      * been read by fcron daemon */
     snprintf(buf, sizeof(buf), "new.%s", user);
-    remove(buf);
+    remove_as_user(buf, useruid, fcrontab_gid);
 
     /* finally create a file in order to tell the daemon
      * a file was removed, and launch a signal to daemon */
     snprintf(buf, sizeof(buf), "rm.%s", user);
-    fd = open(buf, O_CREAT | O_TRUNC | O_EXCL, S_IRUSR | S_IWUSR);
-
-#ifdef USE_SETE_ID
-    if (seteuid(uid) != 0)
-	die_e("seteuid(uid[%d])", uid);
-#endif
+    fd = open_as_user(buf, fcrontab_uid, fcrontab_gid, O_CREAT|O_TRUNC|O_EXCL, S_IRUSR|S_IWUSR);
 
     if ( fd == -1 ) {
 	if ( errno != EEXIST )
@@ -421,25 +387,30 @@ list_file(char *file)
 {
     FILE *f = NULL;
     int c;
+    int fd = -1;
 
     explain("listing %s's fcrontab", user);
 
-    if ( (f = fopen(file, "r")) == NULL ) {
-	if ( errno == ENOENT ) {
+    fd = open_as_user(file, useruid, fcrontab_uid, O_RDONLY);
+    if ( fd < 0 ) {
+        if ( errno == ENOENT ) {
 	    explain("user %s has no fcrontab.", user);
 	    return ;
 	}
 	else
 	    die_e("User %s could not read file \"%s\"", user, file);
     }
-    else {
 
-	while ( (c = getc(f)) != EOF )
-	    putchar(c);
-
-	fclose(f);
-
+    f = fdopen(fd, "r");
+    if ( f == NULL ) {
+        close(fd);
+        die_e("User %s could not read file \"%s\"", user, file);
     }
+
+    while ( (c = getc(f)) != EOF )
+        putchar(c);
+
+    fclose(f);
 
 }
 
@@ -456,7 +427,7 @@ edit_file(char *fcron_orig)
     time_t mtime = 0;
     char *tmp_str;
     FILE *f = NULL, *fi = NULL;
-    int file = -1;
+    int file = -1, origfd = -1;
     int c;
     char correction = 0;
     short return_val = EXIT_OK;
@@ -479,7 +450,8 @@ edit_file(char *fcron_orig)
     }
 #endif
     /* copy user's fcrontab (if any) to a temp file */
-    if ( (f = fopen(fcron_orig, "r")) == NULL ) {
+    origfd = open_as_user(fcron_orig, useruid, fcrontab_gid, O_RDONLY);
+    if ( origfd < 0 ) {
 	if ( errno != ENOENT ) {
 	    error_e("could not open file %s", fcron_orig);
 	    goto exiterr;
@@ -489,6 +461,11 @@ edit_file(char *fcron_orig)
 		    user);
     }
     else { 
+        f = fdopen(origfd, "r");
+        if ( f == NULL ) {
+	    error_e("could not fdopen file %s", fcron_orig);
+	    goto exiterr;
+        }
 	/* copy original file to temp file */
 	while ( (c=getc(f)) != EOF ) {
 	    if ( putc(c, fi) == EOF ) {
@@ -517,10 +494,13 @@ edit_file(char *fcron_orig)
 	    goto exiterr;
 	}
 
+        /* close the file before the user edits it */
+        close(file);
+
 	switch ( pid = fork() ) {
 	case 0:
 	    /* child */
-	    if ( uid != rootuid ) {
+	    if ( useruid != rootuid ) {
 		if (setgid(asgid) < 0) {
 		    error_e("setgid(asgid)");
 		    goto exiterr;
@@ -559,6 +539,13 @@ edit_file(char *fcron_orig)
 		    " fcrontab is unchanged.\n");
 	    goto exiterr;
 	}
+
+        /* re-open the file that has just been edited */
+        file = open_as_user(tmp_str, useruid, usergid, O_RDONLY);
+        if ( file < 0 ) {
+            error_e("Could not open file %s", tmp_str);
+            goto exiterr;
+        }
 
 #ifndef USE_SETE_ID
 	/* chown the file back to rootuid/rootgid */
@@ -623,13 +610,13 @@ edit_file(char *fcron_orig)
   end:
     if ( file != -1 && close(file) != 0 )
 	error_e("could not close %s", tmp_str);
-    if ( remove(tmp_str) != 0 )
+    if ( remove_as_user(tmp_str, useruid, fcrontab_gid) != 0 )
 	error_e("could not remove %s", tmp_str);
     free(tmp_str);
     xexit (return_val);
 
   exiterr:
-    if ( remove(tmp_str) != 0 )
+    if ( remove_as_user(tmp_str, useruid, fcrontab_gid) != 0 )
 	error_e("could not remove %s", tmp_str);
     free(tmp_str);
     if ( f != NULL )
@@ -689,7 +676,7 @@ reinstall(char *fcron_orig)
 
     explain("reinstalling %s's fcrontab", user);
 
-    if ( (i = open(fcron_orig, O_RDONLY)) < 0) {
+    if ( (i = open_as_user(fcron_orig, useruid, fcrontab_gid, O_RDONLY)) < 0) {
 	if ( errno == ENOENT ) {
 	    fprintf(stderr, "Could not reinstall: user %s has no fcrontab\n",
 		    user);
@@ -832,7 +819,7 @@ parseopt(int argc, char *argv[])
 	    usage(); break;
 
 	case 'u':
-	    if (uid != rootuid) {
+	    if (useruid != rootuid) {
 		fprintf(stderr, "must be privileged to use -u\n");
 		xexit(EXIT_ERR);
 	    }
@@ -921,7 +908,7 @@ parseopt(int argc, char *argv[])
 	else
 	    usage();
 
-	if (uid != rootuid) {
+	if (useruid != rootuid) {
 	    fprintf(stderr, "must be privileged to use -u\n");
 	    xexit(EXIT_ERR);
 	}
@@ -931,7 +918,7 @@ parseopt(int argc, char *argv[])
 	if ( list_opt + rm_opt + edit_opt + reinstall_opt == 0 )
 	    file_opt = optind;
 	else {
-	    if (uid != rootuid) {
+	    if (useruid != rootuid) {
 		fprintf(stderr, "must be privileged to use [user|-u user]\n");
 		xexit(EXIT_ERR);
 	    }
@@ -943,7 +930,7 @@ parseopt(int argc, char *argv[])
 
     if ( user == NULL ) {
 	/* get user's name using getpwuid() */
-	if ( ! (pass = getpwuid(uid)) )
+	if ( ! (pass = getpwuid(useruid)) )
 	    die_e("user \"%s\" is not in passwd file. Aborting.", USERNAME);
 	/* we need to strdup2 the value given by getpwuid() because we free
 	 * file->cf_user in delete_file */
@@ -1009,8 +996,14 @@ main(int argc, char **argv)
     if (strrchr(argv[0],'/')==NULL) prog_name = argv[0];
     else prog_name = strrchr(argv[0],'/')+1;
     
-    uid = getuid();
-    gid = getgid();
+    useruid = getuid();
+    usergid = getgid();
+
+#ifdef USE_SETE_ID
+    /* drop any suid privilege (that we use to write files) but keep sgid
+     * one for now: we need it for read_conf() and is_allowed() */
+    seteuid_safe(useruid); 
+#endif
 
     errno = 0;
     if ( ! (pass = getpwnam(USERNAME)) )
@@ -1019,32 +1012,24 @@ main(int argc, char **argv)
     fcrontab_gid = pass->pw_gid;
 
     /* get current dir */
-#ifdef USE_SETE_ID
-    if (seteuid(uid) != 0) 
-	die_e("Could not change euid to %d", uid); 
-#endif
+    orig_dir[0] = '\0';
     if ( getcwd(orig_dir, sizeof(orig_dir)) == NULL )
 	die_e("getcwd");
-#ifdef USE_SETE_ID
-    if (seteuid(fcrontab_uid) != 0) 
-	die_e("Couldn't change euid to fcrontab_uid[%d]",fcrontab_uid);
-#endif
 
     /* interpret command line options */
     parseopt(argc, argv);
 
 #ifdef USE_SETE_ID
+    /* drop any privilege we may have: we will only get them back
+     * temporarily every time we need it. */
+    seteuid_safe(useruid); 
+    setegid_safe(usergid); 
+#endif
 
 #ifdef HAVE_LIBPAM
     /* Open PAM session for the user and obtain any security
        credentials we might need */
 
-    /* FIXME: remove some #ifdef //////////////////////// */
-    /* FIXME: should really uid=euid when calling PAM ? */
-#ifdef USE_SETE_ID
-    if (seteuid(uid) != 0) 
-	die_e("Could not change euid to %d", uid); 
-#endif
     debug("username: %s", user);
     retcode = pam_start("fcrontab", user, &apamconv, &pamh);
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM");
@@ -1068,28 +1053,16 @@ main(int argc, char **argv)
     /* Close the log here, because PAM calls openlog(3) and
        our log messages could go to the wrong facility */
     xcloselog();
-    /* FIXME: remove some #ifdef //////////////////////// */
-    /* FIXME: should really uid=euid when calling PAM ? */
-#ifdef USE_SETE_ID
-    if (seteuid(fcrontab_uid) != 0) 
-	die_e("Couldn't change euid to fcrontab_uid[%d]",fcrontab_uid);
-#endif
 #endif /* USE_PAM */
 
-    if (uid != fcrontab_uid)
-	if (seteuid(fcrontab_uid) != 0) 
-	    die_e("Couldn't change euid to fcrontab_uid[%d]",fcrontab_uid);
+#ifdef USE_SETE_ID
+    seteuid_safe(fcrontab_uid);
     /* change directory */
     if (chdir(fcrontabs) != 0) {
 	error_e("Could not chdir to %s", fcrontabs);
 	xexit (EXIT_ERR);
     }
-    /* get user's permissions */
-    if (seteuid(uid) != 0) 
-	die_e("Could not change euid to %d", uid); 
-    if (setegid(fcrontab_gid) != 0) 
-	die_e("Could not change egid to " GROUPNAME "[%d]", fcrontab_gid); 
-
+    seteuid_safe(useruid);
 #else /* USE_SETE_ID */
 
     if (setuid(rootuid) != 0 ) 
@@ -1130,7 +1103,7 @@ main(int argc, char **argv)
 		file[sizeof(file)-1] = '\0';
 	    }
 
-            fd = open_as_user(file, O_RDONLY, uid, gid);
+            fd = open_as_user(file, useruid, usergid, O_RDONLY);
             if (fd < 0)
                 die_e("Could not open file %s", file);
 	    if (make_file(file, fd) == OK)

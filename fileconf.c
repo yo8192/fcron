@@ -299,7 +299,7 @@ read_env(char *ptr, cf_t *cf)
     }
     name[j] = '\0';
 
-    if ( name == '\0' )
+    if ( name[0] == '\0' )
 	goto error;
 
     /* skip '=' and spaces around */

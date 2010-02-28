@@ -44,6 +44,12 @@ extern char *sendmail;
 /* functions prototypes */
 extern uid_t get_user_uid_safe(char *username);
 extern gid_t get_group_gid_safe(char *groupname);
+extern void seteuid_safe(uid_t euid);
+extern void setegid_safe(uid_t egid);
+extern int remove_as_user(const char *pathname, uid_t removeuid, gid_t removegid);
+extern int open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...);
+extern int rename_as_user(const char *oldpath, const char *newpath, uid_t renameuid, gid_t renamegid);
+
 extern int remove_blanks(char *str);
 extern char *strdup2(const char *);
 extern int get_word(char **str);

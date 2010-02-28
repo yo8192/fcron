@@ -309,7 +309,7 @@ save_one_file(cf_t *file, char *filename, uid_t own_uid, gid_t own_gid, time_t s
 	return ERR;
     }
 #endif
-    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, S_IRUSR|S_IWUSR);
+    fd = open_as_user(filename, own_uid, own_gid, O_WRONLY|O_CREAT|O_TRUNC|O_SYNC, S_IRUSR|S_IWUSR);
 #ifdef WITH_SELINUX
     if ( is_selinux_enabled() )
 	setfscreatecon(NULL);
@@ -323,7 +323,7 @@ save_one_file(cf_t *file, char *filename, uid_t own_uid, gid_t own_gid, time_t s
 	error_e("Could not fchown %s to uid:%d gid:%d", filename, own_uid, own_gid);
 	if ( close(fd) < 0 )
 	    error_e("save_one_file(%s): could not close(fd)", filename);
-	remove(filename);
+	remove_as_user(filename, own_uid, own_gid);
 	return ERR;
     }
 
@@ -331,7 +331,7 @@ save_one_file(cf_t *file, char *filename, uid_t own_uid, gid_t own_gid, time_t s
     if ( write_file_to_disk(fd, file, save_date) == ERR ) {
 	if ( close(fd) < 0 )
 	    error_e("save_one_file(%s): could not close(fd)", filename);
-	remove(filename);
+	remove_as_user(filename, own_uid, own_gid);
 	return ERR;
     }
 
@@ -359,7 +359,7 @@ save_file_safe(cf_t *file, char *final_path, char *prog_name, uid_t own_uid,
     strcpy(&temp_path[temp_path_index], tmp_str);
 
     if ( save_one_file(file, temp_path, own_uid, own_gid, save_date) == OK ) {
-	if ( rename(temp_path, final_path) != 0 ) {
+	if ( rename_as_user(temp_path, final_path, own_uid, own_gid) != 0 ) {
 	    error_e("Cannot rename %s to %s", temp_path, final_path);
 	    error("%s will try to save the name to its definitive filename "
 		  "directly.", prog_name);

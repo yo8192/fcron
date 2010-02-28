@@ -73,8 +73,9 @@ uid_t rootuid = 0;
 gid_t rootgid = 0;
 
 /* misc */
-char *user_str;
-uid_t user_uid;
+char *user_str = NULL;
+uid_t user_uid = 0;
+gid_t user_gid = 0;
 
 /* if you change this structure, please update NUM_CMD value in dyncom.h */
 struct cmd_list_ent cmd_list[NUM_CMD] = {
@@ -642,30 +643,33 @@ main(int argc, char **argv)
     if ( strrchr(argv[0], '/') == NULL) prog_name = argv[0];
     else prog_name = strrchr(argv[0], '/') + 1;
 
-    /* interpret command line options */
-    parseopt(argc, argv);
-
-/*      if (debug_opt) */
-/*  	fprintf(stderr, "uid : %d euid : %d\n", getuid(), geteuid()); */
-
-    /* read fcron.conf and update global parameters */
-    read_conf();
-
     user_uid = getuid();
+    user_gid = getgid();
     if ( (pass = getpwuid(user_uid)) == NULL )
 	die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
     user_str = strdup2(pass->pw_name);
 
-    /* we don't need anymore special rights : drop them */
-    seteuid(user_uid);
-    setuid(user_uid);
-/*      if (debug_opt) */
-/*  	fprintf(stderr, "uid : %d euid : %d\n", getuid(), geteuid()); */
+    /* drop suid rights that we don't need, but keep the sgid rights
+     * for now as we will need them for read_conf() and is_allowed() */
+    seteuid_safe(user_uid);
+    if ( setuid(user_uid) < 0 )
+        die_e("could not setuid() to %d", user_uid);
+
+    /* interpret command line options */
+    parseopt(argc, argv);
+
+    /* read fcron.conf and update global parameters */
+    read_conf();
 
     if ( ! is_allowed(user_str) ) {
 	die("User \"%s\" is not allowed to use %s. Aborting.",
 	    user_str, prog_name);	    
     }
+
+    /* we don't need anymore special rights : drop remaining ones */
+    setegid_safe(user_gid);
+    if ( setgid(user_gid) < 0 )
+        die_e("could not setgid() to %d", user_gid);
 
     /* check for broken pipes ... */
     signal(SIGPIPE, sigpipe_handler);
