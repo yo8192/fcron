@@ -82,7 +82,7 @@ HEADERSALL := config.h $(SRCDIR)/global.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRC
 
 # this is a regular expression :
 # do not ci automaticaly generated files and doc (done by doc's Makefile)
-RCSNOCI:=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|config.log\|config.status\|config.h\|config.cache\|Makefile\|doc.*\|CVS.*\)
+RCSNOCI:=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|config.log\|config.status\|config.h\|config.cache\|Makefile\|doc.*\|CVS.*\|.git.*\)
 
 RUN_NON_PRIVILEGED := @RUN_NON_PRIVILEGED@
 ifeq ($(RUN_NON_PRIVILEGED), 1)
@@ -282,13 +282,13 @@ ci: ciclean
 # ci the doc files
 	make -C doc ci
 
-tar: configure updatedoc vclean ci
+tar: configure updatedoc vclean ciclean
 
 	echo $(VERSION) > ./VERSION
 
 	make -C doc tarclean
 
-	@(find ./ -type f ! -regex '.*RCS.*' ! -regex '.*CVS.*' | \
+	@(find ./ -type f ! -regex '.*RCS.*' ! -regex '.*CVS.*' ! -regex '.*\.git.*'| \
              sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
 	@(cd ..; ln -s fcron fcron-$(VERSION))
 	(cd ..; tar -czvf fcron-$(VERSION).src.tar.gz `cat fcron/MANIFEST`)
