@@ -525,7 +525,8 @@ edit_file(char *fcron_orig)
 		}
 	    }
 	    snprintf(editorcmd, sizeof(editorcmd), "%s %s", cureditor, tmp_str);
-	    chdir(tmp_path);
+	    if ( chdir(tmp_path) != 0 )
+                error_e("Could not chdir to %s", tmp_path);
 	    execlp(shell, shell, "-c", editorcmd, tmp_str, NULL);
 	    error_e("Error while running \"%s\"", cureditor);
 	    goto exiterr;
