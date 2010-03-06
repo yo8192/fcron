@@ -376,8 +376,10 @@ run_job_grand_child_setup_stderr_stdout(cl_t *line, int *pipe_fd)
 #endif
     }
     else if ( foreground ) {
-	freopen("/dev/null", "w", stdout);
-	freopen("/dev/null", "w", stderr);
+	if ( freopen("/dev/null", "w", stdout) == NULL )
+            error_e("could not freopen /dev/null as stdout");
+	if ( freopen("/dev/null", "w", stderr) == NULL )
+            error_e("could not freopen /dev/null as stderr");
     }
     
 }
