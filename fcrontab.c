@@ -391,7 +391,7 @@ list_file(char *file)
 
     explain("listing %s's fcrontab", user);
 
-    fd = open_as_user(file, useruid, fcrontab_uid, O_RDONLY);
+    fd = open_as_user(file, useruid, fcrontab_gid, O_RDONLY);
     if ( fd < 0 ) {
         if ( errno == ENOENT ) {
 	    explain("user %s has no fcrontab.", user);
