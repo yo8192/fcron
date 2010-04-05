@@ -24,6 +24,9 @@ A copy of the license is included in gfdl.sgml.
 	 <listitem>
 	    <para>Added check_system_crontabs.sh which is to replace the less portable check_system_crontabs.bash.</para>
 	 </listitem>
+	 <listitem>
+	    <para>Added option -c to check_system_crontabs.sh to specify a fcron.conf file to use</para>
+	 </listitem>
       </itemizedlist>
 
       <itemizedlist>
