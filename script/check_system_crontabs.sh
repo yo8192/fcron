@@ -65,6 +65,7 @@
 #                                + bug fixes and enhancement.
 # 2005/04/27  Daniel Himler      Security enhancements and cleanups.
 # 2005/09/14  Damon Harper       Command lines options, cleanups.
+# 2008/07/23  Wolfram Schlich    Patch to allow to specify a fcron.conf file
 # 2010/03/10  Michal Gorny       Removed bashisms for better portability.
 #
 
@@ -76,6 +77,7 @@ DEFAULT_CROND_DIR=/etc/cron.d
 DEFAULT_CRONTAB_FILE=/etc/crontab
 DEFAULT_FCRONTAB_FILE=/etc/fcrontab
 
+DEFAULT_FCRON_CONFIG_FILE=/etc/fcron/fcron.conf
 FCRONTAB_PROG=/usr/bin/fcrontab
 FCRONTABS_DIR=/var/spool/fcron
 
@@ -117,6 +119,7 @@ Usage: check_system_crontabs [options]
     -i          Interactive use with no delay; same as -s 0.
     -p PATHNAME Full path to or filename of the fcrontab binary; use this
                 only if it cannot be found automatically.
+    -c FILE     Full path to fcron config file (default $DEFAULT_FCRON_CONFIG_FILE).
     -F FILE     System fcrontab file (default $DEFAULT_FCRONTAB_FILE).
     -C FILE     System crontab file (default $DEFAULT_CRONTAB_FILE).
     -D DIR      System crontab directory (default $DEFAULT_CROND_DIR).
@@ -127,6 +130,7 @@ _EOF_
 
 SLEEP_TIME_BEFORE_REBUILD="$DEFAULT_SLEEP_TIME_BEFORE_REBUILD"
 CROND_DIR="$DEFAULT_CROND_DIR"
+FCRON_CONFIG_FILE="$DEFAULT_FCRON_CONFIG_FILE"
 CRONTAB_FILE="$DEFAULT_CRONTAB_FILE"
 FCRONTAB_FILE="$DEFAULT_FCRONTAB_FILE"
 FCRONTAB_PROG=
@@ -151,6 +155,10 @@ while [ $# -gt 0 ]; do
     ;;
   -p)
     FCRONTAB_PROG="$2"
+    shift
+    ;;
+  -c)
+    FCRON_CONFIG_FILE="$2"
     shift
     ;;
   -F)
@@ -257,7 +265,7 @@ _EOF_
   sed -i -e "s/@yearly/0 0 1 1 */g" -e "s/@annually/0 0 1 1 */g" -e "s/@monthly/0 0 1 * */g" -e "s/@weekly/0 0 * * 0/g" -e "s/@daily/0 0 * * */g" -e "s/@midnight/0 0 * * */g" -e "s/@hourly/0 * * * */g" "$FCRONTAB_FILE_TMP"
 
   # notify fcron about the updated file
-  "$FCRONTAB_PROG" "$FCRONTAB_FILE_TMP" -u systab
+  "$FCRONTAB_PROG" -c "$FCRON_CONFIG_FILE" "$FCRONTAB_FILE_TMP" -u systab
 }
 
 NEED_REBUILD=0

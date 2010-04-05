@@ -14,6 +14,19 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
+	 <title>From version 3.0.5 to 3.0.6</title>
+	 <listitem>
+	    <para>Fixed bug preventing normal user from running fcrontab -l if fcron's uid!=gid</para>
+	 </listitem>
+	 <listitem>
+	    <para>Fixed fcrontab's PAM initialization when working on the systab user.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Added check_system_crontabs.sh which is to replace the less portable check_system_crontabs.bash.</para>
+	 </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
 	 <title>From version 3.0.4 to 3.0.5</title>
 	 <listitem>
 	    <para>Security issue: fixed security issue that allowed malicious user to read any file readable by group 'fcron' (in particular fcron's config files and the fcrontabs of non-root users). On systems without seteuid() (i.e. quite exotic systems) then the bug is harder to exploit but any file could be read.</para>
