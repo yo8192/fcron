@@ -27,6 +27,9 @@ A copy of the license is included in gfdl.sgml.
 	 <listitem>
 	    <para>Added option -c to check_system_crontabs.sh to specify a fcron.conf file to use</para>
 	 </listitem>
+	 <listitem>
+	    <para>Fixed Makefile bug preventing installation when building from a different folder than the sources (wrong fcron.conf path)</para>
+	 </listitem>
       </itemizedlist>
 
       <itemizedlist>

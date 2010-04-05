@@ -152,7 +152,7 @@ ifeq ($(FCRONDYN), 1)
 	$(INSTALL) -m 755 fcrondyn $(DESTDIR)$(DESTBIN)
 endif
 	if test ! -f $(DESTDIR)$(ETC)/fcron.allow -a ! -f $(DESTDIR)$(ETC)/fcron.deny ; then $(INSTALL) -m 644 $(SRCDIR)/files/fcron.allow $(DESTDIR)$(ETC) ; $(INSTALL) -m 644 $(SRCDIR)/files/fcron.deny $(DESTDIR)$(ETC) ; fi
-	test -f $(DESTDIR)$(ETC)/fcron.conf || $(INSTALL) -m 644 $(SRCDIR)/files/fcron.conf $(DESTDIR)$(ETC)
+	test -f $(DESTDIR)$(ETC)/fcron.conf || $(INSTALL) -m 644 files/fcron.conf $(DESTDIR)$(ETC)
 
 	make -C doc install-staged
 
