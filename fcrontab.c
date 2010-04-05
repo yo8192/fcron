@@ -1038,8 +1038,8 @@ main(int argc, char **argv)
     /* Open PAM session for the user and obtain any security
        credentials we might need */
 
-    debug("username: %s", user);
-    retcode = pam_start("fcrontab", user, &apamconv, &pamh);
+    debug("username: %s, runas: %s", user, runas);
+    retcode = pam_start("fcrontab", runas, &apamconv, &pamh);
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM");
     retcode = pam_authenticate(pamh, 0);    /* is user really user? */
     if (retcode != PAM_SUCCESS)
