@@ -473,6 +473,7 @@ useful when used in conjunction with option &optvolatile;.</para>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
 			<para>Mail output even if zero-length.</para>
+			<para>Setting this option to true will also set &optmail; to true.</para>
 			<para>&seealso; options &optmail;, &optmailto;,
 &opterroronlymail;, &optnolog;.</para>
 		    </listitem>
@@ -553,6 +554,7 @@ system load average values.</para>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>true</constant>)</para>
 			<para>Mail output (if any) or not.</para>
+			<para>Setting this option to false will also set &optforcemail; to false.</para>
 			<para>&seealso; options &optmailto;, &optforcemail;,
 &opterroronlymail;, &optnolog;.</para>
 		    </listitem>

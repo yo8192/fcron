@@ -497,8 +497,7 @@ run_job(struct exe_t *exeent)
 
 	/* // */
  	debug("run_job(): child: %s, output to %s, %s, %s\n",
-	      is_mail(line->cl_option) || is_mailzerolength(line->cl_option) ?
-	      "mail" : "no mail",
+	      is_mail(line->cl_option) ? "mail" : "no mail",
 	      to_stdout ? "stdout" : "file",
  	      foreground ? "running in foreground" : "running in background",
  	      is_stdout(line->cl_option) ? "stdout" : "normal" );
@@ -516,8 +515,7 @@ run_job(struct exe_t *exeent)
 	    error_e("child: could not close(pipe_pid_fd[0])");
 
 	pipe_fd[0] = pipe_fd[1] = -1;
-	if ( ! to_stdout && 
-	     ( is_mail(line->cl_option) || is_mailzerolength(line->cl_option))){
+	if ( ! to_stdout && is_mail(line->cl_option) ) {
 	    /* we create the temp file (if needed) before change_user(),
 	     * as temp_file() needs root privileges */
 	    /* if we run in foreground, stdout and stderr point to the console.

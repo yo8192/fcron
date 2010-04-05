@@ -333,8 +333,10 @@ read_env(char *ptr, cf_t *cf)
      *  we don't store it in the same way. */
     /* please note that we check if the mailto is valid in conf.c */
     if ( strcmp(name, "MAILTO") == 0 ) {
-	if ( strcmp(val, "\0") == 0 )
+	if ( strcmp(val, "\0") == 0 ) {
 	    clear_mail(default_line.cl_option);
+	    clear_forcemail(default_line.cl_option);
+        }
 	else {
 	    Set(default_line.cl_mailto, val);
 	    set_mail(default_line.cl_option);
@@ -735,10 +737,12 @@ read_opt(char *ptr, cl_t *cl)
 	else if(strcmp(opt_name, "m")==0 || strcmp(opt_name, "mail")==0){
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
-	    if ( i == 0 )
+	    if ( i == 0 ) {
 		clear_mail(cl->cl_option);
+		clear_forcemail(cl->cl_option);
+            }
 	    else
-		set_mail(cl->cl_option);	
+		set_mail(cl->cl_option);
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
@@ -748,8 +752,10 @@ read_opt(char *ptr, cl_t *cl)
 		Handle_err;
 	    if ( i == 0 )
 		clear_mailzerolength(cl->cl_option);
-	    else
-		set_mailzerolength(cl->cl_option);	
+	    else {
+		set_mailzerolength(cl->cl_option);
+		set_mail(cl->cl_option);
+            }
  	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
@@ -765,8 +771,10 @@ read_opt(char *ptr, cl_t *cl)
 	    i = 0;
 	    while ( *ptr != ')' && i + 1 < sizeof(buf) )
 		buf[i++] = *ptr++;
-	    if ( strcmp(buf, "\0") == 0 )
+	    if ( strcmp(buf, "\0") == 0 ) {
 		clear_mail(cl->cl_option);
+		clear_forcemail(cl->cl_option);
+            }
 	    else {
 		    Set(cl->cl_mailto, buf);
 		    set_mail(cl->cl_option);
@@ -1191,6 +1199,7 @@ read_freq(char *ptr, cf_t *cf)
 
 #ifndef USE_SENDMAIL
     clear_mail(cl->cl_option);
+    clear_forcemail(cl->cl_option);
 #endif
 
     cl->cl_next = cf->cf_line_base;
@@ -1296,6 +1305,7 @@ read_arys(char *ptr, cf_t *cf)
 
 #ifndef USE_SENDMAIL
     clear_mail(cl->cl_option);
+    clear_forcemail(cl->cl_option);
 #endif
 
     cl->cl_next = cf->cf_line_base;
@@ -1434,6 +1444,7 @@ read_period(char *ptr, cf_t *cf)
   ok:
 #ifndef USE_SENDMAIL
     clear_mail(cl->cl_option);
+    clear_forcemail(cl->cl_option);
 #endif
 
     cl->cl_next = cf->cf_line_base;
