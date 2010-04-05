@@ -14,3 +14,13 @@ fcronsighup
 files/fcron.conf
 convert-fcrontab
 doc/stylesheets/fcron-doc.dsl
+MANIFEST
+VERSION
+PREVIOUS_VERSION
+doc/en/HTML/*
+doc/en/man/*
+doc/en/txt/*
+doc/fr/HTML/*
+doc/fr/man/*
+doc/fr/txt/*
+
