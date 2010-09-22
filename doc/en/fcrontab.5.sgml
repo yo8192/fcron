@@ -385,6 +385,112 @@ will run only ONCE either at 2:15, 3:15 OR 4:15.</para>
 
 	</refsect2>
 
+	<refsect2 id="fcrontab.5.shortcuts">
+	    <title>Vixie cron shortcuts</title>
+	    <para>To ensure a good compatibility with Vixie cron, Vixie cron shortcuts are supported. Generally speaking their usage is not recommended as they lack some of the flexibility brought by fcron. Also where the precise time of execution is not critical, the use <link
+linkend="uptent">lines based on elapsed system up time</link> is recommended instead.</para>
+	    <para>A task using a Vixie cron shortcut is of the form:</para>
+	    <programlisting>shortcut command</programlisting>
+	    <para>Below is a list of available shortcuts with their fcron equivalent:</para>
+	    <table>
+		<title>Vixie cron shortcuts </title>
+		<tgroup cols="2">
+		    <thead>
+			<row>
+			    <entry>shortcut: </entry>
+			    <entry>meaning: </entry>
+			    <entry>fcron equivalent: </entry>
+			    <entry>suggested alternative: </entry>
+			</row>
+		    </thead>
+		    <tbody>
+			<row>
+			    <entry>@reboot </entry>
+			    <entry>Run once, at startup </entry>
+			    <entry>@runatreboot,runonce 1 </entry>
+			    <entry>   </entry>
+			</row>
+			<row>
+			    <entry>@yearly </entry>
+			    <entry>Run once a year </entry>
+			    <entry>0 0 1 1 * </entry>
+			    <entry>@ 12m </entry>
+			</row>
+			<row>
+			    <entry>@annually </entry>
+			    <entry>(same as @yearly) </entry>
+			    <entry>0 0 1 1 * </entry>
+			    <entry>@ 12m </entry>
+			</row>
+			<row>
+			    <entry>@monthly </entry>
+			    <entry>Run once a month </entry>
+			    <entry>0 0 1 * * </entry>
+			    <entry>@ 1m </entry>
+			</row>
+			<row>
+			    <entry>@weekly </entry>
+			    <entry>Run once a week </entry>
+			    <entry>0 0 * * 0 </entry>
+			    <entry>@ 1w </entry>
+			</row>
+			<row>
+			    <entry>@daily </entry>
+			    <entry>Run once a day </entry>
+			    <entry>0 0 * * * </entry>
+			    <entry>@ 1d </entry>
+			</row>
+			<row>
+			    <entry>@midnight </entry>
+			    <entry>(same as @daily) </entry>
+			    <entry>0 0 * * * </entry>
+			    <entry> </entry>
+			</row>
+			<row>
+			    <entry>@hourly </entry>
+			    <entry>Run once an hour </entry>
+			    <entry>0 * * * * </entry>
+			    <entry>@ 1h </entry>
+			</row>
+		    </tbody>
+		</tgroup>
+	    </table>
+
+
+	    <para>A few examples:</para>
+	    <programlisting># run check_laptop_logs.sh at the first minute of every hour:
+@hourly check_laptop_logs.sh
+# run check_web_server.sh and check_file_server.sh every day at exactly
+# midnight, both at the same time:
+@daily check_web_server.sh
+@daily check_file_server.sh
+# run compress_home_made_app_log_files.sh at exactly midnight
+# on the first day of every month:
+@monthly compress_home_made_app_log_files.sh</programlisting>
+	    <para>However you might want to replace those task definitions by something as:</para>
+	    <programlisting># run check_laptop_logs.sh after every hour of system up time:
+@ 60 check_laptop_logs.sh
+# run check_web_server.sh and check_file_server.sh every night between midnight
+# and 3am, one by after the other:
+%nightly,serial * 0-3 check_web_server.sh
+%nightly,serial * 0-3 check_file_server.sh
+# Run compress_home_made_app_log_files.sh once a month, only at night
+# when the load is low:
+@monthly,lavg(0.5) * 21-23,0-5 * compress_home_made_app_log_files.sh</programlisting>
+
+
+	    <para>Last, but not least, it should be noted that tasks defined using a Vixie cron shortcut will only have the same behaviour as in Vixie cron if they are not modified by some earlier option definition. That will be the case if you import a Vixie cron crontab into fcron without modification, or if you precede the task definition by a &optreset;, e.g.:</para>
+	    <programlisting>!serial
+@ 10 fcron_task_1
+@ 25 fcron_task_2
+!reset
+@reboot start_unprivileged_user_program
+@daily cleanup_tmp.sh</programlisting>
+	    <para>In the example above, &optserial; would apply to the last two tasks if we hadn't used &optreset;.</para>
+	</refsect2>
+
+
+
 	<refsect2>
 	    <title>Options</title>
 	    <para>The options can be set either for every line below the
@@ -626,6 +732,18 @@ for most uses.</para>
 		    </listitem>
 		</varlistentry>
 
+		<varlistentry id="fcrontab.5.rebootreset">
+		    <term>rebootreset</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>When set to true, fcron will act as if the task was
+a new one every time the OS reboots. This is very similar to the option &optvolatile;
+but based on the OS reboots instead of fcron restarts.
+You may also want to use option &optfirst; if you use fcron that way.</para>
+			<para>&seealso; options &optfirst;, &optvolatile;, &optrunonce;, &optrunatreboot;.</para>
+		    </listitem>
+		</varlistentry>
+
 		<varlistentry id="fcrontab.5.reset">
 		    <term>reset</term>
 		    <listitem>
@@ -643,6 +761,15 @@ permissions and environment (only root is allowed to use this option).</para>
 		    </listitem>
 		</varlistentry>
 
+		<varlistentry id="fcrontab.5.runatreboot">
+		    <term>runatreboot</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>If set to true, the task will be run at system startup (i.e. immediately after the &argfirstsleep; delay -- by default, &firstsleep; seconds -- when the &fcron; daemon starts the first time after the OS has booted). This is in addition to the regular schedule which won't be modified by this option.</para>
+			<para>&seealso; options &optvolatile;, &optrunonce;, &optrebootreset;.</para>
+		    </listitem>
+		</varlistentry>
+
 		<varlistentry id="fcrontab.5.runfreq">
 		    <term>runfreq</term>
 		    <term>r</term>
@@ -651,6 +778,15 @@ permissions and environment (only root is allowed to use this option).</para>
 			<para>Run every "<replaceable>runfreq</replaceable>"
 matches of time and date. (this option is ignored for <link
 linkend="uptent">lines based on elapsed system up time</link>).</para>
+		    </listitem>
+		</varlistentry>
+
+		<varlistentry id="fcrontab.5.runonce">
+		    <term>runonce</term>
+		    <listitem>
+			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
+			<para>Do not re-schedule the task after it has run once, until the next OS reboot (if &optvolatile; is not set) or until the next &fcron; daemon restart (if &optvolatile; is set).</para>
+			<para>&seealso; options &optvolatile;, &optrebootreset;, &optrunatreboot;.</para>
 		    </listitem>
 		</varlistentry>
 
@@ -683,7 +819,7 @@ simultaneously?</para>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
 			<para>If fcron is running in the foreground, then also
 let jobs print to stderr/stdout instead of mailing or discarding it.</para>
-			<para>&seealso; fcron's option <option>--once</option>
+			<para>&seealso; fcron's option &argonce;
 in <link linkend="fcron.8">&fcron;(8)</link>.</para>
 		    </listitem>
 		</varlistentry>
@@ -742,14 +878,14 @@ the load average. Set until to 0 to remove the timeout.</para>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
 			<para>When set to true, the job is based on a "volatile"
-system up time, i.e. restart counting each time fcron is started, which is
-useful when fcron is started by a script running only, for instance, during a
+system up time, i.e. restart counting each time &fcron; is started, which is
+useful when &fcron; is started by a script running only, for instance, during a
 dialup connection: the "volatile" system up time then refers to the dialup
 connection time. You may also want to use option &optfirst; if you use fcron
 that way.</para>
-			<para>&seealso; options &optfirst;, &optstdout;, <link
-linkend="uptent">lines based on elapsed system up time</link>, fcron's option
-<option>--once</option> in <link linkend="fcron.8">&fcron;(8)</link>.</para>
+			<para>&seealso; options &optfirst;, &optstdout;, &optrebootreset;,
+<link linkend="uptent">lines based on elapsed system up time</link>, fcron's command line argument
+&argonce; in <link linkend="fcron.8">&fcron;(8)</link>.</para>
 		    </listitem>
 		</varlistentry>
 	    </variablelist>

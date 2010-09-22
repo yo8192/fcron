@@ -290,8 +290,10 @@ AC_ARG_WITH(piddir,
 )
 AC_MSG_RESULT([$PIDDIR])
 PIDFILE="${PIDDIR}/fcron.pid"
+REBOOT_LOCK="${PIDDIR}/fcron.reboot"
 AC_SUBST(PIDDIR)
 AC_SUBST(PIDFILE)
+AC_SUBST(REBOOT_LOCK)
 
 FIFODIR="${localstatedir}/run"
 AC_MSG_CHECKING(location of fifo files)

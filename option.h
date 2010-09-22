@@ -56,6 +56,9 @@
  *           or loaded in memory.
  */
 
+/* WARNING : if you add some options, make sure that OPTION_SIZE is big
+ *           enough in global.h */
+
 /*
   
   The options are :
@@ -89,6 +92,10 @@
   24     Should first value be applied at each fcron startup, or before line first exe ?
   25     if fcron is running in foreground, print jobs output to stderr/stdout or mail ?
   26     should the output of the job be emailed to the user only non-zero exit status ?
+  27     rebootreset: if set then apply option first at each system startup
+  28     runatreboot: if set then run the job at each system startup
+  29     runonce: if set then run the job only once
+  30     hasrun: set if the job has been run at least once
 
 */
 
@@ -456,6 +463,53 @@
 	(_bit_set(opt, 26))
 #define clear_erroronlymail(opt) \
 	(_bit_clear(opt, 26))
+
+/*
+  bit 27 : set to 1 : at each system startup, run the job after the delay set
+                      in the option first
+           set to 0 : leave the nextexe time as it
+*/
+#define	is_rebootreset(opt) \
+	(_bit_test(opt, 27))
+#define	set_rebootreset(opt) \
+	(_bit_set(opt, 27))
+#define clear_rebootreset(opt) \
+	(_bit_clear(opt, 27))
+
+/*
+  bit 28 : set to 1 : run the job immediately after the system startup
+           set to 0 : leave the nextexe time as it
+*/
+#define	is_runatreboot(opt) \
+	(_bit_test(opt, 28))
+#define	set_runatreboot(opt) \
+	(_bit_set(opt, 28))
+#define clear_runatreboot(opt) \
+	(_bit_clear(opt, 28))
+
+/*
+  bit 29 : set to 1 : run the job only once until next system reboot
+                      (or next fcron restart if volatile is set)
+           set to 0 : don't limit the number of times the job is run
+*/
+#define	is_runonce(opt) \
+	(_bit_test(opt, 29))
+#define	set_runonce(opt) \
+	(_bit_set(opt, 29))
+#define clear_runonce(opt) \
+	(_bit_clear(opt, 29))
+
+/*
+  bit 30 : set to 1 : the job has run at least once since system reboot
+                      (or since fcron restart if volatile is set)
+           set to 0 : job hasn't run yet
+*/
+#define	is_hasrun(opt) \
+	(_bit_test(opt, 30))
+#define	set_hasrun(opt) \
+	(_bit_set(opt, 30))
+#define clear_hasrun(opt) \
+	(_bit_clear(opt, 30))
 
 #endif /* __OPTIONH__ */
 

@@ -42,32 +42,6 @@ void run_lavg_job(lavg_t *l);
 void run_queue_job(cl_t *line);
 
 void
-run_reboot_jobs(void)
-{
-    int reboot = 0;
-    struct job_t *j;
-
-    /* lock exist - skip reboot jobs */
-    if (access(REBOOT_LOCK, F_OK) == 0) {
-        info("@reboot jobs will only be run at computer's startup.");
-        return;
-    }
-    /* lock doesn't exist - create lock, run reboot jobs */
-    if ((reboot = creat(REBOOT_LOCK, S_IRUSR & S_IWUSR)) < 0)
-        error_e("Can't create lock for reboot jobs.");
-    else
-        close(reboot);
-
-    for (u = db->head; u != NULL; u = u->next) {
-        for (e = u->crontab; e != NULL; e = e->next) {
-            if (e->flags & WHEN_REBOOT)
-                job_add(e, u);
-        }
-    }
-    (void) job_runqueue();
-}
-
-void
 test_jobs(void)
   /* determine which jobs need to be run, and run them. */
 {
@@ -77,23 +51,32 @@ test_jobs(void)
     debug("Looking for jobs to execute ...");
 /*      // */
 
-    while ( (j=queue_base) && j->j_line->cl_nextexe <= now ){
-	if ( j->j_line->cl_remain > 0 && --(j->j_line->cl_remain) > 0) {
-	    set_next_exe(j->j_line, STD, -1);
+    while ( (j=queue_base) && j->j_line->cl_nextexe <= now ) {
+
+        if ( j->j_line->cl_remain > 0 && --(j->j_line->cl_remain) > 0) {
 	    debug("    cl_remain: %d", j->j_line->cl_remain);
-	    continue ;
 	}
+        else {
 
-	j->j_line->cl_remain = j->j_line->cl_runfreq;
+            j->j_line->cl_remain = j->j_line->cl_runfreq;
 
-	if ( is_lavg(j->j_line->cl_option) )
-	    add_lavg_job(j->j_line, -1);
-	else if ( is_serial(j->j_line->cl_option) )
-	    add_serial_job(j->j_line, -1);
-	else
-	    run_normal_job(j->j_line, -1);
+            if ( is_lavg(j->j_line->cl_option) )
+                add_lavg_job(j->j_line, -1);
+            else if ( is_serial(j->j_line->cl_option) )
+                add_serial_job(j->j_line, -1);
+            else
+                run_normal_job(j->j_line, -1);
+
+            set_hasrun(j->j_line->cl_option);
+        }
 	
-	set_next_exe(j->j_line, STD, -1);
+        if ( is_runonce(j->j_line->cl_option) && is_hasrun(j->j_line->cl_option) ) {
+            explain("Line %s has runonce set: not re-scheduling it.", j->j_line->cl_shell);
+            job_queue_remove(j->j_line);
+        }
+	else {
+		set_next_exe(j->j_line, STD, -1);
+	}
     }
 
 }
@@ -263,68 +246,79 @@ run_queue_job(cl_t *line)
 
 }
 
+job_t *
+job_queue_remove(cl_t *line)
+    /* remove a job from the queue list
+     * returns a pointer to the previous entry,
+     * or NULL if the line either wasn't in the queue or was the first entry */
+{
+    struct job_t *j;
+    struct job_t *jprev = NULL;
 
+    if (queue_base == NULL)
+        return NULL;
+
+    /* find the job in the list */
+    for (j = queue_base; j != NULL ; jprev = j, j = j->j_next) {
+        if ( j->j_line == line ) {
+            /* remove it from the list */
+            if (jprev != NULL) {
+                jprev->j_next = j->j_next;
+            }
+            else
+                /* first element of the list */
+                queue_base = j->j_next;
+
+            free_safe(j);
+            return jprev;
+        }
+    }
+
+    /* the job wasn't there */
+    return NULL;
+}
 
 void
 insert_nextexe(cl_t *line)
-    /* insert a job the queue list */
+    /* insert a job at the right position in the job queue */
 {
-    struct job_t *newjob;
+    struct job_t *newjob = NULL;
+    struct job_t *j = NULL;
+    struct job_t *jprev = NULL;
 
-    if (queue_base != NULL) {
-	struct job_t *j;
-	struct job_t *jprev = NULL;
-	struct job_t *old_entry = NULL;
+    Alloc(newjob, job_t);
+    newjob->j_line = line;
+    newjob->j_next = NULL;
 
-	/* find the job in the list */
-	for (j = queue_base; j != NULL ; j = j->j_next)
-	    if ( j->j_line == line ) {
-		old_entry = j;
-		/* remove it from the list */
-		if (jprev != NULL) {
-		    jprev->j_next = j->j_next;
-		    j = jprev;
-		}
-		else
-		    /* first element of the list */
-		    j = queue_base = j->j_next;
-
-		break;
-	    }
-	    else
-		jprev = j;
-
-	jprev = NULL;
-	if (j == NULL || line->cl_nextexe < j->j_line->cl_nextexe)
-	    j = queue_base;
-	while (j != NULL && (line->cl_nextexe >= j->j_line->cl_nextexe)) {
-	    jprev = j;
-	    j = j->j_next;
-	}	    
-
-	if (old_entry == NULL) {
-	    /* this job wasn't in the queue : we append it */
-	    Alloc(newjob, job_t);
-	    newjob->j_line = line;
-	}
-	else
-	    /* this job was already in the queue : we move it */
-	    newjob = old_entry;
-
-	newjob->j_next = j;
-
-	if (jprev == NULL)
-	    queue_base = newjob;
-	else
-	    jprev->j_next = newjob;
-
-    }
-    else {
+    if (queue_base == NULL) {
 	/* no job in queue */
-	Alloc(newjob, job_t);
-	newjob->j_line = line;	    
 	queue_base = newjob;
+        return;
     }
+
+    jprev = job_queue_remove(line);
+    j = (jprev)? jprev : queue_base;
+
+    /* check if we should start from queue_base or from jprev
+     * (in some cases, e.g. fcrontab has just been edited, the line should
+     *  be moved *forward* in the queue) */
+    if (jprev == NULL || line->cl_nextexe < jprev->j_line->cl_nextexe ) {
+        j = queue_base;
+    }
+
+    /* a job can only be moved back */
+    while (j != NULL && (line->cl_nextexe >= j->j_line->cl_nextexe)) {
+        jprev = j;
+        j = j->j_next;
+    }
+    /* when we get out from the while(), newjob should be added between jprev and j */
+
+    newjob->j_next = j;
+
+    if (jprev == NULL)
+        queue_base = newjob;
+    else
+        jprev->j_next = newjob;
 
 }
 
@@ -1195,7 +1189,28 @@ set_next_exe(cl_t *line, char option, int info_fd)
     }
     else {
 	/* this is a job based on system up time */
-	line->cl_nextexe = basetime + line->cl_timefreq;
+
+        if ( line->cl_timefreq == LONG_MAX ) {
+            /* when timefreq is set to LONG_MAX, it means that next time nextexe
+             * is updated we want it to be the furthest away possible so as the job
+             * is never executed again (unless at the next reboot/fcron startup
+             * if the line as the appropriate options set) */
+            /* NOTE: the options runonce/hasrun should be used to achieve this,
+             *       but we keep this here as an extra safety */
+            debug("Setting cl_nextexe to LONG_MAX to prevent the line from running again.");
+            line->cl_nextexe = LONG_MAX;
+        }
+        else {
+            line->cl_nextexe = basetime + line->cl_timefreq;
+            if ( line->cl_nextexe <= basetime ) {
+                /* there was an integer overflow! */
+                error("Error while setting next exe time for job %s: cl_nextexe"
+                        " overflowed. basetime=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
+                        line->cl_shell, basetime, line->cl_timefreq, line->cl_nextexe);
+                error("Setting cl_nextexe to LONG_MAX to prevent an infinite loop.");
+                line->cl_nextexe = LONG_MAX;
+            }
+        }
 
 	ft = localtime( &(line->cl_nextexe) );
 
@@ -1242,7 +1257,7 @@ set_next_exe_notrun(cl_t *line, char context)
      * of the function. */
     tz_changed = switch_timezone(orig_tz_envvar, line->cl_tz);
     
-    if (context == SYSDOWN) {
+    if (context == SYSDOWN || context == SYSDOWN_RUNATREBOOT) {
 	/* handle timezone differences */
 	previous_period = line->cl_nextexe - (line->cl_file->cf_tzdiff * 3600);
 	set_next_exe_opt = NO_GOTO;
@@ -1264,7 +1279,11 @@ set_next_exe_notrun(cl_t *line, char context)
     move_time_to(BEGIN_NEXT_PERIOD, line, &ftime);
     next_period = mktime_no_dst(&ftime) + (line->cl_file->cf_tzdiff * 3600);
 
-    set_next_exe(line, set_next_exe_opt, -1);
+    if ( context == SYSDOWN_RUNATREBOOT )
+        line->cl_nextexe = now;
+    else
+        set_next_exe(line, set_next_exe_opt, -1);
+
     if ( line->cl_nextexe >= next_period ) {
 	/* line has not run during one or more period(s) : send a mail */
 	mail_notrun(line, context, &last_nextexe);
@@ -1272,6 +1291,26 @@ set_next_exe_notrun(cl_t *line, char context)
 
     if ( tz_changed > 0 )
 	switch_back_timezone(orig_tz_envvar);
+
+}
+
+void
+mail_notrun_time_t(cl_t *line, char context, time_t since_time_t)
+/* Same as mail_notrun() but with 'since' defined as a time_t instead of a struct tm */
+{
+    struct tm *since2 = NULL;
+    struct tm since;
+    int tz_changed = 0;
+
+    since2 = localtime(&line->cl_nextexe);
+    memcpy(&since, since2, sizeof(since));
+
+    tz_changed = switch_timezone(orig_tz_envvar, line->cl_tz);
+
+    mail_notrun(line, SYSDOWN, &since);
+
+    if ( tz_changed > 0 )
+        switch_back_timezone(orig_tz_envvar);
 
 }
 

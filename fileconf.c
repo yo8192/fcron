@@ -29,6 +29,7 @@
 
 char *get_string(char *ptr);
 int get_line(char *str, size_t size, FILE *file);
+void init_default_line(cl_t *cl, cf_t *cf);
 char *get_time(char *ptr, time_t *time, int zero_allowed);
 char *get_num(char *ptr, int *num, int max, short int decimal,
 	      const char **names);
@@ -38,9 +39,11 @@ char *read_field(char *ptr, bitstr_t *ary, int max, const char **names);
 void read_freq(char *ptr, cf_t *cf);
 void read_arys(char *ptr, cf_t *cf);
 void read_period(char *ptr, cf_t *cf);
+int read_shortcut(char *ptr, cf_t *cf);
 void read_env(char *ptr, cf_t *cf);
 char *read_opt(char *ptr, cl_t *cl);
 char *check_username(char *ptr, cf_t *cf, cl_t *cl);
+void free_line(cl_t *cl);
 
 
 char need_correction;
@@ -122,7 +125,7 @@ get_line(char *str, size_t size, FILE *file)
 		*(str + i) = (char) '\0';
 		return OK;
 	    }
-	    break;
+            break;
 		
 	case EOF:
 	    *(str + i) = (char) '\0';
@@ -147,6 +150,19 @@ get_line(char *str, size_t size, FILE *file)
 
 }
 
+void
+init_default_line(cl_t *cl, cf_t *cf)
+/* clear all context/options from cl */
+{
+    bzero(cl, sizeof(cl_t));
+    Set(cl->cl_runas, runas);
+    Set(cl->cl_mailto, runas);
+    free_safe(cl->cl_tz);
+    set_default_opt(cl->cl_option);
+    cl->cl_file = cf;
+}
+
+
 int
 read_file(char *filename)
     /* read file "name" and append cf_t list */
@@ -161,7 +177,6 @@ read_file(char *filename)
     int ret;
     
     bzero(buf, sizeof(buf));
-    bzero(&default_line, sizeof(cl_t));
     need_correction = 0;
     line = 1;
     file_name = filename;
@@ -180,11 +195,7 @@ read_file(char *filename)
     Alloc(cf, cf_t);
     cf->cf_env_list = env_list_init();
     cf->cf_user = strdup2(user);
-    default_line.cl_file = cf;
-    default_line.cl_runas = strdup2(runas);
-    default_line.cl_mailto = strdup2(runas);
-    default_line.cl_tz = NULL;
-    set_default_opt(default_line.cl_option);
+    init_default_line(&default_line, cf);
 
     if ( debug_opt )
 	fprintf(stderr, "FILE %s\n", file_name);
@@ -217,7 +228,9 @@ read_file(char *filename)
 	    /* comments or empty line: skipping */
 	    break;
 	case '@':
-	    read_freq(ptr, cf);
+            /* if it is not a shortcut line then read_shortcut() won't do anything. */
+            if ( ! read_shortcut(ptr, cf))
+                read_freq(ptr, cf);
 	    entries++;
 	    break;
 	case '&':
@@ -335,7 +348,7 @@ read_env(char *ptr, cf_t *cf)
     if ( strcmp(name, "MAILTO") == 0 ) {
 	if ( strcmp(val, "\0") == 0 ) {
 	    clear_mail(default_line.cl_option);
-	    clear_forcemail(default_line.cl_option);
+	    clear_mailzerolength(default_line.cl_option);
         }
 	else {
 	    Set(default_line.cl_mailto, val);
@@ -566,15 +579,46 @@ read_opt(char *ptr, cl_t *cl)
 		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
 	}
 
+	else if(strcmp(opt_name, "rebootreset")==0) {
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		clear_rebootreset(cl->cl_option);
+	    else
+		set_rebootreset(cl->cl_option);
+            if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+	}
+
+
+	else if(strcmp(opt_name, "runatreboot")==0){
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		clear_runatreboot(cl->cl_option);
+	    else
+                set_runatreboot(cl->cl_option);
+            if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+	}
+
+
+	else if(strcmp(opt_name, "runonce")==0){
+	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
+		Handle_err;
+	    if ( i == 0 )
+		clear_runonce(cl->cl_option);
+	    else
+                set_runonce(cl->cl_option);
+            if (debug_opt)
+		fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+	}
+
 	else if( strcmp(opt_name, "reset")==0 ) {
 	    if ( in_brackets && (ptr = get_bool(ptr, &i)) == NULL )
 		Handle_err;
 	    if ( i == 1 ) {
-		bzero(cl, sizeof(cl_t));
-		Set(cl->cl_runas, runas);
-		Set(cl->cl_mailto, runas);
-		free_safe(cl->cl_tz);
-		set_default_opt(cl->cl_option);
+                init_default_line(cl, cl->cl_file);
 	    }
 	    if (debug_opt)
 		fprintf(stderr, "  Opt : \"%s\"\n", opt_name);
@@ -739,7 +783,7 @@ read_opt(char *ptr, cl_t *cl)
 		Handle_err;
 	    if ( i == 0 ) {
 		clear_mail(cl->cl_option);
-		clear_forcemail(cl->cl_option);
+		clear_mailzerolength(cl->cl_option);
             }
 	    else
 		set_mail(cl->cl_option);
@@ -773,7 +817,7 @@ read_opt(char *ptr, cl_t *cl)
 		buf[i++] = *ptr++;
 	    if ( strcmp(buf, "\0") == 0 ) {
 		clear_mail(cl->cl_option);
-		clear_forcemail(cl->cl_option);
+		clear_mailzerolength(cl->cl_option);
             }
 	    else {
 		    Set(cl->cl_mailto, buf);
@@ -1123,6 +1167,152 @@ check_username(char *ptr, cf_t *cf, cl_t *cl)
 }
 
 
+char *
+read_word(char *ptr, char *buf, size_t buf_size)
+/* copy a word to buf with a max_size of buf_size and return a pointer
+ * to the next char after the word */
+{
+    int i = 0;
+
+    bzero(buf, buf_size);
+
+    while ( isalnum( (int) *ptr)  && i < buf_size )
+        buf[i++] = *ptr++;
+
+    return ptr;
+}
+
+int
+read_shortcut(char *ptr, cf_t *cf)
+/* try to read a shortcut entry, and if it is one then append a line to cf
+ * Return 1 if that was a shortcut entry. If it wasn't, return 0 and make sure
+ * ptr is back to its orig value. */
+{
+    cl_t *cl = NULL;
+    char shortcut[20];
+    char *ptr_orig = ptr;
+
+    Alloc(cl, cl_t);
+    memcpy(cl, &default_line, sizeof(cl_t));
+    cl->cl_runas = strdup2(default_line.cl_runas);
+    cl->cl_mailto = strdup2(default_line.cl_mailto);
+    if ( cl->cl_tz != NULL )
+	cl->cl_tz = strdup2(default_line.cl_tz);
+
+    /* skip the @ */
+    ptr++;
+
+    ptr = read_word(ptr, shortcut, sizeof(shortcut));
+
+    /* time&date by default -- we'll switch to freq if @reboot */
+    set_td(cl->cl_option);
+    cl->cl_remain = cl->cl_runfreq; /* FIXME: necessary?? */
+
+    if ( strcmp(shortcut, "reboot") == 0 ) {
+        set_freq(cl->cl_option);
+        set_runatreboot(cl->cl_option);
+        set_runonce(cl->cl_option);
+        clear_volatile(cl->cl_option);
+        cl->cl_runfreq = 0;
+        cl->cl_first = 0;
+        /* the job will not be rescheduled after the first execution (flag is_hasrun),
+         * we set timefreq to LONG_MAX just in case */
+        cl->cl_timefreq = LONG_MAX;
+
+        if ( debug_opt )
+            fprintf(stderr, "  Shc : @reboot\n");
+    }
+    else if ( strcmp(shortcut, "yearly")  == 0 || strcmp(shortcut, "annually")  == 0 ) {
+        bit_set(cl->cl_mins, 0);
+        bit_set(cl->cl_hrs, 0);
+        bit_set(cl->cl_days, 1);
+        bit_set(cl->cl_mons, 0);
+        bit_nset(cl->cl_dow, 0, 7);
+
+        if ( debug_opt )
+            fprintf(stderr, "  Shc : @yearly\n");
+    }
+    else if ( strcmp(shortcut, "monthly")  == 0 ) {
+        bit_set(cl->cl_mins, 0);
+        bit_set(cl->cl_hrs, 0);
+        bit_set(cl->cl_days, 1);
+        bit_nset(cl->cl_mons, 0, 11);
+        bit_nset(cl->cl_dow, 0, 7);
+
+        if ( debug_opt )
+            fprintf(stderr, "  Shc : @monthly\n");
+    }
+    else if ( strcmp(shortcut, "weekly")  == 0 ) {
+        bit_set(cl->cl_mins, 0);
+        bit_set(cl->cl_hrs, 0);
+        bit_nset(cl->cl_days, 0, 31);
+        bit_nset(cl->cl_mons, 0, 11);
+        bit_set(cl->cl_dow, 0);
+        bit_set(cl->cl_dow, 7); /* 0 and 7 are both sunday */
+
+        if ( debug_opt )
+            fprintf(stderr, "  Shc : @weekly\n");
+    }
+    else if ( strcmp(shortcut, "daily")  == 0 || strcmp(shortcut, "midnight")  == 0 ) {
+        bit_set(cl->cl_mins, 0);
+        bit_set(cl->cl_hrs, 0);
+        bit_nset(cl->cl_days, 0, 31);
+        bit_nset(cl->cl_mons, 0, 11);
+        bit_nset(cl->cl_dow, 0, 7);
+
+        if ( debug_opt )
+            fprintf(stderr, "  Shc : @daily\n");
+    }
+    else if ( strcmp(shortcut, "hourly")  == 0 ) {
+        bit_set(cl->cl_mins, 0);
+        bit_nset(cl->cl_hrs, 0, 23);
+        bit_nset(cl->cl_days, 0, 31);
+        bit_nset(cl->cl_mons, 0, 11);
+        bit_nset(cl->cl_dow, 0, 7);
+
+        if ( debug_opt )
+            fprintf(stderr, "  Shc : @hourly\n");
+    }
+    else {
+        /* this is not a shortcut line but a normal @-line:  */
+        ptr = ptr_orig;
+        return 0;
+    }
+
+    /* check for inline runas */
+    ptr = check_username(ptr, cf, cl);
+
+    /* get cl_shell field ( remove trailing blanks ) */
+    if ( (cl->cl_shell = get_string(ptr)) == NULL ) {
+	fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
+		file_name, line);
+	goto exiterr;
+    }
+    if ( strcmp(cl->cl_shell, "\0") == 0 ) {
+	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
+		file_name, line);
+	free_safe(cl->cl_shell);
+	goto exiterr;
+    }
+
+#ifndef USE_SENDMAIL
+    clear_mail(cl->cl_option);
+    clear_mailzerolength(cl->cl_option);
+#endif
+
+    cl->cl_next = cf->cf_line_base;
+    cf->cf_line_base = cl;
+
+    if ( debug_opt )
+	fprintf(stderr, "  Cmd \"%s\" (shortcut)\n", cl->cl_shell);
+    return 1;
+
+  exiterr:
+    free_safe(cl);
+    need_correction = 1;
+    return 1;
+}
+
 void
 read_freq(char *ptr, cf_t *cf)
     /* read a freq entry, and append a line to cf */
@@ -1175,11 +1365,9 @@ read_freq(char *ptr, cf_t *cf)
 	goto exiterr;
     }
 
-    if ( is_volatile(cl->cl_option) && cl->cl_first == -1 )
-	/* time before first execution is not specified */
+    if ( cl->cl_first == -1 )
+	/* time before first execution was not specified explicitely */
 	cl->cl_first = cl->cl_timefreq;
-    else
-	cl->cl_nextexe = (cl->cl_first == -1 ) ? cl->cl_timefreq : cl->cl_first;
 
     /* check for inline runas */
     ptr = check_username(ptr, cf, cl);
@@ -1212,7 +1400,7 @@ read_freq(char *ptr, cf_t *cf)
     return;
 
   exiterr:
-    free_safe(cl);
+    free_line(cl);
     need_correction = 1;
     return;
 }
@@ -1300,6 +1488,7 @@ read_arys(char *ptr, cf_t *cf)
     if ( strcmp(cl->cl_shell, "\0") == 0 ) {
 	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
 		file_name, line);
+	free_safe(cl->cl_shell);
 	goto exiterr;
     }
 
@@ -1317,7 +1506,7 @@ read_arys(char *ptr, cf_t *cf)
 
   exiterr:
     need_correction = 1;
-    free_safe(cl);
+    free_line(cl);
     return;
 
 }
@@ -1393,6 +1582,7 @@ read_period(char *ptr, cf_t *cf)
     if ( strcmp(cl->cl_shell, "\0") == 0 ) {
 	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
 		file_name, line);
+	free_safe(cl->cl_shell);
 	goto exiterr;
     } 
     else if ( cl->cl_shell[0] == '*' || isdigit( (int) cl->cl_shell[0]) )
@@ -1456,7 +1646,7 @@ read_period(char *ptr, cf_t *cf)
 
   exiterr:
     need_correction = 1;
-    free_safe(cl);
+    free_line(cl);
     return;
 
 }
@@ -1653,6 +1843,18 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
     return ptr;
 }
 
+void
+free_line(cl_t *cl)
+    /* free a line, including its fields */
+{
+    if (cl != NULL) {
+        free_safe(cl->cl_shell);
+        free_safe(cl->cl_runas);
+        free_safe(cl->cl_mailto);
+        free_safe(cl->cl_tz);
+        free_safe(cl);
+    }
+}
 
 void
 delete_file(const char *user_name)
@@ -1672,11 +1874,7 @@ delete_file(const char *user_name)
 	    cur_line = file->cf_line_base;
 	    while ( (line = cur_line) != NULL) {
 		cur_line = line->cl_next;
-		free_safe(line->cl_shell);
-		free_safe(line->cl_mailto);
-		free_safe(line->cl_runas);
-		free_safe(line->cl_tz);
-		free_safe(line);
+                free_line(line);
 	    }
 	    break ;
 

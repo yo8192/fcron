@@ -70,6 +70,7 @@ gid_t rootgid = 0;
 /* misc */
 char *user_str;
 uid_t user_uid;
+uid_t user_gid;
 
 /* if you change this structure, please update NUM_CMD value in dyncom.h */
 struct cmd_list_ent cmd_list[NUM_CMD] = {
@@ -648,6 +649,7 @@ main(int argc, char **argv)
     read_conf();
 
     user_uid = getuid();
+    user_gid = getgid();
     if ( (pass = getpwuid(user_uid)) == NULL )
 	die("user \"%s\" is not in passwd file. Aborting.", USERNAME);
     user_str = strdup2(pass->pw_name);

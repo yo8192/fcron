@@ -37,10 +37,13 @@ extern void set_next_exe(struct cl_t *line, char option, int info_fd);
 #define NO_GOTO_LOG 2  /* set_next_exe() : NO_GOTO but also log nextexe time */
 #define FROM_CUR_NEXTEXE 4 /* set_next_exe() : compute from nextexe, not now */
 extern void set_next_exe_notrun(struct cl_t *line, char context);
-#define LAVG 1         /* set_next_exe_notrun() : context */
-#define SYSDOWN 2      /* set_next_exe_notrun() : context */
-#define QUEUE_FULL 3   /* set_next_exe_notrun() : context */
+#define LAVG 1                /* set_next_exe_notrun() : context */
+#define SYSDOWN 2             /* set_next_exe_notrun() : context */
+#define QUEUE_FULL 3          /* set_next_exe_notrun() : context */
+#define SYSDOWN_RUNATREBOOT 4 /* set_next_exe_notrun() : context */
 extern void mail_notrun(struct cl_t *line, char context, struct tm *since);
+extern void mail_notrun_time_t(cl_t *line, char context, time_t since_time_t);
+extern job_t * job_queue_remove(cl_t *line);
 extern void insert_nextexe(struct cl_t *line);
 extern void run_normal_job(cl_t *line, int fd);
 extern void add_serial_job(struct cl_t *line, int fd);

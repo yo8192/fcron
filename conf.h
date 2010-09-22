@@ -28,7 +28,7 @@
 
 /* functions prototypes */
 extern void reload_all(const char *dir_name);
-extern void synchronize_dir(const char *dir_name);
+extern void synchronize_dir(const char *dir_name, int is_system_startup);
 extern void delete_file(const char *user_name);
 extern void save_file(struct cf_t *file_name);
 

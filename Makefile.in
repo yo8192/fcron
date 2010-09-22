@@ -30,6 +30,7 @@ FCRONTABS	= @FCRONTABS@
 PIDDIR		= @PIDDIR@
 FIFODIR		= @FIFODIR@
 PIDFILE		= @PIDFILE@
+REBOOT_LOCK	= @REBOOT_LOCK@
 FIFOFILE	= @FIFOFILE@
 FCRON_SHELL	= @FCRON_SHELL@
 SENDMAIL	= @SENDMAIL@
@@ -118,7 +119,7 @@ exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
 	$(CC) $(CFLAGS) -o $@  exe_list.o u_list.o exe_list_test.o log.o subs.o $(LIBS)
 
 %.o: $(SRCDIR)/%.c $(HEADERSALL) $(SRCDIR)/%.h
-	$(CC) $(CFLAGS) -DPIDFILE="\"${PIDFILE}\"" \
+	$(CC) $(CFLAGS) -DPIDFILE="\"${PIDFILE}\"" -DREBOOT_LOCK="\"${REBOOT_LOCK}\"" \
 	-DFIFOFILE="\"${FIFOFILE}\"" -DETC="\"${ETC}\"" \
 	-DFCRON_SHELL="\"${FCRON_SHELL}\"" -DFCRON_CONF="\"${FCRON_CONF}\"" \
 	-DFCRONTABS="\"${FCRONTABS}\"" \

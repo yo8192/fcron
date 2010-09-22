@@ -149,12 +149,12 @@ can run simultaneously on an only system (but each &fcron; process *must* have a
 different spool dir and pid file from the other processes).</para>
 		</listitem>
 	    </varlistentry>
-	    <varlistentry>
+	    <varlistentry id="fcron.8.once">
 		<term><option>-o</option></term>
 		<term><option>--once</option></term>
 		<listitem>
 		    <para>Execute all jobs that need to be run at the time &fcron;
-was started, wait for them, then return. Sets <option>firstsleep</option> to 0.
+was started, wait for them, then return. Sets &argfirstsleep; to 0.
 May be especially useful when used with options <option>-y</option> and
 <option>-f</option> in a script run, for instance, at dialup connection.</para>
 		    <para>&seealso; fcrontab's options &optvolatile;,
@@ -169,7 +169,7 @@ May be especially useful when used with options <option>-y</option> and
 in foreground.</para>
 		</listitem>
 	    </varlistentry>
-	    <varlistentry>
+	    <varlistentry id="fcron.8.firstsleep">
 		<term><option>-l</option> <replaceable>time</replaceable></term>
 		<term><option>--firstsleep</option>
 <replaceable>time</replaceable></term>

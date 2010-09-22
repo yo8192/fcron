@@ -243,13 +243,9 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 	Save_str(fd, S_MAILTO_T, line->cl_mailto, write_buf, &write_buf_used);
 	Save_strn(fd, S_OPTION_T, (char *)line->cl_option, OPTION_SIZE,
 		  write_buf, &write_buf_used);
+	Save_lint(fd, S_NEXTEXE_T, line->cl_nextexe, write_buf, &write_buf_used);
 
 	/* the following are saved only if needed */
-	if ( is_volatile(line->cl_option) && is_freq(line->cl_option) ) {
-	    Save_lint(fd, S_FIRST_T, line->cl_first, write_buf, &write_buf_used);
-	}
-	else
-	    Save_lint(fd, S_NEXTEXE_T, line->cl_nextexe, write_buf, &write_buf_used);
 	if ( line->cl_numexe )
 	    Save_strn(fd, S_NUMEXE_T, (char *)&line->cl_numexe, 1, write_buf, &write_buf_used);
 	if ( is_lavg(line->cl_option) )
@@ -272,6 +268,7 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 		     
 	if ( is_freq(line->cl_option) ) {
 	    /* save the frequency to run the line */
+	    Save_lint(fd, S_FIRST_T, line->cl_first, write_buf, &write_buf_used);
 	    Save_lint(fd, S_TIMEFREQ_T, line->cl_timefreq, write_buf, &write_buf_used);
 	}
 	else {

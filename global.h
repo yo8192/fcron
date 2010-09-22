@@ -155,7 +155,7 @@
 
 #define Set(VAR, VALUE) \
         { \
-          free(VAR); \
+          free_safe(VAR); \
           VAR = strdup2(VALUE); \
         }
 
@@ -187,7 +187,7 @@ typedef struct cf_t {
 } cf_t;
 
 
-#define OPTION_SIZE 4
+#define OPTION_SIZE 4 /* number of bytes to hold the cl_option bit array */
 #define LAVG_SIZE 3
 /* warning : do not change the order of the members of this structure
  *   because some tests made are dependent to that order */
@@ -200,7 +200,7 @@ typedef struct cl_t {
     char          *cl_runas;      /* determine permissions of the job        */
     char          *cl_mailto;     /* mail output to cl_mailto                */
     char          *cl_tz;         /* time zone of the line                   */
-    long int       cl_id;         /* line's unique id number                 */
+    unsigned long  cl_id;         /* line's unique id number                 */
     time_t         cl_until;      /* timeout of the wait for a lavg value    */
     time_t         cl_first;      /* initial delay preserved for volatile entries */
     time_t         cl_nextexe;    /* time and date of the next execution     */

@@ -48,6 +48,7 @@ RETSIGTYPE sigusr1_handler(int x);
 RETSIGTYPE sigusr2_handler(int x);
 int parseopt(int argc, char *argv[]);
 void get_lock(void);
+int is_system_reboot(void);
 void create_spooldir(char *dir);
 
 /* command line options */
@@ -270,6 +271,27 @@ get_lock()
      * keep it open and locked, but we don't need the handles elsewhere.
      */
 
+}
+
+int
+is_system_startup(void)
+{
+    int reboot = 0;
+
+    /* lock exist - skip reboot jobs */
+    if (access(REBOOT_LOCK, F_OK) == 0) {
+        explain("@reboot jobs will only be run at computer's startup.");
+        /* don't run @reboot jobs */
+        return 0;
+    }
+    /* lock doesn't exist - create lock, run reboot jobs */
+    if ((reboot = creat(REBOOT_LOCK, S_IRUSR & S_IWUSR)) < 0)
+        error_e("Can't create lock for reboot jobs.");
+    else
+        close(reboot);
+
+    /* run @reboot jobs */
+    return 1;
 }
 
 
@@ -671,7 +693,7 @@ check_signal()
 
 	if (sig_conf == 1) {
 	    /* update configuration */
-	    synchronize_dir(".");
+	    synchronize_dir(".", 0);
 	    sig_conf = 0;
 #ifdef HAVE_SIGNAL
 	    signal(SIGHUP, sighup_handler);
@@ -721,7 +743,7 @@ main_loop()
 
     now = time(NULL);
 
-    synchronize_dir(".");
+    synchronize_dir(".", is_system_startup());
 
     /* synchronize save with jobs execution */
     save = now + save_time;
@@ -732,6 +754,7 @@ main_loop()
 	/* force first execution after first_sleep sec : execution of jobs
 	 * during system boot time is not what we want */
 	stime = first_sleep;
+    debug("initial sleep time : %ld", stime);
 
     for (;;) {
 	

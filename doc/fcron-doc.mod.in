@@ -3,6 +3,8 @@
 <!-- Stable release: -->
 <!ENTITY % devrelease "IGNORE">
 
+<!-- General information -->
+
 <!ENTITY date "@@Date@">
 <!ENTITY version "@@VERSION_QUOTED@">
 <!ENTITY copyrightdate "2000-2008">
@@ -14,6 +16,8 @@
 <!ENTITY webpage '<ulink url="&webpageadr;">&webpageadr;</ulink>'>
 <!ENTITY docurlEN '<ulink url="&webpageadr/files/fcron-doc-en-html.tar.gz">&webpageadr/files/fcron-doc-html.tar.gz</ulink>'>
 <!ENTITY docurlFR '<ulink url="&webpageadr/files/fcron-doc-fr-html.tar.gz">&webpageadr/files/fcron-doc-html.tar.gz</ulink>'>
+
+<!-- Compilation variables -->
 
 <!ENTITY editor "@@FCRON_EDITOR@">
 <!ENTITY etc "@@ETC@">
@@ -36,6 +40,7 @@
 <!ENTITY shell "@@FCRON_SHELL@">
 <!ENTITY sysfcrontab "@@SYSFCRONTAB@">
 
+<!-- shortcuts -->
 
 <!ENTITY seealso "<emphasis>See also</emphasis>:">
 <!ENTITY voiraussi "<emphasis>Voir aussi</emphasis>&nbsp;:">
@@ -49,6 +54,7 @@
 <!ENTITY fcron.conf "<systemitem>fcron.conf</systemitem>">
 <!ENTITY pam "<application>pam</application>">
 
+<!-- documents -->
 
 <!ENTITY about SYSTEM "readme.sgml">
 <!ENTITY install SYSTEM "install.sgml">
@@ -66,6 +72,11 @@
 <!ENTITY fdl SYSTEM "fdl.sgml">
 <!ENTITY gpl SYSTEM "gpl.sgml">
 
+<!-- command line arguments -->
+<!ENTITY argfirstsleep '<link linkend="fcron.8.firstsleep"><varname>--sleeptime</varname></link>'>
+<!ENTITY argonce '<link linkend="fcron.8.once"><varname>--once</varname></link>'>
+
+<!-- fcrontab options -->
 
 <!ENTITY optbootrun '<link linkend="fcrontab.5.bootrun"><varname>bootrun</varname></link>'>
 <!ENTITY optdayand '<link linkend="fcrontab.5.dayand"><varname>dayand</varname></link>'>
@@ -88,9 +99,12 @@
 <!ENTITY optnolog '<link linkend="fcrontab.5.nolog"><varname>nolog</varname></link>'>
 <!ENTITY optnoticenotrun '<link linkend="fcrontab.5.noticenotrun"><varname>noticenotrun</varname></link>'>
 <!ENTITY optrandom '<link linkend="fcrontab.5.random"><varname>random</varname></link>'>
+<!ENTITY optrebootreset '<link linkend="fcrontab.5.rebootreset"><varname>rebootreset</varname></link>'>
 <!ENTITY optreset '<link linkend="fcrontab.5.reset"><varname>reset</varname></link>'>
 <!ENTITY optrunas '<link linkend="fcrontab.5.runas"><varname>runas</varname></link>'>
+<!ENTITY optrunatreboot '<link linkend="fcrontab.5.runatreboot"><varname>runatreboot</varname></link>'>
 <!ENTITY optrunfreq '<link linkend="fcrontab.5.runfreq"><varname>runfreq</varname></link>'>
+<!ENTITY optrunonce '<link linkend="fcrontab.5.runonce"><varname>runonce</varname></link>'>
 <!ENTITY optserial '<link linkend="fcrontab.5.serial"><varname>serial</varname></link>'>
 <!ENTITY optserialonce '<link linkend="fcrontab.5.serialonce"><varname>serialonce</varname></link>'>
 <!ENTITY optstdout '<link linkend="fcrontab.5.stdout"><varname>stdout</varname></link>'>

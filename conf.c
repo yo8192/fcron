@@ -29,12 +29,13 @@
 #include "conf.h"
 #include "database.h"
 
-int read_file(const char *file_name, cf_t *cf);
+int read_file(const char *file_name, cf_t *cf, int is_system_startup);
 int add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str,
-		     time_t t_save);
+		     time_t t_save, int is_system_startup);
 int read_strn(int fd, char **str, short int size);
 int read_type(int fd, short int *type, short int *size);
-void synchronize_file(char *file_name);
+void synchronize_file(char *file_name, int is_system_startup);
+void free_line(cl_t *cl);
 
 
 /* this is used to create a list of files to remove, to add */
@@ -65,13 +66,13 @@ reload_all(const char *dir_name)
 	f = file_base;
     }
     
-    synchronize_dir(dir_name);
+    synchronize_dir(dir_name, 0);
 
 }
 
 
 void
-synchronize_dir(const char *dir_name)
+synchronize_dir(const char *dir_name, int is_system_startup)
     /* read dir_name and create three list of files to remove,
      * new files and normal files. Then remove each file
      * listed in the first list, then read normal files,
@@ -149,7 +150,7 @@ synchronize_dir(const char *dir_name)
 #endif
 	    ) {
 	    explain("adding file %s", list_cur->str);	    
-	    synchronize_file(list_cur->str);
+	    synchronize_file(list_cur->str, is_system_startup);
 	}
 	else
 	    error_e("ignoring file \"%s\" : not in passwd file.", list_cur->str);
@@ -165,7 +166,7 @@ synchronize_dir(const char *dir_name)
 #endif
 	    ) {
 	    explain("adding new file %s", list_cur->str + 4);
-	    synchronize_file(list_cur->str);  
+	    synchronize_file(list_cur->str, is_system_startup);
 	}
 	else
 	    error_e("ignoring file %s : not in passwd file.", 
@@ -204,7 +205,7 @@ synchronize_dir(const char *dir_name)
 
 
 void
-synchronize_file(char *file_name)
+synchronize_file(char *file_name, int is_system_startup)
 {
 
     cf_t *cur_f = NULL;
@@ -244,7 +245,7 @@ synchronize_file(char *file_name)
 
 	    /* load new file */
 	    Alloc(cur_f, cf_t);
-	    if ( read_file(file_name, cur_f) != 0 ) {
+	    if ( read_file(file_name, cur_f, is_system_startup) != 0 ) {
 		/* an error as occured */
 		return;
 	    }
@@ -290,9 +291,21 @@ synchronize_file(char *file_name)
 				+ new_l->cl_file->cf_tzdiff;
 			else
 			    new_l->cl_nextexe = old_l->cl_nextexe;
-			insert_nextexe(new_l);
 
-			if (debug_opt) {
+                        if (is_runonce(new_l->cl_option) && is_runonce(old_l->cl_option)
+                            && is_hasrun(old_l->cl_option)) {
+                            explain("  from last conf: job '%s' with runonce set has "
+                                    "already run since last system startup: not "
+                                    "re-scheduling.", new_l->cl_shell);
+                            set_hasrun(new_l->cl_option);
+                            /* job has already run: remove from the queue */
+                            job_queue_remove(new_l);
+                        }
+                        else
+                            /* update the position in the queue */
+			    insert_nextexe(new_l);
+
+			if (debug_opt && ! is_hasrun(new_l->cl_option)) {
 			    struct tm *ftime;
 			    ftime = localtime(&new_l->cl_nextexe);
 			    debug("  from last conf: %s next exec %d/%d/%d"
@@ -330,7 +343,7 @@ synchronize_file(char *file_name)
 	
 	    Alloc(cur_f, cf_t);
 
-	    if ( read_file(file_name, cur_f) != 0 ) {
+	    if ( read_file(file_name, cur_f, is_system_startup) != 0 ) {
 		/* an error as occured */
 		return;
 	    }
@@ -354,7 +367,7 @@ synchronize_file(char *file_name)
 	
 	Alloc(cur_f, cf_t);
 
-	if ( read_file(file_name, cur_f) != 0 ) {
+	if ( read_file(file_name, cur_f, is_system_startup) != 0 ) {
 	    /* an error as occured */
 	    return;
 	}
@@ -423,7 +436,7 @@ read_type(int fd, short int *type, short int *size)
         }
 
 int
-read_file(const char *file_name, cf_t *cf)
+read_file(const char *file_name, cf_t *cf, int is_system_startup)
     /* read a formated fcrontab.
        return ERR on error, OK otherwise */
 {
@@ -437,6 +450,7 @@ read_file(const char *file_name, cf_t *cf)
     struct passwd *pass = NULL;
     short int type = 0, size = 0;
     int rc;
+    int has_read_cl_first = 0; /* have we read S_FIRST_T? */
 #ifdef WITH_SELINUX
     int flask_enabled = is_selinux_enabled();
     int retval;
@@ -631,6 +645,7 @@ read_file(const char *file_name, cf_t *cf)
 	case S_FIRST_T:
 	    Read(bufi, size, "Error while reading first field");
 	    cl->cl_first = (time_t) bufi;
+            has_read_cl_first = 1;
 	    break;
 
 	case S_OPTION_T:
@@ -699,14 +714,21 @@ read_file(const char *file_name, cf_t *cf)
 	    break;
 
 	case S_ENDLINE_T:
-	    if (add_line_to_file(cl, cf, runas, runas_str, t_save) == 0)
-		Alloc(cl, cl_t);
+            if (is_freq(cl->cl_option) && ! has_read_cl_first) {
+                /* Up to fcron 3.0.X, cl_first/S_FIRST_T was not saved for all @-lines */
+                cl->cl_first = cl->cl_nextexe;
+            }
+	    if (add_line_to_file(cl, cf, runas, runas_str, t_save, is_system_startup) != 0)
+                free_line(cl);
+            Alloc(cl, cl_t);
 	    break;
 
 	    /* default case in "switch(type)" */
 	default:
 	    error("Error while loading %s : unknown field type %d (ignored)",
 		  file_name, type);
+            free_line(cl);
+            Alloc(cl, cl_t);
 	    /* skip the data corresponding to the unknown field */
 	    {
 		/* we avoid using fseek(), as it seems not to work correctly
@@ -763,7 +785,7 @@ read_file(const char *file_name, cf_t *cf)
 
 
 int
-add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save)
+add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save, int is_system_startup)
     /* check if the line is valid, and if yes, add it to the file cf */
 {
     time_t slept = now - t_save;
@@ -772,10 +794,6 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 	 cl->cl_mailto == NULL ) {
 	error("Line is not valid (empty shell, runas or mailto field)"
 	      " : ignored");
-	bzero(cl, sizeof(cl));
-	if (cl->cl_shell) free_safe(cl->cl_shell);
-	if (cl->cl_runas) free_safe(cl->cl_runas);
-	if (cl->cl_mailto) free_safe(cl->cl_mailto);
 	return 1;
     }
 
@@ -799,9 +817,13 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 	Set(cl->cl_mailto,cl->cl_file->cf_user);
     }
 
-    /* check if the job hasn't been stopped during execution and insert
-     * it in lavg or serial queue if it was in one at fcron's stops  */
-    if (cl->cl_numexe > 0) {
+    /* job has been stopped during execution: insert it in lavg or serial queue
+     * if it was in one at fcron's stops.  */
+    /* NOTE: runatreboot is prioritary over jobs that were still running
+     * when fcron stops, because the former will get run quicker as they are not
+     * put into the serial queue. runatreboot jobs will be handled later on. */
+    if (cl->cl_numexe > 0 && ! is_runatreboot(cl->cl_option)) {
+
 	cl->cl_numexe = 0;
 	if ( is_lavg(cl->cl_option) ) {
 	    if ( ! is_strict(cl->cl_option) )
@@ -820,10 +842,44 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 	}
     }
 
-    if ( is_td(cl->cl_option) ) {
+    if (is_system_startup || is_volatile(cl->cl_option)) {
+        clear_hasrun(cl->cl_option);
+    }
+
+    if (is_runonce(cl->cl_option) && is_hasrun(cl->cl_option)) {
+        /* if we get here, then is_system_startup is_volatile are both false */
+        /* do nothing: don't re-schedule or add to the job queue */
+        explain("job '%s' with runonce set has already run since last "
+                "system startup: not re-scheduling.", cl->cl_shell);
+    }
+    else if ( is_td(cl->cl_option) ) {
     
 	/* set the time and date of the next execution  */
-	if ( cl->cl_nextexe <= now ) {
+        if ( is_system_startup && is_runatreboot(cl->cl_option) ) {
+
+            if ( is_notice_notrun(cl->cl_option) ) {
+
+                if ( cl->cl_runfreq == 1 ) {
+                    /* %-line */
+		    set_next_exe_notrun(cl, SYSDOWN_RUNATREBOOT);
+                }
+                else {
+                    /* set next exe and mail user */
+                    time_t since = cl->cl_nextexe;
+
+                    cl->cl_nextexe = now;
+                    mail_notrun_time_t(cl, SYSDOWN, since);
+                }
+
+            }
+            else {
+                cl->cl_nextexe = now;
+            }
+
+            insert_nextexe(cl);
+
+        }
+        else if ( cl->cl_nextexe <= now ) {
 	    if ( cl->cl_nextexe == 0 )
 		/* the is a line from a new file */
 		set_next_exe(cl, NO_GOTO, -1);
@@ -850,44 +906,72 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
 	    }
 	    else {
 		if ( is_notice_notrun(cl->cl_option) ) {
-		    /* set next exe and mail user */
-		    struct tm *since2 = localtime(&cl->cl_nextexe);
-		    struct tm since;
+                    /* set next exe and mail user */
+                    time_t since = cl->cl_nextexe;
 
-		    int tz_changed = 0;
-		    tz_changed = switch_timezone(orig_tz_envvar, cl->cl_tz);
-
-		    memcpy(&since, since2, sizeof(since));
 		    set_next_exe(cl, NO_GOTO, -1);
-		    mail_notrun(cl, SYSDOWN, &since);
+                    mail_notrun_time_t(cl, SYSDOWN, since);
 
-		    if ( tz_changed > 0 )
-			switch_back_timezone(orig_tz_envvar);
 		} 
 		else
 		    set_next_exe(cl, NO_GOTO, -1);
 	    }
 	}
-	else
+	else {
 	    /* value of nextexe is valid : just insert line in queue */
 	    insert_nextexe(cl);
+        }
     } else {  /* is_td(cl->cl_option) */
 	/* standard @-lines */
-	if ( is_volatile(cl->cl_option) ) {
-	    /* cl_first is always saved for a volatile line */
- 	    cl->cl_nextexe = now + cl->cl_first;
- 	} else
- 	    cl->cl_nextexe += slept;
+        if ( is_system_startup && is_runatreboot(cl->cl_option) ) {
+            cl->cl_nextexe = now;
+        }
+        /* t_save == 0 means this is a new file, hence a new line */
+        else if (t_save == 0
+                 || is_volatile(cl->cl_option)
+                 || ( is_system_startup
+                      && ( is_rebootreset(cl->cl_option)
+                           || is_runonce(cl->cl_option) ) ) ) {
+	    /* cl_first is always saved to disk for a volatile line */
+            if ( cl->cl_first == LONG_MAX ) {
+                cl->cl_nextexe = LONG_MAX;
+            }
+            else {
+                cl->cl_nextexe = now + cl->cl_first;
+                if ( cl->cl_nextexe < now ) {
+                    /* there was an integer overflow! */
+                    error("Error while setting next exe time for job %s: cl_nextexe"
+                            " overflowed. now=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
+                            cl->cl_shell, now, cl->cl_timefreq, cl->cl_nextexe);
+                    error("Setting cl_nextexe to LONG_MAX to prevent an infinite loop.");
+                    cl->cl_nextexe = LONG_MAX;
+                }
+            }
+        }
+        else {
+            if ( cl->cl_nextexe != LONG_MAX ) {
+                cl->cl_nextexe += slept;
+                if ( cl->cl_nextexe < now ) {
+                    /* there was an integer overflow! */
+                    error("Error while setting next exe time for job %s: cl_nextexe"
+                            " overflowed. now=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
+                            cl->cl_shell, now, cl->cl_timefreq, cl->cl_nextexe);
+                    error("Setting cl_nextexe to LONG_MAX to prevent an infinite loop.");
+                    cl->cl_nextexe = LONG_MAX;
+                }
+            }
+        }
  
 	if ( cl->cl_timefreq < 10 ) {
 	    error("Invalid timefreq for %s: set to 1 day",
 		  cl->cl_shell);
 	    cl->cl_timefreq = 3600*24;
 	}
-	insert_nextexe(cl);
+
+        insert_nextexe(cl);
     }	    
 
-    if (debug_opt) {
+    if (debug_opt && ! (is_runonce(cl->cl_option) && is_hasrun(cl->cl_option)) ) {
 	struct tm *ftime;
 	ftime = localtime( &(cl->cl_nextexe) );
 	debug("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d:%02d"
@@ -898,11 +982,26 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
     } 
 
     /* add the current line to the list, and allocate a new line */
-    if ( (cl->cl_id = next_id++) >= ULONG_MAX - 1)
+    if ( (cl->cl_id = next_id++) >= ULONG_MAX - 1) {
+        warn("Line id reached %ld: cycling back to zero.", ULONG_MAX);
 	next_id = 0;
+    }
     cl->cl_next = cf->cf_line_base;
     cf->cf_line_base = cl;
     return 0;
+}
+
+void
+free_line(cl_t *cl)
+    /* free a line, including its fields */
+{
+    if (cl != NULL) {
+        free_safe(cl->cl_shell);
+        free_safe(cl->cl_runas);
+        free_safe(cl->cl_mailto);
+        free_safe(cl->cl_tz);
+        free_safe(cl);
+    }
 }
 
 void
@@ -1008,11 +1107,8 @@ delete_file(const char *user_name)
 		else
 		    prev_j = j;
 
-	    /* free line itself */
-	    free_safe(line->cl_shell);
-	    free_safe(line->cl_runas);
-	    free_safe(line->cl_mailto);
-	    free_safe(line);
+            /* free line itself */
+            free_line(line);
 	}
 	/* delete_file() MUST remove only the first occurrence :
 	 * this is needed by synchronize_file() */
