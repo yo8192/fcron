@@ -766,6 +766,9 @@ permissions and environment (only root is allowed to use this option).</para>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
 			<para>If set to true, the task will be run at system startup (i.e. immediately after the &argfirstsleep; delay -- by default, &firstsleep; seconds -- when the &fcron; daemon starts the first time after the OS has booted). This is in addition to the regular schedule which won't be modified by this option.</para>
+                        <para>For instance, if a program should be started automatically and run from 7am to 6pm, you could use the following dfcrontab definitions:</para>
+                        <programlisting>&amp;runatreboot 0 6 * * 1-5 start_my_program.sh
+& 0 7 * * 1-5 stop_my_program.sh</programlisting>
 			<para>&seealso; options &optvolatile;, &optrunonce;, &optrebootreset;.</para>
 		    </listitem>
 		</varlistentry>

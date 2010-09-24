@@ -351,17 +351,30 @@ and set appropriately the paths:</para>
 		  <link linkend="fcrontab.5">&fcrontab;(5),</link> and choose the
 		  type of line which is the most appropriate for your needs (this is
 		  likely to be a @-line or a %-line).</para>
-	       <para>However if you do want to emulate an anacron entry of the form:</para>
+               <para>On a Debian/Ubuntu, the default /etc/anacrontab looks like:<para>
+<programlisting>1       5       cron.daily       nice run-parts --report /etc/cron.daily
+7       10      cron.weekly      nice run-parts --report /etc/cron.weekly
+@monthly        15      cron.monthly nice run-parts --report /etc/cron.monthly
+</programlisting>
+               <para>A close fcron equivalent would be (see &optserial;):<para>
+<programlisting># Run once a day/week/month, and ensure only one of those tasks is run at a time:
+!reset
+!serial,nice(10)
+%daily * * run-parts --report /etc/cron.daily
+%weekly * * run-parts --report /etc/cron.weekly
+%monthly * * * run-parts --report /etc/cron.monthly</programlisting>
+               <para>Or you could go for something a bit more specific (see &optlavg;, &optnoticenotrun;):<para>
+<programlisting># Only run the tasks out of office-hours when the system load is low
+# and send an email to the user if fcron couldn't run the job:
+!reset
+!serial,lavg(0.5,1,1.5),noticenotrun,nice(10),mailto(admin@yourdomain.com)
+%daily * 0-9,18-23 run-parts --report /etc/cron.daily
+%weekly * 0-9,18-23 run-parts --report /etc/cron.weekly
+%monthly * 0-9,18-23 * run-parts --report /etc/cron.monthly</programlisting>
+	       <para>Also, if you do want to emulate an anacron entry of the form:</para>
 	       <programlisting>0 delay job-identity /your/command</programlisting>
-	       <para>then use something as:</para>
+	       <para>then you can use something as:</para>
 	       <programlisting>@runonce delay /your/command</programlisting>
-	       <para>If you use a non-zero anacron period/period_name (i.e. if you
-                  don't want your task to be run every day), then
-                  you should use a %daily, %monthly or %weekly line. If
-               this doesn't emulate an anacron entry as closely as you would like,
-               you may want to try a %hours or %days line, and/or &optrunfreq;.</para>
-               <para>In any case, you could benefit from using fcron options such as
-               &optserial; or &optlavg;.</para>
 	    </answer>
 	 </qandaentry>
 	 <qandaentry>
