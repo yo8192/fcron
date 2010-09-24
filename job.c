@@ -32,13 +32,14 @@ void sig_dfl(void);
 void end_job(cl_t *line, int status, FILE *mailf, short mailpos, char **sendmailenv);
 void end_mailer(cl_t *line, int status);
 #ifdef HAVE_LIBPAM
-void die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str);
+void die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str, env_list_t *env);
 #endif
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 int read_write_pipe(int fd, void *buf, size_t size, int action);
 int read_pipe(int fd, void *to, size_t size);
 int write_pipe(int fd, void *buf, size_t size);
+void become_user(struct cl_t *cl, struct passwd *pas, char *home);
 
 #ifdef WITH_SELINUX
 extern char **environ;
@@ -55,7 +56,7 @@ die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str, env_list_t 
 
     if (is_mail(cl->cl_option)) {
         char **envp = env_list_export_envp(env);
-	FILE *mailf = create_mail(cl, "Could not run fcron job", NULL, envp);
+	FILE *mailf = create_mail(cl, "Could not run fcron job", envp);
 
 	/* print the error in both syslog and a file, in order to mail it to user */
 	if (dup2(fileno(mailf), 1) != 1 || dup2(1, 2) != 2)
@@ -68,7 +69,7 @@ die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str, env_list_t 
 
 	pam_end(pamh, pamerrno);  
 
-        become_user(cl, pas, "/")
+        become_user(cl, pas, "/");
 
 	launch_mailer(cl, mailf, envp);
 	/* launch_mailer() does not return : we never get here */
@@ -124,7 +125,7 @@ setup_user_and_env(struct cl_t *cl, struct passwd *pas,
     char *myshell = NULL;
 #ifdef HAVE_LIBPAM
     int    retcode = 0;
-    const char * const * env;
+    char **env;
 #endif
 
     if (pas == NULL)
@@ -172,7 +173,7 @@ setup_user_and_env(struct cl_t *cl, struct passwd *pas,
     if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas,
 					      "Could not open PAM session", env_list);
 
-    for (env = (const char * const *)pam_getenvlist(pamh); env && *env; env++) {
+    for (env = pam_getenvlist(pamh); env && *env; env++) {
         env_list_putenv(env_list, *env, 1);
     }
 
@@ -433,8 +434,10 @@ run_job_grand_child_setup_stderr_stdout(cl_t *line, int *pipe_fd)
 #endif
     }
     else if ( foreground ) {
-	freopen("/dev/null", "w", stdout);
-	freopen("/dev/null", "w", stderr);
+	if ( freopen("/dev/null", "w", stdout) == NULL )
+            error_e("could not freopen /dev/null as stdout");
+	if ( freopen("/dev/null", "w", stderr) == NULL )
+            error_e("could not freopen /dev/null as stderr");
     }
     
 }

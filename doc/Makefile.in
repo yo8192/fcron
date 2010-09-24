@@ -42,7 +42,7 @@ LANGUAGES = en fr
 
 # this is a regular expression:
 # do not ci these files
-RCSNOCI=.*\(bitstring.3\|fcron-doc.ced\|Makefile\|${STYLESHEET}\|fcron-doc.mod\|HTML.*\|txt.*\|man\/.*\|CVS.*\)
+RCSNOCI=.*\(bitstring.3\|fcron-doc.ced\|Makefile\|${STYLESHEET}\|fcron-doc.mod\|HTML.*\|txt.*\|man\/.*\|CVS.*\|.git.*\)
 
 all: doc
 

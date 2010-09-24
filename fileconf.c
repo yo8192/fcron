@@ -164,7 +164,7 @@ init_default_line(cl_t *cl, cf_t *cf)
 
 
 int
-read_file(char *filename)
+read_file(char *filename, int fd)
     /* read file "name" and append cf_t list */
 {
     cf_t *cf = NULL;
@@ -183,14 +183,14 @@ read_file(char *filename)
 
     /* open file */
 
-    /* check if user is allowed to read file */
-    if ( access(file_name, R_OK) != 0 )
-	die_e("User %s can't read file \"%s\"", user, file_name);
-    else if ( (file = fopen(file_name, "r")) == NULL ) {
+    if ( (file = fdopen(fd, "r")) == NULL ) {
 	fprintf(stderr, "Could not open \"%s\": %s\n", file_name,
 		strerror(errno));
 	return ERR;
     }
+
+    /* Rewind, just in case */
+    rewind(file);
 
     Alloc(cf, cf_t);
     cf->cf_env_list = env_list_init();
@@ -278,7 +278,9 @@ read_file(char *filename)
     cf->cf_next = file_base;
     file_base = cf;
 
-    fclose(file);
+    /* don't close as underlying fd may still be used by calling function */
+    if (fflush(file) != 0)
+        error_e("could not fflush() file_name");
     
     free_safe(default_line.cl_runas);
     free_safe(default_line.cl_mailto);
@@ -1920,8 +1922,13 @@ save_file(char *path)
      * ownership to this user, in order to make fcron check the runas fields.
      * (a malicious user could put a runas(root) and wait for the fcrontab to be
      * installed by root) */
+#ifdef USE_SETE_ID
 	if ( save_file_safe(file, path, "fcrontab", asuid, fcrontab_gid, 0) == ERR )
 	    return ERR;
+#else
+	if ( save_file_safe(file, path, "fcrontab", fcrontab_uid, fcrontab_gid, 0) == ERR )
+	    return ERR;
+#endif
 
     }
 

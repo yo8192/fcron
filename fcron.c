@@ -542,7 +542,8 @@ main(int argc, char **argv)
 	die_e("Could not change dir to %s", fcrontabs);
     
 
-    freopen("/dev/null", "r", stdin);
+    if ( freopen("/dev/null", "r", stdin) == NULL )
+        error_e("Could not open /dev/null as stdin");
 
     if (foreground == 0) {
 
@@ -576,8 +577,10 @@ main(int argc, char **argv)
 	    close(fd);
 	}
 	
-	freopen("/dev/null", "w", stdout);
-	freopen("/dev/null", "w", stderr);
+        if ( freopen("/dev/null", "w", stdout) == NULL )
+            error_e("Could not open /dev/null as stdout");
+        if ( freopen("/dev/null", "w", stderr) == NULL )
+            error_e("Could not open /dev/null as stderr");
 
 	/* close most other open fds */
 	xcloselog();
