@@ -65,6 +65,7 @@
 extern time_t now;
 extern char foreground;
 extern char dosyslog;
+extern char default_mail_charset[TERM_LEN];
 extern time_t first_sleep;
 extern char *cdir;
 extern pid_t daemon_pid;

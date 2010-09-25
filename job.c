@@ -56,7 +56,7 @@ die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str, env_list_t 
 
     if (is_mail(cl->cl_option)) {
         char **envp = env_list_export_envp(env);
-	FILE *mailf = create_mail(cl, "Could not run fcron job", envp);
+	FILE *mailf = create_mail(cl, "Could not run fcron job", NULL, NULL, envp);
 
 	/* print the error in both syslog and a file, in order to mail it to user */
 	if (dup2(fileno(mailf), 1) != 1 || dup2(1, 2) != 2)
@@ -111,7 +111,8 @@ become_user(struct cl_t *cl, struct passwd *pas, char *home)
 
 void
 setup_user_and_env(struct cl_t *cl, struct passwd *pas,
-                   char ***sendmailenv, char ***jobenv, char **curshell, char **curhome)
+                   char ***sendmailenv, char ***jobenv, char **curshell,
+                   char **curhome, char **content_type, char **encoding)
 /* Check PAM authorization, and setup the environment variables
  * to run sendmail and to run the job itself. Change dir to HOME and check if SHELL is ok */
 /* (*curshell) and (*curhome) will be allocated and should thus be freed
@@ -223,18 +224,25 @@ setup_user_and_env(struct cl_t *cl, struct passwd *pas,
         if  ( curshell != NULL )
             *curshell = strdup2(myshell);
 
-        if (jobenv != NULL)
-            *jobenv = env_list_export_envp(env_list);
-
-        env_list_destroy(env_list);
+        *jobenv = env_list_export_envp(env_list);
 
     }
+
+    if ( content_type != NULL ) {
+        (*content_type) = strdup2(env_list_getenv(env_list, "CONTENT_TYPE"));
+    }
+    if ( encoding != NULL ) {
+        (*encoding) = strdup2(env_list_getenv(env_list, "CONTENT_TRANSFER_ENCODING"));
+    }
+
+    env_list_destroy(env_list);
 
 }
 
 void
 change_user_setup_env(struct cl_t *cl,
-                   char ***sendmailenv, char ***jobenv, char **curshell, char **curhome)
+                   char ***sendmailenv, char ***jobenv, char **curshell,
+                   char **curhome, char **content_type, char **encoding)
 /* call setup_user_and_env() and become_user().
  * As a result, *curshell and *curhome will be allocated and should thus be freed
  * if curshell and curhome are not NULL. */
@@ -246,7 +254,8 @@ change_user_setup_env(struct cl_t *cl,
     if ( pas == NULL )
         die_e("failed to get passwd fields for user \"%s\"", cl->cl_runas);
 
-    setup_user_and_env(cl, pas, sendmailenv, jobenv, curshell, curhome);
+    setup_user_and_env(cl, pas, sendmailenv, jobenv, curshell, curhome,
+                       content_type, encoding);
     become_user(cl, pas, *curhome);
     free_safe(*curhome);
 }
@@ -265,7 +274,8 @@ sig_dfl(void)
 
 
 FILE *
-create_mail(cl_t *line, char *subject, char **env)
+create_mail(cl_t *line, char *subject, char *content_type, char *encoding,
+            char **env)
     /* create a temp file and write in it a mail header */
 {
     /* create temporary file for stdout and stderr of the job */
@@ -307,6 +317,35 @@ create_mail(cl_t *line, char *subject, char **env)
     else
 	fprintf(mailf, "Subject: fcron <%s@%s> %s\n", line->cl_file->cf_user,
 		( hostname[0] != '\0')? hostname:"?" , line->cl_shell);
+
+    if (content_type == NULL) {
+        fprintf(mailf, "Content-Type: text/plain; charset=%s\n",
+                default_mail_charset);
+    }
+    else {
+        /* user specified Content-Type header. */
+        char *c = NULL;
+
+        /* Remove new-lines or users could specify arbitrary mail headers!
+         * (fcrontab should already prevent that, but better safe than sorry) */
+        for (c=content_type; *c != '\0'; c++) {
+            if (*c == '\n')
+                *c = ' ';
+        }
+        fprintf(mailf, "Content-Type: %s\n", content_type);
+    }
+
+    if (encoding != NULL) {
+        char *c = NULL;
+
+        /* Remove new-lines or users could specify arbitrary mail headers!
+         * (fcrontab should already prevent that, but better safe than sorry) */
+        for (c=encoding; *c != '\0'; c++) {
+            if (*c == '\n')
+                *c = ' ';
+        }
+        fprintf(mailf, "Content-Transfer-Encoding: %s\n", encoding);
+    }
 
     /* Add headers so as automated systems can identify that this message
      * is an automated one sent by fcron.
@@ -489,6 +528,8 @@ run_job(struct exe_t *exeent)
         char **sendmailenv = NULL;
         char *curshell = NULL;
         char *curhome = NULL;
+        char *content_type = NULL;
+        char *encoding = NULL;
         FILE *mailf = NULL;
         int status = 0;
         int to_stdout = foreground && is_stdout(line->cl_option);
@@ -511,7 +552,8 @@ run_job(struct exe_t *exeent)
         if ( pas == NULL )
             die_e("failed to get passwd fields for user \"%s\"", line->cl_runas);
 
-        setup_user_and_env(line, pas, &sendmailenv, &jobenv, &curshell, &curhome);
+        setup_user_and_env(line, pas, &sendmailenv, &jobenv, &curshell,
+                           &curhome, &content_type, &encoding);
 
 	/* close unneeded READ fd */
 	if ( close(pipe_pid_fd[0]) < 0 )
@@ -523,7 +565,7 @@ run_job(struct exe_t *exeent)
 	     * as temp_file() needs root privileges */
 	    /* if we run in foreground, stdout and stderr point to the console.
 	     * Otherwise, stdout and stderr point to /dev/null . */
-	    mailf = create_mail(line, NULL, jobenv);
+	    mailf = create_mail(line, NULL, content_type, encoding, jobenv);
 	    mailpos = ftell(mailf);
 	    if (pipe(pipe_fd) != 0) 
 		die_e("could not pipe() (job not executed)");

@@ -65,6 +65,10 @@ char once = 0;      /* set to 1 if fcron shall return immediately after running
 		     * all jobs that are due at the time when fcron is started */
 char dosyslog = 1;  /* set to 1 when we log messages to syslog, else 0 */
 
+/* Get the default locale character set for the mail
+ * "Content-Type: ...; charset=" header */
+char default_mail_charset[TERM_LEN] = "";
+
 /* used in temp_file() : create it in current dir (normally spool dir) */
 char *tmp_path = "";
 
@@ -505,6 +509,7 @@ sigusr2_handler(int x)
 int
 main(int argc, char **argv)
 {
+    char *codeset = NULL;
 
     rootuid = get_user_uid_safe(ROOTNAME);
     rootgid = get_group_gid_safe(ROOTGROUP);
@@ -541,6 +546,17 @@ main(int argc, char **argv)
     if (chdir(fcrontabs) != 0)
 	die_e("Could not change dir to %s", fcrontabs);
     
+    /* Get the default locale character set for the mail
+     * "Content-Type: ...; charset=" header */
+    setlocale(LC_ALL,""); /* set locale to system defaults or to
+                             that specified by any  LC_* env vars */
+    /* Except that "US-ASCII" is preferred to "ANSI_x3.4-1968" in MIME,
+     * even though "ANSI_x3.4-1968" is the official charset name. */
+    if ( (codeset = nl_langinfo(CODESET)) != 0L &&
+            strcmp(codeset, "ANSI_x3.4-1968") != 0 )
+        strncpy(default_mail_charset, codeset, sizeof(default_mail_charset));
+    else
+        strcpy(default_mail_charset, "US-ASCII");
 
     if ( freopen("/dev/null", "r", stdin) == NULL )
         error_e("Could not open /dev/null as stdin");

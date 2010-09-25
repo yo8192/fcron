@@ -25,13 +25,19 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
+	       <para>add audit (libaudit)</para>
+	    </listitem>
+	    <listitem>
+	       <para>Use directory notifications (FAM) / inotify, and support a fcrontab
+	       and a cron.d as Vixie cron does (directly included in fcron itself, not thanks to a script as now).
+               However the parsing work is done by fcrontab, and should probably keep on being done by fcrontab for
+               security and stability reasons: have fcron call fcrontab to do that job?</para>
+	    </listitem>
+	    <listitem>
 	       <para>could be worth checking fcron for memory leaks using specialized library (just in case...)</para>
 	    </listitem>
 	    <listitem>
 	       <para>option to put a maximum limit on the execution time of a task + terminate it if not finished yet + send email to let the user know</para>
-	    </listitem>
-	    <listitem>
-	       <para>jitter feature: if 100 jobs to be started at the same minute, then make them start at a random second of that minute to limit load spikes (see BSD cron jitter feature)</para>
 	    </listitem>
 	    <listitem>
 	       <para>setting to limit the number of jobs of a single user in the serialq/lavgq to X jobs + make sure root always has Y slots that it can use in those queues (i.e. number of slots used by root + number of free slots >= Y)</para>
@@ -47,6 +53,9 @@ A copy of the license is included in gfdl.sgml.
       <sect2>
 	 <title>Low priority</title>
 	 <itemizedlist>
+	    <listitem>
+	       <para>use readline (if available) for fcrondyn.</para>
+	    </listitem>
 	    <listitem>
 	       <para>add logging to a file (instead of syslog) with configuration in fcron.conf</para>
 	    </listitem>
@@ -68,19 +77,12 @@ A copy of the license is included in gfdl.sgml.
 		  should not be run again (in case of an error, etc...).</para>
 	    </listitem>
 	    <listitem>
-	       <para>Use directory notifications (FAM), and support a fcrontab 
-	       and a cron.d as Vixie cron does (directly included in fcron itself, not thanks to a script as now).</para>
-	    </listitem>
-	    <listitem>
 	       <para>PAM support (included in fcron, but needs more tests by
 		  people using PAM - not implemented in fcrondyn: is it needed
 		  in fcrondyn anyway?)</para>
 	    </listitem>
 	    <listitem>
 	       <para>support for per user serial queue (especially for root)</para>
-	    </listitem>
-	    <listitem>
-	       <para>use readline (if available) for fcrondyn.</para>
 	    </listitem>
 	    <listitem>
 	       <para>add a mailsubject option, for custom mail subjects (for instance, in case of a job containing something secret -- password, etc -- in the command line).</para>

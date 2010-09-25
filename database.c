@@ -1360,7 +1360,7 @@ mail_notrun(cl_t *line, char context, struct tm *since)
     memcpy(&time, time2, sizeof(time));
 
     /* create a temp file, and write in it the message to send */
-    mailf = create_mail(line, "Non-execution of fcron job", NULL);
+    mailf = create_mail(line, "Non-execution of fcron job", NULL, NULL, NULL);
 
     switch ( context ) {
     case SYSDOWN:
@@ -1400,7 +1400,7 @@ mail_notrun(cl_t *line, char context, struct tm *since)
     }
     
     /* become user (for security reasons) */
-    change_user_setup_env(line, &sendmailenv, NULL, NULL, NULL);
+    change_user_setup_env(line, &sendmailenv, NULL, NULL, NULL, NULL, NULL);
 
     /* then, send mail */
     launch_mailer(line, mailf, sendmailenv);

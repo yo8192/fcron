@@ -72,6 +72,7 @@ command is extracted. TZ is also defined to the value of the option timezone whe
 overridden by settings in the &fcrontabf;, but <envar>USER</envar> may not.
 Every other environment assignments defined in the user &fcrontabf; are then
 made, and the command is executed.</para>
+            <para>By default, fcron will send emails using the email "Content-Type:" header of "text/plain" with the "charset=" parameter set to the charmap / codeset of the locale in which <link linkend="fcron.8">&fcron;(8)</link> is started up - i.e. either the default system locale, if no LC_* environment variables are set, or the locale specified by the LC_* environment variables (see locale(7)). You can use different character encodings for emailed fcron job output by setting the CONTENT_TYPE and CONTENT_TRANSFER_ENCODING variables in fcrontabs, to the correct values of the mail headers of those names.</para>
 	    <para>Plus, the special variable <varname>MAILTO</varname> allows
 you to tell &fcron; to whom it has to mail the command's output. Note that
 <varname>MAILTO</varname> is in fact equivalent to a global declaration of the

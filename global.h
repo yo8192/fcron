@@ -62,6 +62,9 @@
 #include <limits.h>
 #endif
 
+#include <locale.h>
+#include <nl_types.h>
+#include <langinfo.h>
 #include <pwd.h>
 #include <signal.h>
 
