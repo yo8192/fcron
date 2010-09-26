@@ -41,10 +41,6 @@ int read_pipe(int fd, void *to, size_t size);
 int write_pipe(int fd, void *buf, size_t size);
 void become_user(struct cl_t *cl, struct passwd *pas, char *home);
 
-#ifdef WITH_SELINUX
-extern char **environ;
-#endif
-
 #ifdef HAVE_LIBPAM
 void
 die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str, env_list_t *env)
