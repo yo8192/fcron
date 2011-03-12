@@ -14,9 +14,11 @@ fcronsighup
 files/fcron.conf
 convert-fcrontab
 doc/stylesheets/fcron-doc.dsl
-PREVIOUS_VERSION
 doc/fcron-doc.mod
 exe_list_test
+MANIFEST
+VERSION
+PREVIOUS_VERSION
 doc/en/HTML/*
 doc/en/man/*
 doc/en/txt/*

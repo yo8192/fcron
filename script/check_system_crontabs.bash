@@ -1,6 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 #
-# check_system_crontabs
+#
+#
+# IMPORTANT NOTE: THIS SCRIPT IS TO BE REPLACED BY THE MORE PORTABLE
+#                 check_system_crontabs.sh.
+#                 It is only kept here until we are confident the non-bash
+#                 version is stable.
+#
+#
+#
+# check_system_crontabs.bash
 #
 # Script to check and see if any system (f)crontabs have changed, and if so 
 # build a fcrontab file from /etc/crontab, /etc/fcrontab and files from

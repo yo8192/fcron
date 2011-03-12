@@ -14,13 +14,31 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
-	 <title>From version 3.0.5 to 3.1.0</title>
+	 <title>From version 3.0.6 to 3.1.0</title>
 	 <listitem>
 	    <para>Pass fcrondyn client credentials through the socket when possible so as the user doesn't need to type his password when using fcrondyn.</para>
          </listitem>
 	 <listitem>
 	    <para>Code clean-up: Implemented generic unordred list for lavgq / exeq.</para>
          </listitem>
+      </itemizedlist>
+      <itemizedlist>
+	 <title>From version 3.0.5 to 3.0.6</title>
+	 <listitem>
+	    <para>Fixed bug preventing normal user from running fcrontab -l if fcron's uid!=gid</para>
+	 </listitem>
+	 <listitem>
+	    <para>Fixed fcrontab's PAM initialization when working on the systab user.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Added check_system_crontabs.sh which is to replace the less portable check_system_crontabs.bash.</para>
+	 </listitem>
+	 <listitem>
+	    <para>Added option -c to check_system_crontabs.sh to specify a fcron.conf file to use</para>
+	 </listitem>
+	 <listitem>
+	    <para>Fixed Makefile bug preventing installation when building from a different folder than the sources (wrong fcron.conf path)</para>
+	 </listitem>
       </itemizedlist>
 
       <itemizedlist>

@@ -385,7 +385,7 @@ list_file(char *file)
 
     explain("listing %s's fcrontab", user);
 
-    fd = open_as_user(file, useruid, fcrontab_uid, O_RDONLY);
+    fd = open_as_user(file, useruid, fcrontab_gid, O_RDONLY);
     if ( fd < 0 ) {
         if ( errno == ENOENT ) {
 	    explain("user %s has no fcrontab.", user);
@@ -1032,8 +1032,8 @@ main(int argc, char **argv)
     /* Open PAM session for the user and obtain any security
        credentials we might need */
 
-    debug("username: %s", user);
-    retcode = pam_start("fcrontab", user, &apamconv, &pamh);
+    debug("username: %s, runas: %s", user, runas);
+    retcode = pam_start("fcrontab", runas, &apamconv, &pamh);
     if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM");
     retcode = pam_authenticate(pamh, 0);    /* is user really user? */
     if (retcode != PAM_SUCCESS)

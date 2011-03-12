@@ -516,8 +516,8 @@ abbreviation. The options are (default value in parentheses):</para>
 		    <term>b</term>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
-			<para>Run a &-line at &fcron;'s startup if it should
-have be run during system down time.</para>
+			<para>Run an &-line at &fcron;'s startup if it should
+have run during system down time.</para>
 		    </listitem>
 		</varlistentry>
 
@@ -710,7 +710,7 @@ reduce disk access on a laptop.</para>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
 			<para>Should &fcron; mail user to report the
-non-execution of a %-job or a &-job? (because of system down state for both or
+non-execution of a %-job or an &-job? (because of system down state for both or
 a too high system load average for the latter)</para>
 			<para>&seealso; options &optlavg;, &optstrict;.</para>
 		    </listitem>
