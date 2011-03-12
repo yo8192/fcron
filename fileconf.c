@@ -1512,12 +1512,6 @@ get_num(char *ptr, int *num, int max, short int decimal, const char **names)
 	if ( decimal > 0 )
 	    *num *= 10 * decimal;
 
-	if ( max == 12 )
-	    /* this number is part of the month field.
-	     * user set it from 1 to 12, but we manage it internally
-	     * as a number from 0 to 11 : we remove 1 to *num */
-	    *num = *num - 1;
-
     }
 
     return ptr;
@@ -1551,8 +1545,14 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	    ptr++;
 	} else {
 
-	    if ( (ptr = get_num(ptr, &start, max, 0, names)) == NULL )
+	    ptr = get_num(ptr, &start, max, 0, names);
+	    if (ptr == NULL)
 		return NULL;
+    	    if (max == 12)
+                /* this number is part of the month field.
+                 * user set it from 1 to 12, but we manage it internally
+                 * as a number from 0 to 11 : we remove 1 to start */
+                 start -= 1;
 
 	    if (*ptr == ',' || *ptr == ' ' || *ptr == '\t') {
 		/* this is a single number : set up array and continue */
@@ -1565,8 +1565,15 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	    /* check for a dash */
 	    else if ( *ptr == '-' ) {
 		ptr++;
-		if ( (ptr = get_num(ptr, &stop, max, 0, names)) == NULL )
+		ptr = get_num(ptr, &stop, max, 0, names);
+		if (ptr == NULL)
+                    /* we reached the end of the string to parse */
 		    return NULL;
+    	        if (max == 12)
+                    /* this number is part of the month field.
+                     * user set it from 1 to 12, but we manage it internally
+                     * as a number from 0 to 11 : we remove 1 to stop */
+                     stop -= 1;
 	    } else {
 		/* syntax error */
 		need_correction = 1;
@@ -1606,6 +1613,11 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	    rm = 0;
 	    if ( (ptr = get_num(ptr, &rm, max, 0, names)) == NULL )
 		return NULL;
+    	    if (max == 12)
+                /* this number is part of the month field.
+                 * user set it from 1 to 12, but we manage it internally
+                 * as a number from 0 to 11 : we remove 1 to rm */
+                 rm -= 1;
 
 	    if (debug_opt)
 		fprintf(stderr, " ~%d", rm);	    
