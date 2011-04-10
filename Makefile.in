@@ -266,7 +266,7 @@ updatedoc:
 	make -C doc doc
 
 indent:
-	indent -linux -i4 -nsob -sc *.c *.h
+	indent -linux -i4 -nsob -sc -psl -nce *.c *.h
 
 configure: configure.in
 # update configure script, then Makefile and config.h, and finally 
