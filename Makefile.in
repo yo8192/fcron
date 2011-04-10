@@ -265,6 +265,9 @@ files/fcron.conf: $(SRCDIR)/files/fcron.conf.in config.h
 updatedoc:
 	make -C doc doc
 
+indent:
+	indent -linux -i4 -nsob -sc *.c *.h
+
 configure: configure.in
 # update configure script, then Makefile and config.h, and finally 
 # run make tar using the new Makefile (needed because the version
