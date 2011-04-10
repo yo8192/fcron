@@ -128,6 +128,10 @@
 #include <sys/ucred.h>
 #endif
 
+#ifdef WITH_AUDIT
+#include <libaudit.h>
+#endif
+
 #ifdef HAVE_LIBPAM
 #include "pam.h"
 #endif

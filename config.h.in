@@ -352,6 +352,9 @@
 /* Define if you have the <grp.h> header file.  */
 #undef HAVE_GRP_H
 
+/* Define if you have the <libaudit.h> header file.  */
+#undef HAVE_LIBAUDIT_H
+
 /* Define if you have the <limits.h> header file.  */
 #undef HAVE_LIMITS_H
 
@@ -433,11 +436,17 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
+/* Define if you have the audit library (-laudit).  */
+#undef HAVE_LIBAUDIT
+
 /* Define if you have the dgc library (-ldgc).  */
 #undef HAVE_LIBDGC
 
 /* Define if you have the pam library (-lpam).  */
 #undef HAVE_LIBPAM
+
+/* Have audit trails (libaudit) support */
+#undef WITH_AUDIT
 
 /* Have SE Linux support */
 #undef WITH_SELINUX

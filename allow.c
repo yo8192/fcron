@@ -82,32 +82,47 @@ is_allowed(char *user)
     int deny = 0;
 
     /* check if user is in passwd file */
-    if ( getpwnam(user) == NULL )
-	return 0;
+    if ( getpwnam(user) != NULL ) {
 
-    /* check if user is in fcron.allow and/or in fcron.deny files */
-    allow = in_file(user, fcronallow);
-    deny = in_file(user, fcrondeny);
+        /* check if user is in fcron.allow and/or in fcron.deny files */
+        allow = in_file(user, fcronallow);
+        deny = in_file(user, fcrondeny);
 
-    if ( allow == -1 && deny == -1 )
-	/* neither fcron.allow nor fcron.deny exist :
-	 * we consider that user is allowed */
-	return 1;
+        /* in_file() returns:
+         *       -1 if file doesn't exist
+         *        0 if string is not in file,
+         *        1 if it is in file
+         *   and  2 if file contains "all" string */
 
-    if ( allow == -1 && deny == 0 )
-	return 1;
+        if ( allow == -1 && deny == -1 )
+            /* neither fcron.allow nor fcron.deny exist :
+             * we consider that user is allowed */
+        return 1;
+
+        if ( allow == -1 && deny == 0 )
+            return 1;
     
-    if ( deny == -1 && allow == 1 )
-	return 1;
+        if ( deny == -1 && allow == 1 )
+            return 1;
 
-    if ( allow == 1 )
-	if ( deny != 1 )
-	    return 1;
-    if ( allow == 2 )
-	if ( deny <= 0 )
-	    return 1;
+        if ( allow == 1 && deny != 1 )
+            return 1;
+        if ( allow == 2 && deny <= 0 )
+            return 1;
+
+    }
 
     /* if we gets here, user is not allowed */
+
+#ifdef WITH_AUDIT
+    {
+        int audit_fd = audit_open();
+        audit_log_user_message(audit_fd, AUDIT_USER_START, "fcron deny",
+                                NULL, NULL, NULL, 0);
+        close(audit_fd);
+    }
+#endif
+
     return 0;
 
 }

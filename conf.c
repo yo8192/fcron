@@ -512,10 +512,10 @@ read_file(const char *file_name, cf_t *cf, int is_system_startup)
 
 #ifdef WITH_SELINUX
     /*
-     * Since crontab files are not directly executed,
-     * crond must ensure that the crontab file has
+     * Since fcrontab files are not directly executed,
+     * fcrond must ensure that the fcrontab file has
      * a context that is appropriate for the context of
-     * the user cron job.  It performs an entrypoint
+     * the user fcron job.  It performs an entrypoint
      * permission check for this purpose.
      */
 #ifdef SYSFCRONTAB

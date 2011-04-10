@@ -54,7 +54,7 @@ AC_CHECK_HEADERS(stdarg.h)
 AC_CHECK_HEADERS(termios.h)
 AC_CHECK_HEADERS(strings.h)
 AC_CHECK_HEADERS(sys/types.h sys/socket.h sys/un.h)
-AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h crypt.h shadow.h)
+AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h crypt.h shadow.h libaudit.h)
 AC_CHECK_HEADERS(sys/resource.h)
 AC_CHECK_HEADERS(grp.h)
 
@@ -84,6 +84,7 @@ AC_FUNC_STRFTIME
 AC_FUNC_WAIT3
 AC_CHECK_LIB(xnet, shutdown)
 AC_CHECK_LIB(selinux, getcon, [selinuxavail=1], [selinuxavail=0])
+AC_CHECK_LIB(audit, audit_open, [auditavail=1], [auditavail=0])
 AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
 AC_CHECK_LIB(kstat, kstat_open, [kstat=1], [kstat=0])
 if test $getloadavg -eq 1; then
@@ -422,6 +423,7 @@ WARNING :
     fcrondyn=0
     usepam=0
     useselinux=0
+    useaudit=0
     ;;
   *)
     AC_MSG_ERROR(Invalid argument : please use 'yes' or 'no'.)
@@ -761,6 +763,40 @@ AC_DEFINE_UNQUOTED(ANSWERALL, "$answerall")
 AC_SUBST(ANSWERALL)
 
 
+AC_MSG_CHECKING(if audit trails should be enabled if available)
+AC_ARG_WITH(audit,
+[ --with-audit=[yes|no]	Enable (or not) audit trails if available (default: yes).],
+[ case "$withval" in
+  no)
+    useaudit=0
+    ;;
+  yes)
+    useaudit=1
+    ;;
+  *)
+    AC_MSG_ERROR(Must be set to either "yes" or "no".)
+    ;;
+  esac ]
+)
+if test useaudit = "0"; then
+  AC_MSG_RESULT(no)
+elif test "$useaudit" = "1" && test "$auditavail" != 1; then
+  useaudit=0
+  AC_MSG_RESULT(not available)
+  AC_MSG_ERROR([
+  You requested audit trails to be enabled, but libaudit was not found.
+])
+elif test "$auditavail" = 1; then
+  useaudit=1
+  AC_MSG_RESULT(yes)
+  LIBS="$LIBS -laudit"
+  AC_DEFINE(WITH_AUDIT)
+else
+  useaudit=0
+  AC_MSG_RESULT(no)
+fi
+
+
 if test "$usepam" = ""; then
   usepam=1
 fi
@@ -976,6 +1012,13 @@ else
 	echo "no"
 fi
 
+echo -n "Audit trails :                      "
+if test "$useaudit" -eq 1; then
+	echo "yes"
+else
+	echo "no"
+fi
+
 echo -n "PAM :                               "
 if test "$usepam" -eq 1; then
 	echo "yes"
@@ -998,7 +1041,7 @@ else
 fi
 
 echo -n "Load average support :              "
-if test "$getloadavg" -eq 1 -o ! -z "$proc"; then
+if test "$getloadavg" -eq 1 -o -n "$proc"; then
 	echo "yes"
 else
 	echo "no"

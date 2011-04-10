@@ -25,7 +25,7 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>add audit (libaudit)</para>
+	       <para>add audit (libaudit) + TEST</para>
 	    </listitem>
 	    <listitem>
 	       <para>Use directory notifications (FAM) / inotify, and support a fcrontab
