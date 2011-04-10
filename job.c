@@ -619,9 +619,9 @@ run_job(struct exe_t *exeent)
 #endif /* CHECKJOBS OR CHECKRUNJOB */
 
 #ifdef WITH_SELINUX
-	    if(flask_enabled && setexeccon(line->cl_file->cf_user_context) )
-		die_e("Can't set execute context \"%s\".",
-		      line->cl_file->cf_user_context);
+	    if(flask_enabled && setexeccon(line->cl_file->cf_user_context) < 0)
+		die_e("Can't set execute context '%s' for user '%s'.",
+		      line->cl_file->cf_user_context, line->cl_runas);
 #else
 	    if (setsid() == -1) {
 		die_e("setsid(): errno %d", errno);
