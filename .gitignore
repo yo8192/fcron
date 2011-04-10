@@ -26,3 +26,7 @@ doc/fr/HTML/*
 doc/fr/man/*
 doc/fr/txt/*
 configure
+tests/test-open*
+tests/test-types*
+tests/test-uidgid*
+
