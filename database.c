@@ -1321,7 +1321,6 @@ mail_notrun(cl_t *line, char context, struct tm *since)
     int pid = 0;
     FILE *mailf = 0;
     struct tm *time2 = NULL, time;
-    int tz_changed = 0;
     char **sendmailenv = NULL;
 
     switch ( pid = fork() ) {
@@ -1345,13 +1344,11 @@ mail_notrun(cl_t *line, char context, struct tm *since)
 	return;
     }
 
-    /* Switch to another timezone if necessary. */
     /* If line should be scheduled in a different time zone
      * (ie. cl_tz != NULL),
-     * switch to that timezone now, do the calculations,
-     * and switch back to the local timezone at the end 
-     * of the function. */
-    tz_changed = switch_timezone(orig_tz_envvar, line->cl_tz);
+     * switch to that timezone now, before we do the calculations. */
+    /* No need to switch back as this function does NOT return. */
+    switch_timezone(orig_tz_envvar, line->cl_tz);
     
     if ( context == QUEUE_FULL )
 	time2 = localtime(&now);
