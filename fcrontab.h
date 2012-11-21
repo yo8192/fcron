@@ -27,6 +27,7 @@
 #define __FCRONTAB_H__
 
 #include "global.h"
+#include "mem.h"
 #include "fcronconf.h"
 
 /* global variables */

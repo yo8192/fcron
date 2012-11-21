@@ -25,6 +25,7 @@
  /* $Id: convert-fcrontab.c,v 1.23 2007-04-14 18:04:21 thib Exp $ */
 
 #include "convert-fcrontab.h"
+#include "mem.h"
 
 char rcs_info[] = "$Id: convert-fcrontab.c,v 1.23 2007-04-14 18:04:21 thib Exp $";
 
@@ -119,18 +120,18 @@ delete_file(cf_t *file)
     cur_line = file->cf_line_base;
     while ( (line = cur_line) != NULL) {
 	cur_line = line->cl_next;
-	free_safe(line->cl_shell);
-	free_safe(line->cl_mailto);
-	free_safe(line->cl_runas);
-	free_safe(line);
+	Free_safe(line->cl_shell);
+	Free_safe(line->cl_mailto);
+	Free_safe(line->cl_runas);
+	Free_safe(line);
     }
 
     /* free env variables */
     env_list_destroy(file->cf_env_list);
 
     /* finally free file itself */
-    free_safe(file->cf_user);
-    free_safe(file);
+    Free_safe(file->cf_user);
+    Free_safe(file);
 
 }
 
@@ -182,7 +183,7 @@ convert_file(char *file_name)
     /* read env variables */
     while( (env = read_str(f, buf, sizeof(buf))) != NULL ) {
         env_list_putenv(file->cf_env_list, env, 1);
-        free_safe(env);
+        Free_safe(env);
     }
 
     /* read lines */
@@ -208,7 +209,7 @@ convert_file(char *file_name)
 
     }
 
-    free_safe(line);
+    Free_safe(line);
 
     fclose(f);
 

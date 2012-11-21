@@ -29,6 +29,7 @@
 #include "global.h"
 #include "read_string.h"
 #include "log.h"
+#include "mem.h"
 
 extern char debug_opt;
 

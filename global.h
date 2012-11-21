@@ -156,16 +156,6 @@
 #define setegid(arg) setresgid(-1,(arg),-1)
 #endif
 
-#define Alloc(PTR, TYPE) \
-        if( (PTR = calloc(1, sizeof(TYPE))) == NULL ) \
-            die_e("Could not calloc.");
-
-#define Set(VAR, VALUE) \
-        { \
-          free_safe(VAR); \
-          VAR = strdup2(VALUE); \
-        }
-
 #define Skip_blanks(PTR) \
         while((*(PTR) == ' ') || (*(PTR) == '\t')) \
 	    (PTR)++;

@@ -33,6 +33,7 @@
 #include "fcrondyn.h"
 #include "allow.h"
 #include "read_string.h"
+#include "mem.h"
 
 char rcs_info[] = "$Id: fcrondyn.c,v 1.19 2007-04-14 18:04:11 thib Exp $";
 
@@ -149,7 +150,7 @@ void
 xexit(int exit_val)
     /* clean & exit */
 {
-    free_safe(cmd_str);
+    Free_safe(cmd_str);
 
     exit(exit_val);
 }
@@ -371,7 +372,7 @@ authenticate_user_password(int fd)
     send(fd, buf, len, 0);
     Overwrite(buf);
     Overwrite(password);
-    free_safe(password);
+    Free_safe(password);
     
     tv.tv_sec = MAX_WAIT_TIME;
     tv.tv_usec = 0;
@@ -501,7 +502,7 @@ talk_fcron(char *cmd_str, int fd)
 	return ERR;
 
     send(fd, cmd, cmd_len * sizeof(long int), 0);
-    free_safe(cmd);
+    Free_safe(cmd);
     cmd_len = 0;
 
     tv.tv_sec = MAX_WAIT_TIME;
@@ -598,7 +599,7 @@ parseopt(int argc, char *argv[])
 	    break;
 
 	case 'i':
-	    free_safe(cmd_str);
+	    Free_safe(cmd_str);
 	    break;
 
 	case 'x':

@@ -157,7 +157,7 @@ init_default_line(cl_t *cl, cf_t *cf)
     bzero(cl, sizeof(cl_t));
     Set(cl->cl_runas, runas);
     Set(cl->cl_mailto, runas);
-    free_safe(cl->cl_tz);
+    Free_safe(cl->cl_tz);
     set_default_opt(cl->cl_option);
     cl->cl_file = cf;
 }
@@ -282,9 +282,9 @@ read_file(char *filename, int fd)
     if (fflush(file) != 0)
         error_e("could not fflush() file_name");
     
-    free_safe(default_line.cl_runas);
-    free_safe(default_line.cl_mailto);
-    free_safe(default_line.cl_tz);
+    Free_safe(default_line.cl_runas);
+    Free_safe(default_line.cl_mailto);
+    Free_safe(default_line.cl_tz);
 
     if ( ! need_correction )
 	return OK;
@@ -362,7 +362,7 @@ read_env(char *ptr, cf_t *cf)
         env_list_setenv(cf->cf_env_list, name, val, 1);
     }
     
-    free_safe(val);
+    Free_safe(val);
 
     return;
 
@@ -516,7 +516,7 @@ read_opt(char *ptr, cl_t *cl)
 		buf[i++] = *ptr++;
 	    
 	    if ( strcmp(buf, "\0") == 0 ) {
-		free_safe(cl->cl_tz);
+		Free_safe(cl->cl_tz);
 	    }
 	    else {
 		Set(cl->cl_tz, buf);
@@ -1293,7 +1293,7 @@ read_shortcut(char *ptr, cf_t *cf)
     if ( strcmp(cl->cl_shell, "\0") == 0 ) {
 	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
 		file_name, line);
-	free_safe(cl->cl_shell);
+	Free_safe(cl->cl_shell);
 	goto exiterr;
     }
 
@@ -1310,7 +1310,7 @@ read_shortcut(char *ptr, cf_t *cf)
     return 1;
 
   exiterr:
-    free_safe(cl);
+    Free_safe(cl);
     need_correction = 1;
     return 1;
 }
@@ -1383,7 +1383,7 @@ read_freq(char *ptr, cf_t *cf)
     if ( strcmp(cl->cl_shell, "\0") == 0 ) {
 	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
 		file_name, line);
-	free_safe(cl->cl_shell);
+	Free_safe(cl->cl_shell);
 	goto exiterr;
     }
 
@@ -1415,7 +1415,7 @@ read_freq(char *ptr, cf_t *cf)
           fprintf(stderr, "\n"); \
       fprintf(stderr, "%s:%d: Error while reading " DESCRP " field: " \
              "skipping line.\n", file_name, line); \
-      free_safe(cl); \
+      Free_safe(cl); \
       return; \
   }
 
@@ -1490,7 +1490,7 @@ read_arys(char *ptr, cf_t *cf)
     if ( strcmp(cl->cl_shell, "\0") == 0 ) {
 	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
 		file_name, line);
-	free_safe(cl->cl_shell);
+	Free_safe(cl->cl_shell);
 	goto exiterr;
     }
 
@@ -1584,7 +1584,7 @@ read_period(char *ptr, cf_t *cf)
     if ( strcmp(cl->cl_shell, "\0") == 0 ) {
 	fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
 		file_name, line);
-	free_safe(cl->cl_shell);
+	Free_safe(cl->cl_shell);
 	goto exiterr;
     } 
     else if ( cl->cl_shell[0] == '*' || isdigit( (int) cl->cl_shell[0]) )
@@ -1862,11 +1862,11 @@ free_line(cl_t *cl)
     /* free a line, including its fields */
 {
     if (cl != NULL) {
-        free_safe(cl->cl_shell);
-        free_safe(cl->cl_runas);
-        free_safe(cl->cl_mailto);
-        free_safe(cl->cl_tz);
-        free_safe(cl);
+        Free_safe(cl->cl_shell);
+        Free_safe(cl->cl_runas);
+        Free_safe(cl->cl_mailto);
+        Free_safe(cl->cl_tz);
+        Free_safe(cl);
     }
 }
 
@@ -1912,8 +1912,8 @@ delete_file(const char *user_name)
     env_list_destroy(file->cf_env_list);
 
     /* finally free file itself */
-    free_safe(file->cf_user);
-    free_safe(file);
+    Free_safe(file->cf_user);
+    Free_safe(file);
 
 }
 

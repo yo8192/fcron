@@ -1,5 +1,5 @@
 /*
- * FCRON - periodic command scheduler 
+ * FCRON - periodic command scheduler
  *
  *  Copyright 2000-2010 Thibault Godouet <fcron@free.fr>
  *
@@ -12,34 +12,50 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- * 
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  *  The GNU General Public License can also be found in the file
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
- /* $Id: subs.h,v 1.11 2007-04-14 18:04:23 thib Exp $ */
+/* mem: manage memory (de)allocation.
+ * Mostly wrappers around standard functions to check for errors.
+ * We also always set variable to NULL after free()ing them, and check
+ * if a variable is NULL before attempting to free it. */
 
-#ifndef __SUBS_H__
-#define __SUBS_H__
+#ifndef __MEM_H__
+#define __MEM_H__
+
+/* macros */
+#define Alloc(PTR, TYPE) \
+{ \
+    if ( ( (PTR)=calloc(1, sizeof(TYPE)) ) == NULL ) { \
+        die_e("Could not calloc."); \
+    } \
+}
+
+#define Free_safe(PTR) \
+{ \
+    if ((PTR) != NULL) { \
+        free((PTR)); \
+        (PTR) = NULL; \
+    } \
+}
+
+#define Set(VAR, VALUE) \
+{ \
+    Free_safe((VAR)); \
+    (VAR) = strdup2((VALUE)); \
+}
 
 
 /* functions prototypes */
-extern uid_t get_user_uid_safe(char *username);
-extern gid_t get_group_gid_safe(char *groupname);
-extern void seteuid_safe(uid_t euid);
-extern void setegid_safe(uid_t egid);
-extern int remove_as_user(const char *pathname, uid_t removeuid, gid_t removegid);
-extern int open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...);
-extern int rename_as_user(const char *oldpath, const char *newpath, uid_t renameuid, gid_t renamegid);
+extern char *strdup2(const char *);
+extern char *strndup2(const char *, size_t n);
+extern void *alloc_safe(size_t len, const char * desc);
+extern void *realloc_safe(void *ptr, size_t len, const char * desc);
 
-extern int remove_blanks(char *str);
-extern int strcmp_until(const char *left, const char *right, char until);
-extern int get_word(char **str);
-extern void my_unsetenv(const char *name);
-extern void my_setenv_overwrite(const char *name, const char *value);
-
-#endif /* __SUBS_H__ */
+#endif /* __MEM_H__ */

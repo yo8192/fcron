@@ -153,7 +153,7 @@ log_syslog(int priority, int fd, char *fmt, va_list args)
     log_console_str(msg);
     log_fd_str(fd, msg);
 
-    free_safe(msg);
+    Free_safe(msg);
 }
 
 /* Same as log_syslog(), but also appends an error description corresponding
@@ -172,7 +172,7 @@ log_e(int priority, char *fmt, va_list args)
     log_syslog_str(priority, msg);
     log_console_str(msg);
 
-    free_safe(msg);
+    Free_safe(msg);
 }
 
 
@@ -192,7 +192,7 @@ log_pame(int priority, pam_handle_t *pamh, int pamerrno, char *fmt, va_list args
 
     xcloselog();
 
-    free_safe(msg);
+    Free_safe(msg);
 }
 #endif
 
@@ -413,7 +413,7 @@ send_msg_fd_debug(int fd, char *fmt, ...)
 
     log_fd_str(fd, msg);
 
-    free_safe(msg);
+    Free_safe(msg);
 
     va_end(args);
 }
@@ -433,7 +433,7 @@ send_msg_fd(int fd, char *fmt, ...)
 
     log_fd_str(fd, msg);
 
-    free_safe(msg);
+    Free_safe(msg);
 
     va_end(args);
 }

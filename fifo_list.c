@@ -111,7 +111,7 @@ fifo_list_resize_array(fifo_list_t *l)
 	
     e = alloc_safe(l->array_size*l->entry_size, "larger fifo_list_t array");
     memcpy(e, l->entries_array, (l->entry_size * old_size));
-    free_safe(l->entries_array);
+    Free_safe(l->entries_array);
     l->entries_array = e;    
 
     if ( l->cur_entry != NULL )
@@ -237,7 +237,7 @@ fifo_list_destroy(fifo_list_t *list)
     if ( list == NULL )
 	die("Invalid argument for fifo_list_destroy(): list=%d", list);
 
-    free_safe(list->entries_array);
-    free_safe(list);
+    Free_safe(list->entries_array);
+    Free_safe(list);
     return NULL;
 }

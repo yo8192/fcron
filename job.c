@@ -253,7 +253,7 @@ change_user_setup_env(struct cl_t *cl,
     setup_user_and_env(cl, pas, sendmailenv, jobenv, curshell, curhome,
                        content_type, encoding);
     become_user(cl, pas, *curhome);
-    free_safe(*curhome);
+    Free_safe(*curhome);
 }
 
 void
@@ -568,7 +568,7 @@ run_job(struct exe_t *exeent)
 	}
 
         become_user(line, pas, curhome);
-        free_safe(curhome);
+        Free_safe(curhome);
 
 	/* restore umask to default */
 	umask (saved_umask);

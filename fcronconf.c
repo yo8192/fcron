@@ -24,6 +24,7 @@
  /* $Id: subs.c,v 1.29 2008-05-11 11:08:23 thib Exp $ */
 
 #include "global.h"
+#include "mem.h"
 #include "fcronconf.h"
 #include "subs.h"
 
@@ -70,15 +71,15 @@ void
 free_conf(void)
 /* free() the memory allocated in init_conf() */
 {
-    free_safe(fcronconf);
-    free_safe(fcrontabs);
-    free_safe(pidfile);
-    free_safe(fifofile);
-    free_safe(fcronallow);
-    free_safe(fcrondeny);
-    free_safe(shell);
-    free_safe(sendmail);
-    free_safe(editor);
+    Free_safe(fcronconf);
+    Free_safe(fcrontabs);
+    Free_safe(pidfile);
+    Free_safe(fifofile);
+    Free_safe(fcronallow);
+    Free_safe(fcrondeny);
+    Free_safe(shell);
+    Free_safe(sendmail);
+    Free_safe(editor);
 }
 
 void

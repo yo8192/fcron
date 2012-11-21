@@ -343,59 +343,6 @@ strcmp_until(const char *left, const char *right, char until)
     return (*left - *right);
 }
 
-
-char *
-strdup2(const char *str)
-{
-    char *ptr;
-
-    if ( str == NULL )
-	return NULL;
-
-    ptr = strdup(str);
-    
-    if ( ! ptr)
-        die_e("Could not strdup()");
-
-    return(ptr);
-}
-
-void *
-alloc_safe(size_t len, const char * desc)
-/* allocate len-bytes of memory, and return the pointer.
- * Die with a log message if there is any error */
-{
-    void *ptr = NULL;
-
-    ptr = calloc(1, len);
-    if ( ptr == NULL ) {
-        die_e("Could not allocate %d bytes of memory%s%s", len, (desc)? "for " : "", desc);
-    }
-    return ptr;
-}
-
-void *
-realloc_safe(void *cur, size_t len, const char * desc)
-/* allocate len-bytes of memory, and return the pointer.
- * Die with a log message if there is any error */
-{
-    void *new = NULL;
-
-    new = realloc(cur, len);
-    if ( new == NULL ) {
-        die_e("Could not reallocate %d bytes of memory%s%s", len, (desc)? "for " : "", desc);
-    }
-    return new;
-}
-
-void
-free_safe(void *ptr)
-    /* free() p and set it to NULL to prevent errors if it is free()ed again */
-{
-    free(ptr);
-    ptr = NULL;
-}
-
 int
 get_word(char **str)
     /* make str point the next word and return word length */

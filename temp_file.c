@@ -25,6 +25,7 @@
 
 #include "global.h"
 #include "temp_file.h"
+#include "mem.h"
 
 extern char *tmp_path;
 extern char debug_opt;

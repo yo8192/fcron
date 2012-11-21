@@ -30,6 +30,7 @@
    in Makefile to create .o files which needs the corresponding .h to exist. */
 
 #include "global.h"
+#include "mem.h"
 
 extern uid_t rootuid;
 extern gid_t rootgid;

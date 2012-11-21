@@ -27,6 +27,7 @@
 #define __FCRON_H__
 
 #include "global.h"
+#include "mem.h"
 #include "exe_list.h"
 #include "lavg_list.h"
 #include "fcronconf.h"

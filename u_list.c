@@ -28,6 +28,7 @@
  */
 
 #include "global.h"
+#include "mem.h"
 #include "log.h"
 #include "u_list.h"
 
@@ -259,7 +260,7 @@ u_list_destroy(u_list_t *list)
     if ( list == NULL )
 	die("Invalid argument for u_list_destroy(): list=%d", list);
 
-    free_safe(list->entries_array);
-    free_safe(list);
+    Free_safe(list->entries_array);
+    Free_safe(list);
     return NULL;
 }

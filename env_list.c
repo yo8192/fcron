@@ -166,7 +166,7 @@ env_list_destroy(env_list_t *list)
     env_list_end_iteration(list);
     /* free the data in the env_t entries */
     for ( c = env_list_first(list) ; c != NULL ; c = env_list_next(list) ) {
-        free_safe(c->e_envvar);
+        Free_safe(c->e_envvar);
     }
     /* free the actual list structure */
     return (env_list_t *) u_list_destroy((u_list_t *) list);
@@ -199,9 +199,9 @@ env_list_free_envp(char **envp)
     char *p = NULL;
 
     for ( p = envp[0] ; p != NULL ; p++ ) {
-        free_safe(p);
+        Free_safe(p);
     }
-    free_safe(envp);
+    Free_safe(envp);
 
 }
 

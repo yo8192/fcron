@@ -269,7 +269,7 @@ job_queue_remove(cl_t *line)
                 /* first element of the list */
                 queue_base = j->j_next;
 
-            free_safe(j);
+            Free_safe(j);
             return jprev;
         }
     }
@@ -362,7 +362,7 @@ add_serial_job(cl_t *line, int info_fd)
 	    memcpy(ptr, serial_array + (old_size - serial_array_index),
 		   (sizeof(cl_t*) * serial_array_index));
 	    serial_array_index = 0;
-	    free_safe(serial_array);
+	    Free_safe(serial_array);
 	    serial_array = ptr;
 	}
     }

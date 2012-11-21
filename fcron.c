@@ -228,7 +228,7 @@ xexit(int exit_value)
     lavg_list_destroy(lavg_list);
     free_conf();
 
-    free_safe(orig_tz_envvar);
+    Free_safe(orig_tz_envvar);
 
     explain("Exiting with code %d", exit_value);
     exit (exit_value);
