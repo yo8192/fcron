@@ -43,7 +43,6 @@ int read_shortcut(char *ptr, cf_t *cf);
 void read_env(char *ptr, cf_t *cf);
 char *read_opt(char *ptr, cl_t *cl);
 char *check_username(char *ptr, cf_t *cf, cl_t *cl);
-void free_line(cl_t *cl);
 
 
 char need_correction;
@@ -1855,19 +1854,6 @@ read_field(char *ptr, bitstr_t *ary, int max, const char **names)
 	fprintf(stderr, " #");
 
     return ptr;
-}
-
-void
-free_line(cl_t *cl)
-    /* free a line, including its fields */
-{
-    if (cl != NULL) {
-        Free_safe(cl->cl_shell);
-        Free_safe(cl->cl_runas);
-        Free_safe(cl->cl_mailto);
-        Free_safe(cl->cl_tz);
-        Free_safe(cl);
-    }
 }
 
 void

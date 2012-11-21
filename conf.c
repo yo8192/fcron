@@ -35,7 +35,6 @@ int add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str,
 int read_strn(int fd, char **str, short int size);
 int read_type(int fd, short int *type, short int *size);
 void synchronize_file(char *file_name, int is_system_startup);
-void free_line(cl_t *cl);
 
 
 /* this is used to create a list of files to remove, to add */
@@ -989,19 +988,6 @@ add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str, time_t t_save
     cl->cl_next = cf->cf_line_base;
     cf->cf_line_base = cl;
     return 0;
-}
-
-void
-free_line(cl_t *cl)
-    /* free a line, including its fields */
-{
-    if (cl != NULL) {
-        Free_safe(cl->cl_shell);
-        Free_safe(cl->cl_runas);
-        Free_safe(cl->cl_mailto);
-        Free_safe(cl->cl_tz);
-        Free_safe(cl);
-    }
 }
 
 void
