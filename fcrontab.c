@@ -573,18 +573,24 @@ edit_file(char *fcron_orig)
 	    case 2:
 		fprintf(stderr, "\nFile contains some errors. "
 			"Ignore [i] or Correct [c] ? ");
-		/* the 2nd getchar() is for the newline char (\n) */
-		while ( (c = getchar())	&& c != 'i' && c != 'c' ) {
-		    fprintf(stderr, "Please press c to correct, "
-			    "or i to ignore: ");
-		    while (c != '\n')
-			c = getchar();
-		}
-		if ( c == 'c' ) {
-		    /* free memory used to store the list */
-		    delete_file(user);
-		    correction = 1;
-		}
+                while ( (c = getchar()) ) {
+                    /* consume the rest of the line, e.g. the newline char (\n) */
+                    while (c != '\n' && (getchar() != '\n') );
+
+                    if (c == 'i') {
+                        break;
+                    }
+                    else if ( c == 'c' ) {
+                        /* free memory used to store the list */
+                        delete_file(user);
+                        correction = 1;
+                        break;
+                    }
+                    else {
+                        fprintf(stderr, "Please press c to correct, "
+                                "or i to ignore: ");
+                    }
+                }
 		break;
 	    default:
 		break;
