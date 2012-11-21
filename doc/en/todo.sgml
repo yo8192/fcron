@@ -25,6 +25,9 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
+	       <para>fileconf.c: alert if space or quote in string (timezone, mailto, ...) -> function to read strings?? e.g. for timezone() value -> currently results in weird behaviour with no obvious explanation</para>
+	    </listitem>
+	    <listitem>
 	       <para>add audit (libaudit) + TEST</para>
 	    </listitem>
 	    <listitem>
