@@ -44,7 +44,6 @@ void read_env(char *ptr, cf_t *cf);
 char *read_opt(char *ptr, cl_t *cl);
 char *check_username(char *ptr, cf_t *cf, cl_t *cl);
 
-
 char need_correction;
 cl_t default_line;    /* default options for a line */
 char *file_name;
@@ -74,6 +73,7 @@ get_string(char *ptr)
 {
     char quote = 0;
     int length = 0;
+    char *rtn_string = NULL;
 
     if ( *ptr == '\"' || *ptr == '\'' ) {
 	quote = *ptr;
@@ -92,8 +92,8 @@ get_string(char *ptr)
 	}
     }
     
-
-    return strdup2(ptr);
+    Set(rtn_string, ptr);
+    return rtn_string;
 
 }
 
@@ -193,7 +193,7 @@ read_file(char *filename, int fd)
 
     Alloc(cf, cf_t);
     cf->cf_env_list = env_list_init();
-    cf->cf_user = strdup2(user);
+    Set(cf->cf_user, user);
     init_default_line(&default_line, cf);
 
     if ( debug_opt )
@@ -403,6 +403,42 @@ get_nice(char *ptr, int *nice)
 
 }
 
+int
+assign_option_string(char **var, char *value)
+/* Read the value of an option, and assign it to the var.
+ * Returns the length of the value, or -1 on error. */
+{
+    char *ptr = value;
+    char *start = value;
+    char *end = value;
+    int len = 0;
+
+    Free_safe(*var);
+
+    /* look for the end of the option value */
+    while ( ptr != NULL && *ptr != ')' ) {
+        ptr++;
+        len++;
+    }
+
+    if ( len <= 0 ) {
+        return len;
+    }
+
+    end = ptr-1;
+
+    /* spaces and quotes are not allowed before or after the value */
+    if ( isspace((int) *start) || isspace((int) *end)
+            || *start == '\'' || *start == '\"'
+            || *end == '\'' || *end == '\"' ) {
+        return -1;
+    }
+
+    *var = strndup2(value, len);
+
+    return len;
+}
+
 
 char *
 get_bool(char *ptr, int *i)
@@ -479,6 +515,11 @@ read_opt(char *ptr, cl_t *cl)
 	    ptr++;
 	}
 
+	/* spaces are not allowed -- make sure there is no leading space. */
+	if ( isspace( (int) *ptr) ) {
+		Handle_err;
+	}
+
 	/* global options for a file */
 
 	if ( strcmp(opt_name, "tzdiff") == 0 ) {
@@ -504,24 +545,23 @@ read_opt(char *ptr, cl_t *cl)
 	/* options related to a line (or a set of lines) */
 
 	else if ( strcmp(opt_name, "timezone") == 0 ) {
-	    char buf[50];
-	    bzero(buf, sizeof(buf));
+            int len = -1;
 
-	    if( ! in_brackets )
+	    if ( ! in_brackets ) {
 		Handle_err;
+            }
 
-	    i = 0;
-	    while ( *ptr != ')' && i + 1 < sizeof(buf) )
-		buf[i++] = *ptr++;
-	    
-	    if ( strcmp(buf, "\0") == 0 ) {
-		Free_safe(cl->cl_tz);
-	    }
-	    else {
-		Set(cl->cl_tz, buf);
-	    }
- 	    if (debug_opt)
+            len = assign_option_string(&(cl->cl_tz), ptr);
+            if ( len < 0 ) {
+		Handle_err;
+            }
+            else {
+                ptr += len;
+            }
+
+            if (debug_opt) {
 		fprintf(stderr, "  Opt : \"%s\" \"%s\"\n", opt_name, cl->cl_tz);
+            }
 	}
 	
 
@@ -806,26 +846,28 @@ read_opt(char *ptr, cl_t *cl)
 	}
 
 	else if( strcmp(opt_name, "mailto") == 0) {
-	    char buf[50];
-	    bzero(buf, sizeof(buf));
+            int len = -1;
 
-	    if( ! in_brackets )
+	    if ( ! in_brackets ) {
 		Handle_err;
+            }
 
 	    /* please note that we check if the mailto is valid in conf.c */
-	    i = 0;
-	    while ( *ptr != ')' && i + 1 < sizeof(buf) )
-		buf[i++] = *ptr++;
-	    if ( strcmp(buf, "\0") == 0 ) {
+            len = assign_option_string(&(cl->cl_mailto), ptr);
+            if ( len < 0 ) {
+		Handle_err;
+            }
+            else if ( len == 0 ) {
 		clear_mail(cl->cl_option);
 		clear_mailzerolength(cl->cl_option);
             }
-	    else {
-		    Set(cl->cl_mailto, buf);
-		    set_mail(cl->cl_option);
-	    }
+            else {
+                ptr += len;
+                set_mail(cl->cl_option);
+            }
+
  	    if (debug_opt)
-		fprintf(stderr, "  Opt : \"%s\" \"%s\"\n", opt_name, buf);
+		fprintf(stderr, "  Opt : \"%s\" \"%s\"\n", opt_name, cl->cl_mailto);
 	}
 
 	else if( strcmp(opt_name, "erroronlymail") == 0 ) {
@@ -903,40 +945,52 @@ read_opt(char *ptr, cl_t *cl)
 	}
 
 	else if(strcmp(opt_name, "runas") == 0) {
+            int len = -1;
+            char *runas = NULL;
+            struct passwd *pas;
+
+	    if ( ! in_brackets ) {
+		Handle_err;
+            }
+
+            len = assign_option_string(&runas, ptr);
+            if ( len < 0 ) {
+		Handle_err;
+            }
+            else {
+                ptr += len;
+            }
+
 	    if (getuid() != rootuid) {
 		fprintf(stderr, "must be privileged to use option runas: "
 			"skipping option\n");
 		need_correction = 1;
-		if ( ! in_brackets )
-		    Handle_err;
-		while( *ptr != ')' && *ptr != ' ' && *ptr != '\0' )
-		    ptr++;
-	    }
-	    else {
-		char name[USER_NAME_LEN];
-		struct passwd *pas;
-		int i = 0;
+            }
+            else if ( len > USER_NAME_LEN ) {
+		fprintf(stderr, "runas: user name \"%s\" longer than %d"
+                        "characters: skipping option\n",
+                        runas, USER_NAME_LEN);
+		need_correction = 1;
+            }
+	    else if ((pas = getpwnam(runas)) == NULL) {
+                fprintf(stderr, "runas: \"%s\" is not in passwd file : "
+                        "ignored", runas);
+                need_correction = 1;
+            }
 
-		if( ! in_brackets )
-		    Handle_err;
+            if (need_correction) {
+                Free_safe(runas);
+            }
+            else {
+                /* only set cl_runas if all is well, as cl_runas MUST always
+                 * be set to a valid value */
+                Set(cl->cl_runas, runas);
+            }
 
-		bzero(name, sizeof(name));
+            /* all good */
+            if (debug_opt)
+                fprintf(stderr, "  Opt : \"%s\" %s ptr=%p\n", opt_name, cl->cl_runas, cl->cl_runas);
 
-		while ( *ptr != ')' && i + 1 < sizeof(name))
-		    name[i++] = *ptr++;
-    
-		if ((pas = getpwnam(name)) == NULL) {
-		    fprintf(stderr, "runas: \"%s\" is not in passwd file : "
-			    "ignored", name);
-		    need_correction = 1;
-		} 
-		else {
-		    Set(cl->cl_runas, name);
-		    if (debug_opt)
-			fprintf(stderr, "  Opt : \"%s\" %s\n", opt_name, name);
-		}
-
-	    }
 	}
 
 	else if( strcmp(opt_name, "random") == 0 ) {
@@ -1193,12 +1247,7 @@ read_shortcut(char *ptr, cf_t *cf)
     char shortcut[20];
     char *ptr_orig = ptr;
 
-    Alloc(cl, cl_t);
-    memcpy(cl, &default_line, sizeof(cl_t));
-    cl->cl_runas = strdup2(default_line.cl_runas);
-    cl->cl_mailto = strdup2(default_line.cl_mailto);
-    if ( cl->cl_tz != NULL )
-	cl->cl_tz = strdup2(default_line.cl_tz);
+    cl = dups_cl(&default_line);
 
     /* skip the @ */
     ptr++;
@@ -1320,12 +1369,8 @@ read_freq(char *ptr, cf_t *cf)
 {
     cl_t *cl = NULL;
     
-    Alloc(cl, cl_t);
-    memcpy(cl, &default_line, sizeof(cl_t));
-    cl->cl_runas = strdup2(default_line.cl_runas);
-    cl->cl_mailto = strdup2(default_line.cl_mailto);
-    if ( cl->cl_tz != NULL ) 
-	cl->cl_tz = strdup2(default_line.cl_tz);
+    cl = dups_cl(&default_line);
+
     cl->cl_first = -1; /* 0 is a valid value, so we have to use -1 to detect unset */
 
     /* skip the @ */
@@ -1418,6 +1463,7 @@ read_freq(char *ptr, cf_t *cf)
       return; \
   }
 
+
 void
 read_arys(char *ptr, cf_t *cf)
     /* read a run freq number plus a normal fcron line */
@@ -1425,12 +1471,7 @@ read_arys(char *ptr, cf_t *cf)
     cl_t *cl = NULL;
     int i = 0;
 
-    Alloc(cl, cl_t);
-    memcpy(cl, &default_line, sizeof(cl_t));
-    cl->cl_runas = strdup2(default_line.cl_runas);
-    cl->cl_mailto = strdup2(default_line.cl_mailto);
-    if ( cl->cl_tz != NULL ) 
-	cl->cl_tz = strdup2(default_line.cl_tz);
+    cl = dups_cl(&default_line);
 
     /* set cl_remain if not specified */
     if ( *ptr == '&' ) {
@@ -1519,12 +1560,7 @@ read_period(char *ptr, cf_t *cf)
     cl_t *cl = NULL;
     short int remain = 8;
 
-    Alloc(cl, cl_t);
-    memcpy(cl, &default_line, sizeof(cl_t));
-    cl->cl_runas = strdup2(default_line.cl_runas);
-    cl->cl_mailto = strdup2(default_line.cl_mailto);
-    if ( cl->cl_tz != NULL ) 
-	cl->cl_tz = strdup2(default_line.cl_tz);
+    cl = dups_cl(&default_line);
 
     /* skip the % */
     ptr++;
