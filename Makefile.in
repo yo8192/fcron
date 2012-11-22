@@ -4,7 +4,6 @@
 
 # @configure_input@
 
-# $Id: Makefile.in,v 1.109 2008-05-11 10:55:39 thib Exp $
 
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined

@@ -4,7 +4,6 @@
 #  them if necessary.
 #
 
-# $Id: user-group,v 1.15 2005-06-11 22:53:21 thib Exp $
 
 # take 4 arguments : 	username
 # 			groupname

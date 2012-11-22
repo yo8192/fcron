@@ -2,7 +2,6 @@
 # Uninstall fcron under SysV system.
 #
 
-# $Id: boot-uninstall,v 1.8 2001-07-10 10:52:27 thib Exp $
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
 if test -d /usr/ucb; then
