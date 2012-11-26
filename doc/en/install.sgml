@@ -30,22 +30,18 @@ tar -xzf fcron-X.Y.Z.src.tar.gz</command></screen>
 		    <itemizedlist>
 			<listitem>
 			    <para>
-				The command <command>make install</command> asks
-you by default some questions you have to answer. To avoid that (which can be
-useful for automatic installers), you can use the
-<command>./configure</command>'s option <option>--with-answer-all</option>
-and/or <option>--with-boot-install</option> (see "<command>./configure</command>
-<option>--help</option>" for more details).
-			    </para>
+				If using <productname>PAM</productname>, beware that by default the <productname>PAM</productname> configuration will be installed in <filename>/usr/local/etc/</filename>. That most likely mean that your system won't use this config, and may ask you to type your password everytime you start fcrontab or fcrondyn.</para>
+                            <para>The simplest way to avoid this is to instruct configure to use <filename>/etc</filename> instead with:</para>
+           <screen><prompt>bash$ </prompt><command>./configure --sysconfdir=/etc</command></screen>
 			</listitem>
 			<listitem>
 			    <para>
 				You may also want to change the place where
 &fcron; will be installed: you can use the <command>configure </command>'s
 option <option>--prefix</option> to do that. For instance:
-<command>./configure</command> <option>--prefix=/usr/local</option> (default is
-prefix=/usr)
 			    </para>
+<screen><prompt>bash$ </prompt><command>./configure --prefix=/usr--sysconfdir=/etc</command></screen>
+<para>(default is <option>prefix=/usr/local</option> and <option>sysconfdir=${prefix}/etc</option>).</para>
 			</listitem>
 			<listitem>
 			    <para>
@@ -53,6 +49,16 @@ prefix=/usr)
 <productname>PAM</productname>, <productname>SE Linux</productname> or &fcrondyn;, use <command>configure</command>'s
 option <option>--with-pam=no</option>, <option>--with-selinux=no</option> 
 and/or <option>--with-fcrondyn=no</option>.</para>
+			</listitem>
+			<listitem>
+			    <para>
+				The command <command>make install</command> asks
+you by default some questions you have to answer. To avoid that (which can be
+useful for automatic installers), you can use the
+<command>./configure</command>'s option <option>--with-answer-all</option>
+and/or <option>--with-boot-install</option> (see "<command>./configure
+--help</command>" for more details).
+			    </para>
 			</listitem>
 			<listitem>
 			    <para>To debug &fcron;, you should use
@@ -63,7 +69,7 @@ and/or <option>--with-fcrondyn=no</option>.</para>
 			    <para>
 				You can get info on the others
 <command>configure </command>'s options by running
-"<command>./configure</command> <option>--help</option>".
+"<command>./configure --help</command>".
 			    </para>
 			</listitem>
 		    </itemizedlist>

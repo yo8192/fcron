@@ -407,7 +407,7 @@ linkend="uptent">lines based on elapsed system up time</link> is recommended ins
 			<row>
 			    <entry>@reboot </entry>
 			    <entry>Run once, at startup </entry>
-			    <entry>@runatreboot,runonce 1 </entry>
+			    <entry>@runatreboot,runonce(true)</entry>
 			    <entry>   </entry>
 			</row>
 			<row>
