@@ -102,7 +102,7 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
 
     if (flags & O_CREAT) {
         va_start(ap, flags);
-        mode = va_arg(ap, mode_t);
+        mode = (sizeof(mode_t) < sizeof(int)) ? va_arg(ap, int) : va_arg(ap, mode_t);
         va_end(ap);
     }
 
@@ -160,7 +160,7 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
 
     if (flags & O_CREAT) {
         va_start(ap, flags);
-        mode = va_arg(ap, mode_t);
+        mode = (sizeof(mode_t) < sizeof(int)) ? va_arg(ap, int) : va_arg(ap, mode_t);
         va_end(ap);
     }
 
