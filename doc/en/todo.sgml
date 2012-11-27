@@ -24,11 +24,16 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>fileconf.c: alert if space or quote in string (timezone, mailto, ...) -> function to read strings?? e.g. for timezone() value -> currently results in weird behaviour with no obvious explanation</para>
+	       <para>@reboot: test updated startup script with removal of fcron.reboot + add to other scripts?</para>
 	    </listitem>
 	    <listitem>
 	       <para>add audit (libaudit) + TEST</para>
 	    </listitem>
+	 </itemizedlist>
+      </sect2>
+      <sect2>
+	 <title>Low priority</title>
+	 <itemizedlist>
 	    <listitem>
 	       <para>Use directory notifications (FAM) / inotify, and support a fcrontab
 	       and a cron.d as Vixie cron does (directly included in fcron itself, not thanks to a script as now).
@@ -50,11 +55,6 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>find way to have the non translated pages of the French translation be updated automatically (changes, todo, etc -> copied from the English doc)</para>
 	    </listitem>
-	 </itemizedlist>
-      </sect2>
-      <sect2>
-	 <title>Low priority</title>
-	 <itemizedlist>
 	    <listitem>
 	       <para>use readline (if available) for fcrondyn.</para>
 	    </listitem>

@@ -30,6 +30,10 @@ tar -xzf fcron-X.Y.Z.src.tar.gz</command></screen>
 		    <itemizedlist>
 			<listitem>
 			    <para>
+				If you can't see a <filename>./configure</filename>, then you probably checked out the files from git, in which case you need to run <command>autoconf</command> to generate the <filename>configure</filename> script.</para>
+			</listitem>
+			<listitem>
+			    <para>
 				If using <productname>PAM</productname>, beware that by default the <productname>PAM</productname> configuration will be installed in <filename>/usr/local/etc/</filename>. That most likely mean that your system won't use this config, and may ask you to type your password everytime you start fcrontab or fcrondyn.</para>
                             <para>The simplest way to avoid this is to instruct configure to use <filename>/etc</filename> instead with:</para>
            <screen><prompt>bash$ </prompt><command>./configure --sysconfdir=/etc</command></screen>
