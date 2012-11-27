@@ -24,6 +24,7 @@ export PATH="/sbin:/usr/sbin:/bin:/usr/bin"
 
 FUNCTION=0
 SBIN=@@DESTSBIN@
+REBOOT_LOCK=@@REBOOT_LOCK@
 
 EXEC="$SBIN/fcron"
 
@@ -77,6 +78,13 @@ case "$1" in
 	if test -d /var/lock/subsys/; then
 	    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/fcron
 	fi
+	if test \( "$RUNLEVEL" = "0" -o "$RUNLEVEL" = "6" \) \
+	    -a -f "$REBOOT_LOCK" ; then
+	    # Make sure the lock file is deleted on reboot/shutdown
+	    # in case the OS doesn't do it itself
+	    rm -f "$REBOOT_LOCK"
+	fi
+
 	$FINALECHO
 	;;
   status)

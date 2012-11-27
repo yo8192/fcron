@@ -17,6 +17,7 @@ DAEMON_PIDFILE="/var/run/fcron.pid"
 #DAEMON_OPT=""
 DAEMON_USER="root"
 SUPPORTS_HUP="yes"
+REBOOT_LOCK=@@REBOOT_LOCK@
 
 pid_par=${DAEMON_PIDFILE:+"-p $DAEMON_PIDFILE"}
 usr_par=${DAEMON_USER:+"-u $DAEMON_USER"}
@@ -78,6 +79,12 @@ case "$1" in
 		echo -n " Warning: daemon not running. "
 		killproc $pid_par -t 10 ${DAEMON_BIN}
 		rc_status -v
+		if test \( "$RUNLEVEL" = "0" -o "$RUNLEVEL" = "6" \) \
+			-a -f "$REBOOT_LOCK" ; then
+			# Make sure the lock file is deleted on reboot/shutdown
+			# in case the OS doesn't do it itself
+			rm -f "$REBOOT_LOCK"
+		fi
 		;;
 	try-restart|condrestart)
 		if test "$1" = "condrestart"; then

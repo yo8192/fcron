@@ -122,13 +122,11 @@ if test $IS_FREEBSD -eq 1; then
       INSTALL="n"
     fi
     if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-      cp -f $SRCDIR/script/fcron.sh /usr/local/etc/rc.d/
+      cp -f script/fcron.sh /usr/local/etc/rc.d/
       if test $DEBUG -eq 1; then
         cat /usr/local/etc/rc.d/fcron.sh | sed 's: -b: -b -d:' > /usr/local/etc/rc.d/fcron.sh2
         mv -f /usr/local/etc/rc.d/fcron.sh2 /usr/local/etc/rc.d/fcron.sh
       fi
-      cat /usr/local/etc/rc.d/fcron.sh | sed "s:@@DESTSBIN@:$DESTBIN:" > /usr/local/etc/rc.d/fcron.sh2
-      mv -f /usr/local/etc/rc.d/fcron.sh2 /usr/local/etc/rc.d/fcron.sh
       chmod +x /usr/local/etc/rc.d/fcron.sh
       INSTALLED=1
     else
@@ -161,14 +159,12 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
     INSTALL="n"
   fi
   if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-    $INSPROG -c -m 755 $SRCDIR/script/sysVinit-launcher $ROOTDIR/init.d/fcron
+    $INSPROG -c -m 755 script/sysVinit-launcher $ROOTDIR/init.d/fcron
     if test $DEBUG -eq 1; then
       cat $ROOTDIR/init.d/fcron | sed 's: -b: -b -d:' >$ROOTDIR/init.d/fcron2
       mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
       chmod +x $ROOTDIR/init.d/fcron
     fi
-    cat $ROOTDIR/init.d/fcron | sed "s:@@DESTSBIN@:$DESTBIN:" >$ROOTDIR/init.d/fcron2
-    mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
     chmod +x $ROOTDIR/init.d/fcron
 
     for j in 2 3 4 5

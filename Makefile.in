@@ -129,6 +129,10 @@ exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
 
 install: install-staged strip perms
 ifeq ($(BOOTINSTALL), 1)
+	if test ! -d script; then mkdir script ; fi
+        for F in sysVinit-launcher fcron.sh fcron.init.suse ; do \
+	    $(SRCDIR)/script/gen-in.pl $(SRCDIR)/script/$${F}.in script/$${F} ./ ; \
+        done
 	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS) $(ANSWERALL) $(SRCDIR)
 endif
 
@@ -227,6 +231,10 @@ ifeq ($(FCRONDYN), 1)
 endif
 
 install-boot: install
+	if test ! -d script; then mkdir script ; fi
+	for F in sysVinit-launcher fcron.sh fcron.init.suse ; do \
+	    $(SRCDIR)/script/gen-in.pl $(SRCDIR)/script/$${F}.in script/$${F} ./ ; \
+        done
 	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS)  $(ANSWERALL) $(SRCDIR)
 
 install-restart: install
@@ -253,7 +261,8 @@ ciclean: clean
 	rm -fR autom4te*
 
 vclean: ciclean
-	rm -f config.log config.status config.h config.cache Makefile PREVIOUS_VERSION
+	rm -f config.log config.status config.h config.cache Makefile PREVIOUS_VERSION \
+            files/fcron.conf script/fcron.init.suse script/fcron.sh script/sysVinit-launcher
 	make -C doc clean
 
 
