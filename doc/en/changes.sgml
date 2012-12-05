@@ -15,13 +15,40 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 3.0.6 to 3.1.0</title>
          <listitem>
+            <para>Vixie cron compatibility: added options @reboot, @daily, @hourly, etc. Also added more generic options runatreboot, rebootreset and runonce.</para>
+         </listitem>
+	 <listitem>
+	    <para>Pass fcrondyn client credentials through the socket when possible so as the user doesn't need to type his password when using fcrondyn.</para>
+         </listitem>
+         <listitem>
             <para>added audit (libaudit) support</para>
          </listitem>
 	 <listitem>
 	    <para>Better validation of string arguments of fcrontab options. In particular for timezones, previously a space could be added at the beginning or the end of the timezone with no warning, and this led fcron to use an unexpected timezone, which could cause confusion.</para>
          </listitem>
-	 <listitem>
-	    <para>Pass fcrondyn client credentials through the socket when possible so as the user doesn't need to type his password when using fcrondyn.</para>
+         <listitem>
+            <para>Allow tasks to run every seconds</para>
+         </listitem>
+         <listitem>
+            <para>fcron now sets the email headers X-Cron-Env and Auto-Submitted (as described in RFC 3834).</para>
+         </listitem>
+         <listitem>
+            <para>email encoding: fcron now sets the email headers Content-Type and Content-Transfer-Encoding. They can be controlled by setting the CONTENT_TYPE and CONTENT_TRANSFER_ENCODING variables in fcrontabs.</para>
+         </listitem>
+         <listitem>
+            <para>Added systemd service definition (thank you Reiner)</para>
+         </listitem>
+         <listitem>
+            <para>bug fix: fcrontab: don't alert about invalid character when correcting fcrontab twice</para>
+         </listitem>
+         <listitem>
+            <para>bug fix: fixed free_safe() function (replaced by macro).</para>
+         </listitem>
+         <listitem>
+            <para>bug fix: configure script: usage of sendmail couldn't be disabled</para>
+         </listitem>
+         <listitem>
+            <para>bug fix: fixed a potential (unlikely) 1 byte overflow in strncat() in socket.c</para>
          </listitem>
 	 <listitem>
 	    <para>Quite a lot of code clean-up and refactoring -- e.g. implemented generic unordred list for lavgq / exeq.</para>

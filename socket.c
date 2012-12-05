@@ -372,7 +372,7 @@ auth_client_password(struct fcrondyn_cl *client)
         len += (sizeof(FIELD_STR)-1); \
     }
 #define Add_field(FIELD_STR) \
-    strncat(fields, FIELD_STR, sizeof(fields) - len); \
+    strncat(fields, FIELD_STR, sizeof(fields) - len - 1); \
     len += (sizeof(FIELD_STR)-1);
 
 void
