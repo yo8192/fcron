@@ -390,6 +390,29 @@ DOCDIR="$docdir"
 AC_SUBST(DOCDIR)
 
 
+dnl systemd init system
+SYSTEMD_DIR="no"
+
+AC_CHECK_PROGS(PKG_CONFIG, $PKG_CONFIG pkg-config, , $PATH:/local/bin:/usr/local/bin:/opt/sfw/bin)
+AC_MSG_CHECKING(for systemd)
+AC_ARG_WITH([systemdsystemunitdir],
+[ --with-systemdsystemunitdir=DIR   Directory for systemd service files.],
+[], [ if test "x" != "x$PKG_CONFIG"; then
+    with_systemdsystemunitdir=`$PKG_CONFIG --variable=systemdsystemunitdir systemd`
+  fi])
+if test "x$with_systemdsystemunitdir" != xno; then
+   if test "x" != "x$with_systemdsystemunitdir"; then
+       SYSTEMD_DIR="$with_systemdsystemunitdir"
+       AC_MSG_RESULT(yes)
+   else
+       AC_MSG_RESULT(no)
+   fi
+else
+   AC_MSG_RESULT(disabled)
+fi
+AC_SUBST(SYSTEMD_DIR)
+
+
 dnl ---------------------------------------------------------------------
 dnl Users and groups ...
 

@@ -53,6 +53,7 @@ BOOTINSTALL	:= @BOOTINSTALL@
 ANSWERALL	:= @ANSWERALL@
 USEPAM		:= @USEPAM@
 FCRONDYN	:= @FCRONDYN@
+SYSTEMD_DIR     := @SYSTEMD_DIR@
 
 # Options
 #	-DDEBUG		even more verbose
@@ -127,13 +128,19 @@ exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
 	-DFCRON_EDITOR="\"${FCRON_EDITOR}\"" -DBINDIREX="\"${DESTBIN}\"" \
 	-c $<
 
-install: install-staged strip perms
-ifeq ($(BOOTINSTALL), 1)
+initscripts:
 	if test ! -d script; then mkdir script ; fi
-        for F in sysVinit-launcher fcron.sh fcron.init.suse ; do \
+	for F in sysVinit-launcher fcron.sh fcron.init.suse fcron.init.systemd ; do \
 	    $(SRCDIR)/script/gen-in.pl $(SRCDIR)/script/$${F}.in script/$${F} ./ ; \
-        done
+	done
+
+install: install-staged strip perms initscripts
+ifeq ($(BOOTINSTALL), 1)
 	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS) $(ANSWERALL) $(SRCDIR)
+endif
+ifneq ($(SYSTEMD_DIR), no)
+	if test ! -d $(DESTDIR)$(SYSTEMD_DIR); then $(INSTALL) -m 755 -d $(DESTDIR)$(SYSTEMD_DIR) ; fi
+	$(INSTALL) -m 644 files/fcron.init.systemd $(DESTDIR)$(SYSTEMD_DIR)/fcron.service
 endif
 
 install-staged: all
@@ -230,11 +237,7 @@ ifeq ($(FCRONDYN), 1)
 	strip $(DESTDIR)$(DESTBIN)/fcrondyn
 endif
 
-install-boot: install
-	if test ! -d script; then mkdir script ; fi
-	for F in sysVinit-launcher fcron.sh fcron.init.suse ; do \
-	    $(SRCDIR)/script/gen-in.pl $(SRCDIR)/script/$${F}.in script/$${F} ./ ; \
-        done
+install-boot: install initscripts
 	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS)  $(ANSWERALL) $(SRCDIR)
 
 install-restart: install
@@ -262,7 +265,8 @@ ciclean: clean
 
 vclean: ciclean
 	rm -f config.log config.status config.h config.cache Makefile PREVIOUS_VERSION \
-            files/fcron.conf script/fcron.init.suse script/fcron.sh script/sysVinit-launcher
+            files/fcron.conf script/fcron.init.suse script/fcron.init.systemd \
+            script/fcron.sh script/sysVinit-launcher
 	make -C doc clean
 
 
