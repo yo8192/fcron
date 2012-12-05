@@ -39,6 +39,9 @@ A copy of the license is included in gfdl.sgml.
             <para>Added systemd service definition (thank you Reiner)</para>
          </listitem>
          <listitem>
+            <para>Allow Makefile parallelism (e.g. make -j 4)</para>
+         </listitem>
+         <listitem>
             <para>bug fix: fcrontab: don't alert about invalid character when correcting fcrontab twice</para>
          </listitem>
          <listitem>

@@ -168,10 +168,10 @@ endif
 	if test ! -f $(DESTDIR)$(ETC)/fcron.allow -a ! -f $(DESTDIR)$(ETC)/fcron.deny ; then $(INSTALL) -m 644 $(SRCDIR)/files/fcron.allow $(DESTDIR)$(ETC) ; $(INSTALL) -m 644 $(SRCDIR)/files/fcron.deny $(DESTDIR)$(ETC) ; fi
 	test -f $(DESTDIR)$(ETC)/fcron.conf || $(INSTALL) -m 644 files/fcron.conf $(DESTDIR)$(ETC)
 
-	make -C doc install-staged
+	$(MAKE) -C doc install-staged
 
 
-perms:
+perms: install-staged strip
 # Note : we don't use "chown user:group file" because some systems use ":"
 #        and others "." as separator.
 	chown $(ROOTNAME) $(DESTDIR)$(DESTSBIN) 
@@ -226,10 +226,10 @@ endif
 	rm -f $(DESTDIR)$(FCRONTABS)/fcrontab.sig
 	find $(DESTDIR)$(FCRONTABS) -type f ! -name "*.orig" -exec chown $(ROOTNAME) {} \; -exec chgrp $(ROOTGROUP) {} \; -exec chmod 600 {} \;
 
-	make -C doc perms
+	$(MAKE) -C doc perms
 
 # strip executables
-strip:
+strip: install-staged
 	strip $(DESTDIR)$(DESTSBIN)/fcron
 	strip $(DESTDIR)$(DESTBIN)/fcrontab
 	strip $(DESTDIR)$(DESTBIN)/fcronsighup
@@ -251,13 +251,13 @@ uninstall:
 	rm -f $(DESTDIR)$(DESTBIN)/fcrontab
 	rm -f $(DESTDIR)$(DESTBIN)/fcronsighup
 	rm -f $(DESTDIR)$(DESTBIN)/fcrondyn
-	make -C doc uninstall
+	$(MAKE) -C doc uninstall
 	$(SRCDIR)/script/boot-uninstall
 
 clean:
 	rm -f *.o core
 	rm -f fcron fcrontab fcrondyn fcronsighup convert-fcrontab files/fcron.conf
-	make -C doc clean
+	$(MAKE) -C doc clean
 
 ciclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
@@ -267,7 +267,7 @@ vclean: ciclean
 	rm -f config.log config.status config.h config.cache Makefile PREVIOUS_VERSION \
             files/fcron.conf script/fcron.init.suse script/fcron.init.systemd \
             script/fcron.sh script/sysVinit-launcher
-	make -C doc clean
+	$(MAKE) -C doc clean
 
 
 files/fcron.conf: $(SRCDIR)/files/fcron.conf.in config.h
@@ -275,7 +275,7 @@ files/fcron.conf: $(SRCDIR)/files/fcron.conf.in config.h
 	$(SRCDIR)/script/gen-in.pl $(SRCDIR)/files/fcron.conf.in files/fcron.conf ./
 
 updatedoc:
-	make -C doc doc
+	$(MAKE) -C doc doc
 
 indent:
 	indent -linux -i4 -nsob -sc -psl -nce *.c *.h
@@ -299,13 +299,13 @@ ci: ciclean
 	@(find ./ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \
           -exec ci -l -Nver`echo $(VERSION) | tr '.' '_'` {} \;)
 # ci the doc files
-	make -C doc ci
+	$(MAKE) -C doc ci
 
 tar: configure updatedoc vclean ciclean
 
 	echo $(VERSION) > ./VERSION
 
-	make -C doc tarclean
+	$(MAKE) -C doc tarclean
 
 	@(find ./ -type f ! -regex '.*RCS.*' ! -regex '.*CVS.*' ! -regex '.*\.git.*'| \
              sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
