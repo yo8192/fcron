@@ -592,8 +592,9 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 			found = 1;
 		    }
 		}
-		else
-		    Test_line(e->e_line, e->e_job_pid, 0, 0)
+		else {
+		    Test_line(e->e_line, e->e_job_pid, 0, 0);
+                }
 	    }
 	    break;
 
