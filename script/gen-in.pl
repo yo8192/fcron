@@ -16,7 +16,7 @@
 
 
 
-open(CONFIG, "$ARGV[2]/config.h") or print "error while opening config.h\n" and exit;
+open(CONFIG, "$ARGV[2]/config.h") or print "error while opening config.h: $!\n" and exit;
 while ( <CONFIG> ) {
     if ( /^\#define\s+(\w+?)\s+([\w\/-]+?)\s/ ) {
 	$map{$1} = $2;
@@ -28,7 +28,7 @@ while ( <CONFIG> ) {
 }
 close(CONFIG);
 
-open(MAKEFILE, "$ARGV[2]/Makefile") or print "error while opening Makefile\n" and exit;
+open(MAKEFILE, "$ARGV[2]/Makefile") or print "error while opening Makefile: $!\n" and exit;
 while ( <MAKEFILE> ) {
     if ( /^\s*?(\w+?)\s*?=\s*?([^\s]+)\s/ ) {
 	$name = $1;
@@ -47,8 +47,8 @@ close(MAKEFILE);
 
 chop ($map{Date} = `date +%m/%d/%Y`);
 
-open(SRC, $ARGV[0]) or print "error while opening $ARGV[0]\n" and exit;
-open(DEST, ">$ARGV[1]") or print "error while opening $ARGV[1]\n" and exit;
+open(SRC, $ARGV[0]) or print "error while opening $ARGV[0]: $!\n" and exit;
+open(DEST, ">$ARGV[1]") or print "error while opening $ARGV[1]: $!\n" and exit;
 
 while ( <SRC> ) {
     s/@@([^@]*)@/$map{$1}/g;
