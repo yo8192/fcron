@@ -30,6 +30,9 @@ A copy of the license is included in gfdl.sgml.
             <para>Allow tasks to run every seconds</para>
          </listitem>
          <listitem>
+            <para>don't inherit fcron's environment when running a job but build the environment from scratch (cleaner, and this is what Vixie cron does)</para>
+         </listitem>
+         <listitem>
             <para>fcron now sets the email headers X-Cron-Env and Auto-Submitted (as described in RFC 3834).</para>
          </listitem>
          <listitem>
