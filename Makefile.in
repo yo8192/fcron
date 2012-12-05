@@ -95,7 +95,7 @@ else
 endif
 
 ifeq ($(FCRONDYN), 1)
-all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf
+all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf initscripts
 else
 all: fcron fcrontab convert-fcrontab files/fcron.conf
 endif
@@ -129,12 +129,12 @@ exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
 	-c $<
 
 initscripts:
-	if test ! -d script; then mkdir script ; fi
-	for F in sysVinit-launcher fcron.sh fcron.init.suse fcron.init.systemd ; do \
-	    $(SRCDIR)/script/gen-in.pl $(SRCDIR)/script/$${F}.in script/$${F} ./ ; \
-	done
+	@(if test ! -d script; then mkdir script ; fi ; \
+		for F in sysVinit-launcher fcron.sh fcron.init.suse fcron.init.systemd ; do \
+	    		$(SRCDIR)/script/gen-in.pl $(SRCDIR)/script/$${F}.in script/$${F} ./ ; \
+		done)
 
-install: install-staged strip perms initscripts
+install: install-staged strip perms 
 ifeq ($(BOOTINSTALL), 1)
 	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS) $(ANSWERALL) $(SRCDIR)
 endif
@@ -237,7 +237,7 @@ ifeq ($(FCRONDYN), 1)
 	strip $(DESTDIR)$(DESTBIN)/fcrondyn
 endif
 
-install-boot: install initscripts
+install-boot: install 
 	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS)  $(ANSWERALL) $(SRCDIR)
 
 install-restart: install
