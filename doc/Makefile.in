@@ -52,7 +52,7 @@ doc:
 		test -d $(SRCDIR)/$$i/HTML || mkdir $(SRCDIR)/$$i/HTML ; \
 		test -d $(SRCDIR)/$$i/txt || mkdir $(SRCDIR)/$$i/txt ; \
 		test -d $(SRCDIR)/$$i/man || mkdir $(SRCDIR)/$$i/man ; \
-		make $(SRCDIR)/$$i/HTML/index.html $(SRCDIR)/$$i/txt/readme.txt \
+		$(MAKE) $(SRCDIR)/$$i/HTML/index.html $(SRCDIR)/$$i/txt/readme.txt \
 			$(SRCDIR)/$$i/man/fcron.8 ; \
 	done)
 
@@ -67,9 +67,9 @@ doc-if-none:
 # succeed after the first time "make doc" is called
 	@(for i in $(LANGUAGES); \
 	do \
-		test -f $(SRCDIR)/$$i/HTML/index.html || make doc ; \
-		test -f $(SRCDIR)/$$i/txt/readme.txt || make doc ; \
-		test -f $(SRCDIR)/$$i/man/fcron.8 || make doc ; \
+		test -f $(SRCDIR)/$$i/HTML/index.html || $(MAKE) doc ; \
+		test -f $(SRCDIR)/$$i/txt/readme.txt || $(MAKE) doc ; \
+		test -f $(SRCDIR)/$$i/man/fcron.8 || $(MAKE) doc ; \
 	done)
 
 # man/fcron.8 means in fact "build *all* the man pages"
@@ -225,7 +225,7 @@ vclean: clean
 	rm -f Makefile ${STYLESHEET}
 
 ci: clean
-# we run a "cd .." because it makes appear the path of the file ( ./doc/XXXX )
+# we run a "cd .." because it makes the path of the file appear ( ./doc/XXXX )
 # during the ci-ing
 # the symbolic links verX_X_X has been created since version 2.9.4
 	@(cd ..; find ./doc/ -type f ! -regex '.*RCS.*' ! -regex "$(RCSNOCI)" \

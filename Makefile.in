@@ -95,7 +95,7 @@ else
 endif
 
 ifeq ($(FCRONDYN), 1)
-all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf initscripts
+all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf initscripts doc
 else
 all: fcron fcrontab convert-fcrontab files/fcron.conf
 endif
@@ -133,6 +133,9 @@ initscripts:
 		for F in sysVinit-launcher fcron.sh fcron.init.suse fcron.init.systemd ; do \
 	    		$(SRCDIR)/script/gen-in.pl $(SRCDIR)/script/$${F}.in script/$${F} ./ ; \
 		done)
+
+doc:
+	$(MAKE) -C doc doc-if-none
 
 install: install-staged strip perms 
 ifeq ($(BOOTINSTALL), 1)
