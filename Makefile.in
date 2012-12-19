@@ -95,7 +95,7 @@ else
 endif
 
 ifeq ($(FCRONDYN), 1)
-all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf initscripts doc
+all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf initscripts documentation
 else
 all: fcron fcrontab convert-fcrontab files/fcron.conf
 endif
@@ -134,7 +134,7 @@ initscripts:
 	    		$(SRCDIR)/script/gen-in.pl $(SRCDIR)/script/$${F}.in script/$${F} ./ ; \
 		done)
 
-doc:
+documentation:
 	$(MAKE) -C doc doc-if-none
 
 install: install-staged strip perms 
