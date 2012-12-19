@@ -59,13 +59,6 @@ A copy of the license is included in gfdl.sgml.
 	       <para>add logging to a file (instead of syslog) with configuration in fcron.conf</para>
 	    </listitem>
 	    <listitem>
-	       <para>code cleaning: create a .c/.h file for data structures
-		  (file/line lists, serial queue, lavg list, exe list),
-		  and work with them only through functions/macros.
-	       + secure equivalent to str[n]{cat|copy|...}</para>
-	       <para>Note: may introduce bugs, so it will be done in fcron 3.1.x, and needs to be tested thoroughly.</para>
-	    </listitem>
-	    <listitem>
 	       <para>For environment settings, make a var substitution.</para>
 	    </listitem>
 	    <listitem>
