@@ -26,6 +26,12 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>confirm 'make indent' options are good, and apply</para>
 	    </listitem>
+	    <listitem>
+	       <para>change git config to fetch tags</para>
+	    </listitem>
+	    <listitem>
+	       <para>Make DocBook in vim easier? (at least indentation)</para>
+	    </listitem>
 	 </itemizedlist>
       </sect2>
       <sect2>
@@ -36,6 +42,9 @@ A copy of the license is included in gfdl.sgml.
 	       and a cron.d as Vixie cron does (directly included in fcron itself, not thanks to a script as now).
                However the parsing work is done by fcrontab, and should probably keep on being done by fcrontab for
                security and stability reasons: have fcron call fcrontab to do that job?</para>
+	    </listitem>
+	    <listitem>
+	       <para>use readline (if available) for fcrondyn.</para>
 	    </listitem>
 	    <listitem>
 	       <para>could be worth checking fcron for memory leaks using specialized library (just in case...)</para>
@@ -51,9 +60,6 @@ A copy of the license is included in gfdl.sgml.
 	    </listitem>
 	    <listitem>
 	       <para>find way to have the non translated pages of the French translation be updated automatically (changes, todo, etc -> copied from the English doc)</para>
-	    </listitem>
-	    <listitem>
-	       <para>use readline (if available) for fcrondyn.</para>
 	    </listitem>
 	    <listitem>
 	       <para>add logging to a file (instead of syslog) with configuration in fcron.conf</para>
