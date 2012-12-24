@@ -42,4 +42,4 @@ extern gid_t fcrontab_gid;
 extern uid_t rootuid;
 extern gid_t rootgid;
 
-#endif /* __FCRONTAB_H__ */
+#endif                          /* __FCRONTAB_H__ */

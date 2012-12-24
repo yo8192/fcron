@@ -55,7 +55,7 @@
 /* functions prototypes */
 extern char *strdup2(const char *);
 extern char *strndup2(const char *, size_t n);
-extern void *alloc_safe(size_t len, const char * desc);
-extern void *realloc_safe(void *ptr, size_t len, const char * desc);
+extern void *alloc_safe(size_t len, const char *desc);
+extern void *realloc_safe(void *ptr, size_t len, const char *desc);
 
-#endif /* __MEM_H__ */
+#endif                          /* __MEM_H__ */

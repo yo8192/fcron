@@ -28,10 +28,12 @@
 #include "temp_file.h"
 
 void sig_dfl(void);
-void end_job(cl_t *line, int status, FILE *mailf, short mailpos, char **sendmailenv);
-void end_mailer(cl_t *line, int status);
+void end_job(cl_t * line, int status, FILE * mailf, short mailpos,
+             char **sendmailenv);
+void end_mailer(cl_t * line, int status);
 #ifdef HAVE_LIBPAM
-void die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str, env_list_t *env);
+void die_mail_pame(cl_t * cl, int pamerrno, struct passwd *pas, char *str,
+                   env_list_t * env);
 #endif
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -42,7 +44,8 @@ void become_user(struct cl_t *cl, struct passwd *pas, char *home);
 
 #ifdef HAVE_LIBPAM
 void
-die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str, env_list_t *env)
+die_mail_pame(cl_t * cl, int pamerrno, struct passwd *pas, char *str,
+              env_list_t * env)
 /* log an error in syslog, mail user if necessary, and die */
 {
     char buf[MAX_MSG];
@@ -51,26 +54,27 @@ die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str, env_list_t 
 
     if (is_mail(cl->cl_option)) {
         char **envp = env_list_export_envp(env);
-	FILE *mailf = create_mail(cl, "Could not run fcron job", NULL, NULL, envp);
+        FILE *mailf =
+            create_mail(cl, "Could not run fcron job", NULL, NULL, envp);
 
-	/* print the error in both syslog and a file, in order to mail it to user */
-	if (dup2(fileno(mailf), 1) != 1 || dup2(1, 2) != 2)
-	    die_e("dup2() error");    /* dup2 also clears close-on-exec flag */
+        /* print the error in both syslog and a file, in order to mail it to user */
+        if (dup2(fileno(mailf), 1) != 1 || dup2(1, 2) != 2)
+            die_e("dup2() error");      /* dup2 also clears close-on-exec flag */
 
-	foreground = 1;
-	error_pame(pamh, pamerrno, buf, cl->cl_shell);
-	error("Job '%s' has *not* run.", cl->cl_shell);
-	foreground = 0;
+        foreground = 1;
+        error_pame(pamh, pamerrno, buf, cl->cl_shell);
+        error("Job '%s' has *not* run.", cl->cl_shell);
+        foreground = 0;
 
-	pam_end(pamh, pamerrno);  
+        pam_end(pamh, pamerrno);
 
         become_user(cl, pas, "/");
 
-	launch_mailer(cl, mailf, envp);
-	/* launch_mailer() does not return : we never get here */
+        launch_mailer(cl, mailf, envp);
+        /* launch_mailer() does not return : we never get here */
     }
     else
-	die_pame(pamh, pamerrno, buf, cl->cl_shell);
+        die_pame(pamh, pamerrno, buf, cl->cl_shell);
 }
 #endif
 
@@ -84,7 +88,7 @@ become_user(struct cl_t *cl, struct passwd *pas, char *home)
     if (pas == NULL)
         die("become_user() called with a NULL struct passwd");
 
-   /* Change running state to the user in question */
+    /* Change running state to the user in question */
     if (initgroups(pas->pw_name, pas->pw_gid) < 0)
         die_e("initgroups failed: %s", pas->pw_name);
 
@@ -93,11 +97,12 @@ become_user(struct cl_t *cl, struct passwd *pas, char *home)
 
     if (setuid(pas->pw_uid) < 0)
         die("setuid failed: %s %d", pas->pw_name, pas->pw_uid);
-#endif /* not RUN_NON_PRIVILEGED */
+#endif                          /* not RUN_NON_PRIVILEGED */
 
     /* make sure HOME is defined and change dir to it */
     if (chdir(home) != 0) {
-        error_e("Could not chdir to HOME dir '%s'. Trying to chdir to '/'.", home);
+        error_e("Could not chdir to HOME dir '%s'. Trying to chdir to '/'.",
+                home);
         if (chdir("/") < 0)
             die_e("Could not chdir to HOME dir /");
     }
@@ -113,14 +118,13 @@ setup_user_and_env(struct cl_t *cl, struct passwd *pas,
 /* (*curshell) and (*curhome) will be allocated and should thus be freed
  * if curshell and curhome are not NULL. */
 /* Return the the two env var sets, the shell to use to execle() commands and the home dir */
-
 {
     env_list_t *env_list = env_list_init();
     env_t *e = NULL;
     char *path = NULL;
     char *myshell = NULL;
 #ifdef HAVE_LIBPAM
-    int    retcode = 0;
+    int retcode = 0;
     char **env;
 #endif
 
@@ -133,13 +137,14 @@ setup_user_and_env(struct cl_t *cl, struct passwd *pas,
     /* inherit fcron's PATH for sendmail. We will later change it to DEFAULT_JOB_PATH
      * or a user defined PATH for the job itself */
     path = getenv("PATH");
-    env_list_setenv(env_list, "PATH", ( path != NULL ) ? path : DEFAULT_JOB_PATH, 1);
+    env_list_setenv(env_list, "PATH", (path != NULL) ? path : DEFAULT_JOB_PATH,
+                    1);
 
     if (cl->cl_tz != NULL)
         env_list_setenv(env_list, "TZ", cl->cl_tz, 1);
     /* To ensure compatibility with Vixie cron, we don't use the shell defined
      * in /etc/passwd by default, but the default value from fcron.conf instead: */
-    if ( shell != NULL && shell[0] != '\0' )
+    if (shell != NULL && shell[0] != '\0')
         /* default: use value from fcron.conf */
         env_list_setenv(env_list, "SHELL", shell, 1);
     else
@@ -148,35 +153,38 @@ setup_user_and_env(struct cl_t *cl, struct passwd *pas,
 
 #if ( ! defined(RUN_NON_PRIVILEGED)) && defined(HAVE_LIBPAM)
     /* Open PAM session for the user and obtain any security
-       credentials we might need */
+     * credentials we might need */
 
     retcode = pam_start("fcron", pas->pw_name, &apamconv, &pamh);
-    if (retcode != PAM_SUCCESS) die_pame(pamh, retcode, "Could not start PAM for %s",
-					 cl->cl_shell);
+    if (retcode != PAM_SUCCESS)
+        die_pame(pamh, retcode, "Could not start PAM for %s", cl->cl_shell);
     /* Some system seem to need that pam_authenticate() call.
      * Anyway, we have no way to authentificate the user :
      * we must set auth to pam_permit. */
     retcode = pam_authenticate(pamh, PAM_SILENT);
-    if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas,
-					      "Could not authenticate PAM user", env_list);
-    retcode = pam_acct_mgmt(pamh, PAM_SILENT); /* permitted access? */
-    if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas,
-					      "Could not init PAM account management", env_list);
+    if (retcode != PAM_SUCCESS)
+        die_mail_pame(cl, retcode, pas,
+                      "Could not authenticate PAM user", env_list);
+    retcode = pam_acct_mgmt(pamh, PAM_SILENT);  /* permitted access? */
+    if (retcode != PAM_SUCCESS)
+        die_mail_pame(cl, retcode, pas,
+                      "Could not init PAM account management", env_list);
     retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED | PAM_SILENT);
-    if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas, 
-					      "Could not set PAM credentials", env_list);
+    if (retcode != PAM_SUCCESS)
+        die_mail_pame(cl, retcode, pas, "Could not set PAM credentials",
+                      env_list);
     retcode = pam_open_session(pamh, PAM_SILENT);
-    if (retcode != PAM_SUCCESS) die_mail_pame(cl, retcode, pas,
-					      "Could not open PAM session", env_list);
+    if (retcode != PAM_SUCCESS)
+        die_mail_pame(cl, retcode, pas, "Could not open PAM session", env_list);
 
     for (env = pam_getenvlist(pamh); env && *env; env++) {
         env_list_putenv(env_list, *env, 1);
     }
 
     /* Close the log here, because PAM calls openlog(3) and
-       our log messages could go to the wrong facility */
+     * our log messages could go to the wrong facility */
     xcloselog();
-#endif /* ( ! defined(RUN_NON_PRIVILEGED)) && defined(HAVE_LIBPAM) */
+#endif                          /* ( ! defined(RUN_NON_PRIVILEGED)) && defined(HAVE_LIBPAM) */
 
     /* export the environment for sendmail before we apply user customization */
     if (sendmailenv != NULL)
@@ -189,45 +197,46 @@ setup_user_and_env(struct cl_t *cl, struct passwd *pas,
         /* Make sure we don't keep fcron daemon's PATH (which we used for sendmail) */
         env_list_setenv(env_list, "PATH", DEFAULT_JOB_PATH, 1);
 
-        for ( e = env_list_first(cl->cl_file->cf_env_list); e != NULL;
-                e = env_list_next(cl->cl_file->cf_env_list) ) {
+        for (e = env_list_first(cl->cl_file->cf_env_list); e != NULL;
+             e = env_list_next(cl->cl_file->cf_env_list)) {
             env_list_putenv(env_list, e->e_envvar, 1);
         }
 
         /* make sure HOME is defined */
         env_list_putenv(env_list, "HOME=/", 0); /* don't overwrite if already defined */
-        if ( curhome != NULL ) {
+        if (curhome != NULL) {
             (*curhome) = strdup2(env_list_getenv(env_list, "HOME"));
         }
 
         /* check that SHELL is valid */
         myshell = env_list_getenv(env_list, "SHELL");
-        if ( myshell == NULL || myshell[0] == '\0' ) {
+        if (myshell == NULL || myshell[0] == '\0') {
             myshell = shell;
         }
-        else if ( access(myshell, X_OK) != 0 ) {
+        else if (access(myshell, X_OK) != 0) {
             if (errno == ENOENT)
                 error("shell \"%s\" : no file or directory. SHELL set to %s",
-                        myshell, shell);
+                      myshell, shell);
             else
-                error_e("shell \"%s\" not valid : SHELL set to %s",
-                        myshell, shell);
+                error_e("shell \"%s\" not valid : SHELL set to %s", myshell,
+                        shell);
 
             myshell = shell;
         }
         env_list_setenv(env_list, "SHELL", myshell, 1);
-        if  ( curshell != NULL )
+        if (curshell != NULL)
             *curshell = strdup2(myshell);
 
         *jobenv = env_list_export_envp(env_list);
 
     }
 
-    if ( content_type != NULL ) {
+    if (content_type != NULL) {
         (*content_type) = strdup2(env_list_getenv(env_list, "CONTENT_TYPE"));
     }
-    if ( encoding != NULL ) {
-        (*encoding) = strdup2(env_list_getenv(env_list, "CONTENT_TRANSFER_ENCODING"));
+    if (encoding != NULL) {
+        (*encoding) =
+            strdup2(env_list_getenv(env_list, "CONTENT_TRANSFER_ENCODING"));
     }
 
     env_list_destroy(env_list);
@@ -236,8 +245,8 @@ setup_user_and_env(struct cl_t *cl, struct passwd *pas,
 
 void
 change_user_setup_env(struct cl_t *cl,
-                   char ***sendmailenv, char ***jobenv, char **curshell,
-                   char **curhome, char **content_type, char **encoding)
+                      char ***sendmailenv, char ***jobenv, char **curshell,
+                      char **curhome, char **content_type, char **encoding)
 /* call setup_user_and_env() and become_user().
  * As a result, *curshell and *curhome will be allocated and should thus be freed
  * if curshell and curhome are not NULL. */
@@ -246,7 +255,7 @@ change_user_setup_env(struct cl_t *cl,
 
     errno = 0;
     pas = getpwnam(cl->cl_runas);
-    if ( pas == NULL )
+    if (pas == NULL)
         die_e("failed to get passwd fields for user \"%s\"", cl->cl_runas);
 
     setup_user_and_env(cl, pas, sendmailenv, jobenv, curshell, curhome,
@@ -259,17 +268,17 @@ void
 sig_dfl(void)
     /* set signals handling to its default */
 {
-	signal(SIGTERM, SIG_DFL);
-	signal(SIGCHLD, SIG_DFL);
-	signal(SIGHUP, SIG_DFL);
-	signal(SIGUSR1, SIG_DFL);
-	signal(SIGUSR2, SIG_DFL);
-	signal(SIGPIPE, SIG_DFL);
+    signal(SIGTERM, SIG_DFL);
+    signal(SIGCHLD, SIG_DFL);
+    signal(SIGHUP, SIG_DFL);
+    signal(SIGUSR1, SIG_DFL);
+    signal(SIGUSR2, SIG_DFL);
+    signal(SIGPIPE, SIG_DFL);
 }
 
 
 FILE *
-create_mail(cl_t *line, char *subject, char *content_type, char *encoding,
+create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
             char **env)
     /* create a temp file and write in it a mail header */
 {
@@ -281,37 +290,38 @@ create_mail(cl_t *line, char *subject, char *content_type, char *encoding,
     char add_hostname = 0;
     int i = 0;
 
-    if ( mailf == NULL )
-	die_e("Could not fdopen() mailfd");
+    if (mailf == NULL)
+        die_e("Could not fdopen() mailfd");
 
 #ifdef HAVE_GETHOSTNAME
     if (gethostname(hostname, sizeof(hostname)) != 0) {
-	error_e("Could not get hostname");
-	hostname[0] = '\0';
+        error_e("Could not get hostname");
+        hostname[0] = '\0';
     }
     else {
-	/* it is unspecified whether a truncated hostname is NUL-terminated */
-	hostname[USER_NAME_LEN-1] = '\0';
+        /* it is unspecified whether a truncated hostname is NUL-terminated */
+        hostname[USER_NAME_LEN - 1] = '\0';
 
-	/* check if mailto is a complete mail address */
-	add_hostname = ( strchr(line->cl_mailto, '@') == NULL ) ? 1 : 0;
+        /* check if mailto is a complete mail address */
+        add_hostname = (strchr(line->cl_mailto, '@') == NULL) ? 1 : 0;
     }
-#else /* HAVE_GETHOSTNAME */
+#else                           /* HAVE_GETHOSTNAME */
     hostname[0] = '\0';
-#endif /* HAVE_GETHOSTNAME */
+#endif                          /* HAVE_GETHOSTNAME */
 
     /* write mail header */
-    if ( add_hostname )
+    if (add_hostname)
         fprintf(mailf, "To: %s@%s\n", line->cl_mailto, hostname);
     else
         fprintf(mailf, "To: %s\n", line->cl_mailto);
 
     if (subject)
-	fprintf(mailf, "Subject: fcron <%s@%s> %s: %s\n", line->cl_file->cf_user,
-		( hostname[0] != '\0')? hostname:"?" , subject, line->cl_shell);
+        fprintf(mailf, "Subject: fcron <%s@%s> %s: %s\n",
+                line->cl_file->cf_user, (hostname[0] != '\0') ? hostname : "?",
+                subject, line->cl_shell);
     else
-	fprintf(mailf, "Subject: fcron <%s@%s> %s\n", line->cl_file->cf_user,
-		( hostname[0] != '\0')? hostname:"?" , line->cl_shell);
+        fprintf(mailf, "Subject: fcron <%s@%s> %s\n", line->cl_file->cf_user,
+                (hostname[0] != '\0') ? hostname : "?", line->cl_shell);
 
     if (content_type == NULL) {
         fprintf(mailf, "Content-Type: text/plain; charset=%s\n",
@@ -323,7 +333,7 @@ create_mail(cl_t *line, char *subject, char *content_type, char *encoding,
 
         /* Remove new-lines or users could specify arbitrary mail headers!
          * (fcrontab should already prevent that, but better safe than sorry) */
-        for (c=content_type; *c != '\0'; c++) {
+        for (c = content_type; *c != '\0'; c++) {
             if (*c == '\n')
                 *c = ' ';
         }
@@ -335,7 +345,7 @@ create_mail(cl_t *line, char *subject, char *content_type, char *encoding,
 
         /* Remove new-lines or users could specify arbitrary mail headers!
          * (fcrontab should already prevent that, but better safe than sorry) */
-        for (c=encoding; *c != '\0'; c++) {
+        for (c = encoding; *c != '\0'; c++) {
             if (*c == '\n')
                 *c = ' ';
         }
@@ -353,8 +363,8 @@ create_mail(cl_t *line, char *subject, char *content_type, char *encoding,
 
     /* See environ(7) and execle(3) to get documentation on environ:
      * it is an array of NULL-terminated strings, whose last entry is NULL */
-    if ( env != NULL ) {
-        for ( i = 0 ; env[i] != NULL ; i++ ) {
+    if (env != NULL) {
+        for (i = 0; env[i] != NULL; i++) {
             fprintf(mailf, "X-Cron-Env: <%s>\n", env[i]);
         }
     }
@@ -377,43 +387,45 @@ read_write_pipe(int fd, void *buf, size_t size, int action)
     int size_processed = 0;
     int ret;
     int num_retry = 0;
-    
-    while ( size_processed < size ) {
-	errno = 0;
-	if ( action == PIPE_READ )
-	    ret = read(fd, (char *)buf + size_processed, size); 
-	else if ( action == PIPE_WRITE )
-	    ret = write(fd, (char *)buf + size_processed, size);
-	else {
-	    error("Invalid action parameter for function read_write_pipe():"
-		  " %d", action);
-	    return ERR;
-	}
-	if ( ret > 0 )
-	    /* some data read correctly -- we still may need
-	     * one or several calls of read() to read the rest */
-	    size_processed += ret;
-	else if ( ret < 0 && errno == EINTR )
-	    /* interrupted by a signal : let's try again */
-	    continue;
-	else {
-	    /* error */
 
-	    if ( ret == 0 ) {
-		/* is it really an error when writing ? should we continue
-		 * in this case ? */
-		if ( num_retry < 3 ) {
-		    num_retry++;
-		    error_e("read_write_pipe(): read/write returned 0: retrying... (size: %d, size_processed: %d, num_retry: %d)", size, size_processed, num_retry);
-		    sleep(1);
-		    continue;
-		}
-		else
-		    return ERR;
-	    }
-	    else
-		return errno;
-	}
+    while (size_processed < size) {
+        errno = 0;
+        if (action == PIPE_READ)
+            ret = read(fd, (char *)buf + size_processed, size);
+        else if (action == PIPE_WRITE)
+            ret = write(fd, (char *)buf + size_processed, size);
+        else {
+            error("Invalid action parameter for function read_write_pipe():"
+                  " %d", action);
+            return ERR;
+        }
+        if (ret > 0)
+            /* some data read correctly -- we still may need
+             * one or several calls of read() to read the rest */
+            size_processed += ret;
+        else if (ret < 0 && errno == EINTR)
+            /* interrupted by a signal : let's try again */
+            continue;
+        else {
+            /* error */
+
+            if (ret == 0) {
+                /* is it really an error when writing ? should we continue
+                 * in this case ? */
+                if (num_retry < 3) {
+                    num_retry++;
+                    error_e
+                        ("read_write_pipe(): read/write returned 0: retrying... (size: %d, size_processed: %d, num_retry: %d)",
+                         size, size_processed, num_retry);
+                    sleep(1);
+                    continue;
+                }
+                else
+                    return ERR;
+            }
+            else
+                return errno;
+        }
     }
 
     return OK;
@@ -440,57 +452,57 @@ write_pipe(int fd, void *buf, size_t size)
 }
 
 void
-run_job_grand_child_setup_stderr_stdout(cl_t *line, int *pipe_fd)
+run_job_grand_child_setup_stderr_stdout(cl_t * line, int *pipe_fd)
     /* setup stderr and stdout correctly so as the mail containing
      * the output of the job can be send at the end of the job.
      * Close the pipe (both ways). */
 {
 
-    if (is_mail(line->cl_option) ) {
-	/* we can't dup2 directly to mailfd, since a "cmd > /dev/stderr" in
-	 * a script would erase all previously collected message */
-	if ( dup2( pipe_fd[1], 1) != 1 || dup2(1, 2) != 2 )
-	    die_e("dup2() error");  /* dup2 also clears close-on-exec flag */
-	/* we close the pipe_fd[]s : the resources remain, and the pipe will
-	 * be effectively close when the job stops */
-	if ( close(pipe_fd[0]) < 0 )
-	    error_e("setup_stderr_stdout: could not close(pipe_fd[0])");
-	if ( close(pipe_fd[1]) < 0 )
-	    error_e("setup_stderr_stdout: could not close(pipe_fd[1])");
-	/* Standard buffering results in unwanted behavior (some messages,
-	   at least error from fcron process itself, are lost) */
+    if (is_mail(line->cl_option)) {
+        /* we can't dup2 directly to mailfd, since a "cmd > /dev/stderr" in
+         * a script would erase all previously collected message */
+        if (dup2(pipe_fd[1], 1) != 1 || dup2(1, 2) != 2)
+            die_e("dup2() error");      /* dup2 also clears close-on-exec flag */
+        /* we close the pipe_fd[]s : the resources remain, and the pipe will
+         * be effectively close when the job stops */
+        if (close(pipe_fd[0]) < 0)
+            error_e("setup_stderr_stdout: could not close(pipe_fd[0])");
+        if (close(pipe_fd[1]) < 0)
+            error_e("setup_stderr_stdout: could not close(pipe_fd[1])");
+        /* Standard buffering results in unwanted behavior (some messages,
+         * at least error from fcron process itself, are lost) */
 #ifdef HAVE_SETLINEBUF
-	setlinebuf(stdout);
-	setlinebuf(stderr);
+        setlinebuf(stdout);
+        setlinebuf(stderr);
 #else
-	setvbuf(stdout, NULL, _IONBF, 0);
-	setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
+        setvbuf(stderr, NULL, _IONBF, 0);
 #endif
     }
-    else if ( foreground ) {
-	if ( freopen("/dev/null", "w", stdout) == NULL )
+    else if (foreground) {
+        if (freopen("/dev/null", "w", stdout) == NULL)
             error_e("could not freopen /dev/null as stdout");
-	if ( freopen("/dev/null", "w", stderr) == NULL )
+        if (freopen("/dev/null", "w", stderr) == NULL)
             error_e("could not freopen /dev/null as stderr");
     }
-    
+
 }
 
 void
-run_job_grand_child_setup_nice(cl_t *line)
+run_job_grand_child_setup_nice(cl_t * line)
     /* set the nice value for the job */
 {
-    if ( line->cl_nice != 0 ) {
-	errno = 0; /* so that it works with any libc and kernel */
-	if ( nice(line->cl_nice) == -1  &&  errno != 0 )
-	    error_e("could not set nice value");
+    if (line->cl_nice != 0) {
+        errno = 0;              /* so that it works with any libc and kernel */
+        if (nice(line->cl_nice) == -1 && errno != 0)
+            error_e("could not set nice value");
     }
 }
 
-int 
+int
 run_job(struct exe_t *exeent)
     /* fork(), redirect outputs to a temp file, and execl() the task.
-     * Return ERR if it could not fork() the first time, OK otherwise. */ 
+     * Return ERR if it could not fork() the first time, OK otherwise. */
 {
 
     pid_t pid;
@@ -499,255 +511,262 @@ run_job(struct exe_t *exeent)
     int ret = 0;
 
     /* prepare the job execution */
-    if ( pipe(pipe_pid_fd) != 0 ) {
-	error_e("pipe(pipe_pid_fd) : setting job_pid to -1");
-	exeent->e_job_pid = -1;
-	pipe_pid_fd[0] = pipe_pid_fd[1] = -1;
+    if (pipe(pipe_pid_fd) != 0) {
+        error_e("pipe(pipe_pid_fd) : setting job_pid to -1");
+        exeent->e_job_pid = -1;
+        pipe_pid_fd[0] = pipe_pid_fd[1] = -1;
     }
 
 #ifdef CHECKRUNJOB
-    debug("run_job(): first pipe created successfully : about to do first fork()");
-#endif /* CHECKRUNJOB */
+    debug
+        ("run_job(): first pipe created successfully : about to do first fork()");
+#endif                          /* CHECKRUNJOB */
 
-    switch ( pid = fork() ) {
+    switch (pid = fork()) {
     case -1:
-	error_e("Fork error : could not exec \"%s\"", line->cl_shell);
-	return ERR;
-	break;
+        error_e("Fork error : could not exec \"%s\"", line->cl_shell);
+        return ERR;
+        break;
 
     case 0:
-	/* child */
-    {
-        struct passwd *pas = NULL;
-        char **jobenv = NULL;
-        char **sendmailenv = NULL;
-        char *curshell = NULL;
-        char *curhome = NULL;
-        char *content_type = NULL;
-        char *encoding = NULL;
-        FILE *mailf = NULL;
-        int status = 0;
-        int to_stdout = foreground && is_stdout(line->cl_option);
-        int pipe_fd[2];
-        short int mailpos = 0;	/* 'empty mail file' size */
+        /* child */
+        {
+            struct passwd *pas = NULL;
+            char **jobenv = NULL;
+            char **sendmailenv = NULL;
+            char *curshell = NULL;
+            char *curhome = NULL;
+            char *content_type = NULL;
+            char *encoding = NULL;
+            FILE *mailf = NULL;
+            int status = 0;
+            int to_stdout = foreground && is_stdout(line->cl_option);
+            int pipe_fd[2];
+            short int mailpos = 0;      /* 'empty mail file' size */
 #ifdef WITH_SELINUX
-        int flask_enabled = is_selinux_enabled();
+            int flask_enabled = is_selinux_enabled();
 #endif
 
-	/* // */
- 	debug("run_job(): child: %s, output to %s, %s, %s\n",
-	      is_mail(line->cl_option) ? "mail" : "no mail",
-	      to_stdout ? "stdout" : "file",
- 	      foreground ? "running in foreground" : "running in background",
- 	      is_stdout(line->cl_option) ? "stdout" : "normal" );
-	/* // */
+            /* // */
+            debug("run_job(): child: %s, output to %s, %s, %s\n",
+                  is_mail(line->cl_option) ? "mail" : "no mail",
+                  to_stdout ? "stdout" : "file",
+                  foreground ? "running in foreground" :
+                  "running in background",
+                  is_stdout(line->cl_option) ? "stdout" : "normal");
+            /* // */
 
-        errno = 0;
-        pas = getpwnam(line->cl_runas);
-        if ( pas == NULL )
-            die_e("failed to get passwd fields for user \"%s\"", line->cl_runas);
+            errno = 0;
+            pas = getpwnam(line->cl_runas);
+            if (pas == NULL)
+                die_e("failed to get passwd fields for user \"%s\"",
+                      line->cl_runas);
 
-        setup_user_and_env(line, pas, &sendmailenv, &jobenv, &curshell,
-                           &curhome, &content_type, &encoding);
+            setup_user_and_env(line, pas, &sendmailenv, &jobenv, &curshell,
+                               &curhome, &content_type, &encoding);
 
-	/* close unneeded READ fd */
-	if ( close(pipe_pid_fd[0]) < 0 )
-	    error_e("child: could not close(pipe_pid_fd[0])");
+            /* close unneeded READ fd */
+            if (close(pipe_pid_fd[0]) < 0)
+                error_e("child: could not close(pipe_pid_fd[0])");
 
-	pipe_fd[0] = pipe_fd[1] = -1;
-	if ( ! to_stdout && is_mail(line->cl_option) ) {
-	    /* we create the temp file (if needed) before change_user(),
-	     * as temp_file() needs root privileges */
-	    /* if we run in foreground, stdout and stderr point to the console.
-	     * Otherwise, stdout and stderr point to /dev/null . */
-	    mailf = create_mail(line, NULL, content_type, encoding, jobenv);
-	    mailpos = ftell(mailf);
-	    if (pipe(pipe_fd) != 0) 
-		die_e("could not pipe() (job not executed)");
-	}
+            pipe_fd[0] = pipe_fd[1] = -1;
+            if (!to_stdout && is_mail(line->cl_option)) {
+                /* we create the temp file (if needed) before change_user(),
+                 * as temp_file() needs root privileges */
+                /* if we run in foreground, stdout and stderr point to the console.
+                 * Otherwise, stdout and stderr point to /dev/null . */
+                mailf = create_mail(line, NULL, content_type, encoding, jobenv);
+                mailpos = ftell(mailf);
+                if (pipe(pipe_fd) != 0)
+                    die_e("could not pipe() (job not executed)");
+            }
 
-        become_user(line, pas, curhome);
-        Free_safe(curhome);
+            become_user(line, pas, curhome);
+            Free_safe(curhome);
 
-	/* restore umask to default */
-	umask (saved_umask);
+            /* restore umask to default */
+            umask(saved_umask);
 
-	sig_dfl();
+            sig_dfl();
 
 #ifdef CHECKRUNJOB
-	debug("run_job(): child: change_user() done -- about to do 2nd fork()");
-#endif /* CHECKRUNJOB */
+            debug
+                ("run_job(): child: change_user() done -- about to do 2nd fork()");
+#endif                          /* CHECKRUNJOB */
 
-	/* now, run the job */
-	switch ( pid = fork() ) {
-	case -1:
-	    error_e("Fork error : could not exec \"%s\"", line->cl_shell);
-	    if ( write(pipe_pid_fd[1], &pid, sizeof(pid)) < 0 )
-		error_e("could not write child pid to pipe_pid_fd[1]");
-	    if ( pipe_fd[0] != -1 && close(pipe_fd[0]) < 0 )
-		error_e("child: could not close(pipe_fd[0])");
-	    if ( pipe_fd[1] != -1 && close(pipe_fd[1]) < 0 )
-		error_e("child: could not close(pipe_fd[1])");
-	    if ( close(pipe_pid_fd[1]) < 0 )
-		error_e("child: could not close(pipe_pid_fd[1])");
-	    exit(EXIT_ERR);
-	    break;
+            /* now, run the job */
+            switch (pid = fork()) {
+            case -1:
+                error_e("Fork error : could not exec \"%s\"", line->cl_shell);
+                if (write(pipe_pid_fd[1], &pid, sizeof(pid)) < 0)
+                    error_e("could not write child pid to pipe_pid_fd[1]");
+                if (pipe_fd[0] != -1 && close(pipe_fd[0]) < 0)
+                    error_e("child: could not close(pipe_fd[0])");
+                if (pipe_fd[1] != -1 && close(pipe_fd[1]) < 0)
+                    error_e("child: could not close(pipe_fd[1])");
+                if (close(pipe_pid_fd[1]) < 0)
+                    error_e("child: could not close(pipe_pid_fd[1])");
+                exit(EXIT_ERR);
+                break;
 
-	case 0:
-	    /* grand child (child of the 2nd fork) */
-	    
-	    /* the grand child does not use this pipe: close remaining fd */
-            if ( close(pipe_pid_fd[1]) < 0 )
-                error_e("grand child: could not close(pipe_pid_fd[1])");
+            case 0:
+                /* grand child (child of the 2nd fork) */
 
-            if ( ! to_stdout )
-            /* note : the following closes the pipe */
-                run_job_grand_child_setup_stderr_stdout(line, pipe_fd);
+                /* the grand child does not use this pipe: close remaining fd */
+                if (close(pipe_pid_fd[1]) < 0)
+                    error_e("grand child: could not close(pipe_pid_fd[1])");
 
-	    foreground = 1; 
-	    /* now, errors will be mailed to the user (or to /dev/null) */
+                if (!to_stdout)
+                    /* note : the following closes the pipe */
+                    run_job_grand_child_setup_stderr_stdout(line, pipe_fd);
 
-	    run_job_grand_child_setup_nice(line);
+                foreground = 1;
+                /* now, errors will be mailed to the user (or to /dev/null) */
 
-	    xcloselog();
+                run_job_grand_child_setup_nice(line);
+
+                xcloselog();
 
 #if defined(CHECKJOBS) || defined(CHECKRUNJOB)
-	    /* this will force to mail a message containing at least the exact
-	     * and complete command executed for each execution of all jobs */
-	    debug("run_job(): grand-child: Executing \"%s -c %s\"", curshell, line->cl_shell);
-#endif /* CHECKJOBS OR CHECKRUNJOB */
+                /* this will force to mail a message containing at least the exact
+                 * and complete command executed for each execution of all jobs */
+                debug("run_job(): grand-child: Executing \"%s -c %s\"",
+                      curshell, line->cl_shell);
+#endif                          /* CHECKJOBS OR CHECKRUNJOB */
 
 #ifdef WITH_SELINUX
-	    if(flask_enabled && setexeccon(line->cl_file->cf_user_context) < 0)
-		die_e("Can't set execute context '%s' for user '%s'.",
-		      line->cl_file->cf_user_context, line->cl_runas);
+                if (flask_enabled
+                    && setexeccon(line->cl_file->cf_user_context) < 0)
+                    die_e("Can't set execute context '%s' for user '%s'.",
+                          line->cl_file->cf_user_context, line->cl_runas);
 #else
-	    if (setsid() == -1) {
-		die_e("setsid(): errno %d", errno);
-	    }
-#endif
-	    execle(curshell, curshell, "-c", line->cl_shell, NULL, jobenv);
-	    /* execle returns only on error */
-	    die_e("Couldn't exec shell '%s'",curshell);
-
-	    /* execution never gets here */
-
-	default:
-	    /* child (parent of the 2nd fork) */
-
-	    /* close unneeded WRITE pipe and READ pipe */
-	    if ( pipe_fd[1] != -1 && close(pipe_fd[1]) < 0 )
-		error_e("child: could not close(pipe_fd[1])");
-
-#ifdef CHECKRUNJOB
-	    debug("run_job(): child: pipe_fd[1] and pipe_pid_fd[0] closed"
-		  " -- about to write grand-child pid to pipe");
-#endif /* CHECKRUNJOB */
-
-	    /* give the pid of the child to the parent (main) fcron process */
-	    ret = write_pipe(pipe_pid_fd[1], &pid, sizeof(pid));
-            if ( ret != OK ) {
-                if ( ret == ERR )
-                    error("run_job(): child: Could not write job pid to pipe");
-                else {
-                    errno = ret;
-                    error_e("run_job(): child: Could not write job pid to pipe");
+                if (setsid() == -1) {
+                    die_e("setsid(): errno %d", errno);
                 }
-            }
+#endif
+                execle(curshell, curshell, "-c", line->cl_shell, NULL, jobenv);
+                /* execle returns only on error */
+                die_e("Couldn't exec shell '%s'", curshell);
+
+                /* execution never gets here */
+
+            default:
+                /* child (parent of the 2nd fork) */
+
+                /* close unneeded WRITE pipe and READ pipe */
+                if (pipe_fd[1] != -1 && close(pipe_fd[1]) < 0)
+                    error_e("child: could not close(pipe_fd[1])");
 
 #ifdef CHECKRUNJOB
-	    debug("run_job(): child: grand-child pid written to pipe");
-#endif /* CHECKRUNJOB */
+                debug("run_job(): child: pipe_fd[1] and pipe_pid_fd[0] closed"
+                      " -- about to write grand-child pid to pipe");
+#endif                          /* CHECKRUNJOB */
 
-	    if ( ! is_nolog(line->cl_option) )
-            explain("Job %s started for user %s (pid %d)", line->cl_shell,
-                    line->cl_file->cf_user, pid);
+                /* give the pid of the child to the parent (main) fcron process */
+                ret = write_pipe(pipe_pid_fd[1], &pid, sizeof(pid));
+                if (ret != OK) {
+                    if (ret == ERR)
+                        error
+                            ("run_job(): child: Could not write job pid to pipe");
+                    else {
+                        errno = ret;
+                        error_e
+                            ("run_job(): child: Could not write job pid to pipe");
+                    }
+                }
 
-            if ( ! to_stdout && is_mail(line->cl_option ) ) {
-                /* user wants a mail : we use the pipe */
-                char mailbuf[TERM_LEN];
-                FILE *pipef = fdopen(pipe_fd[0], "r");
+#ifdef CHECKRUNJOB
+                debug("run_job(): child: grand-child pid written to pipe");
+#endif                          /* CHECKRUNJOB */
 
-                if ( pipef == NULL )
-                    die_e("Could not fdopen() pipe_fd[0]");
+                if (!is_nolog(line->cl_option))
+                    explain("Job %s started for user %s (pid %d)",
+                            line->cl_shell, line->cl_file->cf_user, pid);
 
-                mailbuf[sizeof(mailbuf)-1] = '\0';
-                while ( fgets(mailbuf, sizeof(mailbuf), pipef) != NULL )
-                    if ( fputs(mailbuf, mailf) < 0 )
-                        warn("fputs() failed to write to mail file for job %s (pid %d)",
-                                line->cl_shell, pid);
-                /* (closes also pipe_fd[0]): */
-                if ( fclose(pipef) != 0 )
-                    error_e("child: Could not fclose(pipef)");
+                if (!to_stdout && is_mail(line->cl_option)) {
+                    /* user wants a mail : we use the pipe */
+                    char mailbuf[TERM_LEN];
+                    FILE *pipef = fdopen(pipe_fd[0], "r");
+
+                    if (pipef == NULL)
+                        die_e("Could not fdopen() pipe_fd[0]");
+
+                    mailbuf[sizeof(mailbuf) - 1] = '\0';
+                    while (fgets(mailbuf, sizeof(mailbuf), pipef) != NULL)
+                        if (fputs(mailbuf, mailf) < 0)
+                            warn("fputs() failed to write to mail file for job %s (pid %d)", line->cl_shell, pid);
+                    /* (closes also pipe_fd[0]): */
+                    if (fclose(pipef) != 0)
+                        error_e("child: Could not fclose(pipef)");
+                }
+
+                /* FIXME : FOLLOWING HACK USELESS ? */
+                /* FIXME : HACK
+                 * this is a try to fix the bug on sorcerer linux (no jobs
+                 * exectued at all, and
+                 * "Could not read job pid : setting it to -1: No child processes"
+                 * error messages) */
+                /* use a select() or similar to know when parent has read
+                 * the pid (with a timeout !) */
+                /* // */
+                sleep(2);
+                /* // */
+#ifdef CHECKRUNJOB
+                debug("run_job(): child: closing pipe with parent");
+#endif                          /* CHECKRUNJOB */
+                if (close(pipe_pid_fd[1]) < 0)
+                    error_e("child: could not close(pipe_pid_fd[1])");
+
+                /* we use a while because of a possible interruption by a signal */
+                while ((pid = wait3(&status, 0, NULL)) > 0) {
+#ifdef CHECKRUNJOB
+                    debug("run_job(): child: ending job pid %d", pid);
+#endif                          /* CHECKRUNJOB */
+                    end_job(line, status, mailf, mailpos, sendmailenv);
+                }
+
+                /* execution never gets here */
+
             }
 
-            /* FIXME : FOLLOWING HACK USELESS ? */
-            /* FIXME : HACK
-             * this is a try to fix the bug on sorcerer linux (no jobs
-             * exectued at all, and
-             * "Could not read job pid : setting it to -1: No child processes"
-             * error messages) */
-            /* use a select() or similar to know when parent has read
-             * the pid (with a timeout !) */
-            /* // */
-            sleep(2);
-            /* // */
-#ifdef CHECKRUNJOB
-            debug("run_job(): child: closing pipe with parent");
-#endif /* CHECKRUNJOB */
-            if ( close(pipe_pid_fd[1]) < 0 )
-                error_e("child: could not close(pipe_pid_fd[1])");
-
-            /* we use a while because of a possible interruption by a signal */
-            while ( (pid = wait3(&status, 0, NULL)) > 0)
-            {
-#ifdef CHECKRUNJOB
-                debug("run_job(): child: ending job pid %d", pid);
-#endif /* CHECKRUNJOB */
-                end_job(line, status, mailf, mailpos, sendmailenv);
-            }
-
-            /* execution never gets here */
-
+            /* execution should never gets here, but if it happened we exit with an error */
+            exit(EXIT_ERR);
         }
 
-        /* execution should never gets here, but if it happened we exit with an error */
-        exit(EXIT_ERR);
-    }
-
     default:
-	/* parent */
+        /* parent */
 
-	/* close unneeded WRITE fd */
-	if ( close(pipe_pid_fd[1]) < 0 )
-	    error_e("parent: could not close(pipe_pid_fd[1])");
+        /* close unneeded WRITE fd */
+        if (close(pipe_pid_fd[1]) < 0)
+            error_e("parent: could not close(pipe_pid_fd[1])");
 
-	exeent->e_ctrl_pid = pid;
-
-#ifdef CHECKRUNJOB
-	debug("run_job(): about to read grand-child pid...");
-#endif /* CHECKRUNJOB */
-
-	/* read the pid of the job */
-	ret = read_pipe(pipe_pid_fd[0], &(exeent->e_job_pid), sizeof(pid_t));
-	if ( ret != OK ) {
-	    if ( ret == ERR )
-		error("Could not read job pid because of closed pipe:"
-		      " setting it to -1");
-	    else {
-		errno = ret;
-		error_e("Could not read job pid : setting it to -1");
-	    }
-	    
-	    exeent->e_job_pid = -1;
-	    break;
-	}
-	if ( close(pipe_pid_fd[0]) < 0 )
-	    error_e("parent: could not close(pipe_pid_fd[0])");
+        exeent->e_ctrl_pid = pid;
 
 #ifdef CHECKRUNJOB
-	debug("run_job(): finished reading pid of the job -- end of run_job().");
-#endif /* CHECKRUNJOB */
+        debug("run_job(): about to read grand-child pid...");
+#endif                          /* CHECKRUNJOB */
+
+        /* read the pid of the job */
+        ret = read_pipe(pipe_pid_fd[0], &(exeent->e_job_pid), sizeof(pid_t));
+        if (ret != OK) {
+            if (ret == ERR)
+                error("Could not read job pid because of closed pipe:"
+                      " setting it to -1");
+            else {
+                errno = ret;
+                error_e("Could not read job pid : setting it to -1");
+            }
+
+            exeent->e_job_pid = -1;
+            break;
+        }
+        if (close(pipe_pid_fd[0]) < 0)
+            error_e("parent: could not close(pipe_pid_fd[0])");
+
+#ifdef CHECKRUNJOB
+        debug
+            ("run_job(): finished reading pid of the job -- end of run_job().");
+#endif                          /* CHECKRUNJOB */
 
     }
 
@@ -755,62 +774,62 @@ run_job(struct exe_t *exeent)
 
 }
 
-void 
-end_job(cl_t *line, int status, FILE *mailf, short mailpos, char **sendmailenv)
+void
+end_job(cl_t * line, int status, FILE * mailf, short mailpos,
+        char **sendmailenv)
     /* if task have made some output, mail it to user */
 {
 
     char mail_output;
     char *m;
 
-    if ( mailf != NULL
-	 && ( 
-	     is_mailzerolength(line->cl_option)
-	     ||
-	     ( 
-		 is_mail(line->cl_option)
-		 && (
-		     /* job wrote some output and we wan't it in any case: */
-		     ( (fseek(mailf, 0, SEEK_END) == 0 && ftell(mailf) > mailpos)
-		       && ! is_erroronlymail(line->cl_option) )
-		     || 
-		     /* or we want an email only if the job returned an error: */
-		     ! (WIFEXITED(status) && WEXITSTATUS(status) == 0)
-		     ) 
-		  ) 
-	     ) 
-	)
-	/* an output exit : we will mail it */
-	mail_output = 1;
+    if (mailf != NULL && (is_mailzerolength(line->cl_option)
+                          || (is_mail(line->cl_option)
+                              && (
+                                     /* job wrote some output and we wan't it in any case: */
+                                     ((fseek(mailf, 0, SEEK_END) == 0
+                                       && ftell(mailf) > mailpos)
+                                      && !is_erroronlymail(line->cl_option))
+                                     ||
+                                     /* or we want an email only if the job returned an error: */
+                                     !(WIFEXITED(status)
+                                       && WEXITSTATUS(status) == 0)
+                              )
+                          )
+        )
+        )
+        /* an output exit : we will mail it */
+        mail_output = 1;
     else
-	/* no output */
-	mail_output = 0;
+        /* no output */
+        mail_output = 0;
 
     m = (mail_output == 1) ? " (mailing output)" : "";
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-	if ( ! is_nolog(line->cl_option) )
-	    explain("Job %s completed%s", line->cl_shell, m);
+        if (!is_nolog(line->cl_option))
+            explain("Job %s completed%s", line->cl_shell, m);
     }
     else if (WIFEXITED(status)) {
-	warn("Job %s terminated (exit status: %d)%s",
-	     line->cl_shell, WEXITSTATUS(status), m);
-	/* there was an error : in order to inform the user by mail, we need
-	 * to add some data to mailf */
-	if ( mailf != NULL )
-	    fprintf(mailf, "Job %s terminated (exit status: %d)%s",
-		    line->cl_shell, WEXITSTATUS(status), m);
+        warn("Job %s terminated (exit status: %d)%s",
+             line->cl_shell, WEXITSTATUS(status), m);
+        /* there was an error : in order to inform the user by mail, we need
+         * to add some data to mailf */
+        if (mailf != NULL)
+            fprintf(mailf, "Job %s terminated (exit status: %d)%s",
+                    line->cl_shell, WEXITSTATUS(status), m);
     }
     else if (WIFSIGNALED(status)) {
-	error("Job %s terminated due to signal %d%s",
-	      line->cl_shell, WTERMSIG(status), m);
-	if ( mailf != NULL )
-	    fprintf(mailf, "Job %s terminated due to signal %d%s",
-		    line->cl_shell, WTERMSIG(status), m);
+        error("Job %s terminated due to signal %d%s",
+              line->cl_shell, WTERMSIG(status), m);
+        if (mailf != NULL)
+            fprintf(mailf, "Job %s terminated due to signal %d%s",
+                    line->cl_shell, WTERMSIG(status), m);
     }
-    else { /* is this possible? */
-	error("Job %s terminated abnormally %s", line->cl_shell, m);
-	if ( mailf != NULL )
-	    fprintf(mailf, "Job %s terminated abnormally %s", line->cl_shell, m);
+    else {                      /* is this possible? */
+        error("Job %s terminated abnormally %s", line->cl_shell, m);
+        if (mailf != NULL)
+            fprintf(mailf, "Job %s terminated abnormally %s", line->cl_shell,
+                    m);
     }
 
 #ifdef HAVE_LIBPAM
@@ -822,28 +841,28 @@ end_job(cl_t *line, int status, FILE *mailf, short mailpos, char **sendmailenv)
      * It should be ok like that, otherwise contact me ... -tg */
 
     /* Aiee! we may need to be root to do this properly under Linux.  Let's
-       hope we're more l33t than PAM and try it as non-root. If someone
-       complains, I'll fix this :P -hmh */
+     * hope we're more l33t than PAM and try it as non-root. If someone
+     * complains, I'll fix this :P -hmh */
     pam_setcred(pamh, PAM_DELETE_CRED | PAM_SILENT);
     pam_end(pamh, pam_close_session(pamh, PAM_SILENT));
 #endif
 
     if (mail_output == 1) {
-	launch_mailer(line, mailf, sendmailenv);
-	/* never reached */
-	die_e("Internal error: launch_mailer returned");
+        launch_mailer(line, mailf, sendmailenv);
+        /* never reached */
+        die_e("Internal error: launch_mailer returned");
     }
 
     /* if mail is sent, execution doesn't get here : close /dev/null */
-    if ( mailf != NULL && fclose(mailf) != 0 )
-	die_e("Can't close file mailf");
+    if (mailf != NULL && fclose(mailf) != 0)
+        die_e("Can't close file mailf");
 
     exit(0);
 
 }
 
 void
-launch_mailer(cl_t *line, FILE *mailf, char **sendmailenv)
+launch_mailer(cl_t * line, FILE * mailf, char **sendmailenv)
     /* mail the output of a job to user */
 {
 #ifdef USE_SENDMAIL
@@ -856,24 +875,27 @@ launch_mailer(cl_t *line, FILE *mailf, char **sendmailenv)
      * For those users, lseek() works, so I have decided to use both,
      * as I am not sure that lseek(fileno(...)...) will work as expected
      * on non linux systems. */
-    if ( fseek(mailf, 0, SEEK_SET ) != 0) die_e("Can't fseek()");
-    if ( lseek(fileno(mailf), 0, SEEK_SET ) != 0) die_e("Can't lseek()");
-    if ( dup2(fileno(mailf), 0) != 0 ) die_e("Can't dup2(fileno(mailf))");
+    if (fseek(mailf, 0, SEEK_SET) != 0)
+        die_e("Can't fseek()");
+    if (lseek(fileno(mailf), 0, SEEK_SET) != 0)
+        die_e("Can't lseek()");
+    if (dup2(fileno(mailf), 0) != 0)
+        die_e("Can't dup2(fileno(mailf))");
 
     xcloselog();
 
-    if ( chdir("/") < 0 )
-	die_e("Could not chdir to /");
+    if (chdir("/") < 0)
+        die_e("Could not chdir to /");
 
     /* run sendmail with mail file as standard input */
     /* // */
-    debug("execle(%s, %s, %s, %s, NULL, sendmailenv)", sendmail, sendmail, SENDMAIL_ARGS, line->cl_mailto);
+    debug("execle(%s, %s, %s, %s, NULL, sendmailenv)", sendmail, sendmail,
+          SENDMAIL_ARGS, line->cl_mailto);
     /* // */
-    execle(sendmail, sendmail, SENDMAIL_ARGS, line->cl_mailto, NULL, sendmailenv);
+    execle(sendmail, sendmail, SENDMAIL_ARGS, line->cl_mailto, NULL,
+           sendmailenv);
     die_e("Couldn't exec '%s'", sendmail);
-#else /* defined(USE_SENDMAIL) */
+#else                           /* defined(USE_SENDMAIL) */
     exit(EXIT_OK);
 #endif
 }
-
-

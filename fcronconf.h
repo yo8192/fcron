@@ -44,4 +44,4 @@ extern char *sendmail;
 extern void read_conf(void);
 extern void free_conf(void);
 
-#endif /* __FCRONCONF_H__ */
+#endif                          /* __FCRONCONF_H__ */

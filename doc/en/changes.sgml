@@ -13,6 +13,15 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
+	 <title>From version 3.0.6 to 3.1.1</title>
+	    <listitem>
+	       <para>fixed fcrontab edition of *ly lines (hourly, daily, etc)</para>
+	    </listitem>
+	    <listitem>
+	       <para>tweaked 'make indent' options and applied</para>
+	    </listitem>
+      </itemizedlist>
+      <itemizedlist>
 	 <title>From version 3.0.6 to 3.1.0</title>
          <listitem>
             <para>Vixie cron compatibility: added options @reboot, @daily, @hourly, etc. Also added more generic options runatreboot, rebootreset and runonce.</para>

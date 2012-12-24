@@ -34,4 +34,4 @@
 extern uid_t rootuid;
 extern gid_t rootgid;
 
-#endif /* __FCRONSIGHUP_H__ */
+#endif                          /* __FCRONSIGHUP_H__ */

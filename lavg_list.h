@@ -34,23 +34,23 @@
 
 /* Entry to describe one job waiting for an appropriate load average to be executed */
 typedef struct lavg_t {
-    struct cl_t *l_line;  
-    time_t       l_until;   /* the timeout of the wait for load averages */
+    struct cl_t *l_line;
+    time_t l_until;             /* the timeout of the wait for load averages */
 } lavg_t;
 
 typedef struct u_list_t lavg_list_t;
 
 /* functions prototypes */
 extern lavg_list_t *lavg_list_init(void);
-extern lavg_t *lavg_list_add_line(lavg_list_t *list, struct cl_t *line);
-extern lavg_t *lavg_list_add(lavg_list_t *list, lavg_t *entry);
+extern lavg_t *lavg_list_add_line(lavg_list_t * list, struct cl_t *line);
+extern lavg_t *lavg_list_add(lavg_list_t * list, lavg_t * entry);
 /* WARNING: there should always be a unique iteration loop based on
  *          u_list_first()/u_list_next() running at any one time in the code */
-extern lavg_t *lavg_list_first(lavg_list_t *list);
-extern lavg_t *lavg_list_next(lavg_list_t *list);
-extern void lavg_list_end_iteration(lavg_list_t *list);
-extern void lavg_list_remove_cur(lavg_list_t *list);
-extern lavg_list_t *lavg_list_destroy(lavg_list_t *list);
+extern lavg_t *lavg_list_first(lavg_list_t * list);
+extern lavg_t *lavg_list_next(lavg_list_t * list);
+extern void lavg_list_end_iteration(lavg_list_t * list);
+extern void lavg_list_remove_cur(lavg_list_t * list);
+extern lavg_list_t *lavg_list_destroy(lavg_list_t * list);
 
 
-#endif /* __LAVG_LIST_H__ */
+#endif                          /* __LAVG_LIST_H__ */

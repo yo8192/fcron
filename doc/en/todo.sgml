@@ -24,13 +24,7 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>confirm 'make indent' options are good, and apply</para>
-	    </listitem>
-	    <listitem>
-	       <para>change git config to fetch tags</para>
-	    </listitem>
-	    <listitem>
-	       <para>Make DocBook in vim easier? (at least indentation)</para>
+	       <para></para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>

@@ -41,11 +41,11 @@ extern void error_e(char *fmt, ...);
 extern void die(char *fmt, ...);
 extern void die_e(char *fmt, ...);
 #ifdef HAVE_LIBPAM
-extern void error_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...);
-extern void die_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...);
+extern void error_pame(pam_handle_t * pamh, int pamerrno, char *fmt, ...);
+extern void die_pame(pam_handle_t * pamh, int pamerrno, char *fmt, ...);
 #endif
 extern void Debug(char *fmt, ...);
 extern void send_msg_fd_debug(int fd, char *fmt, ...);
 extern void send_msg_fd(int fd, char *fmt, ...);
 
-#endif /* __LOG_H__ */
+#endif                          /* __LOG_H__ */

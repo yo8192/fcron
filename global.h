@@ -135,13 +135,13 @@
 #include "pam.h"
 #endif
 
-#include "bitstring.h"     /* bit arrays */
-#include "option.h"        /* manage fcrontab's options */
-#include "env_list.h"      /* manage fcrontab's environment variable lists */
-#include "cl.h"            /* Cron Line cl_t type and associated functions */
+#include "bitstring.h"          /* bit arrays */
+#include "option.h"             /* manage fcrontab's options */
+#include "env_list.h"           /* manage fcrontab's environment variable lists */
+#include "cl.h"                 /* Cron Line cl_t type and associated functions */
 
 /* you should not change this (nor need to do it) */
-#define ERR     -1           
+#define ERR     -1
 #define OK       0
 
 /* options for local functions */
@@ -171,12 +171,12 @@
 #define debug if(debug_opt) Debug
 
 typedef struct cf_t {
-    struct cf_t  *cf_next;
-    struct cl_t  *cf_line_base;
-    char	 *cf_user;	/* user-name			             */
-    env_list_t   *cf_env_list;  /* list of all parsed env var                */
-    int		  cf_running;	/* number of jobs running                    */
-    signed char	  cf_tzdiff;    /* time diff between system and local hour   */
+    struct cf_t *cf_next;
+    struct cl_t *cf_line_base;
+    char *cf_user;              /* user-name                                 */
+    env_list_t *cf_env_list;    /* list of all parsed env var                */
+    int cf_running;             /* number of jobs running                    */
+    signed char cf_tzdiff;      /* time diff between system and local hour   */
 #ifdef WITH_SELINUX
     security_context_t cf_user_context;
     security_context_t cf_file_context;
@@ -185,8 +185,8 @@ typedef struct cf_t {
 
 
 typedef struct job_t {
-    struct cl_t  *j_line;
-    struct job_t   *j_next;
+    struct cl_t *j_line;
+    struct job_t *j_next;
 } job_t;
 
 
@@ -234,5 +234,4 @@ typedef struct job_t {
 #include "subs.h"
 
 
-#endif /* __GLOBAL_H__ */
-
+#endif                          /* __GLOBAL_H__ */

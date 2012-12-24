@@ -18,7 +18,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef _POSIX_SOURCE	/* Don't redefine if already exists */
+#ifndef _POSIX_SOURCE           /* Don't redefine if already exists */
 #define _POSIX_SOURCE 1
 #endif
 
@@ -40,46 +40,46 @@ getloadavg(double *result, int n)
  * the number of load averages read, or <0 for error
  */
 {
-        kstat_ctl_t    *kc;
-        kstat_t        *ksp;
-        kstat_named_t  *knm;
-        kstat_named_t  knm_buf[20];
-        int            cnt;
-        int            ret;
+    kstat_ctl_t *kc;
+    kstat_t *ksp;
+    kstat_named_t *knm;
+    kstat_named_t knm_buf[20];
+    int cnt;
+    int ret;
 
-        if ( n != 3) {
-            return -1;
-        }
+    if (n != 3) {
+        return -1;
+    }
 
-        ret = 0;
+    ret = 0;
 
-        kc = kstat_open();
-        for (ksp = kc->kc_chain; ksp != NULL; ksp = ksp->ks_next) {
-            if (strcmp(ksp->ks_name, "system_misc") == 0) {
-                kstat_read(kc, ksp, &knm_buf);
-                for (cnt=0; cnt<ksp->ks_ndata; cnt++) {
-                    knm=&knm_buf[cnt];
-                    if (strcmp(knm->name,"avenrun_1min") == 0)  {
-                        result[0] = knm->value.ui32 / 256.0;
-                        ret++;
-		    }
-		    else if (strcmp(knm->name,"avenrun_5min") == 0)  {
-                        result[1] = knm->value.ui32 / 256.0;
-                        ret++;
-                    }
-		    else if (strcmp(knm->name,"avenrun_15min") == 0)  {
-                        result[2] = knm->value.ui32 / 256.0;
-                        ret++;
-                    }
+    kc = kstat_open();
+    for (ksp = kc->kc_chain; ksp != NULL; ksp = ksp->ks_next) {
+        if (strcmp(ksp->ks_name, "system_misc") == 0) {
+            kstat_read(kc, ksp, &knm_buf);
+            for (cnt = 0; cnt < ksp->ks_ndata; cnt++) {
+                knm = &knm_buf[cnt];
+                if (strcmp(knm->name, "avenrun_1min") == 0) {
+                    result[0] = knm->value.ui32 / 256.0;
+                    ret++;
+                }
+                else if (strcmp(knm->name, "avenrun_5min") == 0) {
+                    result[1] = knm->value.ui32 / 256.0;
+                    ret++;
+                }
+                else if (strcmp(knm->name, "avenrun_15min") == 0) {
+                    result[2] = knm->value.ui32 / 256.0;
+                    ret++;
                 }
             }
         }
-        kstat_close(kc);
+    }
+    kstat_close(kc);
 
-        return ret;
+    return ret;
 }
 
-#else /* def HAVE_KSTAT */
+#else                           /* def HAVE_KSTAT */
 
 int
 getloadavg(double *result, int n)
@@ -91,23 +91,23 @@ getloadavg(double *result, int n)
     int i;
 
     if (n > 3)
-	n = 3;
+        n = 3;
 
     if ((fp = fopen(PROC "/loadavg", "r")) == NULL) {
-	error_e("could not open '"PROC"/loadavg'"
-		" (make sure procfs is mounted)");
-	i = -1;
+        error_e("could not open '" PROC "/loadavg'"
+                " (make sure procfs is mounted)");
+        i = -1;
     }
     else {
-	for (i = 0; i < n; i++) {
-	    if (fscanf(fp, "%lf", result) != 1)
-		goto end;
-	    result++;
-	}
+        for (i = 0; i < n; i++) {
+            if (fscanf(fp, "%lf", result) != 1)
+                goto end;
+            result++;
+        }
     }
-  end:
+ end:
     fclose(fp);
-    return (i<0) ? i : i;
+    return (i < 0) ? i : i;
 }
 
-#endif /* def HAVE_KSTAT */
+#endif                          /* def HAVE_KSTAT */

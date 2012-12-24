@@ -78,4 +78,4 @@
 #define CMD_SEND_SIGNAL 401
 #define CMD_RENICE 402
 
-#endif /* __DYNCOM_H__ */
+#endif                          /* __DYNCOM_H__ */

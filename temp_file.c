@@ -40,12 +40,12 @@ temp_file(char **name)
 #ifdef HAVE_MKSTEMP
     char name_local[PATH_LEN] = "";
     snprintf(name_local, sizeof(name_local), "%sfcr-XXXXXX", tmp_path);
-    if ( (fd = mkstemp(name_local)) == -1 )
-	die_e("Can't find a unique temporary filename");
+    if ((fd = mkstemp(name_local)) == -1)
+        die_e("Can't find a unique temporary filename");
     /* we must set the file mode to 600 (some versions of mkstemp may set it
      * incorrectly) */
-    if ( fchmod(fd, S_IWUSR | S_IRUSR) != 0 )
-	die_e("Can't fchmod temp file");
+    if (fchmod(fd, S_IWUSR | S_IRUSR) != 0)
+        die_e("Can't fchmod temp file");
 #else
     const int max_retries = 50;
     char *name_local = NULL;
@@ -53,28 +53,28 @@ temp_file(char **name)
 
     i = 0;
     do {
-	i++;
-	Set(name_local, tempnam(NULL, NULL));
-	if ( name_local == NULL )
-	    die("Can't find a unique temporary filename");
-	fd = open(name_local, O_RDWR|O_CREAT|O_EXCL|O_APPEND, S_IRUSR|S_IWUSR);
-	/* I'm not sure we actually need to be so persistent here */
+        i++;
+        Set(name_local, tempnam(NULL, NULL));
+        if (name_local == NULL)
+            die("Can't find a unique temporary filename");
+        fd = open(name_local, O_RDWR | O_CREAT | O_EXCL | O_APPEND,
+                  S_IRUSR | S_IWUSR);
+        /* I'm not sure we actually need to be so persistent here */
     } while (fd == -1 && errno == EEXIST && i < max_retries);
     if (fd == -1)
-	die_e("Can't open temporary file");
+        die_e("Can't open temporary file");
 #endif
-    if ( name == NULL && unlink(name_local) != 0 )
-	die_e("Can't unlink temporary file %s", name_local);
+    if (name == NULL && unlink(name_local) != 0)
+        die_e("Can't unlink temporary file %s", name_local);
 
-    fcntl(fd, F_SETFD, 1);   /* set close-on-exec flag */
-    
+    fcntl(fd, F_SETFD, 1);      /* set close-on-exec flag */
+
     /* give the name of the temp file if necessary */
     if (name != NULL)
-	*name = strdup2(name_local);
+        *name = strdup2(name_local);
 #ifndef HAVE_MKSTEMP
     free(name_local);
 #endif
 
     return fd;
 }
-

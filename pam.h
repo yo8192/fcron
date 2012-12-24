@@ -35,4 +35,4 @@
 extern pam_handle_t *pamh;
 extern const struct pam_conv apamconv;
 
-#endif /* __PAM_H__ */
+#endif                          /* __PAM_H__ */

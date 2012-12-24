@@ -33,11 +33,11 @@ get_user_uid_safe(char *username)
 
     errno = 0;
     pass = getpwnam(username);
-    if ( pass == NULL ) {
-	die_e("Unable to get the uid of user %s (is user in passwd file?)",
-	      username);
+    if (pass == NULL) {
+        die_e("Unable to get the uid of user %s (is user in passwd file?)",
+              username);
     }
-    
+
     return pass->pw_uid;
 
 }
@@ -50,10 +50,10 @@ get_group_gid_safe(char *groupname)
 
     errno = 0;
     grp = getgrnam(groupname);
-    if ( grp == NULL ) {
-	die_e("Unable to get the gid of group %s", groupname);
+    if (grp == NULL) {
+        die_e("Unable to get the gid of group %s", groupname);
     }
-    
+
     return grp->gr_gid;
 
 }
@@ -84,7 +84,7 @@ setegid_safe(gid_t egid)
         die_e("could not change egid to %d", egid);
 
 }
-#endif /* def USE_SETE_ID */
+#endif                          /* def USE_SETE_ID */
 
 #ifdef USE_SETE_ID
 int
@@ -102,7 +102,9 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
 
     if (flags & O_CREAT) {
         va_start(ap, flags);
-        mode = (sizeof(mode_t) < sizeof(int)) ? va_arg(ap, int) : va_arg(ap, mode_t);
+        mode =
+            (sizeof(mode_t) < sizeof(int)) ? va_arg(ap, int) : va_arg(ap,
+                                                                      mode_t);
         va_end(ap);
     }
 
@@ -120,18 +122,18 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     setegid_safe(orig_egid);
 
     /* if open() didn't fail make sure we opened a 'normal' file */
-    if ( fd >= 0 ) {
+    if (fd >= 0) {
 
-        if ( fstat(fd, &s) < 0 ) {
+        if (fstat(fd, &s) < 0) {
             error_e("open_as_user(): could not fstat %s", pathname);
-            if ( close(fd) < 0 )
+            if (close(fd) < 0)
                 error_e("open_as_user: could not close() %s", pathname);
             fd = -1;
         }
 
-        if ( ! S_ISREG(s.st_mode) || s.st_nlink != 1 ) {
+        if (!S_ISREG(s.st_mode) || s.st_nlink != 1) {
             error_e("open_as_user(): file %s is not a regular file", pathname);
-            if ( close(fd) < 0 )
+            if (close(fd) < 0)
                 error_e("open_as_user: could not close() %s", pathname);
             errno = 0;
             fd = -1;
@@ -143,7 +145,7 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
 
 }
 
-#else /* def USE_SETE_ID */
+#else                           /* def USE_SETE_ID */
 
 int
 open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
@@ -160,7 +162,9 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
 
     if (flags & O_CREAT) {
         va_start(ap, flags);
-        mode = (sizeof(mode_t) < sizeof(int)) ? va_arg(ap, int) : va_arg(ap, mode_t);
+        mode =
+            (sizeof(mode_t) < sizeof(int)) ? va_arg(ap, int) : va_arg(ap,
+                                                                      mode_t);
         va_end(ap);
     }
 
@@ -169,18 +173,18 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
      * There will always be a risk of race-condition between the test
      * and the open but that's the best we can realistically do
      * without seteuid()... */
-    if ( stat(pathname, &s) == 0 ) {
-        if ( ! ( s.st_mode & S_IROTH
-                    || ( s.st_uid == openuid && s.st_mode & S_IRUSR )
-                    || ( s.st_gid == opengid && s.st_mode & S_IRGRP ) ) ) {
+    if (stat(pathname, &s) == 0) {
+        if (!
+            (s.st_mode & S_IROTH || (s.st_uid == openuid && s.st_mode & S_IRUSR)
+             || (s.st_gid == opengid && s.st_mode & S_IRGRP))) {
             error("open_as_user(): file %s does not pass the security test: "
-                    "uid=%d gid=%d mode=%lo openuid=%d opengid=%d",
-                    pathname, s.st_uid, s.st_gid, s.st_mode, openuid, opengid);
+                  "uid=%d gid=%d mode=%lo openuid=%d opengid=%d",
+                  pathname, s.st_uid, s.st_gid, s.st_mode, openuid, opengid);
             errno = EACCES;
             return -1;
         }
     }
-    else if ( errno == ENOENT ) {
+    else if (errno == ENOENT) {
         /* the file doesn't exist so no risk to truncate the wrong file! */
         ;
     }
@@ -195,16 +199,16 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     else
         fd = open(pathname, flags);
 
-    if ( fd < 0 )
+    if (fd < 0)
         /* we couldn't open the file */
         return fd;
 
     /* if open() didn't fail make sure we opened a 'normal' file */
-    if ( fstat(fd, &s) < 0 ) {
+    if (fstat(fd, &s) < 0) {
         error_e("open_as_user(): could not fstat %s", pathname);
         goto err;
     }
-    if ( ! S_ISREG(s.st_mode) || s.st_nlink != 1 ) {
+    if (!S_ISREG(s.st_mode) || s.st_nlink != 1) {
         error_e("open_as_user(): file %s is not a regular file", pathname);
         goto err;
     }
@@ -213,12 +217,11 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
      * is allowed to read that file
      * We do that again as a malicious user could have replaced the file
      * by another one (e.g. a link) between the stat() and the open() earlier */
-    if ( ! ( s.st_mode & S_IROTH
-            || ( s.st_uid == openuid && s.st_mode & S_IRUSR )
-            || ( s.st_gid == opengid && s.st_mode & S_IRGRP ) ) ) {
+    if (!(s.st_mode & S_IROTH || (s.st_uid == openuid && s.st_mode & S_IRUSR)
+          || (s.st_gid == opengid && s.st_mode & S_IRGRP))) {
         error("open_as_user(): file %s does not pass the security test: "
-                "uid=%d gid=%d mode=%lo openuid=%d opengid=%d",
-                pathname, s.st_uid, s.st_gid, s.st_mode, openuid, opengid);
+              "uid=%d gid=%d mode=%lo openuid=%d opengid=%d",
+              pathname, s.st_uid, s.st_gid, s.st_mode, openuid, opengid);
         errno = EACCES;
         goto err;
     }
@@ -229,9 +232,10 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
      *       then we will end up changing the ownership even if the seteuid()
      *       version of that function wouldn't have. That shouldn't break
      *       anything though. */
-    if ( (flags & O_CREAT) && fchown(fd, openuid, opengid) != 0) {
-        error_e("Could not fchown %s to uid:%d gid:%d", pathname, openuid, opengid);
-        if ( close(fd) < 0 )
+    if ((flags & O_CREAT) && fchown(fd, openuid, opengid) != 0) {
+        error_e("Could not fchown %s to uid:%d gid:%d", pathname, openuid,
+                opengid);
+        if (close(fd) < 0)
             error_e("open_as_user: could not close() %s", pathname);
         return -1;
     }
@@ -239,13 +243,13 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     /* everything went ok: return the file descriptor */
     return fd;
 
-err:
-    if ( fd >= 0 && close(fd) < 0 )
+ err:
+    if (fd >= 0 && close(fd) < 0)
         error_e("open_as_user: could not close() %s", pathname);
     return -1;
 }
 
-#endif /* def USE_SETE_ID */
+#endif                          /* def USE_SETE_ID */
 
 int
 remove_as_user(const char *pathname, uid_t removeuid, gid_t removegid)
@@ -258,20 +262,21 @@ remove_as_user(const char *pathname, uid_t removeuid, gid_t removegid)
 
     seteuid_safe(removeuid);
     setegid_safe(removegid);
-#endif /* def USE_SETE_ID */
+#endif                          /* def USE_SETE_ID */
 
     rval = remove(pathname);
 
 #ifdef USE_SETE_ID
     seteuid_safe(orig_euid);
     setegid_safe(orig_egid);
-#endif /* def USE_SETE_ID */
+#endif                          /* def USE_SETE_ID */
 
     return rval;
 }
 
 int
-rename_as_user(const char *oldpath, const char *newpath, uid_t renameuid, gid_t renamegid)
+rename_as_user(const char *oldpath, const char *newpath, uid_t renameuid,
+               gid_t renamegid)
 /* Become user and call rename(), then revert back to who we were */
 {
     int rval = -1;
@@ -281,14 +286,14 @@ rename_as_user(const char *oldpath, const char *newpath, uid_t renameuid, gid_t 
 
     seteuid_safe(renameuid);
     setegid_safe(renamegid);
-#endif /* def USE_SETE_ID */
+#endif                          /* def USE_SETE_ID */
 
     rval = rename(oldpath, newpath);
 
 #ifdef USE_SETE_ID
     seteuid_safe(orig_euid);
     setegid_safe(orig_egid);
-#endif /* def USE_SETE_ID */
+#endif                          /* def USE_SETE_ID */
 
     return rval;
 
@@ -303,23 +308,25 @@ remove_blanks(char *str)
 
     /* scan forward to the null */
     while (*c)
-	c++;
+        c++;
 
     /* scan backward to the first character that is not a space */
-    do	{c--;}
-    while (c >= str && isspace( (int) *c));
+    do {
+        c--;
+    }
+    while (c >= str && isspace((int)*c));
 
     /* if last char is a '\n', we remove it */
-    if ( *c == '\n' )
-	*c = '\0';
+    if (*c == '\n')
+        *c = '\0';
     else
-	/* one character beyond where we stopped above is where the null
-	 * goes. */
-	*++c = '\0';
+        /* one character beyond where we stopped above is where the null
+         * goes. */
+        *++c = '\0';
 
     /* return the new length */
-    return ( c - str );
-    
+    return (c - str);
+
 }
 
 int
@@ -328,7 +335,6 @@ strcmp_until(const char *left, const char *right, char until)
 /* Copyright 1988,1990,1993,1994 by Paul Vixie */
 /* Copyright (c) 2004 by Internet Systems Consortium, Inc. ("ISC")
  * Copyright (c) 1997,2000 by Internet Software Consortium, Inc.  */
-
 {
     while (*left != '\0' && *left != until && *left == *right) {
         left++;
@@ -336,7 +342,7 @@ strcmp_until(const char *left, const char *right, char until)
     }
 
     if ((*left == '\0' || *left == until)
-            && (*right == '\0' || *right == until)) {
+        && (*right == '\0' || *right == until)) {
         return (0);
     }
     return (*left - *right);
@@ -351,10 +357,10 @@ get_word(char **str)
     Skip_blanks(*str);
     ptr = *str;
 
-    while ( (isalnum( (int) *ptr) || *ptr == '_' || *ptr == '-') 
-	    && *ptr != '=' && ! isspace( (int) *ptr) )
-	ptr++;
-    
+    while ((isalnum((int)*ptr) || *ptr == '_' || *ptr == '-')
+           && *ptr != '=' && !isspace((int)*ptr))
+        ptr++;
+
     return (ptr - *str);
 }
 
@@ -365,13 +371,13 @@ my_unsetenv(const char *name)
 {
 
 #ifdef HAVE_UNSETENV
-    if ( unsetenv(name) < 0 )
+    if (unsetenv(name) < 0)
         error_e("could not flush env var %s with unsetenv()", name);
 #else
     char buf[PATH_LEN];
     snprintf(buf, sizeof(buf) - 1, "%s=", name);
-    buf[sizeof(buf)-1] = '\0';
-    if ( putenv(buf) < 0 )
+    buf[sizeof(buf) - 1] = '\0';
+    if (putenv(buf) < 0)
         error_e("could not flush env var %s with putenv()", name);
 #endif
 
@@ -382,7 +388,6 @@ my_setenv_overwrite(const char *name, const char *value)
 /* call setenv(x, x, 1) if available, otherwise call putenv() with the appropriate
  * constructed string.
  * Check for errors and log them. */
-
 {
 
 #ifdef HAVE_SETENV
@@ -390,7 +395,7 @@ my_setenv_overwrite(const char *name, const char *value)
     /* // */
     debug("Calling setenv(%s, %s, 1)", name, value);
     /* // */
-    if ( setenv(name, value, 1) != 0 )
+    if (setenv(name, value, 1) != 0)
         error_e("setenv(%s, %s, 1) failed", name, value);
 
 #else
@@ -398,18 +403,16 @@ my_setenv_overwrite(const char *name, const char *value)
 
     snprintf(buf, sizeof(buf) - 1, "%s=%s", name, value)
 
-    /* The final \0 may not have been copied because of lack of space:
-     * add it to make sure */
-    buf[sizeof(buf)-1]='\0';
+        /* The final \0 may not have been copied because of lack of space:
+         * add it to make sure */
+        buf[sizeof(buf) - 1] = '\0';
 
     /* // */
     debug("Calling putenv(%s)", buf);
     /* // */
-    if ( putenv(buf) != 0 )
+    if (putenv(buf) != 0)
         error_e("putenv(%s) failed", buf);
 
 #endif
 
 }
-
-

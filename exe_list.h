@@ -35,23 +35,23 @@
 /* Entry to describe one job being executed */
 typedef struct exe_t {
     struct cl_t *e_line;
-    pid_t        e_ctrl_pid; /* pid of the fcron process controling the job */
-    pid_t        e_job_pid;  /* pid of the job itself */
+    pid_t e_ctrl_pid;           /* pid of the fcron process controling the job */
+    pid_t e_job_pid;            /* pid of the job itself */
 } exe_t;
 
 typedef struct u_list_t exe_list_t;
 
 /* functions prototypes */
 extern exe_list_t *exe_list_init(void);
-extern exe_t *exe_list_add_line(exe_list_t *list, struct cl_t *line);
-extern exe_t *exe_list_add(exe_list_t *list, exe_t *e);
+extern exe_t *exe_list_add_line(exe_list_t * list, struct cl_t *line);
+extern exe_t *exe_list_add(exe_list_t * list, exe_t * e);
 /* WARNING: there should always be a unique iteration loop based on
  *          u_list_first()/u_list_next() running at any one time in the code */
-extern exe_t *exe_list_first(exe_list_t *list);
-extern exe_t *exe_list_next(exe_list_t *list);
-extern void exe_list_end_iteration(exe_list_t *list);
-extern void exe_list_remove_cur(exe_list_t *list);
-extern exe_list_t *exe_list_destroy(exe_list_t *list);
+extern exe_t *exe_list_first(exe_list_t * list);
+extern exe_t *exe_list_next(exe_list_t * list);
+extern void exe_list_end_iteration(exe_list_t * list);
+extern void exe_list_remove_cur(exe_list_t * list);
+extern exe_list_t *exe_list_destroy(exe_list_t * list);
 
 
-#endif /* __EXE_LIST_H__ */
+#endif                          /* __EXE_LIST_H__ */

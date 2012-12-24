@@ -39,68 +39,70 @@ extern char debug_opt;
 #define PAM_MAX_MSG_SIZE LINE_LEN
 #endif
 
-char *read_string(int echo, const char *prompt)
+char *
+read_string(int echo, const char *prompt)
     /* read a line of input string, giving prompt when appropriate */
 {
     struct termios term_before, term_tmp;
     char line[PAM_MAX_MSG_SIZE];
-    int nc, have_term=0;
+    int nc, have_term = 0;
 
-    debug("called with echo='%s', prompt='%s'.", echo ? "ON":"OFF" , prompt);
+    debug("called with echo='%s', prompt='%s'.", echo ? "ON" : "OFF", prompt);
 
-    if (isatty(STDIN_FILENO)) {                      /* terminal state */
+    if (isatty(STDIN_FILENO)) { /* terminal state */
 
-	/* is a terminal so record settings and flush it */
-	if ( tcgetattr(STDIN_FILENO, &term_before) != 0 ) {
-	    debug("error: failed to get terminal settings");
-	    return NULL;
-	}
-	memcpy(&term_tmp, &term_before, sizeof(term_tmp));
-	if (!echo) 
-	    term_tmp.c_lflag &= ~(ECHO);
-	have_term = 1;
+        /* is a terminal so record settings and flush it */
+        if (tcgetattr(STDIN_FILENO, &term_before) != 0) {
+            debug("error: failed to get terminal settings");
+            return NULL;
+        }
+        memcpy(&term_tmp, &term_before, sizeof(term_tmp));
+        if (!echo)
+            term_tmp.c_lflag &= ~(ECHO);
+        have_term = 1;
 
-    } 
+    }
     else if (!echo)
-	debug("warning: cannot turn echo off");
+        debug("warning: cannot turn echo off");
 
     /* reading the line */
     while (1) {
 
-	fprintf(stderr, "%s", prompt);
-	/* this may, or may not set echo off -- drop pending input */
-	if (have_term)
-	    (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term_tmp);
+        fprintf(stderr, "%s", prompt);
+        /* this may, or may not set echo off -- drop pending input */
+        if (have_term)
+            (void)tcsetattr(STDIN_FILENO, TCSAFLUSH, &term_tmp);
 
-	nc = read(STDIN_FILENO, line, sizeof(line)-1);
-	if (have_term) {
-	    (void) tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
-	    if (!echo)             /* do we need a newline? */
-		fprintf(stderr,"\n");
-	}
-	if (nc > 0) {                 /* we got some user input */
-	    char *input;
+        nc = read(STDIN_FILENO, line, sizeof(line) - 1);
+        if (have_term) {
+            (void)tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
+            if (!echo)          /* do we need a newline? */
+                fprintf(stderr, "\n");
+        }
+        if (nc > 0) {           /* we got some user input */
+            char *input;
 
-	    if (nc > 0 && line[nc-1] == '\n') {     /* <NUL> terminate */
-		line[--nc] = '\0';
-	    } else {
-		line[nc] = '\0';
-	    }
-	    input = strdup2(line);
-	    Overwrite(line);
+            if (nc > 0 && line[nc - 1] == '\n') {       /* <NUL> terminate */
+                line[--nc] = '\0';
+            }
+            else {
+                line[nc] = '\0';
+            }
+            input = strdup2(line);
+            Overwrite(line);
 
-	    return input;                  /* return malloc()ed string */
-	} else if (nc == 0) {                                /* Ctrl-D */
-	    debug("user did not want to type anything");
-	    fprintf(stderr, "\n");
-	    break;
-	}
+            return input;       /* return malloc()ed string */
+        }
+        else if (nc == 0) {     /* Ctrl-D */
+            debug("user did not want to type anything");
+            fprintf(stderr, "\n");
+            break;
+        }
     }
 
     if (have_term)
-	(void) tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
+        (void)tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
 
-    memset(line, 0, PAM_MAX_MSG_SIZE);                      /* clean up */
+    memset(line, 0, PAM_MAX_MSG_SIZE);  /* clean up */
     return NULL;
 }
-

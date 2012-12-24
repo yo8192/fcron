@@ -27,11 +27,12 @@
 
 /* functions prototypes */
 extern void change_user_setup_env(struct cl_t *cl, char ***sendmailenv,
-                        char ***jobenv, char **curshell, char **curhome,
-                        char **content_type, char **encoding);
+                                  char ***jobenv, char **curshell,
+                                  char **curhome, char **content_type,
+                                  char **encoding);
 extern int run_job(struct exe_t *exeent);
 extern FILE *create_mail(struct cl_t *line, char *subject, char *content_type,
                          char *encoding, char **env);
-extern void launch_mailer(struct cl_t *line, FILE *mailf, char **env);
+extern void launch_mailer(struct cl_t *line, FILE * mailf, char **env);
 
-#endif /* __JOB_H__ */
+#endif                          /* __JOB_H__ */

@@ -28,4 +28,4 @@
 /* functions prototypes */
 extern int temp_file(char **name);
 
-#endif /* __TEMP_FILE_H__ */
+#endif                          /* __TEMP_FILE_H__ */

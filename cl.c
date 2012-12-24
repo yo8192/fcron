@@ -25,8 +25,8 @@
 #include "cl.h"
 #include "mem.h"
 
-cl_t*
-dups_cl(cl_t *orig)
+cl_t *
+dups_cl(cl_t * orig)
     /* Duplicate a line, including the strings it points to. */
 {
     cl_t *cl = NULL;
@@ -48,7 +48,8 @@ dups_cl(cl_t *orig)
 
     cl->cl_runas = NULL;
     Set(cl->cl_runas, orig->cl_runas);
-    debug("%s: Set cl->cl_runas=%s", __func__, (cl->cl_runas == NULL) ? "null" : cl->cl_runas);
+    debug("%s: Set cl->cl_runas=%s", __func__,
+          (cl->cl_runas == NULL) ? "null" : cl->cl_runas);
 
     cl->cl_mailto = NULL;
     Set(cl->cl_mailto, orig->cl_mailto);
@@ -60,7 +61,7 @@ dups_cl(cl_t *orig)
 }
 
 void
-free_line(cl_t *cl)
+free_line(cl_t * cl)
     /* free a line, including its fields */
 {
     if (cl != NULL) {
@@ -71,5 +72,3 @@ free_line(cl_t *cl)
         Free_safe(cl);
     }
 }
-
-

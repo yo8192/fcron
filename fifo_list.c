@@ -31,12 +31,12 @@
 #include "fifo_list.h"
 
 /* private functions: */
-int fifo_list_resize_array(fifo_list_t *l);
+int fifo_list_resize_array(fifo_list_t * l);
 #define Sizeof_fifo_list(list) ((list)->entry_size * (list)->array_size)
-fifo_list_entry_t *fifo_list_last(fifo_list_t *l);
+fifo_list_entry_t *fifo_list_last(fifo_list_t * l);
 
 fifo_list_t *
-fifo_list_init(size_t entry_size, int init_size, int grow_size) 
+fifo_list_init(size_t entry_size, int init_size, int grow_size)
 /* Create a new fifo list
  * Returns the newly created unordered list
  * Enough memory to hold init_size entries will initially be allocated,
@@ -46,9 +46,8 @@ fifo_list_init(size_t entry_size, int init_size, int grow_size)
     fifo_list_t *l = NULL;
 
     /* sanity check */
-    if ( entry_size < 1 || init_size < 1 || grow_size < 1 )
-	die("Invalid arguments for fifo_list_init(): entry_size=%d, init_size=%d, "
-	    "grow_size=%d", entry_size, init_size, grow_size);
+    if (entry_size < 1 || init_size < 1 || grow_size < 1)
+        die("Invalid arguments for fifo_list_init(): entry_size=%d, init_size=%d, " "grow_size=%d", entry_size, init_size, grow_size);
 
     /* Allocate the list structure: */
     l = alloc_safe(sizeof(struct fifo_list_t), "new fifo_list_t");
@@ -59,28 +58,30 @@ fifo_list_init(size_t entry_size, int init_size, int grow_size)
     l->entry_size = entry_size;
     l->grow_size = grow_size;
     l->first_entry = l->cur_entry = NULL;
-    l->entries_array = alloc_safe(init_size*entry_size, "new fifo_list_t array");
+    l->entries_array =
+        alloc_safe(init_size * entry_size, "new fifo_list_t array");
 
     return l;
 }
 
 fifo_list_entry_t *
-fifo_list_last(fifo_list_t *l)
+fifo_list_last(fifo_list_t * l)
 /* Returns the pointer of the last entry in the list, or NULL if l is empty */
 {
     fifo_list_entry *e = NULL;
 
-    if ( l->num_entries <= 0 )
-	return NULL;
-    
-    e = (fifo_list_entry_t *) 
-	( (char *)l->entries_array + l->entry_size * ( l->num_entries - 1 ) );
-    if ( e >= (fifo_list_entry_t *)  ( (char *)l->entries_array + Sizeof_fifo_list(l) ) )
-	e -= Sizeof_fifo_list(l);
+    if (l->num_entries <= 0)
+        return NULL;
+
+    e = (fifo_list_entry_t *)
+        ((char *)l->entries_array + l->entry_size * (l->num_entries - 1));
+    if (e >=
+        (fifo_list_entry_t *) ((char *)l->entries_array + Sizeof_fifo_list(l)))
+        e -= Sizeof_fifo_list(l);
 }
 
 int
-fifo_list_resize_array(fifo_list_t *l)
+fifo_list_resize_array(fifo_list_t * l)
 /* Resize l's entries_array up to l->max_entries
  * Returns OK on success, ERR if the array is already at maximum size */
 {
@@ -89,53 +90,56 @@ fifo_list_resize_array(fifo_list_t *l)
     int old_size = l->array_size;
 
     /* sanity check */
-    if ( l == NULL )
-	die("Invalid argument for fifo_list_resize_array(): list=%d", l);
-    if ( l->max_entries > 0 && l->array_size >= l->max_entries ) {
-	debug("Resizing fifo_list_t failed because it is already at max size (size: %d)",
-	      l->array_size);
-	return ERR;
+    if (l == NULL)
+        die("Invalid argument for fifo_list_resize_array(): list=%d", l);
+    if (l->max_entries > 0 && l->array_size >= l->max_entries) {
+        debug
+            ("Resizing fifo_list_t failed because it is already at max size (size: %d)",
+             l->array_size);
+        return ERR;
     }
 
-    if ( l->cur_entry != NULL )
-	/* Compute cur_entry's offset so as we can set cur_entry to the right place
-	 * after we have allocated a new chunk of memory for the entries_array */
-	offset = (char *) l->cur_entry - (char *) l->entries_array;
+    if (l->cur_entry != NULL)
+        /* Compute cur_entry's offset so as we can set cur_entry to the right place
+         * after we have allocated a new chunk of memory for the entries_array */
+        offset = (char *)l->cur_entry - (char *)l->entries_array;
 
     l->array_size = (l->array_size + l->grow_size);
-    if ( l->max_entries > 0 && l->array_size > l->max_entries )
-	l->array_size = l->max_entries;
+    if (l->max_entries > 0 && l->array_size > l->max_entries)
+        l->array_size = l->max_entries;
 
-    debug("Resizing fifo_list_t (old size: %d, new size: %d)...", old_size, l->array_size);
-	
-    e = alloc_safe(l->array_size*l->entry_size, "larger fifo_list_t array");
+    debug("Resizing fifo_list_t (old size: %d, new size: %d)...", old_size,
+          l->array_size);
+
+    e = alloc_safe(l->array_size * l->entry_size, "larger fifo_list_t array");
     memcpy(e, l->entries_array, (l->entry_size * old_size));
     Free_safe(l->entries_array);
-    l->entries_array = e;    
+    l->entries_array = e;
 
-    if ( l->cur_entry != NULL )
-	l->cur_entry = (fifo_list_entry_t *) ( (char *) l->entries_array + offset );
+    if (l->cur_entry != NULL)
+        l->cur_entry =
+            (fifo_list_entry_t *) ((char *)l->entries_array + offset);
 
     return OK;
 }
 
 
-fifo_list_entry_t * 
-fifo_list_add(fifo_list_t *l, fifo_list_entry_t *e)
+fifo_list_entry_t *
+fifo_list_add(fifo_list_t * l, fifo_list_entry_t * e)
 /* Add one entry to the list
  * Returns a pointer to the added element, or NULL if list is already at max size */
 {
     fifo_list_entry_t *new = NULL;
 
     /* sanity check */
-    if ( l == NULL || e == NULL )
-	die("Invalid arguments for fifo_list_add(): list=%d, entry=%d", l, e);
+    if (l == NULL || e == NULL)
+        die("Invalid arguments for fifo_list_add(): list=%d, entry=%d", l, e);
 
     /* Check there is some space left, or resize the array */
-    if ( l->num_entries >= l->array_size ) {
-	/* no more space: attempt to grow (the following function dies on error: */
-	if ( fifo_list_resize_array(l) != OK )
-	    return NULL;
+    if (l->num_entries >= l->array_size) {
+        /* no more space: attempt to grow (the following function dies on error: */
+        if (fifo_list_resize_array(l) != OK)
+            return NULL;
     }
 
     l->num_entries++;
@@ -145,59 +149,61 @@ fifo_list_add(fifo_list_t *l, fifo_list_entry_t *e)
     return new;
 }
 
-fifo_list_entry_t * 
-fifo_list_first(fifo_list_t *l)
+fifo_list_entry_t *
+fifo_list_first(fifo_list_t * l)
 /* Return the first entry of the list (then fifo_list_next() can be used) */
 {
     /* sanity check */
-    if ( l == NULL )
-	die("Invalid argument for fifo_list_first(): list=%d", l);
-    if ( l->cur_entry != NULL )
-	die("fifo_list_first() called but there is already an iteration");
+    if (l == NULL)
+        die("Invalid argument for fifo_list_first(): list=%d", l);
+    if (l->cur_entry != NULL)
+        die("fifo_list_first() called but there is already an iteration");
 
     if (l->num_entries > 0) {
-	l->cur_entry = l->entries_array;
+        l->cur_entry = l->entries_array;
     }
-    
+
     return l->cur_entry;
 }
 
-fifo_list_entry_t * 
-fifo_list_next(fifo_list_t *l)
+fifo_list_entry_t *
+fifo_list_next(fifo_list_t * l)
 /* Return the entry after e */
 {
     /* // WHAT IF I CALL _ADD() (+RESIZE?) OR _REMOVE() BETWEEN TWO _NEXT CALLS? */
 
     /* sanity checks */
-    if ( l == NULL )
-	die("Invalid arguments for fifo_list_next(): list=%d", l);
-    if ( l->cur_entry == NULL )
-	die("fifo_list_next() called outside an iteration: l->cur_entry=%d", l->cur_entry);
+    if (l == NULL)
+        die("Invalid arguments for fifo_list_next(): list=%d", l);
+    if (l->cur_entry == NULL)
+        die("fifo_list_next() called outside an iteration: l->cur_entry=%d",
+            l->cur_entry);
 
-    if ( l->cur_removed > 0 ) {
-	l->cur_removed = 0;
-	/* the current entry has just been removed and replaced by another one:
-	 * we can return the same pointer again. 
-	 * However if the removed entry was the last one then we reached the end
-	 * of the list */
-	 if ( l->cur_entry > fifo_list_last(l) )
-	     l->cur_entry = NULL;
+    if (l->cur_removed > 0) {
+        l->cur_removed = 0;
+        /* the current entry has just been removed and replaced by another one:
+         * we can return the same pointer again.
+         * However if the removed entry was the last one then we reached the end
+         * of the list */
+        if (l->cur_entry > fifo_list_last(l))
+            l->cur_entry = NULL;
     }
     else {
-	/* cur_entry *not* removed (standard behavior) */
+        /* cur_entry *not* removed (standard behavior) */
 
-	if ( l->cur_entry < fifo_list_last(l) )
-	    l->cur_entry = (fifo_list_entry_t *) ( (char *) l->cur_entry + l->entry_size);
-	else
-	    /* reached the end of the list */
-	    l->cur_entry = NULL;
+        if (l->cur_entry < fifo_list_last(l))
+            l->cur_entry =
+                (fifo_list_entry_t *) ((char *)l->cur_entry + l->entry_size);
+        else
+            /* reached the end of the list */
+            l->cur_entry = NULL;
     }
 
     return l->cur_entry;
 }
 
 void
-fifo_list_end_iteration(fifo_list_t *list)
+fifo_list_end_iteration(fifo_list_t * list)
     /* Stop an iteration before _next() reached the end of the list by itself */
 {
     list->cur_entry = NULL;
@@ -206,21 +212,21 @@ fifo_list_end_iteration(fifo_list_t *list)
 
 
 void
-fifo_list_remove_first(fifo_list_t *l)
+fifo_list_remove_first(fifo_list_t * l)
 {
     /* // MANAGE L->NEXT_ENTRY (+ SPECIAL CASE FIRST/LAST ENTRY) */
     fifo_list_entry_t *last = NULL;
 
     /* sanity checks */
-    if ( l == NULL )
-	die("Invalid arguments for fifo_list_remove(): list=%d", l);
-    if ( l->cur_entry == NULL )
-	die("fifo_list_remove_cur() called outside of an iteration");
+    if (l == NULL)
+        die("Invalid arguments for fifo_list_remove(): list=%d", l);
+    if (l->cur_entry == NULL)
+        die("fifo_list_remove_cur() called outside of an iteration");
 
     last = fifo_list_last(l);
-    if ( l->cur_entry < last ) {
-	/* Override e with the last entry */
-	memcpy(l->cur_entry, last, l->entry_size);
+    if (l->cur_entry < last) {
+        /* Override e with the last entry */
+        memcpy(l->cur_entry, last, l->entry_size);
     }
     /* erase the last entry and update the number of entries */
     memset(last, 0, l->entry_size);
@@ -230,11 +236,11 @@ fifo_list_remove_first(fifo_list_t *l)
 }
 
 fifo_list_t *
-fifo_list_destroy(fifo_list_t *list)
+fifo_list_destroy(fifo_list_t * list)
     /* free() the memory allocated for list and returns NULL */
 {
-    if ( list == NULL )
-	die("Invalid argument for fifo_list_destroy(): list=%d", list);
+    if (list == NULL)
+        die("Invalid argument for fifo_list_destroy(): list=%d", list);
 
     Free_safe(list->entries_array);
     Free_safe(list);

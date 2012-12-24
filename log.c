@@ -34,22 +34,22 @@
 #include <sys/socket.h>
 
 #ifdef DEBUG
-char debug_opt = 1;       /* set to 1 if we are in debug mode */
+char debug_opt = 1;             /* set to 1 if we are in debug mode */
 #else
-char debug_opt = 0;       /* set to 1 if we are in debug mode */
+char debug_opt = 0;             /* set to 1 if we are in debug mode */
 #endif
 
 
 static void xopenlog(void);
-char* make_msg(const char *append, char *fmt, va_list args);
+char *make_msg(const char *append, char *fmt, va_list args);
 void log_syslog_str(int priority, char *msg);
 void log_console_str(char *msg);
 void log_fd_str(int fd, char *msg);
 static void log_syslog(int priority, int fd, char *fmt, va_list args);
 static void log_e(int priority, char *fmt, va_list args);
 #ifdef HAVE_LIBPAM
-static void log_pame(int priority, pam_handle_t *pamh, int pamerrno,
-		     char *fmt, va_list args);
+static void log_pame(int priority, pam_handle_t * pamh, int pamerrno,
+                     char *fmt, va_list args);
 #endif
 
 static char truncated[] = " (truncated)";
@@ -60,8 +60,8 @@ static void
 xopenlog(void)
 {
     if (!log_open) {
-	openlog(prog_name, LOG_PID, SYSLOG_FACILITY);
-	log_open=1;
+        openlog(prog_name, LOG_PID, SYSLOG_FACILITY);
+        log_open = 1;
     }
 }
 
@@ -69,7 +69,8 @@ xopenlog(void)
 void
 xcloselog()
 {
-    if (log_open) closelog();
+    if (log_open)
+        closelog();
     log_open = 0;
 }
 
@@ -81,19 +82,19 @@ make_msg(const char *append, char *fmt, va_list args)
     int len;
     char *msg = NULL;
 
-    if ( (msg = calloc(1, MAX_MSG + 1)) == NULL )
-	return NULL;
+    if ((msg = calloc(1, MAX_MSG + 1)) == NULL)
+        return NULL;
     /* There's some confusion in the documentation about what vsnprintf
      * returns when the buffer overflows.  Hmmm... */
     len = vsnprintf(msg, MAX_MSG + 1, fmt, args);
-    if ( append != NULL ) {
-	size_t size_to_cat = ( (MAX_MSG-len) > 0) ? (MAX_MSG-len) : 0;
-	strncat(msg, ": ", size_to_cat); 
-	strncat(msg, append, size_to_cat);
-	len += 2 + strlen(append);
+    if (append != NULL) {
+        size_t size_to_cat = ((MAX_MSG - len) > 0) ? (MAX_MSG - len) : 0;
+        strncat(msg, ": ", size_to_cat);
+        strncat(msg, append, size_to_cat);
+        len += 2 + strlen(append);
     }
     if (len >= MAX_MSG)
-	strcpy(msg + (MAX_MSG - 1) - sizeof(truncated), truncated);
+        strcpy(msg + (MAX_MSG - 1) - sizeof(truncated), truncated);
 
     return msg;
 }
@@ -104,8 +105,8 @@ void
 log_syslog_str(int priority, char *msg)
 {
     if (dosyslog) {
-	xopenlog();
-	syslog(priority, "%s", msg);
+        xopenlog();
+        syslog(priority, "%s", msg);
     }
 
 }
@@ -115,14 +116,14 @@ void
 log_console_str(char *msg)
 {
     if (foreground == 1) {
-	time_t t = time(NULL);
-	struct tm *ft;
-	char date[30];
+        time_t t = time(NULL);
+        struct tm *ft;
+        char date[30];
 
-	ft = localtime(&t);
-	date[0] = '\0';
-	strftime(date, sizeof(date), "%H:%M:%S", ft);
-	fprintf(stderr, "%s %s\n", date, msg);
+        ft = localtime(&t);
+        date[0] = '\0';
+        strftime(date, sizeof(date), "%H:%M:%S", ft);
+        fprintf(stderr, "%s %s\n", date, msg);
 
     }
 }
@@ -131,9 +132,9 @@ log_console_str(char *msg)
 void
 log_fd_str(int fd, char *msg)
 {
-    if ( fd >= 0 ) {
-	send(fd, msg, strlen(msg), 0);
-	send(fd, "\n", strlen("\n"), 0);
+    if (fd >= 0) {
+        send(fd, msg, strlen(msg), 0);
+        send(fd, "\n", strlen("\n"), 0);
     }
 }
 
@@ -145,8 +146,8 @@ log_syslog(int priority, int fd, char *fmt, va_list args)
 {
     char *msg;
 
-    if ( (msg = make_msg(NULL, fmt, args)) == NULL)
-	return;
+    if ((msg = make_msg(NULL, fmt, args)) == NULL)
+        return;
 
     log_syslog_str(priority, msg);
     log_console_str(msg);
@@ -163,10 +164,10 @@ log_e(int priority, char *fmt, va_list args)
     int saved_errno;
     char *msg;
 
-    saved_errno=errno;
+    saved_errno = errno;
 
-    if ( (msg = make_msg(strerror(saved_errno), fmt, args)) == NULL )
-	return ;
+    if ((msg = make_msg(strerror(saved_errno), fmt, args)) == NULL)
+        return;
 
     log_syslog_str(priority, msg);
     log_console_str(msg);
@@ -179,12 +180,13 @@ log_e(int priority, char *fmt, va_list args)
 /* Same as log_syslog(), but also appends an error description corresponding
  * to the pam_error. */
 static void
-log_pame(int priority, pam_handle_t *pamh, int pamerrno, char *fmt, va_list args)
+log_pame(int priority, pam_handle_t * pamh, int pamerrno, char *fmt,
+         va_list args)
 {
     char *msg;
 
-    if ( (msg = make_msg(pam_strerror(pamh, pamerrno), fmt, args)) == NULL )
-        return ;
+    if ((msg = make_msg(pam_strerror(pamh, pamerrno), fmt, args)) == NULL)
+        return;
 
     log_syslog_str(priority, msg);
     log_console_str(msg);
@@ -304,11 +306,11 @@ error_e(char *fmt, ...)
 #ifdef HAVE_LIBPAM
 /* Log a "complain" level message, with a PAM error description */
 void
-error_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...)
+error_pame(pam_handle_t * pamh, int pamerrno, char *fmt, ...)
 {
     va_list args;
 
-    xcloselog();  /* PAM is likely to have used openlog() */
+    xcloselog();                /* PAM is likely to have used openlog() */
 
     va_start(args, fmt);
     log_pame(COMPLAIN_LEVEL, pamh, pamerrno, fmt, args);
@@ -330,53 +332,54 @@ die(char *fmt, ...)
     }
     else {
         error("fcron child aborted: this does not affect the main fcron daemon,"
-        " but this may prevent a job from being run or an email from being sent.");
+              " but this may prevent a job from being run or an email from being sent.");
     }
 
     exit(EXIT_ERR);
 
-}  
+}
 
 
 /* Log a "complain" level message, with an error description, and exit */
 void
 die_e(char *fmt, ...)
 {
-   va_list args;
-   int err_no = 0;
+    va_list args;
+    int err_no = 0;
 
-   err_no = errno;
+    err_no = errno;
 
-   va_start(args, fmt);
-   log_e(COMPLAIN_LEVEL, fmt, args);
-   va_end(args);
-   if (getpid() == daemon_pid) {
+    va_start(args, fmt);
+    log_e(COMPLAIN_LEVEL, fmt, args);
+    va_end(args);
+    if (getpid() == daemon_pid) {
         error("Aborted");
     }
     else {
         error("fcron child aborted: this does not affect the main fcron daemon,"
-        " but this may prevent a job from being run or an email from being sent.");
+              " but this may prevent a job from being run or an email from being sent.");
     }
 
 
-   exit(err_no);
+    exit(err_no);
 
-}  
+}
 
 #ifdef HAVE_LIBPAM
 /* Log a "complain" level message, with a PAM error description, and exit */
 void
-die_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...)
+die_pame(pam_handle_t * pamh, int pamerrno, char *fmt, ...)
 {
     va_list args;
 
-    xcloselog();  /* PAM is likely to have used openlog() */
+    xcloselog();                /* PAM is likely to have used openlog() */
 
     va_start(args, fmt);
     log_pame(COMPLAIN_LEVEL, pamh, pamerrno, fmt, args);
     va_end(args);
-    pam_end(pamh, pamerrno);  
-    if (getpid() == daemon_pid) error("Aborted");
+    pam_end(pamh, pamerrno);
+    if (getpid() == daemon_pid)
+        error("Aborted");
 
     exit(EXIT_ERR);
 
@@ -404,11 +407,11 @@ send_msg_fd_debug(int fd, char *fmt, ...)
 
     va_start(args, fmt);
 
-    if ( (msg = make_msg(NULL, fmt, args)) == NULL)
-	return;
+    if ((msg = make_msg(NULL, fmt, args)) == NULL)
+        return;
 
-    if ( debug_opt )
-	log_syslog_str(DEBUG_LEVEL, msg);
+    if (debug_opt)
+        log_syslog_str(DEBUG_LEVEL, msg);
 
     log_fd_str(fd, msg);
 
@@ -427,8 +430,8 @@ send_msg_fd(int fd, char *fmt, ...)
 
     va_start(args, fmt);
 
-    if ( (msg = make_msg(NULL, fmt, args)) == NULL)
-	return;
+    if ((msg = make_msg(NULL, fmt, args)) == NULL)
+        return;
 
     log_fd_str(fd, msg);
 
@@ -436,5 +439,3 @@ send_msg_fd(int fd, char *fmt, ...)
 
     va_end(args);
 }
-
-

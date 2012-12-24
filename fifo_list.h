@@ -38,26 +38,28 @@ typedef void fifo_list_entry_t;
 
 typedef struct fifo_list_t {
     /* PUBLIC: */
-    int             max_entries;   /* max allowed element number (0: no limit) */
-    int             num_entries;   /* READ ONLY: num of entries in the list now */
+    int max_entries;            /* max allowed element number (0: no limit) */
+    int num_entries;            /* READ ONLY: num of entries in the list now */
     /* PRIVATE: DO NOT ACCESS DIRECTLY */
-    int             array_size;    /* size of the array (in number of entries) */
-    size_t          entry_size;    /* number of element currently in the array */
-    int             grow_size;     /* grow array by grow_size entries at a time */
-    u_list_entry_t *first_entry;   /* Current entry in iteration */
-    u_list_entry_t *cur_entry;     /* Current entry in iteration
-				    * (null if not in iteration, i.e. X_first() has
-				    * not been called or we reached the list end */
-    u_list_entry_t *entries_array; /* pointer to the actual array */
+    int array_size;             /* size of the array (in number of entries) */
+    size_t entry_size;          /* number of element currently in the array */
+    int grow_size;              /* grow array by grow_size entries at a time */
+    u_list_entry_t *first_entry;        /* Current entry in iteration */
+    u_list_entry_t *cur_entry;  /* Current entry in iteration
+                                 * (null if not in iteration, i.e. X_first() has
+                                 * not been called or we reached the list end */
+    u_list_entry_t *entries_array;      /* pointer to the actual array */
 } fifo_list_t;
 
 /* functions prototypes */
-extern fifo_list_t *fifo_list_init(size_t entry_size, int init_size, int grow_size);
-extern fifo_list_entry_t *fifo_list_add(fifo_list_t *list, fifo_list_entry_t *entry);
-extern fifo_list_entry_t *fifo_list_first(fifo_list_t *list);
-extern fifo_list_entry_t *fifo_list_next(fifo_list_t *list);
-extern void fifo_list_end_iteration(fifo_list_t *list);
-extern void fifo_list_remove_first(fifo_list_t *list);
-extern fifo_list_t *fifo_list_destroy(fifo_list_t *list);
+extern fifo_list_t *fifo_list_init(size_t entry_size, int init_size,
+                                   int grow_size);
+extern fifo_list_entry_t *fifo_list_add(fifo_list_t * list,
+                                        fifo_list_entry_t * entry);
+extern fifo_list_entry_t *fifo_list_first(fifo_list_t * list);
+extern fifo_list_entry_t *fifo_list_next(fifo_list_t * list);
+extern void fifo_list_end_iteration(fifo_list_t * list);
+extern void fifo_list_remove_first(fifo_list_t * list);
+extern fifo_list_t *fifo_list_destroy(fifo_list_t * list);
 
-#endif /* __FIFO_LIST_H__ */
+#endif                          /* __FIFO_LIST_H__ */

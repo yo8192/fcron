@@ -29,15 +29,15 @@ strdup2(const char *str)
 {
     char *ptr;
 
-    if ( str == NULL )
+    if (str == NULL)
         return NULL;
 
     ptr = strdup(str);
 
-    if ( ! ptr)
+    if (!ptr)
         die_e("Could not strdup()");
 
-    return(ptr);
+    return (ptr);
 }
 
 char *
@@ -45,43 +45,43 @@ strndup2(const char *str, size_t n)
 {
     char *ptr;
 
-    if ( str == NULL )
-	return NULL;
+    if (str == NULL)
+        return NULL;
 
     ptr = strndup(str, n);
 
-    if ( ! ptr)
+    if (!ptr)
         die_e("Could not strdup()");
 
-    return(ptr);
+    return (ptr);
 }
 
 void *
-alloc_safe(size_t len, const char * desc)
+alloc_safe(size_t len, const char *desc)
 /* allocate len-bytes of memory, and return the pointer.
  * Die with a log message if there is any error */
 {
     void *ptr = NULL;
 
     ptr = calloc(1, len);
-    if ( ptr == NULL ) {
-        die_e("Could not allocate %d bytes of memory%s%s", len, (desc)? "for " : "", desc);
+    if (ptr == NULL) {
+        die_e("Could not allocate %d bytes of memory%s%s", len,
+              (desc) ? "for " : "", desc);
     }
     return ptr;
 }
 
 void *
-realloc_safe(void *cur, size_t len, const char * desc)
+realloc_safe(void *cur, size_t len, const char *desc)
 /* allocate len-bytes of memory, and return the pointer.
  * Die with a log message if there is any error */
 {
     void *new = NULL;
 
     new = realloc(cur, len);
-    if ( new == NULL ) {
-        die_e("Could not reallocate %d bytes of memory%s%s", len, (desc)? "for " : "", desc);
+    if (new == NULL) {
+        die_e("Could not reallocate %d bytes of memory%s%s", len,
+              (desc) ? "for " : "", desc);
     }
     return new;
 }
-
-

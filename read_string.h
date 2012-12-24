@@ -27,9 +27,9 @@
 
 #include "global.h"
 
-#define CONV_ECHO_ON  1                            /* types of echo state */
+#define CONV_ECHO_ON  1         /* types of echo state */
 #define CONV_ECHO_OFF 0
 
 extern char *read_string(int echo, const char *prompt);
 
-#endif /* __READ_STRING_H__ */
+#endif                          /* __READ_STRING_H__ */

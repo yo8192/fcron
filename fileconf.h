@@ -30,4 +30,4 @@ extern int read_file(char *filename, int fd);
 extern void delete_file(const char *user_name);
 extern int save_file(char *path);
 
-#endif /* __FILECONF_H__ */
+#endif                          /* __FILECONF_H__ */

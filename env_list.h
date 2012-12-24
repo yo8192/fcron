@@ -41,22 +41,23 @@ typedef struct u_list_t env_list_t;
 
 /* functions prototypes */
 extern env_list_t *env_list_init(void);
-extern env_list_t *env_list_copy(env_list_t *list);
+extern env_list_t *env_list_copy(env_list_t * list);
 /* WARNING: - These functions are NOT re-entrant.
  *            i.e. there should always be a unique iteration loop based on
  *            u_list_first()/u_list_next() running at any one time in the code
  *          - setenv, putenv, getenv  use an iteration internally
  *            so they cannot be called when already iterating */
-extern env_t *env_list_setenv(env_list_t *list, char *name, char *value, int overwrite);
-extern env_t *env_list_putenv(env_list_t *list, char *envvar, int overwrite);
-extern char *env_list_getenv(env_list_t *list, char *name);
-extern env_t *env_list_first(env_list_t *list);
-extern env_t *env_list_next(env_list_t *list);
-extern void env_list_end_iteration(env_list_t *list);
-extern env_list_t *env_list_destroy(env_list_t *list);
+extern env_t *env_list_setenv(env_list_t * list, char *name, char *value,
+                              int overwrite);
+extern env_t *env_list_putenv(env_list_t * list, char *envvar, int overwrite);
+extern char *env_list_getenv(env_list_t * list, char *name);
+extern env_t *env_list_first(env_list_t * list);
+extern env_t *env_list_next(env_list_t * list);
+extern void env_list_end_iteration(env_list_t * list);
+extern env_list_t *env_list_destroy(env_list_t * list);
 
-extern char **env_list_export_envp(env_list_t *list);
+extern char **env_list_export_envp(env_list_t * list);
 extern void env_list_free_envp(char **envp);
 
 
-#endif /* __ENV_LIST_H__ */
+#endif                          /* __ENV_LIST_H__ */

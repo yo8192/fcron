@@ -31,54 +31,55 @@
 #include "fcron.h"
 #include "exe_list.h"
 
-exe_list_t *exe_list_init(void)
+exe_list_t *
+exe_list_init(void)
 {
-    return (exe_list_t *) u_list_init(sizeof(exe_t), EXE_INITIAL_SIZE, EXE_GROW_SIZE);
+    return (exe_list_t *) u_list_init(sizeof(exe_t), EXE_INITIAL_SIZE,
+                                      EXE_GROW_SIZE);
 }
 
 exe_t *
-exe_list_add_line(exe_list_t *list, struct cl_t *line)
+exe_list_add_line(exe_list_t * list, struct cl_t *line)
 {
-    exe_t e = { NULL, 0, 0};
-    e.e_line = line; /* ANSI C does not allow us to directly replace NULL by line above*/
+    exe_t e = { NULL, 0, 0 };
+    e.e_line = line;            /* ANSI C does not allow us to directly replace NULL by line above */
 
-    return (exe_t *) u_list_add( (u_list_t *) list, (u_list_entry_t *) &e);
+    return (exe_t *) u_list_add((u_list_t *) list, (u_list_entry_t *) & e);
 }
 
 exe_t *
-exe_list_add(exe_list_t *list, exe_t *e)
+exe_list_add(exe_list_t * list, exe_t * e)
 {
-    return (exe_t *) u_list_add( (u_list_t *) list, (u_list_entry_t *) e);
+    return (exe_t *) u_list_add((u_list_t *) list, (u_list_entry_t *) e);
 }
 
 exe_t *
-exe_list_first(exe_list_t *list)
+exe_list_first(exe_list_t * list)
 {
     return (exe_t *) u_list_first((u_list_t *) list);
 }
 
 exe_t *
-exe_list_next(exe_list_t *list)
+exe_list_next(exe_list_t * list)
 {
     return (exe_t *) u_list_next((u_list_t *) list);
 }
 
 void
-exe_list_end_iteration(exe_list_t *list)
+exe_list_end_iteration(exe_list_t * list)
 {
     u_list_end_iteration((u_list_t *) list);
 }
 
 void
-exe_list_remove_cur(exe_list_t *list)
+exe_list_remove_cur(exe_list_t * list)
 {
     u_list_remove_cur((u_list_t *) list);
 }
 
 exe_list_t *
-exe_list_destroy(exe_list_t *list)
+exe_list_destroy(exe_list_t * list)
     /* free() the memory allocated for list and returns NULL */
 {
     return (exe_list_t *) u_list_destroy((u_list_t *) list);
 }
-

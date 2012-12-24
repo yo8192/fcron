@@ -83,7 +83,7 @@ extern short int serial_array_size;
 extern short int serial_array_index;
 extern short int serial_num;
 extern short int serial_running;
-extern short int serial_max_running; 
+extern short int serial_max_running;
 extern short int serial_queue_max;
 extern short int lavg_queue_max;
 extern exe_list_t *exe_list;
@@ -97,5 +97,4 @@ extern short int lavg_serial_running;
 /* fcron.c */
 extern void xexit(int exit_value);
 
-#endif /* __FCRON_H */
-
+#endif                          /* __FCRON_H */

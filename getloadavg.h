@@ -28,4 +28,4 @@
 /* functions prototypes */
 int getloadavg(double *result, int n);
 
-#endif /* __GETLOADAVG_H__ */
+#endif                          /* __GETLOADAVG_H__ */

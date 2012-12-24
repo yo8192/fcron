@@ -28,4 +28,4 @@
 /* functions prototypes */
 extern int is_allowed(char *user);
 
-#endif /* __ALLOW_H__ */
+#endif                          /* __ALLOW_H__ */

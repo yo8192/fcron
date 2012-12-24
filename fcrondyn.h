@@ -46,4 +46,4 @@ typedef struct cmd_list_ent {
     int cmd_default[MAX_NUM_OPT];
 } cmd_list_ent;
 
-#endif /* __FCRONDYN_H__ */
+#endif                          /* __FCRONDYN_H__ */

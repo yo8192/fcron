@@ -31,23 +31,24 @@
 #include "fcron.h"
 #include "env_list.h"
 
-env_list_t *env_list_init(void)
+env_list_t *
+env_list_init(void)
 {
     return (env_list_t *) u_list_init(sizeof(env_t),
-            ENVVAR_INITIAL_SIZE, ENVVAR_GROW_SIZE);
+                                      ENVVAR_INITIAL_SIZE, ENVVAR_GROW_SIZE);
 }
 
 env_list_t *
-env_list_copy(env_list_t *list)
+env_list_copy(env_list_t * list)
 {
     env_list_t *new_list = NULL;
     env_t *e = NULL;
 
     /* copy the list structure */
-    new_list = (env_list_t *) u_list_copy( (u_list_t *) list);
+    new_list = (env_list_t *) u_list_copy((u_list_t *) list);
 
     /* for now the new list points to the same data strings - duplicate them */
-    for ( e = env_list_first(new_list) ; e != NULL ; e = env_list_next(new_list) ) {
+    for (e = env_list_first(new_list); e != NULL; e = env_list_next(new_list)) {
         e->e_envvar = strdup2(e->e_envvar);
     }
 
@@ -56,80 +57,82 @@ env_list_copy(env_list_t *list)
 }
 
 env_t *
-env_list_setenv(env_list_t *list, char *name, char *value, int overwrite)
+env_list_setenv(env_list_t * list, char *name, char *value, int overwrite)
 {
     env_t e = { NULL };
     env_t *c = NULL;
-    size_t len = strlen(name)+1+strlen(value)+1; /* 1 for '=', 1 for '\0' */
+    size_t len = strlen(name) + 1 + strlen(value) + 1;  /* 1 for '=', 1 for '\0' */
 
     /* sanity check */
-    if ( name == NULL || name[0] == '\0' )
+    if (name == NULL || name[0] == '\0')
         return NULL;
 
     /* check if a var 'name' already exists */
-    for ( c = env_list_first(list) ; c != NULL ; c = env_list_next(list) ) {
-        if ( strcmp_until(name, c->e_envvar, '=') == 0 ) {
+    for (c = env_list_first(list); c != NULL; c = env_list_next(list)) {
+        if (strcmp_until(name, c->e_envvar, '=') == 0) {
             /* variable already set: overwrite the value if asked
              * and return that entry */
-            if ( overwrite == 1 ) {
-                c->e_envvar = realloc_safe(c->e_envvar, len, "new env var value");
+            if (overwrite == 1) {
+                c->e_envvar =
+                    realloc_safe(c->e_envvar, len, "new env var value");
                 snprintf(c->e_envvar, len, "%s=%s", name, value);
             }
             env_list_end_iteration(list);
             return c;
-	    }
+        }
     }
 
     /* if we're here we didn't find a var called 'name': add it */
     e.e_envvar = alloc_safe(len, "new env var");
     snprintf(e.e_envvar, len, "%s=%s", name, value);
-    return (env_t *) u_list_add( (u_list_t *) list, (u_list_entry_t *) &e);
+    return (env_t *) u_list_add((u_list_t *) list, (u_list_entry_t *) & e);
 }
 
 env_t *
-env_list_putenv(env_list_t *list, char *envvar, int overwrite)
+env_list_putenv(env_list_t * list, char *envvar, int overwrite)
 {
     env_t e = { NULL };
     env_t *c = NULL;
-    size_t len = strlen(envvar) + 1; /* +1 for the terminating '\0' */
+    size_t len = strlen(envvar) + 1;    /* +1 for the terminating '\0' */
 
     /* sanity check */
-    if ( envvar == NULL || envvar[0] == '\0' )
+    if (envvar == NULL || envvar[0] == '\0')
         return NULL;
 
     /* check if a var 'name' already exists */
-    for ( c = env_list_first(list) ; c != NULL ; c = env_list_next(list) ) {
-        if ( strcmp_until(envvar, c->e_envvar, '=') == 0 ) {
+    for (c = env_list_first(list); c != NULL; c = env_list_next(list)) {
+        if (strcmp_until(envvar, c->e_envvar, '=') == 0) {
             /* variable already set: overwrite the value if asked
              * and return that entry */
-            if ( overwrite == 1 ) {
-                c->e_envvar = realloc_safe(c->e_envvar, len, "new env var value");
-                memcpy(c->e_envvar, envvar, len); /* includes the final '\0' */
+            if (overwrite == 1) {
+                c->e_envvar =
+                    realloc_safe(c->e_envvar, len, "new env var value");
+                memcpy(c->e_envvar, envvar, len);       /* includes the final '\0' */
             }
             env_list_end_iteration(list);
             return c;
-	    }
+        }
     }
 
     /* if we're here we didn't find a var called 'name': add it */
     e.e_envvar = strdup2(envvar);
-    return (env_t *) u_list_add( (u_list_t *) list, (u_list_entry_t *) &e);
+    return (env_t *) u_list_add((u_list_t *) list, (u_list_entry_t *) & e);
 }
 
 char *
-env_list_getenv(env_list_t *list, char *name)
+env_list_getenv(env_list_t * list, char *name)
 {
     env_t *c = NULL;
 
     /* sanity check */
-    if ( name == NULL || name[0] == '\0' )
+    if (name == NULL || name[0] == '\0')
         return NULL;
 
-    for ( c = env_list_first(list) ; c != NULL ; c = env_list_next(list) ) {
-        if ( strcmp_until(name, c->e_envvar, '=') == 0 ) {
+    for (c = env_list_first(list); c != NULL; c = env_list_next(list)) {
+        if (strcmp_until(name, c->e_envvar, '=') == 0) {
             /* found the var: return the pointer to the value */
             env_list_end_iteration(list);
-            return (c->e_envvar+strlen(name)+1); /* +1 for '=' */
+            return (c->e_envvar + strlen(name) + 1);    /* +1 for '=' */
         }
     }
 
@@ -138,25 +141,25 @@ env_list_getenv(env_list_t *list, char *name)
 }
 
 env_t *
-env_list_first(env_list_t *list)
+env_list_first(env_list_t * list)
 {
     return (env_t *) u_list_first((u_list_t *) list);
 }
 
 env_t *
-env_list_next(env_list_t *list)
+env_list_next(env_list_t * list)
 {
     return (env_t *) u_list_next((u_list_t *) list);
 }
 
 void
-env_list_end_iteration(env_list_t *list)
+env_list_end_iteration(env_list_t * list)
 {
     u_list_end_iteration((u_list_t *) list);
 }
 
 env_list_t *
-env_list_destroy(env_list_t *list)
+env_list_destroy(env_list_t * list)
     /* free() the memory allocated for list and returns NULL */
 {
     env_t *c = NULL;
@@ -164,7 +167,7 @@ env_list_destroy(env_list_t *list)
     /* make sure the iteration below won't fail in case one was already iterating */
     env_list_end_iteration(list);
     /* free the data in the env_t entries */
-    for ( c = env_list_first(list) ; c != NULL ; c = env_list_next(list) ) {
+    for (c = env_list_first(list); c != NULL; c = env_list_next(list)) {
         Free_safe(c->e_envvar);
     }
     /* free the actual list structure */
@@ -172,7 +175,7 @@ env_list_destroy(env_list_t *list)
 }
 
 char **
-env_list_export_envp(env_list_t *list)
+env_list_export_envp(env_list_t * list)
 /* export list data as a char **envp structure to use as an argument of execle() */
 {
     env_t *c = NULL;
@@ -180,14 +183,16 @@ env_list_export_envp(env_list_t *list)
     char **envp = NULL;
 
     /* +1 for the end-of-list NULL */
-    envp = alloc_safe((list->num_entries + 1)*sizeof(char *), "environment export");
+    envp =
+        alloc_safe((list->num_entries + 1) * sizeof(char *),
+                   "environment export");
 
-    for ( c=env_list_first(list), i=0 ; c != NULL && i < list->num_entries ;
-            c=env_list_next(list), i++ ) {
+    for (c = env_list_first(list), i = 0; c != NULL && i < list->num_entries;
+         c = env_list_next(list), i++) {
         envp[i] = strdup2(c->e_envvar);
     }
     /* add a NULL as a end-of-list marker */
-    envp[ (list->num_entries + 1 ) - 1] = NULL;
+    envp[(list->num_entries + 1) - 1] = NULL;
 
     return envp;
 }
@@ -197,10 +202,9 @@ env_list_free_envp(char **envp)
 {
     char *p = NULL;
 
-    for ( p = envp[0] ; p != NULL ; p++ ) {
+    for (p = envp[0]; p != NULL; p++) {
         Free_safe(p);
     }
     Free_safe(envp);
 
 }
-

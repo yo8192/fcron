@@ -281,7 +281,9 @@ updatedoc:
 	$(MAKE) -C doc doc
 
 indent:
-	indent -linux -i4 -nsob -sc -psl -nce *.c *.h
+	indent -linux -i4 --no-tabs --leave-optional-blank-lines \
+            --start-left-side-of-comments --procnames-start-lines \
+            --dont-cuddle-else *.c *.h
 
 configure: configure.in
 # update configure script, then Makefile and config.h, and finally 

@@ -510,5 +510,4 @@
 #define clear_hasrun(opt) \
 	(_bit_clear(opt, 30))
 
-#endif /* __OPTIONH__ */
-
+#endif                          /* __OPTIONH__ */
