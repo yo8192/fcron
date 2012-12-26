@@ -512,11 +512,11 @@ read_opt(char *ptr, cl_t * cl)
         if (*ptr == '(') {
             in_brackets = 1;
             ptr++;
-        }
 
-        /* spaces are not allowed -- make sure there is no leading space. */
-        if (isspace((int)*ptr)) {
-            Handle_err;
+            /* spaces are not allowed -- make sure there is no leading space. */
+            if (isspace((int)*ptr)) {
+                Handle_err;
+            }
         }
 
         /* global options for a file */
