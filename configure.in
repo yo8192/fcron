@@ -8,6 +8,7 @@ dnl ---------------------------------------------------------------------
 AC_INIT(allow.c)
 AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.57)
+m4_include([m4/ax_lib_readline.m4])
 
 vers="3.1.1"
 vers_quoted="\"$vers\""
@@ -85,6 +86,7 @@ AC_FUNC_WAIT3
 AC_CHECK_LIB(xnet, shutdown)
 AC_CHECK_LIB(selinux, getcon, [selinuxavail=1], [selinuxavail=0])
 AC_CHECK_LIB(audit, audit_open, [auditavail=1], [auditavail=0])
+AX_LIB_READLINE
 AC_CHECK_FUNC(getloadavg, [getloadavg=1], [getloadavg=0])
 AC_CHECK_LIB(kstat, kstat_open, [kstat=1], [kstat=0])
 if test $getloadavg -eq 1; then
@@ -1055,6 +1057,14 @@ if test "$useselinux" -eq 1; then
 else
 	echo "no"
 fi
+
+echo -n "Readline :                          "
+if test "$ax_cv_lib_readline" = "no"; then
+	echo "no"
+else
+	echo "yes"
+fi
+
 
 echo -n "Run without root's rights :         "
 if test "$run_non_privileged" -eq 1; then

@@ -351,8 +351,20 @@
 /* Define if you have the <grp.h> header file.  */
 #undef HAVE_GRP_H
 
+/* Define if you have the <history.h> header file.  */
+#undef HAVE_HISTORY_H
+
 /* Define if you have the <libaudit.h> header file.  */
 #undef HAVE_LIBAUDIT_H
+
+/* Define if you have the <readline.h> header file.  */
+#undef HAVE_READLINE_H
+
+/* Define if you have the <readline/history.h> header file.  */
+#undef HAVE_READLINE_HISTORY_H
+
+/* Define if you have the <readline/readline.h> header file.  */
+#undef HAVE_READLINE_READLINE_H
 
 /* Define if you have the <limits.h> header file.  */
 #undef HAVE_LIMITS_H
@@ -435,6 +447,9 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
+/* ****************************************************************** */
+/* *** Libraries *** */
+
 /* Define if you have the audit library (-laudit).  */
 #undef HAVE_LIBAUDIT
 
@@ -443,6 +458,12 @@
 
 /* Define if you have the pam library (-lpam).  */
 #undef HAVE_LIBPAM
+
+/* Define if you have the readline library.  */
+#undef HAVE_LIBREADLINE
+
+/* Define if you have the readline history library.  */
+#undef HAVE_READLINE_HISTORY
 
 /* Have audit trails (libaudit) support */
 #undef WITH_AUDIT

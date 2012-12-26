@@ -62,7 +62,6 @@
 
 /* commands : if you change something here, please update fcrondyn.c's cmd_list
  *            and fcron's socket.c . */
-#define NUM_CMD 9
 
 #define CMD_LIST_JOBS 101
 #define CMD_LIST_LAVGQ 102

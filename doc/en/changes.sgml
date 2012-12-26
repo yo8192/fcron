@@ -15,10 +15,13 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 3.0.6 to 3.1.1</title>
 	    <listitem>
-	       <para>fixed fcrontab edition of *ly lines (hourly, daily, etc)</para>
+	       <para>Added readline support for fcrondyn</para>
 	    </listitem>
 	    <listitem>
 	       <para>tweaked 'make indent' options and applied</para>
+	    </listitem>
+	    <listitem>
+	       <para>fixed fcrontab edition of *ly lines (hourly, daily, etc)</para>
 	    </listitem>
       </itemizedlist>
       <itemizedlist>

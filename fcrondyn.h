@@ -36,9 +36,11 @@ extern uid_t rootuid;
 extern gid_t rootgid;
 
 /* types def */
+#define MAX_NUM_ALIAS 2
 #define MAX_NUM_OPT 4
 typedef struct cmd_list_ent {
     char *cmd_name;
+    char *cmd_alias[MAX_NUM_ALIAS];
     char *cmd_desc;
     int cmd_numopt;
     long int cmd_code;

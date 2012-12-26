@@ -34,6 +34,20 @@
 #include "read_string.h"
 #include "mem.h"
 
+#ifdef HAVE_LIBREADLINE
+char **rl_cmpl_fcrondyn(const char *text, int start, int end);
+char *rl_cmpl_command_generator(const char *text, int state);
+#if defined(HAVE_READLINE_READLINE_H)
+#include <readline/readline.h>
+#elif defined(HAVE_READLINE_H)
+#include <readline.h>
+#endif                          /* !defined(HAVE_READLINE_H) */
+#if defined(HAVE_READLINE_HISTORY_H)
+#include <readline/history.h>
+#elif defined(HAVE_HISTORY_H)
+#include <history.h>
+#endif                          /* defined(HAVE_READLINE_HISTORY_H) */
+#endif                          /* HAVE_LIBREADLINE */
 
 void info(void);
 void usage(void);
@@ -71,32 +85,33 @@ char *user_str = NULL;
 uid_t user_uid = 0;
 gid_t user_gid = 0;
 
-/* if you change this structure, please update NUM_CMD value in dyncom.h */
-struct cmd_list_ent cmd_list[NUM_CMD] = {
+struct cmd_list_ent cmd_list[] = {
     /* name, desc, num opt, cmd code, cmd opts, cmd defaults */
-    {"ls", "List all jobs of user", 1, CMD_LIST_JOBS,
+    {"ls", {NULL}, "List all jobs of user", 1, CMD_LIST_JOBS,
      {USER}, {CUR_USER}},
-    {"ls_lavgq", "List jobs of user which are in lavg queue", 1, CMD_LIST_LAVGQ,
+    {"ls_lavgq", {}, "List jobs of user which are in lavg queue", 1,
+     CMD_LIST_LAVGQ, {USER}, {CUR_USER}},
+    {"ls_serialq", {}, "List jobs of user which are in serial queue",
+     1, CMD_LIST_SERIALQ, {USER}, {CUR_USER}},
+    {"ls_exeq", {}, "List running jobs of user", 1, CMD_LIST_EXEQ,
      {USER}, {CUR_USER}},
-    {"ls_serialq", "List jobs of user which are in serial queue", 1,
-     CMD_LIST_SERIALQ,
-     {USER}, {CUR_USER}},
-    {"ls_exeq", "List running jobs of user", 1, CMD_LIST_EXEQ,
-     {USER}, {CUR_USER}},
-    {"detail", "Print details on job", 1, CMD_DETAILS,
+    {"detail", {}, "Print details on job", 1, CMD_DETAILS,
      {JOBID}, {ARG_REQUIRED}},
-/*    {"reschedule", "Reschedule next execution of job", 2, CMD_RESCHEDULE,
-      {TIME_AND_DATE, JOBID}, {ARG_REQUIRED, ARG_REQUIRED}}, */
-    {"runnow", "Advance next execution of job to now", 1, CMD_RUNNOW,
+/*    {"reschedule", {NULL}, "Reschedule next execution of job", 2,
+      CMD_RESCHEDULE, {TIME_AND_DATE, JOBID}, {ARG_REQUIRED, ARG_REQUIRED}}, */
+    {"runnow", {}, "Advance next execution of job to now", 1, CMD_RUNNOW,
      {JOBID}, {ARG_REQUIRED}},
-    {"run", "Run job now (without changing its current schedule)", 1, CMD_RUN,
-     {JOBID}, {ARG_REQUIRED}},
-    {"kill", "Send signal to running job", 2, CMD_SEND_SIGNAL,
+    {"run", {}, "Run job now (without changing its current schedule)", 1,
+     CMD_RUN, {JOBID}, {ARG_REQUIRED}},
+    {"kill", {}, "Send signal to running job", 2, CMD_SEND_SIGNAL,
      {SIGNAL, JOBID}, {ARG_REQUIRED, ARG_REQUIRED}},
-    {"renice", "Renice running job", 2, CMD_RENICE,
-     {NICE_VALUE, JOBID}, {ARG_REQUIRED, ARG_REQUIRED}}
+    {"renice", {}, "Renice running job", 2, CMD_RENICE,
+     {NICE_VALUE, JOBID}, {ARG_REQUIRED, ARG_REQUIRED}},
+    {"quit", {"q", "exit"}, "Quit fcrondyn", 0, QUIT_CMD, {}, {}},
+    {"help", {"h"}, "Display a help message", 0, HELP_CMD, {}, {}},
 };
 
+const int cmd_list_len = sizeof(cmd_list) / sizeof(cmd_list_ent);
 
 void
 info(void)
@@ -184,31 +199,34 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
         return ZEROLEN_CMD;
     }
 
-    if (Strncmp(cmd_str, "q", word_size) == 0
-        || Strncmp(cmd_str, "quit", word_size) == 0
-        || Strncmp(cmd_str, "exit", word_size) == 0) {
-        if (debug_opt)
-            fprintf(stderr, "quit command\n");
-        return QUIT_CMD;
-    }
-
-    if (Strncmp(cmd_str, "h", word_size) == 0
-        || Strncmp(cmd_str, "help", word_size) == 0) {
-        if (debug_opt)
-            fprintf(stderr, "help command\n");
-        return HELP_CMD;
-    }
-
-    for (i = 0; i < NUM_CMD; i++) {
+    for (i = 0; i < cmd_list_len; i++) {
+        int j;
         if (Strncmp(cmd_str, cmd_list[i].cmd_name, word_size) == 0) {
             rank = i;
             break;
+        }
+        for (j = 0; j < MAX_NUM_ALIAS && cmd_list[i].cmd_alias[j] != NULL; j++) {
+            if (Strncmp(cmd_str, cmd_list[i].cmd_alias[j], word_size) == 0) {
+                rank = i;
+                break;
+            }
         }
     }
     if (rank == (-1)) {
         fprintf(stderr, "Error : Unknown command.\n");
         return CMD_NOT_FOUND;
     }
+    else if (cmd_list[rank].cmd_code == QUIT_CMD) {
+        if (debug_opt)
+            fprintf(stderr, "quit command\n");
+        return QUIT_CMD;
+    }
+    else if (cmd_list[rank].cmd_code == HELP_CMD) {
+        if (debug_opt)
+            fprintf(stderr, "Help command\n");
+        return HELP_CMD;
+    }
+
     Write_cmd(cmd_list[rank].cmd_code);
 
     if (debug_opt)
@@ -475,7 +493,7 @@ talk_fcron(char *cmd_str, int fd)
             int i, j, len;
             printf("Command recognized by fcrondyn :\n");
             printf("------------------------------\n");
-            for (i = 0; i < NUM_CMD; i++) {
+            for (i = 0; i < cmd_list_len; i++) {
                 len = printf("%s ", cmd_list[i].cmd_name);
 
                 /* print args : */
@@ -509,11 +527,21 @@ talk_fcron(char *cmd_str, int fd)
                     len += printf(" ");
                 }
                 /* Align correctly the descriptions : */
-                printf("%*s%s\n", 24 - len, "", cmd_list[i].cmd_desc);
+                printf("%*s%s", 24 - len, "", cmd_list[i].cmd_desc);
+
+                /* print alias list (if any) */
+                if (cmd_list[i].cmd_alias[0] != NULL) {
+                    printf(" (aliases:");
+                    for (j = 0;
+                         j < MAX_NUM_ALIAS && cmd_list[i].cmd_alias[j] != NULL;
+                         j++) {
+                        printf(" %s", cmd_list[i].cmd_alias[j]);
+                    }
+                    printf(")");
+                }
+
+                printf("\n");
             }
-            printf("\n");
-            printf("help\t\t\tDisplay this help message\n");
-            printf("quit\t\t\tQuit fcrondyn\n");
         }
         return HELP_CMD;
     case QUIT_CMD:
@@ -581,6 +609,58 @@ talk_fcron(char *cmd_str, int fd)
     return OK;
 }
 
+#ifdef HAVE_LIBREADLINE
+/* Attempt to complete on the contents of TEXT. START and END bound the
+   region of rl_line_buffer that contains the word to complete. TEXT is
+   the word to complete. We can use the entire contents of rl_line_buffer
+   in case we want to do some simple parsing. Return the array of matches,
+   or NULL if there aren't any. */
+char **
+rl_cmpl_fcrondyn(const char *text, int start, int end)
+{
+    char **matches;
+
+    matches = (char **)NULL;
+
+    /* If this word is at the start of the line, then it is a command
+     * to complete. Otherwise it is an argument which we ignore for now */
+    if (start == 0) {
+        matches = rl_completion_matches(text, rl_cmpl_command_generator);
+    }
+
+    return (matches);
+}
+
+/* Generator function for command completion. STATE lets us know whether
+   to start from scratch; without any state (i.e. STATE == 0), then we
+   start at the top of the list. */
+char *
+rl_cmpl_command_generator(const char *text, int state)
+{
+    static int list_index, len;
+    char *name = NULL;
+
+    /* If this is a new word to complete, initialize now.  This includes
+     * saving the length of TEXT for efficiency, and initializing the index
+     * variable to 0. */
+    if (!state) {
+        list_index = 0;
+        len = strlen(text);
+    }
+
+    /* Return the next name which partially matches from the command list. */
+    while (list_index < cmd_list_len) {
+        name = cmd_list[list_index].cmd_name;
+        list_index++;
+        if (strncmp(name, text, len) == 0) {
+            return (strdup2(name));
+        }
+    }
+
+    /* If no names matched, then return NULL. */
+    return ((char *)NULL);
+}
+#endif                          /* HAVE_LIBREADLINE */
 
 int
 interactive_mode(int fd)
@@ -589,15 +669,43 @@ interactive_mode(int fd)
 {
     char existing_connection = (fd < 0) ? 0 : 1;
     int return_code = 0;
+#ifdef HAVE_LIBREADLINE
+    char *line_read = NULL;
+#else                           /* HAVE_LIBREADLINE */
     char buf[LINE_LEN];
+#endif                          /* HAVE_LIBREADLINE */
 
     if (!existing_connection && (fd = connect_fcron()) == ERR)
         return ERR;
 
+#ifdef HAVE_LIBREADLINE
+    /* Allow conditional parsing of the ~/.inputrc file. */
+    rl_readline_name = "fcrondyn";
+
+    /* Tell the completer that we want a crack first. */
+    rl_attempted_completion_function = rl_cmpl_fcrondyn;
+
+    while (1) {
+        line_read = readline("fcrondyn> ");
+        return_code = talk_fcron(line_read, fd);
+
+#ifdef HAVE_READLINE_HISTORY
+        if (line_read && *line_read) {
+            add_history(line_read);
+        }
+#endif
+
+        free(line_read);
+        if (return_code == QUIT_CMD || return_code == ERR) {
+            break;
+        }
+    }
+#else                           /* HAVE_LIBREADLINE */
     while (fprintf(stderr, "fcrondyn> ")
            && fgets(buf, sizeof(buf), stdin) != NULL
            && (return_code = talk_fcron(buf, fd)) != QUIT_CMD
            && return_code != ERR) ;
+#endif                          /* HAVE_LIBREADLINE */
 
     if (!existing_connection)
         close(fd);
