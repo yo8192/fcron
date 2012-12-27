@@ -47,6 +47,7 @@ void log_console_str(char *msg);
 void log_fd_str(int fd, char *msg);
 static void log_syslog(int priority, int fd, char *fmt, va_list args);
 static void log_e(int priority, char *fmt, va_list args);
+static void fcronlog(int priority, char *msg);
 #ifdef HAVE_LIBPAM
 static void log_pame(int priority, pam_handle_t *pamh, int pamerrno,
 		     char *fmt, va_list args);
@@ -54,22 +55,42 @@ static void log_pame(int priority, pam_handle_t *pamh, int pamerrno,
 
 static char truncated[] = " (truncated)";
 static int log_open = 0;
+static FILE *logfd = NULL;
 
 
+/* Initialise logging to either syslog or a file specified in fcron.conf,
+ * or take no action if logging is suppressed.
+ */
 static void
 xopenlog(void)
 {
-    if (!log_open) {
+    if (log_open) 
+	return;
+
+    // are we using syslog?
+    if (dosyslog) {
 	openlog(prog_name, LOG_PID, SYSLOG_FACILITY);
-	log_open=1;
+    } else if (fcronlog != NULL) {
+	logfd = fopen(fcronlog, "a+");
     }
+
+    log_open = 1;
 }
 
 
 void
 xcloselog()
 {
-    if (log_open) closelog();
+    if (!log_open)
+	return;
+
+    // check whether we need to close syslog, or a file.
+    if (dosyslog) {
+	closelog();
+    } else if (fcronlog != NULL) {
+	fclose(logfd);
+    }
+
     log_open = 0;
 }
 
@@ -99,13 +120,16 @@ make_msg(const char *append, char *fmt, va_list args)
 }
 
 
-/* log a simple string to syslog if needed */
+/* log a simple string to syslog/log file if needed */
 void
 log_syslog_str(int priority, char *msg)
 {
+    xopenlog();
+
     if (dosyslog) {
-	xopenlog();
 	syslog(priority, "%s", msg);
+    } else if ( logfd != NULL ) {
+	fcronlog(priority, msg);
     }
 
 }
@@ -172,6 +196,39 @@ log_e(int priority, char *fmt, va_list args)
     log_console_str(msg);
 
     Free_safe(msg);
+}
+
+/* write a message to the file specified by logfd. */
+static void
+fcronlog(int priority, char *msg)
+{
+    time_t t = time(NULL);
+    struct tm *ft;
+    char date[30];
+    char type[30]
+
+    // print the current time as a string.
+    ft = localtime(&t);
+    date[0] = '\0';
+    strftime(date, sizeof(date), "%H:%M:%S", ft);
+
+    // is it an info/warning/error/debug message?
+    switch(priority) {
+    case EXPLAIN_LEVEL:
+	type = "Information";
+	break;
+    case WARNING_LEVEL:
+	type = "Warning";
+	break;
+    case COMPLAIN_LEVEL:
+	type = "Error";
+	break;
+    case DEBUG_LEVEL:
+	type = "Debug";
+    }
+
+    // print the log message.
+    fprintf(logfd, "%s [ %s ]:\n%s\n\n", date, type, msg);
 }
 
 
