@@ -260,8 +260,8 @@ change_user_setup_env(struct cl_t *cl,
 
     setup_user_and_env(cl, pas, sendmailenv, jobenv, curshell, curhome,
                        content_type, encoding);
-    become_user(cl, pas, *curhome);
-    Free_safe(*curhome);
+
+    become_user(cl, pas, (curhome!=NULL)? *curhome : "/");
 }
 
 void
