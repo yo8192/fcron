@@ -68,7 +68,7 @@ xopenlog(void)
 	return;
 
     // are we using syslog?
-    if (dosyslog) {
+    if (dosyslog && (fcronlog == NULL)) {
 	openlog(prog_name, LOG_PID, SYSLOG_FACILITY);
     } else if (fcronlog != NULL) {
 	logfd = fopen(fcronlog, "a+");
@@ -85,7 +85,7 @@ xcloselog()
 	return;
 
     // check whether we need to close syslog, or a file.
-    if (dosyslog) {
+    if (dosyslog && (fcronlog == NULL)) {
 	closelog();
     } else if (fcronlog != NULL) {
 	fclose(logfd);
@@ -126,9 +126,9 @@ log_syslog_str(int priority, char *msg)
 {
     xopenlog();
 
-    if (dosyslog) {
+    if (dosyslog && (logfd == NULL)) {
 	syslog(priority, "%s", msg);
-    } else if ( logfd != NULL ) {
+    } else if (logfd != NULL) {
 	fcronlog(priority, msg);
     }
 
