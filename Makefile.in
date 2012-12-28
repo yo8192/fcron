@@ -77,7 +77,7 @@ endif
 OBJSD := fcron.o cl.o subs.o mem.o save.o temp_file.o log.o database.o job.o conf.o u_list.o exe_list.o lavg_list.o env_list.o fcronconf.o $(LIBOBJS)
 OBJSTAB := fcrontab.o cl.o subs.o mem.o save.o temp_file.o  log.o fileconf.o allow.o read_string.o u_list.o env_list.o fcronconf.o
 OBJSDYN := fcrondyn.o subs.o mem.o log.o allow.o read_string.o fcronconf.o
-OBJCONV := convert-fcrontab.o cl.o subs.o mem.o save.o log.o u_list.o env_list.o
+OBJCONV := convert-fcrontab.o cl.o subs.o mem.o save.o log.o u_list.o env_list.o fcronconf.o
 OBJSIG := fcronsighup.o subs.o mem.o log.o allow.o fcronconf.o
 HEADERSALL := config.h $(SRCDIR)/global.h $(SRCDIR)/cl.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/mem.h $(SRCDIR)/save.h $(SRCDIR)/option.h $(SRCDIR)/dyncom.h
 

@@ -244,7 +244,7 @@ main(int argc, char *argv[])
     /* constants and variables defined by command line */
 
     while(1) {
-	c = getopt(argc, argv, "hV");
+	c = getopt(argc, argv, "chV");
 	if (c == EOF) break;
 	switch (c) {
 
@@ -253,6 +253,9 @@ main(int argc, char *argv[])
 
 	case 'h':
 	    usage(); break;
+
+	case 'c':
+	    Set(fcronconf, optarg); break;
 
 	case ':':
 	    fprintf(stderr, "(setopt) Missing parameter");
@@ -268,6 +271,9 @@ main(int argc, char *argv[])
 
     if (optind >= argc || argc != 2)
 	usage();
+
+    /* parse fcron.conf */
+    read_conf();
 
     user_to_update = strdup2(argv[optind]);
 

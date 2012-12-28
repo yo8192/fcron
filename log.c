@@ -68,10 +68,10 @@ xopenlog(void)
 	return;
 
     // are we using syslog?
-    if (dosyslog && (fcronlog == NULL)) {
+    if (dosyslog && (fcronlogfile == NULL)) {
 	openlog(prog_name, LOG_PID, SYSLOG_FACILITY);
-    } else if (fcronlog != NULL) {
-	logfd = fopen(fcronlog, "a+");
+    } else if (fcronlogfile != NULL) {
+	logfd = fopen(fcronlogfile, "a+");
     }
 
     log_open = 1;
@@ -85,9 +85,9 @@ xcloselog()
 	return;
 
     // check whether we need to close syslog, or a file.
-    if (dosyslog && (fcronlog == NULL)) {
+    if (dosyslog && (fcronlogfile == NULL)) {
 	closelog();
-    } else if (fcronlog != NULL) {
+    } else if (fcronlogfile != NULL) {
 	fclose(logfd);
     }
 
@@ -205,7 +205,7 @@ fcronlog(int priority, char *msg)
     time_t t = time(NULL);
     struct tm *ft;
     char date[30];
-    char type[30]
+    char *type;
 
     // print the current time as a string.
     ft = localtime(&t);

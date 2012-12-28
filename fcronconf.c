@@ -40,7 +40,7 @@ char *pidfile = NULL;
 char *fifofile = NULL;
 char *fcronallow = NULL;
 char *fcrondeny = NULL;
-char *fcronlog = NULL;
+char *fcronlogfile = NULL;
 char *shell = NULL;
 char *sendmail = NULL;
 char *editor = NULL;
@@ -161,7 +161,7 @@ read_conf(void)
 	else if ( strncmp(ptr1, "fifofile", namesize) == 0 ) { Set(fifofile , ptr2); }
 	else if ( strncmp(ptr1, "fcronallow", namesize) == 0 ) { Set(fcronallow , ptr2); }
 	else if ( strncmp(ptr1, "fcrondeny", namesize) == 0 ) { Set(fcrondeny , ptr2); }
-	else if ( strncmp(ptr1, "fcronlog", namesize) == 0 ) { Set(fcronlog, ptr2); }
+	else if ( strncmp(ptr1, "fcronlog", namesize) == 0 ) { Set(fcronlogfile, ptr2); }
 	else if ( strncmp(ptr1, "shell", namesize) == 0 ) { Set(shell , ptr2); }
 	else if ( strncmp(ptr1, "sendmail", namesize) == 0 ) { Set(sendmail , ptr2); }
 	else if ( strncmp(ptr1, "editor", namesize) == 0 ) { Set(editor , ptr2); }
