@@ -59,9 +59,8 @@ char foreground = 0;            /* set to 1 when we are on foreground, else 0 */
 
 time_t first_sleep = FIRST_SLEEP;
 time_t save_time = SAVE;
-char once = 0;                  /* set to 1 if fcron shall return immediately after running
-                                 * all jobs that are due at the time when fcron is started */
-char dosyslog = 1;              /* set to 1 when we log messages to syslog, else 0 */
+char once = 0;      /* set to 1 if fcron shall return immediately after running
+		     * all jobs that are due at the time when fcron is started */
 
 /* Get the default locale character set for the mail
  * "Content-Type: ...; charset=" header */
@@ -137,25 +136,27 @@ usage(void)
   /*  print a help message about command line options and exit */
 {
     fprintf(stderr, "\nfcron " VERSION_QUOTED "\n\n"
-            "fcron [-d] [-f] [-b]\n"
-            "fcron -h\n"
-            "  -s t   --savetime t     Save fcrontabs on disk every t sec.\n"
-            "  -l t   --firstsleep t   Sets the initial delay before any job is executed"
-            ",\n                          default to %d seconds.\n"
-            "  -m n   --maxserial n    Set to n the max number of running serial jobs.\n"
-            "  -c f   --configfile f   Make fcron use config file f.\n"
-            "  -n d   --newspooldir d  Create d as a new spool directory.\n"
-            "  -f     --foreground     Stay in foreground.\n"
-            "  -b     --background     Go to background.\n"
-            "  -y     --nosyslog       Don't log to syslog at all.\n"
-            "  -o     --once           Execute all jobs that need to be run, wait for "
-            "them,\n                          then return. Sets firstsleep to 0.\n"
-            "                          Especially useful with -f and -y.\n"
-            "  -d     --debug          Set Debug mode.\n"
-            "  -h     --help           Show this help message.\n"
-            "  -V     --version        Display version & infos about fcron.\n",
-            FIRST_SLEEP);
-
+	    "fcron [-d] [-f] [-b]\n"
+	    "fcron -h\n"
+	    "  -s t   --savetime t     Save fcrontabs on disk every t sec.\n"
+	    "  -l t   --firstsleep t   Sets the initial delay before any job is executed"
+	    ",\n                          default to %d seconds.\n"
+	    "  -m n   --maxserial n    Set to n the max number of running serial jobs.\n"
+	    "  -c f   --configfile f   Make fcron use config file f.\n"
+	    "  -n d   --newspooldir d  Create d as a new spool directory.\n"
+	    "  -f     --foreground     Stay in foreground.\n"
+	    "  -b     --background     Go to background.\n"
+	    "  -y     --nosyslog       Don't log to syslog at all.\n"
+	    "  -p     --logfilepath    If set, log to the file given as argument.\n"
+	    "  -o     --once           Execute all jobs that need to be run, wait for "
+	    "them,\n                          then return. Sets firstsleep to 0.\n"
+	    "                          Especially useful with -f and -y.\n"
+	    "  -d     --debug          Set Debug mode.\n"
+	    "  -h     --help           Show this help message.\n"
+	    "  -V     --version        Display version & infos about fcron.\n",
+	    FIRST_SLEEP
+	);
+    
     exit(EXIT_ERR);
 }
 
@@ -305,21 +306,23 @@ parseopt(int argc, char *argv[])
     int i;
 
 #ifdef HAVE_GETOPT_LONG
-    static struct option opt[] = {
-        {"debug", 0, NULL, 'd'},
-        {"foreground", 0, NULL, 'f'},
-        {"background", 0, NULL, 'b'},
-        {"nosyslog", 0, NULL, 'y'},
-        {"help", 0, NULL, 'h'},
-        {"version", 0, NULL, 'V'},
-        {"once", 0, NULL, 'o'},
-        {"savetime", 1, NULL, 's'},
-        {"firstsleep", 1, NULL, 'l'},
-        {"maxserial", 1, NULL, 'm'},
-        {"configfile", 1, NULL, 'c'},
-        {"newspooldir", 1, NULL, 'n'},
-        {"queuelen", 1, NULL, 'q'},
-        {0, 0, 0, 0}
+    static struct option opt[] =
+    {
+	{"debug", 0, NULL, 'd'},
+	{"foreground", 0, NULL, 'f'},
+	{"background", 0, NULL, 'b'},
+ 	{"nosyslog", 0, NULL, 'y'},
+ 	{"logfilepath", 1, NULL, 'p'},
+	{"help", 0, NULL, 'h'},
+	{"version", 0, NULL, 'V'},
+ 	{"once", 0, NULL, 'o'},
+	{"savetime", 1, NULL, 's'},
+ 	{"firstsleep", 1, NULL, 'l'},
+	{"maxserial", 1, NULL, 'm'},
+	{"configfile", 1, NULL, 'c'},
+	{"newspooldir", 1, NULL, 'n'},
+	{"queuelen", 1, NULL, 'q'},
+	{0,0,0,0}
     };
 #endif                          /* HAVE_GETOPT_LONG */
 
@@ -330,85 +333,78 @@ parseopt(int argc, char *argv[])
 
     while (1) {
 #ifdef HAVE_GETOPT_LONG
-        c = getopt_long(argc, argv, "dfbyhVos:l:m:c:n:q:", opt, NULL);
+	c = getopt_long(argc, argv, "dfbyp:hVos:l:m:c:n:q:", opt, NULL);
 #else
-        c = getopt(argc, argv, "dfbyhVos:l:m:c:n:q:");
-#endif                          /* HAVE_GETOPT_LONG */
-        if (c == EOF)
+	c = getopt(argc, argv, "dfbyp:hVos:l:m:c:n:q:");
+#endif /* HAVE_GETOPT_LONG */
+	if ( c == EOF ) break;
+	switch ( (char)c ) {
+
+	case 'V':
+	    info(); break;
+
+	case 'h':
+	    usage(); break;
+
+	case 'd':
+	    debug_opt = 1; break;
+
+	case 'f':
+	    foreground = 1; break;
+
+	case 'b':
+	    foreground = 0; break;
+
+ 	case 'y':
+	    dosyslog = 0; break;
+
+        case 'p':
+            logfile_path = strdup2(optarg);
             break;
-        switch ((char)c) {
+	    
+ 	case 'o':
+	    once = 1; first_sleep = 0; break;
 
-        case 'V':
-            info();
-            break;
+	case 's':
+	    if ( (save_time = strtol(optarg, NULL, 10)) < 60 || save_time >= LONG_MAX )
+		die("Save time can only be set between 60 and %d.", LONG_MAX); 
+	    break;
 
-        case 'h':
-            usage();
-            break;
+ 	case 'l':
+	    if ( (first_sleep = strtol(optarg, NULL, 10)) < 0 || first_sleep >= LONG_MAX)
+		die("First sleep can only be set between 0 and %d.", LONG_MAX); 
+	    break;
+	    
+	case 'm':
+	    if ( (serial_max_running = strtol(optarg, NULL, 10)) <= 0 
+		 || serial_max_running >= SHRT_MAX )
+		die("Max running can only be set between 1 and %d.",SHRT_MAX);
+	    break;
 
-        case 'd':
-            debug_opt = 1;
-            break;
+	case 'c':
+	    Set(fcronconf, optarg);
+	    break;
 
-        case 'f':
-            foreground = 1;
-            break;
+	case 'n':
+	    create_spooldir(optarg);
+	    break;
 
-        case 'b':
-            foreground = 0;
-            break;
+	case 'q':
+	    if ( (lavg_queue_max = serial_queue_max = strtol(optarg, NULL, 10)) < 5 
+		|| serial_queue_max >= SHRT_MAX )
+		die("Queue length can only be set between 5 and %d.", SHRT_MAX);
+	    break;
 
-        case 'y':
-            dosyslog = 0;
-            break;
+	case ':':
+	    error("(parseopt) Missing parameter");
+	    usage();
 
-        case 'o':
-            once = 1;
-            first_sleep = 0;
-            break;
+	case '?':
+	    usage();
 
-        case 's':
-            if ((save_time = strtol(optarg, NULL, 10)) < 60
-                || save_time >= LONG_MAX)
-                die("Save time can only be set between 60 and %d.", LONG_MAX);
-            break;
-
-        case 'l':
-            if ((first_sleep = strtol(optarg, NULL, 10)) < 0
-                || first_sleep >= LONG_MAX)
-                die("First sleep can only be set between 0 and %d.", LONG_MAX);
-            break;
-
-        case 'm':
-            if ((serial_max_running = strtol(optarg, NULL, 10)) <= 0
-                || serial_max_running >= SHRT_MAX)
-                die("Max running can only be set between 1 and %d.", SHRT_MAX);
-            break;
-
-        case 'c':
-            Set(fcronconf, optarg);
-            break;
-
-        case 'n':
-            create_spooldir(optarg);
-            break;
-
-        case 'q':
-            if ((lavg_queue_max = serial_queue_max =
-                 strtol(optarg, NULL, 10)) < 5 || serial_queue_max >= SHRT_MAX)
-                die("Queue length can only be set between 5 and %d.", SHRT_MAX);
-            break;
-
-        case ':':
-            error("(parseopt) Missing parameter");
-            usage();
-
-        case '?':
-            usage();
-
-        default:
-            warn("(parseopt) Warning: getopt returned %c", c);
-        }
+	default:
+	    warn("(parseopt) Warning: getopt returned %c", c);
+	}
     }
 
     if (optind < argc) {
@@ -551,6 +547,9 @@ main(int argc, char **argv)
 
     /* read fcron.conf and update global parameters */
     read_conf();
+
+    /* initialize the logs before we become a daemon */
+    xopenlog();
 
     /* change directory */
 

@@ -30,7 +30,6 @@
 #include "fcronconf.h"
 
 /* global variables */
-extern char dosyslog;
 extern pid_t daemon_pid;
 extern uid_t rootuid;
 extern gid_t rootgid;

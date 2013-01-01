@@ -5,7 +5,6 @@
 /* required by log.c */
 char debug_opt = 1;
 char *prog_name = NULL;
-char dosyslog = 1;
 char foreground = 1;
 pid_t daemon_pid = 0;
 uid_t rootuid = 0;

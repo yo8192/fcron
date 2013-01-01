@@ -40,7 +40,6 @@ gid_t rootgid = 0;
 /* needed by log part : */
 char *prog_name = NULL;
 char foreground = 1;
-char dosyslog = 1;
 pid_t daemon_pid = 0;
 
 

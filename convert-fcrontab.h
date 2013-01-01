@@ -30,6 +30,9 @@
 
 #include "global.h"
 
+/* needed for parsing a conf file */
+#include "fcronconf.h"
+
 extern uid_t rootuid;
 extern gid_t rootgid;
 

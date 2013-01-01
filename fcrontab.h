@@ -31,7 +31,6 @@
 
 /* global variables */
 extern pid_t daemon_pid;
-extern char dosyslog;
 extern struct cf_t *file_base;
 extern char *user;
 extern char *runas;

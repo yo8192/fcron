@@ -26,8 +26,11 @@
 #define __LOG_H__
 
 extern char debug_opt;
+extern char *logfile_path; /* path to a file to log to. Set to NULL to disable logging to a file */
+extern int dosyslog; /* set to 1 when we log messages to syslog, else 0 */
 
 /* functions prototypes */
+extern void xopenlog(void);
 extern void xcloselog(void);
 extern void explain(char *fmt, ...);
 extern void explain_fd(int fd, char *fmt, ...);

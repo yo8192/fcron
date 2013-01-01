@@ -41,7 +41,6 @@ char foreground = 1;
 pid_t daemon_pid = 0;
 uid_t rootuid = 0;
 gid_t rootgid = 0;
-char dosyslog = 1;
 
 void
 info(void)
@@ -242,11 +241,10 @@ main(int argc, char *argv[])
 
     /* constants and variables defined by command line */
 
-    while (1) {
-        c = getopt(argc, argv, "hV");
-        if (c == EOF)
-            break;
-        switch (c) {
+    while(1) {
+	c = getopt(argc, argv, "chV");
+	if (c == EOF) break;
+	switch (c) {
 
         case 'V':
             info();
@@ -256,9 +254,12 @@ main(int argc, char *argv[])
             usage();
             break;
 
-        case ':':
-            fprintf(stderr, "(setopt) Missing parameter");
-            usage();
+	case 'c':
+	    Set(fcronconf, optarg); break;
+
+	case ':':
+	    fprintf(stderr, "(setopt) Missing parameter");
+	    usage();
 
         case '?':
             usage();
@@ -270,6 +271,9 @@ main(int argc, char *argv[])
 
     if (optind >= argc || argc != 2)
         usage();
+
+    /* parse fcron.conf */
+    read_conf();
 
     user_to_update = strdup2(argv[optind]);
 
