@@ -241,10 +241,11 @@ main(int argc, char *argv[])
 
     /* constants and variables defined by command line */
 
-    while(1) {
-	c = getopt(argc, argv, "chV");
-	if (c == EOF) break;
-	switch (c) {
+    while (1) {
+        c = getopt(argc, argv, "chV");
+        if (c == EOF)
+            break;
+        switch (c) {
 
         case 'V':
             info();
@@ -254,12 +255,13 @@ main(int argc, char *argv[])
             usage();
             break;
 
-	case 'c':
-	    Set(fcronconf, optarg); break;
+        case 'c':
+            Set(fcronconf, optarg);
+            break;
 
-	case ':':
-	    fprintf(stderr, "(setopt) Missing parameter");
-	    usage();
+        case ':':
+            fprintf(stderr, "(setopt) Missing parameter");
+            usage();
 
         case '?':
             usage();

@@ -42,12 +42,12 @@ int dosyslog = 1;
 char *logfile_path = NULL;
 
 
-char* make_msg(const char *append, char *fmt, va_list args);
+char *make_msg(const char *append, char *fmt, va_list args);
 void log_syslog_str(int priority, char *msg);
-void log_file_str(FILE *logfile, int priority, char *msg);
+void log_file_str(FILE * logfile, int priority, char *msg);
 void log_console_str(int priority, char *msg);
 void log_fd_str(int fd, char *msg);
-static void print_line_prefix(FILE *logfile, int priority);
+static void print_line_prefix(FILE * logfile, int priority);
 static void xlog(int priority, int fd, char *fmt, va_list args);
 static void xlog_e(int priority, int fd, char *fmt, va_list args);
 #ifdef HAVE_LIBPAM
@@ -69,8 +69,8 @@ static FILE *logfile = NULL;
 void
 xopenlog(void)
 {
-    if (log_open) 
-	return;
+    if (log_open)
+        return;
 
     /* we MUST set log_open to 1 before doing anything else. That way,
      * if we call a function that logs something, which calls xopenlog,
@@ -89,11 +89,13 @@ xopenlog(void)
 
             if (dosyslog) {
                 /* we have already called openlog() which cannot fail */
-                syslog(COMPLAIN_LEVEL, "Could not fopen log file '%s': %s", logfile_path, strerror(saved_errno));
+                syslog(COMPLAIN_LEVEL, "Could not fopen log file '%s': %s",
+                       logfile_path, strerror(saved_errno));
             }
 
             print_line_prefix(stderr, COMPLAIN_LEVEL);
-            fprintf(stderr, "Could not fopen log file '%s': %s\n", logfile_path, strerror(saved_errno));
+            fprintf(stderr, "Could not fopen log file '%s': %s\n", logfile_path,
+                    strerror(saved_errno));
         }
     }
 
@@ -104,24 +106,26 @@ void
 xcloselog()
 {
     if (!log_open)
-	return;
+        return;
 
     // check whether we need to close syslog, or a file.
     if (logfile != NULL) {
-	if (fclose(logfile)!= 0) {
+        if (fclose(logfile) != 0) {
             int saved_errno = errno;
 
-            syslog(COMPLAIN_LEVEL, "Error while closing log file '%s': %s", logfile_path, strerror(saved_errno));
+            syslog(COMPLAIN_LEVEL, "Error while closing log file '%s': %s",
+                   logfile_path, strerror(saved_errno));
 
             if (foreground == 1) {
                 print_line_prefix(stderr, COMPLAIN_LEVEL);
-                fprintf(stderr, "Error while closing log file '%s': %s\n", logfile_path, strerror(saved_errno));
+                fprintf(stderr, "Error while closing log file '%s': %s\n",
+                        logfile_path, strerror(saved_errno));
             }
         }
     }
 
     if (dosyslog) {
-	closelog();
+        closelog();
     }
 
     log_open = 0;
@@ -159,20 +163,20 @@ log_syslog_str(int priority, char *msg)
 {
     if (dosyslog) {
         xopenlog();
-	syslog(priority, "%s", msg);
+        syslog(priority, "%s", msg);
     }
 }
 
 /* log a simple string to a log file if needed */
 void
-log_file_str(FILE *logfile, int priority, char *msg)
+log_file_str(FILE * logfile, int priority, char *msg)
 {
     xopenlog();
 
     /* we may have failed to open the logfile - check if
      * it does exist *after* xopenlog() */
     if (logfile != NULL) {
-	print_line_prefix(logfile, priority);
+        print_line_prefix(logfile, priority);
         fprintf(logfile, "%s\n", msg);
         fflush(logfile);
     }
@@ -184,8 +188,8 @@ void
 log_console_str(int priority, char *msg)
 {
     if (foreground == 1) {
-	print_line_prefix(stderr, priority);
-	fprintf(stderr, "%s\n", msg);
+        print_line_prefix(stderr, priority);
+        fprintf(stderr, "%s\n", msg);
     }
 }
 
@@ -241,7 +245,7 @@ xlog_e(int priority, int fd, char *fmt, va_list args)
 
 /* write a message to the file specified by logfile. */
 static void
-print_line_prefix(FILE *logfile, int priority)
+print_line_prefix(FILE * logfile, int priority)
 {
     time_t t = time(NULL);
     struct tm *ft;
@@ -254,21 +258,21 @@ print_line_prefix(FILE *logfile, int priority)
     strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", ft);
 
     // is it an info/warning/error/debug message?
-    switch(priority) {
-        case EXPLAIN_LEVEL:
-            type = " INFO";
-            break;
-        case WARNING_LEVEL:
-            type = " WARN";
-            break;
-        case COMPLAIN_LEVEL:
-            type = "ERROR";
-            break;
-        case DEBUG_LEVEL:
-            type = "DEBUG";
-            break;
-        default:
-            type = "UNKNOWN_SEVERITY";
+    switch (priority) {
+    case EXPLAIN_LEVEL:
+        type = " INFO";
+        break;
+    case WARNING_LEVEL:
+        type = " WARN";
+        break;
+    case COMPLAIN_LEVEL:
+        type = "ERROR";
+        break;
+    case DEBUG_LEVEL:
+        type = "DEBUG";
+        break;
+    default:
+        type = "UNKNOWN_SEVERITY";
     }
 
     // print the log message.
@@ -449,10 +453,10 @@ die_e(char *fmt, ...)
 
     err_no = errno;
 
-   va_start(args, fmt);
-   xlog_e(COMPLAIN_LEVEL, -1, fmt, args);
-   va_end(args);
-   if (getpid() == daemon_pid) {
+    va_start(args, fmt);
+    xlog_e(COMPLAIN_LEVEL, -1, fmt, args);
+    va_end(args);
+    if (getpid() == daemon_pid) {
         error("Aborted");
     }
     else {

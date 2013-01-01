@@ -127,7 +127,7 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     /* if open() didn't fail make sure we opened a 'normal' file */
     if (fd >= 0) {
 
-        if ( fstat(fd, &s) < 0 ) {
+        if (fstat(fd, &s) < 0) {
             saved_errno = errno;
             error_e("open_as_user(): could not fstat %s", pathname);
             if (close(fd) < 0)
@@ -213,12 +213,12 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
         return fd;
 
     /* if open() didn't fail make sure we opened a 'normal' file */
-    if ( fstat(fd, &s) < 0 ) {
+    if (fstat(fd, &s) < 0) {
         saved_errno = errno;
         error_e("open_as_user(): could not fstat %s", pathname);
         goto err;
     }
-    if ( ! S_ISREG(s.st_mode) || s.st_nlink != 1 ) {
+    if (!S_ISREG(s.st_mode) || s.st_nlink != 1) {
         saved_errno = errno;
         error_e("open_as_user(): file %s is not a regular file", pathname);
         goto err;
@@ -231,8 +231,8 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     if (!(s.st_mode & S_IROTH || (s.st_uid == openuid && s.st_mode & S_IRUSR)
           || (s.st_gid == opengid && s.st_mode & S_IRGRP))) {
         error("open_as_user(): file %s does not pass the security test: "
-                "uid=%d gid=%d mode=%lo openuid=%d opengid=%d",
-                pathname, s.st_uid, s.st_gid, s.st_mode, openuid, opengid);
+              "uid=%d gid=%d mode=%lo openuid=%d opengid=%d",
+              pathname, s.st_uid, s.st_gid, s.st_mode, openuid, opengid);
         saved_errno = EACCES;
         goto err;
     }
@@ -243,9 +243,10 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
      *       then we will end up changing the ownership even if the seteuid()
      *       version of that function wouldn't have. That shouldn't break
      *       anything though. */
-    if ( (flags & O_CREAT) && fchown(fd, openuid, opengid) != 0) {
+    if ((flags & O_CREAT) && fchown(fd, openuid, opengid) != 0) {
         saved_errno = errno;
-        error_e("Could not fchown %s to uid:%d gid:%d", pathname, openuid, opengid);
+        error_e("Could not fchown %s to uid:%d gid:%d", pathname, openuid,
+                opengid);
         goto err;
     }
 
