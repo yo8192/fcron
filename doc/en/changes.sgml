@@ -26,6 +26,9 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>fixed fcrontab edition of *ly lines (hourly, daily, etc)</para>
 	    </listitem>
+	    <listitem>
+	       <para>fixed fcron crashes when noticenotrun was triggered</para>
+	    </listitem>
       </itemizedlist>
       <itemizedlist>
 	 <title>From version 3.0.6 to 3.1.0</title>
