@@ -13,7 +13,7 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
-	 <title>From version 3.0.6 to 3.1.1</title>
+	 <title>From version 3.1.0 to 3.1.1</title>
 	    <listitem>
 	       <para>Added readline support for fcrondyn</para>
 	    </listitem>
