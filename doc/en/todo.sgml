@@ -31,14 +31,17 @@ A copy of the license is included in gfdl.sgml.
       <sect2>
 	 <title>Low priority</title>
 	 <itemizedlist>
+            <listitem>
+	       <para>For environment settings, make a var substitution.</para>
+	    </listitem>
+	    <listitem>
+	       <para>add a mailsubject option, for custom mail subjects (for instance, in case of a job containing something secret -- password, etc -- in the command line).</para>
+	    </listitem>
 	    <listitem>
 	       <para>Use directory notifications (FAM) / inotify, and support a fcrontab
 	       and a cron.d as Vixie cron does (directly included in fcron itself, not thanks to a script as now).
                However the parsing work is done by fcrontab, and should probably keep on being done by fcrontab for
                security and stability reasons: have fcron call fcrontab to do that job?</para>
-	    </listitem>
-	    <listitem>
-	       <para>use readline (if available) for fcrondyn.</para>
 	    </listitem>
 	    <listitem>
 	       <para>could be worth checking fcron for memory leaks using specialized library (just in case...)</para>
@@ -56,12 +59,6 @@ A copy of the license is included in gfdl.sgml.
 	       <para>find way to have the non translated pages of the French translation be updated automatically (changes, todo, etc -> copied from the English doc)</para>
 	    </listitem>
 	    <listitem>
-	       <para>add logging to a file (instead of syslog) with configuration in fcron.conf</para>
-	    </listitem>
-	    <listitem>
-	       <para>For environment settings, make a var substitution.</para>
-	    </listitem>
-	    <listitem>
 	       <para>add a return code for jobs which would mean that they
 		  should not be run again (in case of an error, etc...).</para>
 	    </listitem>
@@ -72,9 +69,6 @@ A copy of the license is included in gfdl.sgml.
 	    </listitem>
 	    <listitem>
 	       <para>support for per user serial queue (especially for root)</para>
-	    </listitem>
-	    <listitem>
-	       <para>add a mailsubject option, for custom mail subjects (for instance, in case of a job containing something secret -- password, etc -- in the command line).</para>
 	    </listitem>
 	 </itemizedlist>
       </sect2>

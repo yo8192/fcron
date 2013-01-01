@@ -21,6 +21,9 @@ A copy of the license is included in gfdl.sgml.
 	       <para>tweaked 'make indent' options and applied</para>
 	    </listitem>
 	    <listitem>
+	       <para>Fcron can now log to a file (without syslog) - thanks Matthew Signorini.</para>
+	    </listitem>
+	    <listitem>
 	       <para>fixed fcrontab edition of *ly lines (hourly, daily, etc)</para>
 	    </listitem>
       </itemizedlist>
