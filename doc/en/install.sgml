@@ -15,6 +15,8 @@ A copy of the license is included in gfdl.sgml.
     <title>Compilation requirements</title>
     <itemizedlist>
         <listitem><para>A C compiler (e.g. gcc)</para></listitem>
+        <listitem><para>(optional) <productname>readline</productname> development
+    library (e.g. libreadline-dev)</para></listitem>
         <listitem><para>(optional) <productname>PAM</productname> development
     library (e.g. libpam0g-dev)</para></listitem>
         <listitem><para>(optional) <productname>SE Linux</productname> development library (e.g. libselinux1-dev)</para></listitem>
