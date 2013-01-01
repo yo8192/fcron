@@ -157,9 +157,8 @@ make_msg(const char *append, char *fmt, va_list args)
 void
 log_syslog_str(int priority, char *msg)
 {
-    xopenlog();
-
     if (dosyslog) {
+        xopenlog();
 	syslog(priority, "%s", msg);
     }
 }
@@ -170,6 +169,8 @@ log_file_str(FILE *logfile, int priority, char *msg)
 {
     xopenlog();
 
+    /* we may have failed to open the logfile - check if
+     * it does exist *after* xopenlog() */
     if (logfile != NULL) {
 	print_line_prefix(logfile, priority);
         fprintf(logfile, "%s\n", msg);
