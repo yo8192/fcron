@@ -33,7 +33,6 @@ extern char *fcronconf;
 extern char *fcronallow;
 extern char *fcrondeny;
 extern char *fcrontabs;
-extern char *fcronlogfile;
 extern char *pidfile;
 extern char *fifofile;
 extern char *editor;

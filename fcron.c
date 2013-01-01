@@ -61,7 +61,6 @@ time_t first_sleep = FIRST_SLEEP;
 time_t save_time = SAVE;
 char once = 0;      /* set to 1 if fcron shall return immediately after running
 		     * all jobs that are due at the time when fcron is started */
-char dosyslog = 1;  /* set to 1 when we log messages to syslog, else 0 */
 
 /* Get the default locale character set for the mail
  * "Content-Type: ...; charset=" header */
@@ -149,6 +148,7 @@ usage(void)
 	    "  -f     --foreground     Stay in foreground.\n"
 	    "  -b     --background     Go to background.\n"
 	    "  -y     --nosyslog       Don't log to syslog at all.\n"
+	    "  -p     --logfilepath    If set, log to the file given as argument.\n"
 	    "  -o     --once           Execute all jobs that need to be run, wait for "
 	    "them,\n                          then return. Sets firstsleep to 0.\n"
 	    "                          Especially useful with -f and -y.\n"
@@ -312,6 +312,7 @@ parseopt(int argc, char *argv[])
 	{"foreground", 0, NULL, 'f'},
 	{"background", 0, NULL, 'b'},
  	{"nosyslog", 0, NULL, 'y'},
+ 	{"logfilepath", 1, NULL, 'p'},
 	{"help", 0, NULL, 'h'},
 	{"version", 0, NULL, 'V'},
  	{"once", 0, NULL, 'o'},
@@ -332,9 +333,9 @@ parseopt(int argc, char *argv[])
 
     while(1) {
 #ifdef HAVE_GETOPT_LONG
-	c = getopt_long(argc, argv, "dfbyhVos:l:m:c:n:q:", opt, NULL);
+	c = getopt_long(argc, argv, "dfbyp:hVos:l:m:c:n:q:", opt, NULL);
 #else
-	c = getopt(argc, argv, "dfbyhVos:l:m:c:n:q:");
+	c = getopt(argc, argv, "dfbyp:hVos:l:m:c:n:q:");
 #endif /* HAVE_GETOPT_LONG */
 	if ( c == EOF ) break;
 	switch ( (char)c ) {
@@ -356,6 +357,10 @@ parseopt(int argc, char *argv[])
 
  	case 'y':
 	    dosyslog = 0; break;
+
+        case 'p':
+            logfile_path = strdup2(optarg);
+            break;
 	    
  	case 'o':
 	    once = 1; first_sleep = 0; break;
@@ -538,6 +543,9 @@ main(int argc, char **argv)
 
     /* read fcron.conf and update global parameters */
     read_conf();
+
+    /* initialize the logs before we become a daemon */
+    xopenlog();
 
     /* change directory */
 

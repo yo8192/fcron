@@ -57,7 +57,6 @@ char *cmd_str = NULL;
 /* needed by log part : */
 char *prog_name = NULL;
 char foreground = 1;
-char dosyslog = 1;
 pid_t daemon_pid = 0;
 
 /* uid/gid of user/group root 

@@ -22,7 +22,7 @@
  */
 
 
-/* This code is inspired by Anacron's sources of
+/* This code was originally inspired by Anacron's sources of
    Itai Tzur <itzur@actcom.co.il> */
 
 
@@ -38,16 +38,18 @@ char debug_opt = 1;       /* set to 1 if we are in debug mode */
 #else
 char debug_opt = 0;       /* set to 1 if we are in debug mode */
 #endif
+int dosyslog = 1;
+char *logfile_path = NULL;
 
 
-static void xopenlog(void);
 char* make_msg(const char *append, char *fmt, va_list args);
 void log_syslog_str(int priority, char *msg);
-void log_console_str(char *msg);
+void log_file_str(FILE *logfile, int priority, char *msg);
+void log_console_str(int priority, char *msg);
 void log_fd_str(int fd, char *msg);
-static void log_syslog(int priority, int fd, char *fmt, va_list args);
-static void log_e(int priority, char *fmt, va_list args);
-static void fcronlog(int priority, char *msg);
+static void print_line_prefix(FILE *logfile, int priority);
+static void xlog(int priority, int fd, char *fmt, va_list args);
+static void xlog_e(int priority, int fd, char *fmt, va_list args);
 #ifdef HAVE_LIBPAM
 static void log_pame(int priority, pam_handle_t *pamh, int pamerrno,
 		     char *fmt, va_list args);
@@ -55,26 +57,46 @@ static void log_pame(int priority, pam_handle_t *pamh, int pamerrno,
 
 static char truncated[] = " (truncated)";
 static int log_open = 0;
-static FILE *logfd = NULL;
+static FILE *logfile = NULL;
 
 
 /* Initialise logging to either syslog or a file specified in fcron.conf,
  * or take no action if logging is suppressed.
+ * This function will be called automatically if you attempt to log something,
+ * however you may have to call it explicitely as it needs to run before the
+ * program becomes a daemon so as it can print any errors on the console.
  */
-static void
+void
 xopenlog(void)
 {
     if (log_open) 
 	return;
 
-    // are we using syslog?
-    if (dosyslog && (fcronlogfile == NULL)) {
-	openlog(prog_name, LOG_PID, SYSLOG_FACILITY);
-    } else if (fcronlogfile != NULL) {
-	logfd = fopen(fcronlogfile, "a+");
+    /* we MUST set log_open to 1 before doing anything else. That way,
+     * if we call a function that logs something, which calls xopenlog,
+     * then we won't end up in a nasty loop */
+    log_open = 1;
+
+    // are we logging to a file or using syslog or not logging at all?
+    if (dosyslog) {
+        openlog(prog_name, LOG_PID, SYSLOG_FACILITY);
     }
 
-    log_open = 1;
+    if (logfile_path != NULL) {
+        logfile = fopen(logfile_path, "a");
+        if (logfile == NULL) {
+            int saved_errno = errno;
+
+            if (dosyslog) {
+                /* we have already called openlog() which cannot fail */
+                syslog(COMPLAIN_LEVEL, "Could not fopen log file '%s': %s", logfile_path, strerror(saved_errno));
+            }
+
+            print_line_prefix(stderr, COMPLAIN_LEVEL);
+            fprintf(stderr, "Could not fopen log file '%s': %s\n", logfile_path, strerror(saved_errno));
+        }
+    }
+
 }
 
 
@@ -85,10 +107,21 @@ xcloselog()
 	return;
 
     // check whether we need to close syslog, or a file.
-    if (dosyslog && (fcronlogfile == NULL)) {
+    if (logfile != NULL) {
+	if (fclose(logfile)!= 0) {
+            int saved_errno = errno;
+
+            syslog(COMPLAIN_LEVEL, "Error while closing log file '%s': %s", logfile_path, strerror(saved_errno));
+
+            if (foreground == 1) {
+                print_line_prefix(stderr, COMPLAIN_LEVEL);
+                fprintf(stderr, "Error while closing log file '%s': %s\n", logfile_path, strerror(saved_errno));
+            }
+        }
+    }
+
+    if (dosyslog) {
 	closelog();
-    } else if (fcronlogfile != NULL) {
-	fclose(logfd);
     }
 
     log_open = 0;
@@ -120,34 +153,38 @@ make_msg(const char *append, char *fmt, va_list args)
 }
 
 
-/* log a simple string to syslog/log file if needed */
+/* log a simple string to syslog if needed */
 void
 log_syslog_str(int priority, char *msg)
 {
     xopenlog();
 
-    if (dosyslog && (logfd == NULL)) {
+    if (dosyslog) {
 	syslog(priority, "%s", msg);
-    } else if (logfd != NULL) {
-	fcronlog(priority, msg);
+    }
+}
+
+/* log a simple string to a log file if needed */
+void
+log_file_str(FILE *logfile, int priority, char *msg)
+{
+    xopenlog();
+
+    if (logfile != NULL) {
+	print_line_prefix(logfile, priority);
+        fprintf(logfile, "%s\n", msg);
+        fflush(logfile);
     }
 
 }
 
 /* log a simple string to console if needed */
 void
-log_console_str(char *msg)
+log_console_str(int priority, char *msg)
 {
     if (foreground == 1) {
-	time_t t = time(NULL);
-	struct tm *ft;
-	char date[30];
-
-	ft = localtime(&t);
-	date[0] = '\0';
-	strftime(date, sizeof(date), "%H:%M:%S", ft);
-	fprintf(stderr, "%s %s\n", date, msg);
-
+	print_line_prefix(stderr, priority);
+	fprintf(stderr, "%s\n", msg);
     }
 }
 
@@ -165,7 +202,7 @@ log_fd_str(int fd, char *msg)
  * "priority". */
 /* write it also to fd if positive, and to stderr if foreground==1 */
 static void
-log_syslog(int priority, int fd, char *fmt, va_list args)
+xlog(int priority, int fd, char *fmt, va_list args)
 {
     char *msg;
 
@@ -173,16 +210,17 @@ log_syslog(int priority, int fd, char *fmt, va_list args)
 	return;
 
     log_syslog_str(priority, msg);
-    log_console_str(msg);
+    log_file_str(logfile, priority, msg);
+    log_console_str(priority, msg);
     log_fd_str(fd, msg);
 
     Free_safe(msg);
 }
 
-/* Same as log_syslog(), but also appends an error description corresponding
+/* Same as xlog(), but also appends an error description corresponding
  * to "errno". */
 static void
-log_e(int priority, char *fmt, va_list args)
+xlog_e(int priority, int fd, char *fmt, va_list args)
 {
     int saved_errno;
     char *msg;
@@ -193,14 +231,16 @@ log_e(int priority, char *fmt, va_list args)
 	return ;
 
     log_syslog_str(priority, msg);
-    log_console_str(msg);
+    log_file_str(logfile, priority, msg);
+    log_console_str(priority, msg);
+    log_fd_str(fd, msg);
 
     Free_safe(msg);
 }
 
-/* write a message to the file specified by logfd. */
+/* write a message to the file specified by logfile. */
 static void
-fcronlog(int priority, char *msg)
+print_line_prefix(FILE *logfile, int priority)
 {
     time_t t = time(NULL);
     struct tm *ft;
@@ -210,25 +250,28 @@ fcronlog(int priority, char *msg)
     // print the current time as a string.
     ft = localtime(&t);
     date[0] = '\0';
-    strftime(date, sizeof(date), "%H:%M:%S", ft);
+    strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", ft);
 
     // is it an info/warning/error/debug message?
     switch(priority) {
-    case EXPLAIN_LEVEL:
-	type = "Information";
-	break;
-    case WARNING_LEVEL:
-	type = "Warning";
-	break;
-    case COMPLAIN_LEVEL:
-	type = "Error";
-	break;
-    case DEBUG_LEVEL:
-	type = "Debug";
+        case EXPLAIN_LEVEL:
+            type = " INFO";
+            break;
+        case WARNING_LEVEL:
+            type = " WARN";
+            break;
+        case COMPLAIN_LEVEL:
+            type = "ERROR";
+            break;
+        case DEBUG_LEVEL:
+            type = "DEBUG";
+            break;
+        default:
+            type = "UNKNOWN_SEVERITY";
     }
 
     // print the log message.
-    fprintf(logfd, "%s [ %s ]:\n%s\n\n", date, type, msg);
+    fprintf(logfile, "%s %s ", date, type);
 }
 
 
@@ -244,7 +287,7 @@ log_pame(int priority, pam_handle_t *pamh, int pamerrno, char *fmt, va_list args
         return ;
 
     log_syslog_str(priority, msg);
-    log_console_str(msg);
+    log_console_str(priority, msg);
 
     xcloselog();
 
@@ -260,7 +303,7 @@ explain(char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_syslog(EXPLAIN_LEVEL, -1, fmt, args);
+    xlog(EXPLAIN_LEVEL, -1, fmt, args);
     va_end(args);
 }
 
@@ -271,7 +314,7 @@ explain_fd(int fd, char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_syslog(EXPLAIN_LEVEL, fd, fmt, args);
+    xlog(EXPLAIN_LEVEL, fd, fmt, args);
     va_end(args);
 }
 
@@ -283,7 +326,7 @@ explain_e(char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_e(EXPLAIN_LEVEL, fmt, args);
+    xlog_e(EXPLAIN_LEVEL, -1, fmt, args);
     va_end(args);
 }
 
@@ -295,7 +338,7 @@ warn(char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_syslog(WARNING_LEVEL, -1, fmt, args);
+    xlog(WARNING_LEVEL, -1, fmt, args);
     va_end(args);
 }
 
@@ -306,7 +349,7 @@ warn_fd(int fd, char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_syslog(WARNING_LEVEL, fd, fmt, args);
+    xlog(WARNING_LEVEL, fd, fmt, args);
     va_end(args);
 }
 
@@ -318,7 +361,7 @@ warn_e(char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_e(WARNING_LEVEL, fmt, args);
+    xlog_e(WARNING_LEVEL, -1, fmt, args);
     va_end(args);
 }
 
@@ -330,7 +373,7 @@ error(char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_syslog(COMPLAIN_LEVEL, -1, fmt, args);
+    xlog(COMPLAIN_LEVEL, -1, fmt, args);
     va_end(args);
 }
 
@@ -341,7 +384,7 @@ error_fd(int fd, char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_syslog(COMPLAIN_LEVEL, fd, fmt, args);
+    xlog(COMPLAIN_LEVEL, fd, fmt, args);
     va_end(args);
 }
 
@@ -353,7 +396,7 @@ error_e(char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_e(COMPLAIN_LEVEL, fmt, args);
+    xlog_e(COMPLAIN_LEVEL, -1, fmt, args);
     va_end(args);
 }
 
@@ -380,7 +423,7 @@ die(char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_syslog(COMPLAIN_LEVEL, -1, fmt, args);
+    xlog(COMPLAIN_LEVEL, -1, fmt, args);
     va_end(args);
     if (getpid() == daemon_pid) {
         error("Aborted");
@@ -405,7 +448,7 @@ die_e(char *fmt, ...)
    err_no = errno;
 
    va_start(args, fmt);
-   log_e(COMPLAIN_LEVEL, fmt, args);
+   xlog_e(COMPLAIN_LEVEL, -1, fmt, args);
    va_end(args);
    if (getpid() == daemon_pid) {
         error("Aborted");
@@ -447,7 +490,7 @@ Debug(char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    log_syslog(DEBUG_LEVEL, -1, fmt, args);
+    xlog(DEBUG_LEVEL, -1, fmt, args);
     va_end(args);
 }
 

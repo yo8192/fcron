@@ -39,6 +39,7 @@ A copy of the license is included in gfdl.sgml.
 	    <arg>-f</arg> 
 	    <arg>-o</arg>
 	    <arg>-y</arg>
+	    <arg>-p <replaceable>file</replaceable></arg>
 	    <arg>-l <replaceable>time</replaceable></arg>
 	</cmdsynopsis>
 	<cmdsynopsis>
@@ -166,6 +167,16 @@ May be especially useful when used with options <option>-y</option> and
 		<listitem>
 		    <para>Don't log to syslog at all. May be useful when running
 in foreground.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><option>-p</option> <replaceable>file</replaceable></term>
+		<term><option>--logfilepath</option>
+<replaceable>file</replaceable></term>
+		<listitem>
+		    <para>If set, log to the file given as argument. &fcron; will
+                    log to both that file and syslog in parallel unless
+                    <option>-y</option> is also set.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry id="fcron.8.firstsleep">

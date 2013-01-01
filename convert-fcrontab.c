@@ -41,7 +41,6 @@ char foreground = 1;
 pid_t daemon_pid = 0;
 uid_t rootuid = 0;
 gid_t rootgid = 0;
-char dosyslog = 1;
 
 void
 info(void)
