@@ -99,6 +99,7 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     int fd = -1;
     va_list ap;
     mode_t mode = (mode_t) 0;
+    int saved_errno = 0;
 
     if (flags & O_CREAT) {
         va_start(ap, flags);
@@ -115,6 +116,8 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     else
         fd = open(pathname, flags);
 
+    saved_errno = errno;
+
     /* change the effective uid/gid back to original values */
     seteuid_safe(orig_euid);
     setegid_safe(orig_egid);
@@ -123,6 +126,7 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     if ( fd >= 0 ) {
 
         if ( fstat(fd, &s) < 0 ) {
+            saved_errno = errno;
             error_e("open_as_user(): could not fstat %s", pathname);
             if ( close(fd) < 0 )
                 error_e("open_as_user: could not close() %s", pathname);
@@ -133,11 +137,13 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
             error_e("open_as_user(): file %s is not a regular file", pathname);
             if ( close(fd) < 0 )
                 error_e("open_as_user: could not close() %s", pathname);
-            errno = 0;
+            saved_errno = 0;
             fd = -1;
         }
 
     }
+
+    errno = saved_errno;
 
     return fd;
 
@@ -157,6 +163,7 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     struct stat s;
     va_list ap;
     mode_t mode = (mode_t) 0;
+    int saved_errno = 0;
 
     if (flags & O_CREAT) {
         va_start(ap, flags);
@@ -185,7 +192,9 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
         ;
     }
     else {
+        saved_errno = errno;
         error_e("open_as_user(): could not stat %s", pathname);
+        errno = saved_errno;
         return -1;
     }
 
@@ -201,10 +210,12 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
 
     /* if open() didn't fail make sure we opened a 'normal' file */
     if ( fstat(fd, &s) < 0 ) {
+        saved_errno = errno;
         error_e("open_as_user(): could not fstat %s", pathname);
         goto err;
     }
     if ( ! S_ISREG(s.st_mode) || s.st_nlink != 1 ) {
+        saved_errno = errno;
         error_e("open_as_user(): file %s is not a regular file", pathname);
         goto err;
     }
@@ -219,7 +230,7 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
         error("open_as_user(): file %s does not pass the security test: "
                 "uid=%d gid=%d mode=%lo openuid=%d opengid=%d",
                 pathname, s.st_uid, s.st_gid, s.st_mode, openuid, opengid);
-        errno = EACCES;
+        saved_errno = EACCES;
         goto err;
     }
 
@@ -230,10 +241,9 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
      *       version of that function wouldn't have. That shouldn't break
      *       anything though. */
     if ( (flags & O_CREAT) && fchown(fd, openuid, opengid) != 0) {
+        saved_errno = errno;
         error_e("Could not fchown %s to uid:%d gid:%d", pathname, openuid, opengid);
-        if ( close(fd) < 0 )
-            error_e("open_as_user: could not close() %s", pathname);
-        return -1;
+        goto err;
     }
 
     /* everything went ok: return the file descriptor */
@@ -242,6 +252,7 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
 err:
     if ( fd >= 0 && close(fd) < 0 )
         error_e("open_as_user: could not close() %s", pathname);
+    errno = saved_errno;
     return -1;
 }
 
