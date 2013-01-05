@@ -11,6 +11,7 @@ PIDFile=@@PIDFILE@
 ExecStart=@@DESTSBIN@/fcron
 ExecReload=/bin/kill -USR1 $MAINPID
 Restart=always
+KillMode=process
 
 [Install]
 WantedBy=multi-user.target

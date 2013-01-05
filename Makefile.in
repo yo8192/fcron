@@ -143,7 +143,7 @@ ifeq ($(BOOTINSTALL), 1)
 endif
 ifneq ($(SYSTEMD_DIR), no)
 	if test ! -d $(DESTDIR)$(SYSTEMD_DIR); then $(INSTALL) -m 755 -d $(DESTDIR)$(SYSTEMD_DIR) ; fi
-	$(INSTALL) -m 644 files/fcron.init.systemd $(DESTDIR)$(SYSTEMD_DIR)/fcron.service
+	$(INSTALL) -m 644 script/fcron.init.systemd $(DESTDIR)$(SYSTEMD_DIR)/fcron.service
 endif
 
 install-staged: all
