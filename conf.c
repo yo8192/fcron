@@ -748,13 +748,13 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
         error("file %s is truncated : you should reinstall it with fcrontab",
               file_name);
 
-    fclose(ff);
+    xfclose_check(&ff, file_name);
 
     return OK;
 
  err:
     if (ff != NULL)
-        fclose(ff);
+        xfclose_check(&ff, file_name);
 
     if (cl != NULL && cl->cl_next == NULL) {
         /* line is not yet in the line list of the file : free it */

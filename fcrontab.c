@@ -188,7 +188,7 @@ xexit(int exit_val)
 }
 
 int
-copy_src(int from, char *dest)
+copy_src(int from, const char *dest)
     /* copy src file orig (already opened) to dest */
     /* we first copy the file to a temp file name, and then we rename it,
      * so as to avoid data loss if the filesystem is full. */
@@ -247,7 +247,7 @@ copy_src(int from, char *dest)
             goto exiterr;
         }
 
-    close(to_fd);
+    xclose_check(&to_fd, dest);
     to_fd = -1;
 
     if (rename_as_user(tmp_filename_str, dest, useruid, fcrontab_gid) < 0) {
@@ -260,7 +260,7 @@ copy_src(int from, char *dest)
 
  exiterr:
     if (to_fd != -1)
-        close(to_fd);
+        xclose_check(&to_fd, dest);
     return ERR;
 }
 
@@ -301,7 +301,7 @@ remove_fcrontab(char rm_orig)
     }
     else if (asuid == rootuid && fchown(fd, rootuid, fcrontab_gid) != 0)
         error_e("Could not fchown %s to root", buf);
-    close(fd);
+    xclose_check(&fd, buf);
 
     need_sig = 1;
 
@@ -376,7 +376,7 @@ make_file(char *file, int fd)
 
 
 void
-list_file(char *file)
+list_file(const char *file)
 {
     FILE *f = NULL;
     int c;
@@ -396,19 +396,19 @@ list_file(char *file)
 
     f = fdopen(fd, "r");
     if (f == NULL) {
-        close(fd);
+        xclose_check(&fd, file);
         die_e("User %s could not read file \"%s\"", user, file);
     }
 
     while ((c = getc(f)) != EOF)
         putchar(c);
 
-    fclose(f);
+    xfclose_check(&f, file);
 
 }
 
 void
-edit_file(char *fcron_orig)
+edit_file(const char *fcron_orig)
     /* copy file to a temp file, edit that file, and install it
      * if necessary */
 {
@@ -418,7 +418,7 @@ edit_file(char *fcron_orig)
     int status;
     struct stat st;
     time_t mtime = 0;
-    char *tmp_str;
+    char *tmp_str = NULL;
     FILE *f = NULL, *fi = NULL;
     int file = -1, origfd = -1;
     int c;
@@ -432,7 +432,8 @@ edit_file(char *fcron_orig)
             || strcmp(cureditor, "\0") == 0)
             cureditor = editor;
 
-    file = temp_file(&tmp_str);
+    /* temp_file() dies on error, so tmp_str is always set */
+    file = temp_file(&tmp_str); 
     if ((fi = fdopen(file, "w")) == NULL) {
         error_e("could not fdopen");
         goto exiterr;
@@ -466,8 +467,7 @@ edit_file(char *fcron_orig)
                 goto exiterr;
             }
         }
-        fclose(f);
-        f = NULL;
+        xfclose_check(&f, fcron_orig);
 
         if (ferror(fi))
             error_e("Error while writing new fcrontab to %s");
@@ -496,7 +496,7 @@ edit_file(char *fcron_orig)
         }
 #endif
         /* close the file before the user edits it */
-        close(file);
+        xclose_check(&file, tmp_str);
 
         switch (pid = fork()) {
         case 0:
@@ -618,25 +618,20 @@ edit_file(char *fcron_orig)
     delete_file(user);
 
  end:
-    if (file != -1 && close(file) != 0)
-        error_e("could not close %s", tmp_str);
+    xclose_check(&file, tmp_str);
     if (remove_as_user(tmp_str, useruid, fcrontab_gid) != 0)
         error_e("could not remove %s", tmp_str);
-    free(tmp_str);
+    Free_safe(tmp_str);
     xexit(return_val);
 
  exiterr:
+    xfclose_check(&fi, tmp_str);
+    xclose_check(&file, tmp_str);
     if (remove_as_user(tmp_str, useruid, fcrontab_gid) != 0)
         error_e("could not remove %s", tmp_str);
-    free(tmp_str);
-    if (f != NULL)
-        fclose(f);
-    if (fi != NULL)
-        fclose(fi);
-    if (file != -1)
-        close(file);
+    xfclose_check(&f, fcron_orig);
+    Free_safe(tmp_str);
     xexit(EXIT_ERR);
-
 }
 
 
@@ -700,7 +695,7 @@ reinstall(char *fcron_orig)
 
     close(0);
     dup2(i, 0);
-    close(i);
+    xclose(&i);
 
     xexit(install_stdin());
 

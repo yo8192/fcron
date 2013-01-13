@@ -89,13 +89,14 @@ getloadavg(double *result, int n)
 {
     FILE *fp;
     int i;
+    char loadavg_path = PROC "/loadavg";
 
     if (n > 3)
         n = 3;
 
-    if ((fp = fopen(PROC "/loadavg", "r")) == NULL) {
-        error_e("could not open '" PROC "/loadavg'"
-                " (make sure procfs is mounted)");
+    if ((fp = fopen(loadavg_path, "r")) == NULL) {
+        error_e("could not open '%s' (make sure procfs is mounted)",
+                loadavg_path);
         i = -1;
     }
     else {
@@ -106,7 +107,7 @@ getloadavg(double *result, int n)
         }
     }
  end:
-    fclose(fp);
+    xfclose_check(&fp, loadavg_path);
     return (i < 0) ? i : i;
 }
 

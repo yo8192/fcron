@@ -73,7 +73,7 @@ read_pid(void)
     if ((fp = fopen(pidfile, "r")) != NULL) {
         if (fscanf(fp, "%" ATTR_SIZE_PIDT "d", CAST_PIDT_PTR & pid) < 1)
             error("Unable to read fcron daemon's pid (fscanf(fp,...))");
-        fclose(fp);
+        xfclose_check(&fp, pidfile);
     }
 
     return pid;
@@ -96,6 +96,7 @@ sig_daemon(void)
         char sigfile[PATH_LEN];
         char buf[PATH_LEN];
 
+        sigfile[0] = '\0';
         t = time(NULL);
         tm = localtime(&t);
 
@@ -168,8 +169,8 @@ sig_daemon(void)
 
         sleep(sl);
 
-        fclose(fp);
-        close(fd);
+        xfclose_check(&fp, sigfile);
+        xclose_check(&fd, sigfile);
 
         if (remove(sigfile) < 0)
             error_e("Could not remove %s");

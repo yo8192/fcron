@@ -44,7 +44,7 @@ char *logfile_path = NULL;
 
 char *make_msg(const char *append, char *fmt, va_list args);
 void log_syslog_str(int priority, char *msg);
-void log_file_str(FILE * logfile, int priority, char *msg);
+void log_file_str(int priority, char *msg);
 void log_console_str(int priority, char *msg);
 void log_fd_str(int fd, char *msg);
 static void print_line_prefix(FILE * logfile, int priority);
@@ -64,8 +64,8 @@ static FILE *logfile = NULL;
  * or take no action if logging is suppressed.
  * This function will be called automatically if you attempt to log something,
  * however you may have to call it explicitely as it needs to run before the
- * program becomes a daemon so as it can print any errors on the console.
- */
+ * program becomes a daemon so as it can print an error on the console
+ * if it can't open the logs correctly. */
 void
 xopenlog(void)
 {
@@ -110,7 +110,8 @@ xcloselog()
 
     // check whether we need to close syslog, or a file.
     if (logfile != NULL) {
-        if (fclose(logfile) != 0) {
+        /* we must NOT use xfclose_check() in log.c to avoid infinite loops */
+        if (xfclose(&logfile) != 0) {
             int saved_errno = errno;
 
             syslog(COMPLAIN_LEVEL, "Error while closing log file '%s': %s",
@@ -169,7 +170,7 @@ log_syslog_str(int priority, char *msg)
 
 /* log a simple string to a log file if needed */
 void
-log_file_str(FILE * logfile, int priority, char *msg)
+log_file_str(int priority, char *msg)
 {
     xopenlog();
 
@@ -215,7 +216,7 @@ xlog(int priority, int fd, char *fmt, va_list args)
         return;
 
     log_syslog_str(priority, msg);
-    log_file_str(logfile, priority, msg);
+    log_file_str(priority, msg);
     log_console_str(priority, msg);
     log_fd_str(fd, msg);
 
@@ -236,7 +237,7 @@ xlog_e(int priority, int fd, char *fmt, va_list args)
         return;
 
     log_syslog_str(priority, msg);
-    log_file_str(logfile, priority, msg);
+    log_file_str(priority, msg);
     log_console_str(priority, msg);
     log_fd_str(fd, msg);
 

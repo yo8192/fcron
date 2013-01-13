@@ -232,6 +232,7 @@ typedef struct job_t {
 #include "log.h"
 /* functions used by fcrontab, fcrondyn, and fcron */
 #include "subs.h"
-
+/* file related helper functions */
+#include "filesubs.h"
 
 #endif                          /* __GLOBAL_H__ */

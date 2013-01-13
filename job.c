@@ -465,10 +465,8 @@ run_job_grand_child_setup_stderr_stdout(cl_t * line, int *pipe_fd)
             die_e("dup2() error");      /* dup2 also clears close-on-exec flag */
         /* we close the pipe_fd[]s : the resources remain, and the pipe will
          * be effectively close when the job stops */
-        if (close(pipe_fd[0]) < 0)
-            error_e("setup_stderr_stdout: could not close(pipe_fd[0])");
-        if (close(pipe_fd[1]) < 0)
-            error_e("setup_stderr_stdout: could not close(pipe_fd[1])");
+        xclose_check(&(pipe_fd[0]), "pipe_fd[0] in setup_stderr_stdout");
+        xclose_check(&(pipe_fd[1]), "pipe_fd[1] in setup_stderr_stdout");
         /* Standard buffering results in unwanted behavior (some messages,
          * at least error from fcron process itself, are lost) */
 #ifdef HAVE_SETLINEBUF
@@ -566,8 +564,7 @@ run_job(struct exe_t *exeent)
                                &curhome, &content_type, &encoding);
 
             /* close unneeded READ fd */
-            if (close(pipe_pid_fd[0]) < 0)
-                error_e("child: could not close(pipe_pid_fd[0])");
+            xclose_check(&(pipe_pid_fd[0]), "child's pipe_pid_fd[0]");
 
             pipe_fd[0] = pipe_fd[1] = -1;
             if (!to_stdout && is_mail(line->cl_option)) {
@@ -600,12 +597,9 @@ run_job(struct exe_t *exeent)
                 error_e("Fork error : could not exec \"%s\"", line->cl_shell);
                 if (write(pipe_pid_fd[1], &pid, sizeof(pid)) < 0)
                     error_e("could not write child pid to pipe_pid_fd[1]");
-                if (pipe_fd[0] != -1 && close(pipe_fd[0]) < 0)
-                    error_e("child: could not close(pipe_fd[0])");
-                if (pipe_fd[1] != -1 && close(pipe_fd[1]) < 0)
-                    error_e("child: could not close(pipe_fd[1])");
-                if (close(pipe_pid_fd[1]) < 0)
-                    error_e("child: could not close(pipe_pid_fd[1])");
+                xclose_check(&(pipe_fd[0]), "child's pipe_fd[0]");
+                xclose_check(&(pipe_fd[1]), "child's pipe_fd[1]");
+                xclose_check(&(pipe_pid_fd[1]), "child's pipe_pid_fd[1]");
                 exit(EXIT_ERR);
                 break;
 
@@ -613,8 +607,7 @@ run_job(struct exe_t *exeent)
                 /* grand child (child of the 2nd fork) */
 
                 /* the grand child does not use this pipe: close remaining fd */
-                if (close(pipe_pid_fd[1]) < 0)
-                    error_e("grand child: could not close(pipe_pid_fd[1])");
+                xclose_check(&(pipe_pid_fd[1]), "grand child's pipe_pid_fd[1]");
 
                 if (!to_stdout)
                     /* note : the following closes the pipe */
@@ -654,8 +647,7 @@ run_job(struct exe_t *exeent)
                 /* child (parent of the 2nd fork) */
 
                 /* close unneeded WRITE pipe and READ pipe */
-                if (pipe_fd[1] != -1 && close(pipe_fd[1]) < 0)
-                    error_e("child: could not close(pipe_fd[1])");
+                xclose_check(&(pipe_fd[1]), "child's pipe_fd[1]");
 
 #ifdef CHECKRUNJOB
                 debug("run_job(): child: pipe_fd[1] and pipe_pid_fd[0] closed"
@@ -696,8 +688,7 @@ run_job(struct exe_t *exeent)
                         if (fputs(mailbuf, mailf) < 0)
                             warn("fputs() failed to write to mail file for job %s (pid %d)", line->cl_shell, pid);
                     /* (closes also pipe_fd[0]): */
-                    if (fclose(pipef) != 0)
-                        error_e("child: Could not fclose(pipef)");
+                    xfclose_check(&pipef, "child's pipef");
                 }
 
                 /* FIXME : FOLLOWING HACK USELESS ? */
@@ -714,8 +705,7 @@ run_job(struct exe_t *exeent)
 #ifdef CHECKRUNJOB
                 debug("run_job(): child: closing pipe with parent");
 #endif                          /* CHECKRUNJOB */
-                if (close(pipe_pid_fd[1]) < 0)
-                    error_e("child: could not close(pipe_pid_fd[1])");
+                xclose_check(&(pipe_pid_fd[1]), "child's pipe_pid_fd[1]");
 
                 /* we use a while because of a possible interruption by a signal */
                 while ((pid = wait3(&status, 0, NULL)) > 0) {
@@ -737,8 +727,7 @@ run_job(struct exe_t *exeent)
         /* parent */
 
         /* close unneeded WRITE fd */
-        if (close(pipe_pid_fd[1]) < 0)
-            error_e("parent: could not close(pipe_pid_fd[1])");
+        xclose_check(&(pipe_pid_fd[1]), "parent's pipe_pid_fd[1]");
 
         exeent->e_ctrl_pid = pid;
 
@@ -760,8 +749,7 @@ run_job(struct exe_t *exeent)
             exeent->e_job_pid = -1;
             break;
         }
-        if (close(pipe_pid_fd[0]) < 0)
-            error_e("parent: could not close(pipe_pid_fd[0])");
+        xclose_check(&(pipe_pid_fd[0]), "parent's pipe_pid_fd[0]");
 
 #ifdef CHECKRUNJOB
         debug
@@ -854,8 +842,7 @@ end_job(cl_t * line, int status, FILE * mailf, short mailpos,
     }
 
     /* if mail is sent, execution doesn't get here : close /dev/null */
-    if (mailf != NULL && fclose(mailf) != 0)
-        die_e("Can't close file mailf");
+    xfclose_check(&mailf, "Can't close file mailf");
 
     exit(0);
 

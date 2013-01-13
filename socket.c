@@ -870,7 +870,7 @@ remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client)
 and make client points to the next entry */
 {
     shutdown((*client)->fcl_sock_fd, SHUT_RDWR);
-    close((*client)->fcl_sock_fd);
+    xclose_check(&((*client)->fcl_sock_fd), "client fd");
     remove_from_select_set((*client)->fcl_sock_fd, &master_set, &set_max_fd);
     debug("connection closed : fd : %d", (*client)->fcl_sock_fd);
     if (prev_client == NULL) {
@@ -920,7 +920,7 @@ check_socket(int num)
                 error_e
                     ("Could not set fd attribute O_NONBLOCK : connection rejected.");
                 shutdown(fd, SHUT_RDWR);
-                close(fd);
+                xclose_check(&fd, "client fd");
             }
             else {
                 Alloc(client, fcrondyn_cl);
@@ -1017,13 +1017,13 @@ close_socket(void)
 
     if (listen_fd) {
         shutdown(listen_fd, SHUT_RDWR);
-        close(listen_fd);
+        xclose_check(&listen_fd, "listening fd");
         unlink(fifofile);
 
         client = fcrondyn_cl_base;
         while (client != NULL) {
             shutdown(client->fcl_sock_fd, SHUT_RDWR);
-            close(client->fcl_sock_fd);
+            xclose_check(&(client->fcl_sock_fd), "client fd");
 
             client_buf = client->fcl_next;
             Free_safe(client);

@@ -205,7 +205,7 @@ convert_file(char *file_name)
 
     Free_safe(line);
 
-    fclose(f);
+    xfclose(&f);
 
     /* open a temp file in write mode and truncate it */
     strcpy(buf, "tmp_");

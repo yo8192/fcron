@@ -289,7 +289,7 @@ is_system_startup(void)
     if ((reboot = creat(REBOOT_LOCK, S_IRUSR & S_IWUSR)) < 0)
         error_e("Can't create lock for reboot jobs.");
     else
-        close(reboot);
+       xclose_check(&reboot, REBOOT_LOCK);
 
     /* run @reboot jobs */
     return 1;
@@ -442,28 +442,28 @@ create_spooldir(char *dir)
         die_e("Cannot open dir %s", dir);
 
     if (fstat(dir_fd, &st) != 0) {
-        close(dir_fd);
+        xclose_check(&dir_fd, "spooldir");
         die_e("Cannot fstat %s", dir);
     }
 
     if (!S_ISDIR(st.st_mode)) {
-        close(dir_fd);
+        xclose_check(&dir_fd, "spooldir");
         die("%s exists and is not a directory", dir);
     }
 
     if (fchown(dir_fd, useruid, usergid) != 0) {
-        close(dir_fd);
+        xclose_check(&dir_fd, "spooldir");
         die_e("Cannot fchown dir %s to %s:%s", dir, USERNAME, GROUPNAME);
     }
 
     if (fchmod
         (dir_fd,
          S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP) != 0) {
-        close(dir_fd);
+        xclose_check(&dir_fd, "spooldir");
         die_e("Cannot change dir %s's mode to 770", dir);
     }
 
-    close(dir_fd);
+    xclose_check(&dir_fd, "spooldir");
 
     exit(EXIT_OK);
 
@@ -609,7 +609,7 @@ main(int argc, char **argv)
 #ifndef _HPUX_SOURCE
             ioctl(fd, TIOCNOTTY, 0);
 #endif
-            close(fd);
+            xclose_check(&fd, "/dev/tty");
         }
 
         if (freopen("/dev/null", "w", stdout) == NULL)
@@ -620,6 +620,7 @@ main(int argc, char **argv)
         /* close most other open fds */
         xcloselog();
         for (fd = 3; fd < 250; fd++)
+            /* don't use xclose_check() as we do expect most of them to fail */
             (void)close(fd);
 
         /* finally, create a new session */

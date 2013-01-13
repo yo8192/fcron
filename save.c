@@ -338,22 +338,22 @@ save_one_file(cf_t * file, char *filename, uid_t own_uid, gid_t own_gid,
     if (fchown(fd, own_uid, own_gid) != 0) {
         error_e("Could not fchown %s to uid:%d gid:%d", filename, own_uid,
                 own_gid);
-        if (close(fd) < 0)
-            error_e("save_one_file(%s): could not close(fd)", filename);
+        if (xclose(&fd) < 0)
+            error_e("save_one_file(%s): could not xclose(fd)", filename);
         remove_as_user(filename, own_uid, own_gid);
         return ERR;
     }
 
     /* save file : */
     if (write_file_to_disk(fd, file, save_date) == ERR) {
-        if (close(fd) < 0)
-            error_e("save_one_file(%s): could not close(fd)", filename);
+        if (xclose(&fd) < 0)
+            error_e("save_one_file(%s): could not xclose(fd)", filename);
         remove_as_user(filename, own_uid, own_gid);
         return ERR;
     }
 
-    if (close(fd) < 0)
-        error_e("save_one_file(%s): could not close(fd)", filename);
+    if (xclose(&fd) < 0)
+        error_e("save_one_file(%s): could not xclose(fd)", filename);
 
     return OK;
 }

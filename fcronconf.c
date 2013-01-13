@@ -128,7 +128,7 @@ read_conf(void)
         || st.st_mode & S_IWGRP || st.st_mode & S_IWOTH) {
         error("Conf file (%s) must be owned by root:" GROUPNAME
               " and (no more than) 644 : ignored", fcronconf, GROUPNAME);
-        fclose(f);
+        xfclose_check(&f, fcronconf);
         return;
     }
 
@@ -199,6 +199,6 @@ read_conf(void)
 /*  	debug("  sendmail=%s", sendmail); */
     }
 
-    fclose(f);
+    xfclose_check(&f, fcronconf);
 
 }

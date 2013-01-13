@@ -603,7 +603,7 @@ talk_fcron(char *cmd_str, int fd)
         error_e("error in recv()");
 
     if (!existing_connection)
-        close(fd);
+        xclose_check(&fd, "unix socket");
 
     return OK;
 }
@@ -707,7 +707,7 @@ interactive_mode(int fd)
 #endif                          /* HAVE_LIBREADLINE */
 
     if (!existing_connection)
-        close(fd);
+        xclose_check(&fd, "unix socket");
 
     return OK;
 }

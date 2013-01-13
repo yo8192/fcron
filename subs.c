@@ -130,15 +130,15 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
         if (fstat(fd, &s) < 0) {
             saved_errno = errno;
             error_e("open_as_user(): could not fstat %s", pathname);
-            if (close(fd) < 0)
-                error_e("open_as_user: could not close() %s", pathname);
+            if (xclose(&fd) < 0)
+                error_e("open_as_user: could not xclose() %s", pathname);
             fd = -1;
         }
 
         if (!S_ISREG(s.st_mode) || s.st_nlink != 1) {
             error_e("open_as_user(): file %s is not a regular file", pathname);
-            if (close(fd) < 0)
-                error_e("open_as_user: could not close() %s", pathname);
+            if (xclose(&fd) < 0)
+                error_e("open_as_user: could not xclose() %s", pathname);
             saved_errno = 0;
             fd = -1;
         }
@@ -254,8 +254,8 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     return fd;
 
  err:
-    if (fd >= 0 && close(fd) < 0)
-        error_e("open_as_user: could not close() %s", pathname);
+    if (fd >= 0 && xclose(&fd) < 0)
+        error_e("open_as_user: could not xclose() %s", pathname);
     errno = saved_errno;
     return -1;
 }

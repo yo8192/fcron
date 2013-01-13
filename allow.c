@@ -56,16 +56,16 @@ in_file(char *str, char *file)
         remove_blanks(start);
 
         if (strcmp(str, start) == 0) {
-            fclose(f);
+            xfclose_check(&f, file);
             return 1;
         }
         if (strcmp(start, "all") == 0) {
-            fclose(f);
+            xfclose_check(&f, file);
             return 2;
         }
     }
 
-    fclose(f);
+    xfclose_check(&f, file);
     /* if execution gets here, string is not in file */
     return 0;
 
@@ -118,7 +118,7 @@ is_allowed(char *user)
         int audit_fd = audit_open();
         audit_log_user_message(audit_fd, AUDIT_USER_START, "fcron deny",
                                NULL, NULL, NULL, 0);
-        close(audit_fd);
+        xclose_check(&audit_fd, "audit");
     }
 #endif
 
