@@ -32,6 +32,9 @@ A copy of the license is included in gfdl.sgml.
 	 <title>Low priority</title>
 	 <itemizedlist>
             <listitem>
+	       <para>Add unit tests using some unit-test framework (turn the tests/* code into unit tests)</para>
+	    </listitem>
+           <listitem>
 	       <para>For environment settings, make a var substitution.</para>
 	    </listitem>
 	    <listitem>
