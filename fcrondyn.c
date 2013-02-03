@@ -692,7 +692,7 @@ interactive_mode(int fd)
         if (line_read && *line_read) {
             add_history(line_read);
         }
-#endif
+#endif /* HAVE_READLINE_HISTORY */
 
         free(line_read);
         if (return_code == QUIT_CMD || return_code == ERR) {
@@ -779,7 +779,7 @@ int
 main(int argc, char **argv)
 {
     int return_code = 0;
-    int fd = (-1);
+    int fd = (-1); /* fd == -1 means connection to fcron is not currently open */
     struct passwd *pass = NULL;
 
     rootuid = get_user_uid_safe(ROOTNAME);

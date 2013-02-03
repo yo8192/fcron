@@ -869,10 +869,10 @@ remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client)
 /* close the connection, remove it from the list 
 and make client points to the next entry */
 {
+    debug("closing connection : fd : %d", (*client)->fcl_sock_fd);
     shutdown((*client)->fcl_sock_fd, SHUT_RDWR);
-    xclose_check(&((*client)->fcl_sock_fd), "client fd");
     remove_from_select_set((*client)->fcl_sock_fd, &master_set, &set_max_fd);
-    debug("connection closed : fd : %d", (*client)->fcl_sock_fd);
+    xclose_check(&((*client)->fcl_sock_fd), "client fd");
     if (prev_client == NULL) {
         fcrondyn_cl_base = (*client)->fcl_next;
         Free_safe((*client)->fcl_user);

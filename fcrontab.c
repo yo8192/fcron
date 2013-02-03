@@ -248,7 +248,6 @@ copy_src(int from, const char *dest)
         }
 
     xclose_check(&to_fd, dest);
-    to_fd = -1;
 
     if (rename_as_user(tmp_filename_str, dest, useruid, fcrontab_gid) < 0) {
         error_e("Unable to rename %s to %s : old source file kept",
@@ -677,7 +676,7 @@ install_stdin(void)
 void
 reinstall(char *fcron_orig)
 {
-    int i = 0;
+    int i = -1;
 
     explain("reinstalling %s's fcrontab", user);
 
