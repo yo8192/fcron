@@ -1462,7 +1462,7 @@ read_freq(char *ptr, cf_t * cf)
 
 #ifndef USE_SENDMAIL
     clear_mail(cl->cl_option);
-    clear_forcemail(cl->cl_option);
+    clear_mailzerolength(cl->cl_option);
 #endif
 
     cl->cl_next = cf->cf_line_base;
@@ -1566,7 +1566,7 @@ read_arys(char *ptr, cf_t * cf)
 
 #ifndef USE_SENDMAIL
     clear_mail(cl->cl_option);
-    clear_forcemail(cl->cl_option);
+    clear_mailzerolength(cl->cl_option);
 #endif
 
     cl->cl_next = cf->cf_line_base;
@@ -1721,7 +1721,7 @@ read_period(char *ptr, cf_t * cf)
  ok:
 #ifndef USE_SENDMAIL
     clear_mail(cl->cl_option);
-    clear_forcemail(cl->cl_option);
+    clear_mailzerolength(cl->cl_option);
 #endif
 
     cl->cl_next = cf->cf_line_base;

@@ -768,29 +768,31 @@ end_job(cl_t * line, int status, FILE * mailf, short mailpos,
     /* if task have made some output, mail it to user */
 {
 
-    char mail_output;
-    char *m;
+    char mail_output = 0;
+    char *m = NULL;
 
-    if (mailf != NULL && (is_mailzerolength(line->cl_option)
-                          || (is_mail(line->cl_option)
-                              && (
-                                     /* job wrote some output and we wan't it in any case: */
-                                     ((fseek(mailf, 0, SEEK_END) == 0
-                                       && ftell(mailf) > mailpos)
-                                      && !is_erroronlymail(line->cl_option))
-                                     ||
-                                     /* or we want an email only if the job returned an error: */
-                                     !(WIFEXITED(status)
-                                       && WEXITSTATUS(status) == 0)
-                              )
-                          )
-        )
-        )
+#ifdef USE_SENDMAIL
+    if (mailf != NULL
+            && (is_mailzerolength(line->cl_option)
+                || (is_mail(line->cl_option)
+                    && (
+                        /* job wrote some output and we wan't it in any case: */
+                        ((fseek(mailf, 0, SEEK_END) == 0
+                          && ftell(mailf) > mailpos)
+                         && !is_erroronlymail(line->cl_option))
+                        ||
+                        /* or we want an email only if the job returned an error: */
+                        !(WIFEXITED(status)
+                            && WEXITSTATUS(status) == 0)
+                       )
+                   )
+               )
+        ) {
         /* an output exit : we will mail it */
         mail_output = 1;
-    else
-        /* no output */
-        mail_output = 0;
+    }
+    /* or else there is no output to email -- mail_output is already set to 0 */
+#endif /* USE_SENDMAIL */
 
     m = (mail_output == 1) ? " (mailing output)" : "";
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {

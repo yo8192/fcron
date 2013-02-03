@@ -181,7 +181,8 @@ AC_ARG_ENABLE(checks,
 dnl ---------------------------------------------------------------------
 dnl Programs ...
 
-AC_PATH_PROG(SENDMAIL, sendmail, , $PATH:/usr/lib:/usr/sbin )
+AC_PATH_PROG(FOUND_SENDMAIL, sendmail, , $PATH:/usr/lib:/usr/sbin )
+SENDMAIL=
 USE_SENDMAIL=1
 AC_MSG_CHECKING([actual sendmail to use])
 AC_ARG_WITH(sendmail, [  --with-sendmail=PATH	Path to sendmail.],
@@ -195,18 +196,28 @@ AC_ARG_WITH(sendmail, [  --with-sendmail=PATH	Path to sendmail.],
 if test "$USE_SENDMAIL" != "1" ; then
   AC_MSG_RESULT([disabled])
   AC_MSG_WARN([Without sendmail you will not get the output of the jobs by mail])
-elif test -z "$SENDMAIL" ; then
+elif test -n "$SENDMAIL" ; then
+  dnl The user defined a sendmail program to use:
+  if test ! -x "$SENDMAIL" ; then
+    dnl ... but it is not an executable file!
+    AC_MSG_RESULT([$SENDMAIL])
+    AC_MSG_ERROR([File $SENDMAIL is not an executable file])
+  else
+    dnl ... and it is valid
+    AC_MSG_RESULT([$SENDMAIL])
+  fi
+elif test -z "$FOUND_SENDMAIL" ; then
+  dnl The user didn't defined a program to use, and we didn't find one automatically
   AC_MSG_RESULT([not found])
   AC_MSG_ERROR([Empty sendmail path or cannot determine path to sendmail: try option --with-sendmail=PATH])
-elif test ! -x "$SENDMAIL" ; then
-  AC_MSG_RESULT([$SENDMAIL])
-  AC_MSG_ERROR([File $SENDMAIL is not an executable file])
 else
+  dnl Use the automatically found sendmail program:
+  SENDMAIL="$FOUND_SENDMAIL"
   AC_MSG_RESULT([$SENDMAIL])
 fi
 
 AC_SUBST([SENDMAIL])
-if test x"$USE_SENDMAIL" != x ; then
+if test "$USE_SENDMAIL" = "1"; then
   AC_DEFINE([USE_SENDMAIL])
 fi
 
