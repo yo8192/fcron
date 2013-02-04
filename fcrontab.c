@@ -432,7 +432,7 @@ edit_file(const char *fcron_orig)
             cureditor = editor;
 
     /* temp_file() dies on error, so tmp_str is always set */
-    file = temp_file(&tmp_str); 
+    file = temp_file(&tmp_str);
     if ((fi = fdopen(file, "w")) == NULL) {
         error_e("could not fdopen");
         goto exiterr;

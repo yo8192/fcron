@@ -772,27 +772,26 @@ end_job(cl_t * line, int status, FILE * mailf, short mailpos,
     char *m = NULL;
 
 #ifdef USE_SENDMAIL
-    if (mailf != NULL
-            && (is_mailzerolength(line->cl_option)
-                || (is_mail(line->cl_option)
-                    && (
-                        /* job wrote some output and we wan't it in any case: */
-                        ((fseek(mailf, 0, SEEK_END) == 0
-                          && ftell(mailf) > mailpos)
-                         && !is_erroronlymail(line->cl_option))
-                        ||
-                        /* or we want an email only if the job returned an error: */
-                        !(WIFEXITED(status)
-                            && WEXITSTATUS(status) == 0)
-                       )
-                   )
-               )
+    if (mailf != NULL && (is_mailzerolength(line->cl_option)
+                          || (is_mail(line->cl_option)
+                              && (
+                                     /* job wrote some output and we wan't it in any case: */
+                                     ((fseek(mailf, 0, SEEK_END) == 0
+                                       && ftell(mailf) > mailpos)
+                                      && !is_erroronlymail(line->cl_option))
+                                     ||
+                                     /* or we want an email only if the job returned an error: */
+                                     !(WIFEXITED(status)
+                                       && WEXITSTATUS(status) == 0)
+                              )
+                          )
+        )
         ) {
         /* an output exit : we will mail it */
         mail_output = 1;
     }
     /* or else there is no output to email -- mail_output is already set to 0 */
-#endif /* USE_SENDMAIL */
+#endif                          /* USE_SENDMAIL */
 
     m = (mail_output == 1) ? " (mailing output)" : "";
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {

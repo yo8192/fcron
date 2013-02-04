@@ -1346,14 +1346,14 @@ read_shortcut(char *ptr, cf_t * cf)
     /* The next char must be a space (no other option allowed when using
      * a shortcut: if the user wants to use options, they should use the 
      * native fcron lines */
-    if ( ! isspace((int) *ptr) ) {
+    if (!isspace((int)*ptr)) {
         fprintf(stderr, "%s:%d: No space after shortcut: skipping line.\n",
                 file_name, line);
         goto exiterr;
     }
 
     /* skip spaces before the username / shell command */
-    while (isspace((int) *ptr))
+    while (isspace((int)*ptr))
         ptr++;
 
     /* check for inline runas */

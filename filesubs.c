@@ -62,7 +62,7 @@ xclose_check(int *fd, const char *filedesc)
 /* fclose() a file, and set the FILE* to NULL.
  * Returns fclose()'s return value and leaves errno as is. */
 int
-xfclose(FILE **f)
+xfclose(FILE ** f)
 {
     int retval = EOF;
 
@@ -71,7 +71,7 @@ xfclose(FILE **f)
     }
 
     if (*f != NULL) {
-        retval = fclose (*f);
+        retval = fclose(*f);
         *f = NULL;
     }
 
@@ -82,7 +82,7 @@ xfclose(FILE **f)
  * Returns fclose()'s return value.
  * WARNING: do NOT call from log.c to avoid potential infinite loops! */
 int
-xfclose_check(FILE **f, const char *filedesc)
+xfclose_check(FILE ** f, const char *filedesc)
 {
     int retval = EOF;
 
@@ -91,7 +91,7 @@ xfclose_check(FILE **f, const char *filedesc)
     }
 
     if (*f != NULL) {
-        retval = fclose (*f);
+        retval = fclose(*f);
         if (retval != 0) {
             error_e("Error while fclosing %s", filedesc);
         }
@@ -100,4 +100,3 @@ xfclose_check(FILE **f, const char *filedesc)
 
     return retval;
 }
-

@@ -33,7 +33,7 @@
 
 int xclose(int *fd);
 int xclose_check(int *fd, const char *filedesc);
-int xfclose(FILE **f);
-int xfclose_check(FILE **f, const char *filedesc);
+int xfclose(FILE ** f);
+int xfclose_check(FILE ** f, const char *filedesc);
 
 #endif                          /* __FILESUBS_H__ */

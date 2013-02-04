@@ -289,7 +289,7 @@ is_system_startup(void)
     if ((reboot = creat(REBOOT_LOCK, S_IRUSR & S_IWUSR)) < 0)
         error_e("Can't create lock for reboot jobs.");
     else
-       xclose_check(&reboot, REBOOT_LOCK);
+        xclose_check(&reboot, REBOOT_LOCK);
 
     /* run @reboot jobs */
     return 1;
