@@ -13,6 +13,28 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
+	 <title>From version 3.1.1 to 3.1.2</title>
+	    <listitem>
+	       <para>bug fix: fixed fcron crash bug when using fcrondyn</para>
+	    </listitem>
+	    <listitem>
+	       <para>bug fix: the configure option --without-sendmail was not working correctly.</para>
+	    </listitem>
+	    <listitem>
+	       <para>bug fix: inline runas wouldn't work with Vixie-cron style shortcut lines.</para>
+	    </listitem>
+	    <listitem>
+	       <para>bug fix: fixed bug in the code to log to a file.</para>
+	    </listitem>
+	    <listitem>
+	       <para>systemd: fixed the installation on systems using systemd, and also don't kill jobs when killing fcron.</para>
+	    </listitem>
+	    <listitem>
+	       <para>Made file closures more robust to prevent bugs difficult to troubleshoot to creep in.</para>
+	    </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
 	 <title>From version 3.1.0 to 3.1.1</title>
 	    <listitem>
 	       <para>Added readline support for fcrondyn</para>
