@@ -612,10 +612,10 @@ AC_ARG_WITH(username,
         username="$withval";
 	AC_MSG_RESULT($username)
 	if test "$withval" = "$rootname" && test "$RUN_NON_PRIVILEGED" != "1"; then
-            AC_MSG_WARN([
+            AC_MSG_ERROR([
 
-Beware that running fcrontab setuid root is not very secure. You should use
-another user name if possible.
+Running fcrontab setuid root is NOT secure and would completely break
+the security model of fcron. You must use a different user name.
 ])
             has_euid=0
         fi
