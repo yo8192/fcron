@@ -53,6 +53,9 @@
 
 
 /* functions prototypes */
+#if defined(__sun)
+extern char *strndup (const char *s, size_t n); /* Solaris 10 has no strndup() */
+#endif
 extern char *strdup2(const char *);
 extern char *strndup2(const char *, size_t n);
 extern void *alloc_safe(size_t len, const char *desc);

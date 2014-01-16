@@ -24,6 +24,28 @@
 #include "global.h"
 #include "mem.h"
 
+#if defined(__sun)
+/* Solaris 10 has no strndup() */
+char *
+strndup (const char *s, size_t n)
+    /* Written by Kaveh R. Ghazi <ghazi@caip.rutgers.edu> */
+{
+    char *result;
+    size_t len = strlen (s);
+
+    if (n < len)
+        len = n;
+
+    result = (char *) malloc (len + 1);
+    if (!result)
+        return 0;
+
+    memcpy (result, s, len);
+    result[len] = '\0';
+    return(result);
+}
+#endif
+
 char *
 strdup2(const char *str)
 {

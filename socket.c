@@ -214,42 +214,28 @@ init_socket(void)
 
 }
 
-#if defined(HAVE_GETPEERUCRED) || defined(HAVE_GETPEEREID)
-
-/*
- * WARNING: UNTESTED CODE !!!
- */
-
+#if defined(HAVE_GETPEERUCRED)
 void
 auth_client_getpeer(struct fcrondyn_cl *client)
     /* check client identity by reading its credentials from the socket
-     * using getpeerucred() (Solaris 10 onward) or getpeereid(open/freeBSD).
+     * using getpeerucred() (Solaris 10 onward).
      * Sets client->fcl_user on success, don't do anything on failure
      * so that the client stays unauthenticated */
 {
     struct passwd *p_entry = NULL;
-#ifdef GETPEERUCRED
     ucred_t *ucred = NULL;
-#elif defined(HAVE_GETPEEREID)
-    uid_t euid = -1;
-    gid_t egid = -1;
-#endif
+    uid_t uid = -1;
 
-#ifdef GETPEERUCRED
     if (getpeerucred(client->fcl_sock_fd, &ucred) < 0) {
         error_e("Could not get client credentials using getpeerucred()");
         return;
     }
-#elif defined(HAVE_GETPEEREID)
-    if (getpeereid(client->fcl_sock_fd, &euid, &egid) < 0) {
-        error_e("Could not get client credentials using getpeereid()");
+    uid = ucred_getruid(ucred);
+    if (uid == -1) {
+        error_e("Could not get client uid from ucred_t");
         return;
     }
-#else
-#error "No authentication method in auth_client_getpeer()!"
-#endif
-
-    p_entry = getpwuid(cred.uid);
+    p_entry = getpwuid(uid);
     if (p_entry == NULL) {
         error_e("Could not find password entry for uid %d", cred.uid);
         return;
@@ -258,11 +244,45 @@ auth_client_getpeer(struct fcrondyn_cl *client)
     /* Successfully identified user: */
     client->fcl_user = strdup2(p_entry->pw_name);
 
-    explain("Client's pid=%d, uid=%d, gid=%d username=%s\n", cred.pid, cred.uid,
-            cred.gid, client->fcl_user);
+    explain("Client's pid=%d, uid=%d, username=%s\n",
+            ucred_getpid(ucred), uid, client->fcl_user);
 
 }
-#endif                          /* HAVE_GETPEERUCRED || HAVE_GETPEEREID */
+#endif                          /* HAVE_GETPEERUCRED */
+
+#if defined(HAVE_GETPEEREID)
+/*
+ * WARNING: UNTESTED CODE !!!
+ */
+void
+auth_client_getpeer(struct fcrondyn_cl *client)
+    /* check client identity by reading its credentials from the socket
+     * using getpeerucred() (Solaris 10 onward) or getpeereid(open/freeBSD).
+     * Sets client->fcl_user on success, don't do anything on failure
+     * so that the client stays unauthenticated */
+{
+    struct passwd *p_entry = NULL;
+    uid_t euid = -1;
+    gid_t egid = -1;
+
+    if (getpeereid(client->fcl_sock_fd, &euid, &egid) < 0) {
+        error_e("Could not get client credentials using getpeereid()");
+        return;
+    }
+    p_entry = getpwuid(euid);
+    if (p_entry == NULL) {
+        error_e("Could not find password entry for uid %d", euid);
+        return;
+    }
+
+    /* Successfully identified user: */
+    client->fcl_user = strdup2(p_entry->pw_name);
+
+    explain("Client's uid=%d, gid=%d username=%s\n", euid, egid,
+            client->fcl_user);
+
+}
+#endif                          /* HAVE_GETPEEREID */
 
 
 
