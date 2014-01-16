@@ -237,7 +237,7 @@ auth_client_getpeer(struct fcrondyn_cl *client)
     }
     p_entry = getpwuid(uid);
     if (p_entry == NULL) {
-        error_e("Could not find password entry for uid %d", cred.uid);
+        error_e("Could not find password entry for uid %d", uid);
         return;
     }
 
