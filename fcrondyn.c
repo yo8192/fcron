@@ -458,14 +458,14 @@ connect_fcron(void)
         die_e("Cannot connect() to fcron (check if fcron is running)");
 
 /* Nothing to do on the client side if we use SO_PASSCRED */
-#ifndef SO_PASSCRED
+#if !defined(SO_PASSCRED) && !defined(HAVE_GETPEERUCRED) && !defined(HAVE_GETPEEREID)
     if (authenticate_user_password(fd) == ERR) {
         fprintf(stderr, "Invalid password or too many authentication failures"
                 " (try to connect later).\n(In the later case, fcron rejects all"
                 " new authentication during %d secs)\n", AUTH_WAIT);
         die("Unable to authenticate user");
     }
-#endif                          /* SO_PASSCRED */
+#endif                          /* SO_PASSCRED HAVE_GETPEERUCRED HAVE_GETPEEREID */
 
     return fd;
 
