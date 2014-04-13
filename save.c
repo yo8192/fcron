@@ -306,6 +306,16 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
         return ERR;
     }
 
+    /* Make sure the data is fully synchronize to disk before files are renamed 
+     * to their final destination.
+     * This is to avoid cases where the file name (meta-data) would be updated,
+     * and there is a crash before the data is fully written: not sure if that
+     * is possible, but better safe than sorry! */
+    if (fdatasync(fd) < 0) {
+        error_e("could not fdatasync() %s's fcrontab", file->cf_user);
+        return ERR;
+    }
+
     return OK;
 }
 
