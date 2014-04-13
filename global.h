@@ -147,6 +147,22 @@
 /* options for local functions */
 #define STD 0
 
+/* Approximate max value of time_t which localtime() allows: on a 64bits system,
+ * this is less than LONG_MAX (64bits) as this is limited by struct tm's tm_year
+ * which is a (not long) int (32bits).
+ * As a time_t of INT_MAX=2^31 is 'only' in year 2038, we try to use a larger value
+ * if we can. */
+// FIXME: test on 32bit system
+/* 2^33 = 8589934592, so LONG is 64bits at least */
+#if (LONG_MAX > INT_MAX) && (LONG_MAX > 8589934592)
+/* defined as time_t of 1st Jan of year (SHRT_MAX-1900) at 00:00:00 */
+#  define TIME_T_MAX 971859427200
+#else
+/* struct tm's tm_year is of type int, and tm_year will always be smaller than
+ * the equivalent time_t, so INT_MAX is always a safe max value for time_t. */
+#  define TIME_T_MAX INT_MAX
+#endif
+
 /* macros */
 #ifndef HAVE_SETEUID
 #define seteuid(arg) setresuid(-1,(arg),-1)

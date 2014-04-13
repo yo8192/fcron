@@ -932,34 +932,34 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
                                            || is_runonce(cl->cl_option)))) {
             /* cl_first is always saved to disk for a volatile line */
             if (cl->cl_first == LONG_MAX) {
-                cl->cl_nextexe = LONG_MAX;
+                cl->cl_nextexe = TIME_T_MAX;
             }
             else {
                 cl->cl_nextexe = now + cl->cl_first;
-                if (cl->cl_nextexe < now) {
+                if (cl->cl_nextexe < now || cl->cl_nextexe > TIME_T_MAX) {
                     /* there was an integer overflow! */
                     error
                         ("Error while setting next exe time for job %s: cl_nextexe"
-                         " overflowed. now=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
+                         " overflowed (case1). now=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
                          cl->cl_shell, now, cl->cl_timefreq, cl->cl_nextexe);
                     error
-                        ("Setting cl_nextexe to LONG_MAX to prevent an infinite loop.");
-                    cl->cl_nextexe = LONG_MAX;
+                        ("Setting cl_nextexe to TIME_T_MAX to prevent an infinite loop.");
+                    cl->cl_nextexe = TIME_T_MAX;
                 }
             }
         }
         else {
             if (cl->cl_nextexe != LONG_MAX) {
                 cl->cl_nextexe += slept;
-                if (cl->cl_nextexe < now) {
+                if (cl->cl_nextexe < now || cl->cl_nextexe > TIME_T_MAX) {
                     /* there was an integer overflow! */
                     error
                         ("Error while setting next exe time for job %s: cl_nextexe"
-                         " overflowed. now=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
+                         " overflowed (case2). now=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
                          cl->cl_shell, now, cl->cl_timefreq, cl->cl_nextexe);
                     error
-                        ("Setting cl_nextexe to LONG_MAX to prevent an infinite loop.");
-                    cl->cl_nextexe = LONG_MAX;
+                        ("Setting cl_nextexe to TIME_T_MAX=%ld to prevent an infinite loop.", TIME_T_MAX);
+                    cl->cl_nextexe = TIME_T_MAX;
                 }
             }
         }

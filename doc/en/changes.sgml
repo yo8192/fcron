@@ -17,6 +17,9 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>Fixed compilation on Solaris 10, and fixed fcrondyn authentication without a password on that platform.</para>
 	    </listitem>
+	    <listitem>
+	       <para>Fixed bug where LONG_MAX could potentially be used in functions like localtime(), which is too big for localtime().  This was unlikely to happen unless there was another problem in the first place.</para>
+	    </listitem>
       </itemizedlist>
 
       <itemizedlist>

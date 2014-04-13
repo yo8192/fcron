@@ -1226,20 +1226,20 @@ set_next_exe(cl_t * line, char option, int info_fd)
             /* NOTE: the options runonce/hasrun should be used to achieve this,
              *       but we keep this here as an extra safety */
             debug
-                ("Setting cl_nextexe to LONG_MAX to prevent the line from running again.");
-            line->cl_nextexe = LONG_MAX;
+                ("Setting cl_nextexe to TIME_T_MAX to prevent the line from running again.");
+            line->cl_nextexe = TIME_T_MAX;
         }
         else {
             line->cl_nextexe = basetime + line->cl_timefreq;
             if (line->cl_nextexe <= basetime) {
                 /* there was an integer overflow! */
                 error("Error while setting next exe time for job %s: cl_nextexe"
-                      " overflowed. basetime=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
+                      " overflowed (case3). basetime=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
                       line->cl_shell, basetime, line->cl_timefreq,
                       line->cl_nextexe);
                 error
-                    ("Setting cl_nextexe to LONG_MAX to prevent an infinite loop.");
-                line->cl_nextexe = LONG_MAX;
+                    ("Setting cl_nextexe to TIME_T_MAX to prevent an infinite loop.");
+                line->cl_nextexe = TIME_T_MAX;
             }
         }
 

@@ -374,14 +374,14 @@ parseopt(int argc, char *argv[])
 
         case 's':
             if ((save_time = strtol(optarg, NULL, 10)) < 60
-                || save_time >= LONG_MAX)
-                die("Save time can only be set between 60 and %d.", LONG_MAX);
+                || save_time >= TIME_T_MAX)
+                die("Save time can only be set between 60 and %d.", TIME_T_MAX);
             break;
 
         case 'l':
             if ((first_sleep = strtol(optarg, NULL, 10)) < 0
-                || first_sleep >= LONG_MAX)
-                die("First sleep can only be set between 0 and %d.", LONG_MAX);
+                || first_sleep >= TIME_T_MAX)
+                die("First sleep can only be set between 0 and %d.", TIME_T_MAX);
             break;
 
         case 'm':
