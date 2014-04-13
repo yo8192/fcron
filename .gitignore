@@ -6,6 +6,7 @@ config.h
 config.log
 config.status
 configure
+aclocal.m4
 doc/Makefile
 fcron
 fcrondyn
