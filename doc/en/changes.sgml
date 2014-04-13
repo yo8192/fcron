@@ -13,6 +13,13 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
+	 <title>From version 3.1.2 to 3.1.3</title>
+	    <listitem>
+	       <para>Fixed compilation on Solaris 10, and fixed fcrondyn authentication without a password on that platform.</para>
+	    </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
 	 <title>From version 3.1.1 to 3.1.2</title>
 	    <listitem>
 	       <para>bug fix: fixed fcron crash bug when using fcrondyn</para>
