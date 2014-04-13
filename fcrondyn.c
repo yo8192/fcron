@@ -695,6 +695,13 @@ interactive_mode(int fd)
 
     while (1) {
         line_read = readline("fcrondyn> ");
+
+        if (line_read == NULL) {
+            /* Handle EOF gracefully and move past the prompt line */
+            printf("\n");
+            break;
+        }
+
         return_code = talk_fcron(line_read, fd);
 
 #ifdef HAVE_READLINE_HISTORY

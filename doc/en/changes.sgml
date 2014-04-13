@@ -26,6 +26,9 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>Fixed minor bug in fcronsighup resulting in log errors about closing the signal file</para>
 	    </listitem>
+	    <listitem>
+	       <para>fcrondyn no longer crashes when receiving an EOF when using readline (thanks Wade Carpenter for the patch)</para>
+	    </listitem>
       </itemizedlist>
 
       <itemizedlist>
