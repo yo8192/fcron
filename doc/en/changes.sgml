@@ -20,6 +20,9 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>Fixed bug where LONG_MAX could potentially be used in functions like localtime(), which is too big for localtime().  This was unlikely to happen unless there was another problem in the first place.</para>
 	    </listitem>
+	    <listitem>
+	       <para>fcrondyn -x no longer adds null characters at the end of the output.  This would cause problems if the output was piped to something as grep.  Thanks Dimitri Semitsoglou-Tsiapos for pointing this out.</para>
+	    </listitem>
       </itemizedlist>
 
       <itemizedlist>

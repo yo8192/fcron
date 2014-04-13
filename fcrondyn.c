@@ -143,8 +143,7 @@ usage(void)
             "  -d         set up debug mode.\n"
             "  -h         display this help message.\n"
             "  -V         display version & infos about fcrondyn.\n" "\n"
-            "To list the available commands, run:\n"
-            "  fcrondyn -x help\n");
+            "To list the available commands, run:\n" "  fcrondyn -x help\n");
 
     exit(EXIT_ERR);
 }
@@ -578,8 +577,10 @@ talk_fcron(char *cmd_str, int fd)
         return ERR;
     }
 
-    while ((read_len = (size_t) recv(fd, buf, sizeof(buf), 0)) >= 0
+
+    while ((read_len = (size_t) recv(fd, buf, sizeof(buf) - 1, 0)) >= 0
            || errno == EINTR) {
+
         if (errno == EINTR && debug_opt)
             fprintf(stderr, "got EINTR ...\n");
         else if (read_len > sizeof(buf)) {
@@ -595,16 +596,20 @@ talk_fcron(char *cmd_str, int fd)
             return ERR;
         }
         else {
-            if (write(STDOUT_FILENO, buf, read_len) < 0)
-                error_e("unable to write() to STDOUT_FILENO");
+            /* ensure the string is terminated by a '\0' for when we'll printf() it */
+            buf[read_len] = '\0';
+            printf("%s", buf);
+
+            /* check for the end of command output marker */
             if (read_len >= sizeof(END_STR) &&
                 strncmp(&buf[read_len - sizeof(END_STR)], END_STR,
                         sizeof(END_STR)) == 0)
                 break;
         }
     }
-    if (read_len < 0)
+    if (read_len < 0) {
         error_e("error in recv()");
+    }
 
     if (!existing_connection)
         xclose_check(&fd, "unix socket");
