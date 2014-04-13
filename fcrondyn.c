@@ -135,12 +135,16 @@ usage(void)
 {
     fprintf(stderr,
             "fcrondyn [-i]\n"
-            "fcrondyn -x 'command'\n"
+            "fcrondyn -x {command}\n"
             "fcrondyn -h\n"
+            "  -i         run fcrontab in interactive mode.\n"
+            "  -x         execute one command (in batch mode)\n"
             "  -c f       make fcrontab use config file f.\n"
             "  -d         set up debug mode.\n"
             "  -h         display this help message.\n"
-            "  -V         display version & infos about fcrondyn.\n" "\n");
+            "  -V         display version & infos about fcrondyn.\n" "\n"
+            "To list the available commands, run:\n"
+            "  fcrondyn -x help\n");
 
     exit(EXIT_ERR);
 }
