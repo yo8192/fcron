@@ -958,7 +958,8 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
                          " overflowed (case2). now=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
                          cl->cl_shell, now, cl->cl_timefreq, cl->cl_nextexe);
                     error
-                        ("Setting cl_nextexe to TIME_T_MAX=%ld to prevent an infinite loop.", TIME_T_MAX);
+                        ("Setting cl_nextexe to TIME_T_MAX=%ld to prevent an infinite loop.",
+                         TIME_T_MAX);
                     cl->cl_nextexe = TIME_T_MAX;
                 }
             }

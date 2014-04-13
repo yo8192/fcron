@@ -27,22 +27,22 @@
 #if defined(__sun)
 /* Solaris 10 has no strndup() */
 char *
-strndup (const char *s, size_t n)
+strndup(const char *s, size_t n)
     /* Written by Kaveh R. Ghazi <ghazi@caip.rutgers.edu> */
 {
     char *result;
-    size_t len = strlen (s);
+    size_t len = strlen(s);
 
     if (n < len)
         len = n;
 
-    result = (char *) malloc (len + 1);
+    result = (char *)malloc(len + 1);
     if (!result)
         return 0;
 
-    memcpy (result, s, len);
+    memcpy(result, s, len);
     result[len] = '\0';
-    return(result);
+    return (result);
 }
 #endif
 

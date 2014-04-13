@@ -381,7 +381,8 @@ parseopt(int argc, char *argv[])
         case 'l':
             if ((first_sleep = strtol(optarg, NULL, 10)) < 0
                 || first_sleep >= TIME_T_MAX)
-                die("First sleep can only be set between 0 and %d.", TIME_T_MAX);
+                die("First sleep can only be set between 0 and %d.",
+                    TIME_T_MAX);
             break;
 
         case 'm':

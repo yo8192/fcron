@@ -156,11 +156,11 @@
 /* 2^33 = 8589934592, so LONG is 64bits at least */
 #if (LONG_MAX > INT_MAX) && (LONG_MAX > 8589934592)
 /* defined as time_t of 1st Jan of year (SHRT_MAX-1900) at 00:00:00 */
-#  define TIME_T_MAX 971859427200
+#define TIME_T_MAX 971859427200
 #else
 /* struct tm's tm_year is of type int, and tm_year will always be smaller than
  * the equivalent time_t, so INT_MAX is always a safe max value for time_t. */
-#  define TIME_T_MAX INT_MAX
+#define TIME_T_MAX INT_MAX
 #endif
 
 /* macros */
