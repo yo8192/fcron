@@ -402,6 +402,7 @@ list_file(const char *file)
     while ((c = getc(f)) != EOF)
         putchar(c);
 
+    /* also closes the underlying file descriptor fd: */
     xfclose_check(&f, file);
 
 }

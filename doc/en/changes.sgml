@@ -23,6 +23,9 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>fcrondyn -x no longer adds null characters at the end of the output.  This would cause problems if the output was piped to something as grep.  Thanks Dimitri Semitsoglou-Tsiapos for pointing this out.</para>
 	    </listitem>
+	    <listitem>
+	       <para>Fixed minor bug in fcronsighup resulting in log errors about closing the signal file</para>
+	    </listitem>
       </itemizedlist>
 
       <itemizedlist>

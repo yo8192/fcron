@@ -169,8 +169,10 @@ sig_daemon(void)
 
         sleep(sl);
 
+        /* also closes the underlying file descriptor fd: */
         xfclose_check(&fp, sigfile);
-        xclose_check(&fd, sigfile);
+        /* also reset fd, now closed by xfclose_check(), to make it clear it is closed */
+        fd = -1;
 
         if (remove(sigfile) < 0)
             error_e("Could not remove %s");
