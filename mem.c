@@ -70,6 +70,7 @@ strndup2(const char *str, size_t n)
     if (str == NULL)
         return NULL;
 
+    /* note: if n==0 then ptr will be an empty string (non-NULL) */
     ptr = strndup(str, n);
 
     if (!ptr)

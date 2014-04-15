@@ -62,7 +62,7 @@ int
 save_str(int fd, short int type, char *str, char *write_buf, int *buf_used)
 /* save a string of type "type" in a binary fcrontab file */
 {
-    short int size = strlen(str);
+    short int size = (str != NULL) ? strlen(str) : 0;
     int write_len = sizeof(type) + sizeof(size) + size;
 
     if (write_len > WRITE_BUF_LEN - *buf_used)

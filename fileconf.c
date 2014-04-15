@@ -42,6 +42,7 @@ int read_shortcut(char *ptr, cf_t * cf);
 void read_env(char *ptr, cf_t * cf);
 char *read_opt(char *ptr, cl_t * cl);
 char *check_username(char *ptr, cf_t * cf, cl_t * cl);
+size_t option_strlen(char *value);
 
 char need_correction;
 cl_t default_line;              /* default options for a line */
@@ -403,33 +404,45 @@ get_nice(char *ptr, int *nice)
 
 }
 
-int
-assign_option_string(char **var, char *value)
-/* Read the value of an option, and assign it to the var.
- * Returns the length of the value, or -1 on error. */
+size_t
+option_strlen(char *value)
+/* return the length of the string value of an option */
 {
     char *ptr = value;
-    char *start = value;
-    char *end = value;
-    int len = 0;
-
-    Free_safe(*var);
+    size_t len = 0;
 
     /* look for the end of the option value */
-    while (ptr != NULL && *ptr != ')') {
+    while (ptr != NULL && *ptr != ')' && *ptr != '\0') {
         ptr++;
         len++;
     }
+
+    return len;
+}
+
+int
+assign_option_string(char **var, char *value)
+/* Read the value of an option: if non-empty, assign it to the var,
+ * otherwise set to NULL.
+ * Returns the length of the value (0 if empty), or -1 on error. */
+{
+    char start = value[0];
+    char end = '\0';
+    size_t len = 0;
+
+    Free_safe(*var);
+
+    len = option_strlen(value);
 
     if (len <= 0) {
         return len;
     }
 
-    end = ptr - 1;
+    end = value[len - 1];
 
     /* spaces and quotes are not allowed before or after the value */
-    if (isspace((int)*start) || isspace((int)*end)
-        || *start == '\'' || *start == '\"' || *end == '\'' || *end == '\"') {
+    if (isspace((int)start) || isspace((int)end)
+        || start == '\'' || start == '"' || end == '\'' || end == '"') {
         return -1;
     }
 
@@ -550,6 +563,8 @@ read_opt(char *ptr, cl_t * cl)
                 Handle_err;
             }
 
+            /* assign_option_string() will set cl_tz to NULL is the value is empty,
+             * which means "use the system timezone" */
             len = assign_option_string(&(cl->cl_tz), ptr);
             if (len < 0) {
                 Handle_err;
@@ -860,18 +875,29 @@ read_opt(char *ptr, cl_t * cl)
                 Handle_err;
             }
 
-            /* please note that we check if the mailto is valid in conf.c */
-            len = assign_option_string(&(cl->cl_mailto), ptr);
-            if (len < 0) {
-                Handle_err;
-            }
-            else if (len == 0) {
+            /* assign_option_string() set the value to NULL if the length is zero.
+             * However cl_mailto must not be NULL (as expected in
+             * conf.c:add_line_to_file()), so we check if the length is >= 0
+             * before calling assign_option_string() */ 
+            /* Also please note that we check if the mailto is valid in conf.c */
+            len = option_strlen(ptr);
+            if (len <= 0) {
                 clear_mail(cl->cl_option);
                 clear_mailzerolength(cl->cl_option);
+                if (debug_opt) {
+                    fprintf(stderr, "  Opt : \"mail\" 0\n");
+                    fprintf(stderr, "  Opt : \"forcemail\" 0\n");
+                }
             }
             else {
-                ptr += len;
-                set_mail(cl->cl_option);
+                len = assign_option_string(&(cl->cl_mailto), ptr);
+                if (len < 0) {
+                    Handle_err;
+                }
+                else {
+                    ptr += len;
+                    set_mail(cl->cl_option);
+                }
             }
 
             if (debug_opt)
@@ -963,7 +989,7 @@ read_opt(char *ptr, cl_t * cl)
             }
 
             len = assign_option_string(&runas, ptr);
-            if (len < 0) {
+            if (len <= 0) {
                 Handle_err;
             }
             else {

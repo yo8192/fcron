@@ -464,7 +464,7 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
     }
 
     /* check if this file is owned by root : otherwise, all runas fields
-     * of this field should be set to the owner */
+     * of this file should be set to the owner */
     rc = fstat(fileno(ff), &file_stat);
     if (rc != 0) {
         error_e("Could not stat %s", file_name);

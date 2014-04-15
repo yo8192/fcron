@@ -29,6 +29,9 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>fcrondyn no longer crashes when receiving an EOF when using readline (thanks Wade Carpenter for the patch)</para>
 	    </listitem>
+	    <listitem>
+	       <para>fcrontab no longer crash if mailto is empty (thanks Olaf for reporting the issue)</para>
+	    </listitem>
       </itemizedlist>
 
       <itemizedlist>
