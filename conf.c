@@ -454,7 +454,7 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
     int flask_enabled = is_selinux_enabled();
     int retval;
     struct av_decision avd;
-    const char *user_name;
+    char *user_name = NULL;
 #endif
 
     /* open file */
@@ -511,30 +511,47 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
 #ifdef WITH_SELINUX
     /*
      * Since fcrontab files are not directly executed,
-     * fcrond must ensure that the fcrontab file has
+     * fcron daemon must ensure that the fcrontab file has
      * a context that is appropriate for the context of
      * the user fcron job.  It performs an entrypoint
      * permission check for this purpose.
      */
-#ifdef SYSFCRONTAB
-    if (!strcmp(cf->cf_user, SYSFCRONTAB))
-        user_name = "system_u";
-    else
-#endif                          /* def SYSFCRONTAB */
-        user_name = cf->cf_user;
     if (flask_enabled) {
+        char *sename = NULL;
+        char *selevl = NULL;
+
+        /* first, get the SELinux user for that Linux user */
+#ifdef SYSFCRONTAB
+        if (!strcmp(cf->cf_user, SYSFCRONTAB))
+            /* system_u is the default SELinux user for running system services */
+            user_name = "system_u";
+        else
+#endif                          /* def SYSFCRONTAB */
+        {
+            if (getseuserbyname(cf->cf_user, &sename, &selevl) < 0) {
+                error_e("Cannot find SELinux user for user \"%s\"\n",
+                        cf->cf_user);
+                goto err;
+            }
+            user_name = sename;
+        }
+
         if (get_default_context(user_name, NULL, &cf->cf_user_context))
-            error_e("NO CONTEXT for user \"%s\"", cf->cf_user_context);
+            error_e("NO CONTEXT for Linux user '%s' (SELinux user '%s')",
+                    cf->cf_user, user_name);
         retval =
             security_compute_av(cf->cf_user_context, cf->cf_file_context,
                                 SECCLASS_FILE, FILE__ENTRYPOINT, &avd);
 
         if (retval || ((FILE__ENTRYPOINT & avd.allowed) != FILE__ENTRYPOINT)) {
-            syslog(LOG_ERR, "ENTRYPOINT FAILED for user \"%s\" "
+            syslog(LOG_ERR, "ENTRYPOINT FAILED for Linux user '%s' "
                    "(CONTEXT %s) for file CONTEXT %s", cf->cf_user,
                    cf->cf_user_context, cf->cf_file_context);
             goto err;
         }
+
+        Free_safe(sename);
+        Free_safe(selevl);
     }
 #endif
 

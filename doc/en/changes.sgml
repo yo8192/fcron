@@ -32,6 +32,9 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>fcrontab no longer crash if mailto is empty (thanks Olaf for reporting the issue)</para>
 	    </listitem>
+	    <listitem>
+	       <para>Fixed SELinux issue with Linux user being used instead of the SELinux user (thanks Sven Vermeulen for the patch)</para>
+	    </listitem>
       </itemizedlist>
 
       <itemizedlist>

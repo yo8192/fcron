@@ -878,7 +878,7 @@ read_opt(char *ptr, cl_t * cl)
             /* assign_option_string() set the value to NULL if the length is zero.
              * However cl_mailto must not be NULL (as expected in
              * conf.c:add_line_to_file()), so we check if the length is >= 0
-             * before calling assign_option_string() */ 
+             * before calling assign_option_string() */
             /* Also please note that we check if the mailto is valid in conf.c */
             len = option_strlen(ptr);
             if (len <= 0) {
