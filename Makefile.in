@@ -314,7 +314,7 @@ tar: configure updatedoc vclean ciclean
 
 	$(MAKE) -C doc tarclean
 
-	@(find ./ -type f ! -regex '.*RCS.*' ! -regex '.*CVS.*' ! -regex '.*\.git.*'| \
+	@(find ./ -type f ! -regex '.*RCS.*' ! -regex '.*CVS.*' ! -regex '.*\.git.*' ! -regex '.*debug/.*'| \
              sed -e "s:^\./:fcron-$(VERSION)/:" > MANIFEST)
 	@(cd ..; ln -s fcron fcron-$(VERSION))
 	(cd ..; tar -czvf fcron-$(VERSION).src.tar.gz `cat fcron/MANIFEST`)

@@ -30,4 +30,4 @@ configure
 tests/test-open*
 tests/test-types*
 tests/test-uidgid*
-
+debug/
