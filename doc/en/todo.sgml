@@ -30,6 +30,9 @@ A copy of the license is included in gfdl.sgml.
 	       <para>Option to compile and install from git sources without generating the doc</para>
 	    </listitem>
 	    <listitem>
+	       <para>print date using locales (e.g. DD/MM/YYYY vs. MM/DD/YYYY)</para>
+	    </listitem>
+	    <listitem>
 	       <para></para>
 	    </listitem>
 	 </itemizedlist>
