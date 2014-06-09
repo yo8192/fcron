@@ -13,6 +13,13 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
+	 <title>From version 3.1.3 to 3.2.0</title>
+	    <listitem>
+	       <para>Print date as %Y-%m-%d (the ISO 8601 date format), to avoid being ambiguous in international context.  Also always use the ':' as hour:minute separator (there was a couple of 'h' instead).</para>
+	    </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
 	 <title>From version 3.1.2 to 3.1.3</title>
 	    <listitem>
 	       <para>Fixed compilation on Solaris 10, and fixed fcrondyn authentication without a password on that platform.</para>

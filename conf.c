@@ -308,12 +308,13 @@ synchronize_file(char *file_name, int is_system_startup)
                         if (debug_opt && !is_hasrun(new_l->cl_option)) {
                             struct tm *ftime;
                             ftime = localtime(&new_l->cl_nextexe);
-                            debug("  from last conf: %s next exec %d/%d/%d"
-                                  " wday:%d %02d:%02d:%02d (system time)",
-                                  new_l->cl_shell,
-                                  (ftime->tm_mon + 1), ftime->tm_mday,
-                                  (ftime->tm_year + 1900), ftime->tm_wday,
-                                  ftime->tm_hour, ftime->tm_min, ftime->tm_sec);
+                            debug
+                                ("  from last conf: %s next exec %04d-%02d-%02d"
+                                 " wday:%d %02d:%02d:%02d (system time)",
+                                 new_l->cl_shell, (ftime->tm_year + 1900),
+                                 (ftime->tm_mon + 1), ftime->tm_mday,
+                                 ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
+                                 ftime->tm_sec);
                         }
 
                         break;
@@ -993,11 +994,11 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
     if (debug_opt && !(is_runonce(cl->cl_option) && is_hasrun(cl->cl_option))) {
         struct tm *ftime;
         ftime = localtime(&(cl->cl_nextexe));
-        debug("  cmd %s next exec %d/%d/%d wday:%d %02d:%02d:%02d"
+        debug("  cmd %s next exec %04d-%02d-%02d wday:%d %02d:%02d:%02d"
               " (system time)",
-              cl->cl_shell, (ftime->tm_mon + 1), ftime->tm_mday,
-              (ftime->tm_year + 1900), ftime->tm_wday,
-              ftime->tm_hour, ftime->tm_min, ftime->tm_sec);
+              cl->cl_shell, (ftime->tm_year + 1900), (ftime->tm_mon + 1),
+              ftime->tm_mday, ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
+              ftime->tm_sec);
     }
 
     /* add the current line to the list, and allocate a new line */

@@ -105,7 +105,7 @@ sig_daemon(void)
                 tm->tm_hour++;
                 tm->tm_min -= 60;
             }
-            snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
+            snprintf(buf, sizeof(buf), "%02d:%02d", tm->tm_hour, tm->tm_min);
             sl = 60 - (t % 60) + 50;
         }
         else {
@@ -113,7 +113,7 @@ sig_daemon(void)
                 tm->tm_hour++;
                 tm->tm_min -= 60;
             }
-            snprintf(buf, sizeof(buf), "%02dh%02d", tm->tm_hour, tm->tm_min);
+            snprintf(buf, sizeof(buf), "%02d:%02d", tm->tm_hour, tm->tm_min);
         }
         fprintf(stderr, "Modifications will be taken into account"
                 " at %s.\n", buf);

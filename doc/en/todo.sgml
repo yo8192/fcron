@@ -24,13 +24,7 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>Update FAQ - anacron entry</para>
-	    </listitem>
-	    <listitem>
 	       <para>Option to compile and install from git sources without generating the doc</para>
-	    </listitem>
-	    <listitem>
-	       <para>print date using locales (e.g. DD/MM/YYYY vs. MM/DD/YYYY)</para>
 	    </listitem>
 	    <listitem>
 	       <para></para>

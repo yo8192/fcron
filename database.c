@@ -761,9 +761,9 @@ goto_beginning_next_period_periodical(cl_t * line, struct tm *ftime)
 
     if (debug_opt)
         set_wday(ftime);
-    debug("   %s beginning of next period %d/%d/%d wday:%d %02d:%02d "
-          "(tzdiff=%d, timezone=%s)", line->cl_shell, (ftime->tm_mon + 1),
-          ftime->tm_mday, (ftime->tm_year + 1900), ftime->tm_wday,
+    debug("   %s beginning of next period %04d-%02d-%02d wday:%d %02d:%02d "
+          "(tzdiff=%d, timezone=%s)", line->cl_shell, (ftime->tm_year + 1900),
+          (ftime->tm_mon + 1), ftime->tm_mday, ftime->tm_wday,
           ftime->tm_hour, ftime->tm_min, line->cl_file->cf_tzdiff,
           (line->cl_tz != NULL) ? line->cl_tz : "localtime");
 
@@ -944,11 +944,11 @@ move_time_to(int where, cl_t * line, struct tm *ftime)
         }
     }
 
-    debug("   %s %s %d/%d/%d wday:%d %02d:%02d (tzdiff=%d, timezone=%s)",
+    debug("   %s %s %04d-%02d-%02d wday:%d %02d:%02d (tzdiff=%d, timezone=%s)",
           line->cl_shell,
           (where ==
            END_OF_INTERVAL) ? "end of interval" : "begin of next period",
-          (ftime->tm_mon + 1), ftime->tm_mday, (ftime->tm_year + 1900),
+          (ftime->tm_year + 1900), (ftime->tm_mon + 1), ftime->tm_mday,
           ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
           line->cl_file->cf_tzdiff,
           (line->cl_tz != NULL) ? line->cl_tz : "localtime");
@@ -1155,9 +1155,9 @@ set_next_exe(cl_t * line, char option, int info_fd)
             struct tm int_end;
             time_t int_end_timet;
 
-            debug("   cmd: %s begin int exec %d/%d/%d wday:%d %02d:%02d "
+            debug("   cmd: %s begin int exec %04d-%02d-%02d wday:%d %02d:%02d "
                   "(tzdiff=%d, timezone=%s)", line->cl_shell,
-                  (ftime.tm_mon + 1), ftime.tm_mday, (ftime.tm_year + 1900),
+                  (ftime.tm_year + 1900), (ftime.tm_mon + 1), ftime.tm_mday,
                   ftime.tm_wday, ftime.tm_hour, ftime.tm_min,
                   line->cl_file->cf_tzdiff,
                   (line->cl_tz != NULL) ? line->cl_tz : "localtime");
@@ -1188,10 +1188,11 @@ set_next_exe(cl_t * line, char option, int info_fd)
                 ft = localtime(&nextexe);
                 memcpy(&ftime, ft, sizeof(ftime));
             }
-            send_msg_fd_debug(info_fd, "   cmd: %s next exec %d/%d/%d wday:%d "
+            send_msg_fd_debug(info_fd,
+                              "   cmd: %s next exec %04d-%02d-%02d wday:%d "
                               "%02d:%02d:%02d (tzdiff=%d, timezone=%s)",
-                              line->cl_shell, (ftime.tm_mon + 1), ftime.tm_mday,
-                              (ftime.tm_year + 1900), ftime.tm_wday,
+                              line->cl_shell, (ftime.tm_year + 1900),
+                              (ftime.tm_mon + 1), ftime.tm_mday, ftime.tm_wday,
                               ftime.tm_hour, ftime.tm_min, ftime.tm_sec,
                               line->cl_file->cf_tzdiff,
                               (line->cl_tz != NULL) ? line->cl_tz : "system's");
@@ -1250,10 +1251,11 @@ set_next_exe(cl_t * line, char option, int info_fd)
          * ( localtime() is used in the debug() function) */
         memcpy(&ftime, ft, sizeof(struct tm));
 
-        send_msg_fd_debug(info_fd, "   cmd: %s next exec %d/%d/%d wday:%d "
+        send_msg_fd_debug(info_fd,
+                          "   cmd: %s next exec %04d-%02d-%02d wday:%d "
                           "%02d:%02d:%02d (system time)", line->cl_shell,
-                          (ftime.tm_mon + 1), ftime.tm_mday,
-                          (ftime.tm_year + 1900), ftime.tm_wday, ftime.tm_hour,
+                          (ftime.tm_year + 1900), (ftime.tm_mon + 1),
+                          ftime.tm_mday, ftime.tm_wday, ftime.tm_hour,
                           ftime.tm_min, ftime.tm_sec);
     }
 
@@ -1394,35 +1396,39 @@ mail_notrun(cl_t * line, char context, struct tm *since)
     switch (context) {
     case SYSDOWN:
         fprintf(mailf, "Line %s has not run since and including "
-                "%d/%d/%d wday:%d %02d:%02d (timezone=%s)\n"
+                "%04d-%02d-%02d wday:%d %02d:%02d (timezone=%s)\n"
                 "due to system's down state.\n",
-                line->cl_shell, (since->tm_mon + 1), since->tm_mday,
-                (since->tm_year + 1900), since->tm_wday, since->tm_hour,
-                since->tm_min, (line->cl_tz) ? line->cl_tz : "system's");
-        fprintf(mailf, "It will be next executed at %d/%d/%d wday:"
-                "%d %02d:%02d\n", (time.tm_mon + 1), time.tm_mday,
-                (time.tm_year + 1900), time.tm_wday, time.tm_hour, time.tm_min);
+                line->cl_shell, (since->tm_year + 1900), (since->tm_mon + 1),
+                since->tm_mday, since->tm_wday, since->tm_hour, since->tm_min,
+                (line->cl_tz) ? line->cl_tz : "system's");
+        fprintf(mailf,
+                "It will be next executed at %04d-%02d-%02d wday:"
+                "%d %02d:%02d\n", (time.tm_year + 1900), (time.tm_mon + 1),
+                time.tm_mday, time.tm_wday, time.tm_hour, time.tm_min);
         break;
     case LAVG:
         fprintf(mailf, "Line %s has not run since and including "
-                "%d/%d/%d wday:%d %02d:%02d (timezone=%s)\n",
-                line->cl_shell, (since->tm_mon + 1), since->tm_mday,
-                (since->tm_year + 1900), since->tm_wday, since->tm_hour,
-                since->tm_min, (line->cl_tz) ? line->cl_tz : "system's");
-        fprintf(mailf, "due to a too high system load average or "
+                "%04d-%02d-%02d wday:%d %02d:%02d (timezone=%s)\n",
+                line->cl_shell, (since->tm_year + 1900), (since->tm_mon + 1),
+                since->tm_mday, since->tm_wday, since->tm_hour, since->tm_min,
+                (line->cl_tz) ? line->cl_tz : "system's");
+        fprintf(mailf,
+                "due to a too high system load average or "
                 "too many lavg-serial jobs.\n");
-        fprintf(mailf, "It will be next executed at %d/%d/%d "
-                "wday:%d %02d:%02d (timezone=%s)\n", (time.tm_mon + 1),
-                time.tm_mday, (time.tm_year + 1900), time.tm_wday, time.tm_hour,
+        fprintf(mailf,
+                "It will be next executed at %04d-%02d-%02d "
+                "wday:%d %02d:%02d (timezone=%s)\n", (time.tm_year + 1900),
+                (time.tm_mon + 1), time.tm_mday, time.tm_wday, time.tm_hour,
                 time.tm_min, (line->cl_tz) ? line->cl_tz : "system's");
         break;
     case QUEUE_FULL:
         fprintf(mailf, "Line %s couldn't be added to lavg or serial queue which"
-                " is full ( %d/%d/%d wday:%d %02d:%02d (timezone=%s)).\n",
-                line->cl_shell, (time.tm_mon + 1), time.tm_mday,
-                (time.tm_year + 1900), time.tm_wday, time.tm_hour, time.tm_min,
+                " is full ( %04d-%02d-%02d wday:%d %02d:%02d (timezone=%s)).\n",
+                line->cl_shell, (time.tm_year + 1900), (time.tm_mon + 1),
+                time.tm_mday, time.tm_wday, time.tm_hour, time.tm_min,
                 (line->cl_tz) ? line->cl_tz : "system's");
-        fprintf(mailf, "Consider using options lavgonce, until, strict, "
+        fprintf(mailf,
+                "Consider using options lavgonce, until, strict, "
                 "serialonce and/or fcron's option -m.\n");
         fprintf(mailf, "Note that job %s has not run.\n", line->cl_shell);
         break;

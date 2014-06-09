@@ -496,9 +496,9 @@ print_line(int fd, struct cl_t *line, unsigned char *details, pid_t pid,
             ftime = localtime(&until);
             len +=
                 snprintf(buf + len, sizeof(buf) - len,
-                         " %02d/%02d/%d %02d:%02d %s", (ftime->tm_mon + 1),
-                         ftime->tm_mday, (ftime->tm_year + 1900),
-                         ftime->tm_hour, ftime->tm_min,
+                         " %04d-%02d-%02d %02d:%02d %s",
+                         (ftime->tm_year + 1900), (ftime->tm_mon + 1),
+                         ftime->tm_mday, ftime->tm_hour, ftime->tm_min,
                          (is_strict(line->cl_option)) ? "Y" : "N");
         }
         else
@@ -508,9 +508,10 @@ print_line(int fd, struct cl_t *line, unsigned char *details, pid_t pid,
     }
     if (bit_test(details, FIELD_SCHEDULE)) {
         ftime = localtime(&(line->cl_nextexe));
-        len += snprintf(buf + len, sizeof(buf) - len, " %02d/%02d/%d %02d:%02d",
-                        (ftime->tm_mon + 1), ftime->tm_mday,
-                        (ftime->tm_year + 1900), ftime->tm_hour, ftime->tm_min);
+        len +=
+            snprintf(buf + len, sizeof(buf) - len, " %04d-%02d-%02d %02d:%02d",
+                     (ftime->tm_year + 1900), (ftime->tm_mon + 1),
+                     ftime->tm_mday, ftime->tm_hour, ftime->tm_min);
     }
     len += snprintf(buf + len, sizeof(buf) - len, " %s\n", line->cl_shell);
 
