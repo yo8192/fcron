@@ -597,6 +597,9 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
         error("could not get time and date of saving");
         goto err;
     }
+    else {
+        debug("file saved at %lu.", t_save);
+    }
 
     if (cf->cf_env_list == NULL)
         cf->cf_env_list = env_list_init();
@@ -940,6 +943,12 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
         }
     }
     else {                      /* is_td(cl->cl_option) */
+        if (cl->cl_timefreq < 10) {
+            error("Invalid timefreq %ld for job '%s': setting to 1 day",
+                  cl->cl_timefreq, cl->cl_shell);
+            cl->cl_timefreq = 3600 * 24;
+        }
+
         /* standard @-lines */
         if (is_system_startup && is_runatreboot(cl->cl_option)) {
             cl->cl_nextexe = now;
@@ -970,22 +979,19 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
             if (cl->cl_nextexe != LONG_MAX) {
                 cl->cl_nextexe += slept;
                 if (cl->cl_nextexe < now || cl->cl_nextexe > TIME_T_MAX) {
-                    /* there was an integer overflow! */
+                    /* either there was an integer overflow, or the slept time is incorrect
+                     * (e.g. fcron didn't shut down cleanly and the fcrontab wasn't saved correctly) */
                     error
                         ("Error while setting next exe time for job %s: cl_nextexe"
-                         " overflowed (case2). now=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
+                         " overflowed (case2). now=%lu, cl_timefreq=%lu, cl_nextexe=%lu. "
+                         "Did fcron shut down cleanly?",
                          cl->cl_shell, now, cl->cl_timefreq, cl->cl_nextexe);
                     error
-                        ("Setting cl_nextexe to TIME_T_MAX=%ld to prevent an infinite loop.",
-                         TIME_T_MAX);
-                    cl->cl_nextexe = TIME_T_MAX;
+                        ("Setting cl_nextexe to now+cl_timefreq to prevent an infinite loop.");
+                    cl->cl_nextexe = now + cl->cl_timefreq;
+                    error("next execution will now be at %ld.", cl->cl_nextexe);
                 }
             }
-        }
-
-        if (cl->cl_timefreq < 10) {
-            error("Invalid timefreq for %s: set to 1 day", cl->cl_shell);
-            cl->cl_timefreq = 3600 * 24;
         }
 
         insert_nextexe(cl);

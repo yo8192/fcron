@@ -613,8 +613,8 @@ set_wday(struct tm *date)
     if (date->tm_wday >= 7)
         date->tm_wday -= 7;
 
-    debug("   dow of %d-%d-%d : %d", (date->tm_mon + 1), date->tm_mday,
-          (date->tm_year + 1900), date->tm_wday);
+    debug("   dow of %04d-%02d-%02d : %d", (date->tm_year + 1900),
+          (date->tm_mon + 1), date->tm_mday, date->tm_wday);
 
 }
 
@@ -1233,14 +1233,17 @@ set_next_exe(cl_t * line, char option, int info_fd)
         else {
             line->cl_nextexe = basetime + line->cl_timefreq;
             if (line->cl_nextexe <= basetime) {
-                /* there was an integer overflow! */
+                /* either there was an integer overflow, or the slept time is incorrect
+                 * (e.g. fcron didn't shut down cleanly and the fcrontab wasn't saved correctly) */
                 error("Error while setting next exe time for job %s: cl_nextexe"
-                      " overflowed (case3). basetime=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
+                      " overflowed (case3). basetime=%lu, cl_timefreq=%lu, cl_nextexe=%lu. "
+                      "Did fcron shut down cleanly?",
                       line->cl_shell, basetime, line->cl_timefreq,
                       line->cl_nextexe);
                 error
-                    ("Setting cl_nextexe to TIME_T_MAX to prevent an infinite loop.");
-                line->cl_nextexe = TIME_T_MAX;
+                    ("Setting cl_nextexe to now+cl_timefreq to prevent an infinite loop.");
+                line->cl_nextexe = now + line->cl_timefreq;
+                error("next execution will now be at %ld.", line->cl_nextexe);
             }
         }
 

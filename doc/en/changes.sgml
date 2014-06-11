@@ -17,6 +17,9 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>Print date as %Y-%m-%d (the ISO 8601 date format), to avoid being ambiguous in international context.  Also always use the ':' as hour:minute separator (there was a couple of 'h' instead).</para>
 	    </listitem>
+	    <listitem>
+	       <para>Don't fully disable a @-line when something goes wrong (e.g. fcron didn't shut down cleanly).  The idea was to prevent infinite loops, but this was overkill.  Instead set its next execution to now+frequency.`</para>
+	    </listitem>
       </itemizedlist>
 
       <itemizedlist>
