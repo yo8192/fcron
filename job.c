@@ -157,7 +157,7 @@ setup_user_and_env(struct cl_t *cl, struct passwd *pas,
 
     retcode = pam_start("fcron", pas->pw_name, &apamconv, &pamh);
     if (retcode != PAM_SUCCESS)
-        die_pame(pamh, retcode, "Could not start PAM for %s", cl->cl_shell);
+        die_pame(pamh, retcode, "Could not start PAM for '%s'", cl->cl_shell);
     /* Some system seem to need that pam_authenticate() call.
      * Anyway, we have no way to authentificate the user :
      * we must set auth to pam_permit. */
@@ -522,7 +522,7 @@ run_job(struct exe_t *exeent)
 
     switch (pid = fork()) {
     case -1:
-        error_e("Fork error : could not exec \"%s\"", line->cl_shell);
+        error_e("Fork error : could not exec '%s'", line->cl_shell);
         return ERR;
         break;
 
@@ -594,7 +594,7 @@ run_job(struct exe_t *exeent)
             /* now, run the job */
             switch (pid = fork()) {
             case -1:
-                error_e("Fork error : could not exec \"%s\"", line->cl_shell);
+                error_e("Fork error : could not exec '%s'", line->cl_shell);
                 if (write(pipe_pid_fd[1], &pid, sizeof(pid)) < 0)
                     error_e("could not write child pid to pipe_pid_fd[1]");
                 xclose_check(&(pipe_fd[0]), "child's pipe_fd[0]");
@@ -672,7 +672,7 @@ run_job(struct exe_t *exeent)
 #endif                          /* CHECKRUNJOB */
 
                 if (!is_nolog(line->cl_option))
-                    explain("Job %s started for user %s (pid %d)",
+                    explain("Job '%s' started for user %s (pid %d)",
                             line->cl_shell, line->cl_file->cf_user, pid);
 
                 if (!to_stdout && is_mail(line->cl_option)) {
@@ -686,7 +686,7 @@ run_job(struct exe_t *exeent)
                     mailbuf[sizeof(mailbuf) - 1] = '\0';
                     while (fgets(mailbuf, sizeof(mailbuf), pipef) != NULL)
                         if (fputs(mailbuf, mailf) < 0)
-                            warn("fputs() failed to write to mail file for job %s (pid %d)", line->cl_shell, pid);
+                            warn("fputs() failed to write to mail file for job '%s' (pid %d)", line->cl_shell, pid);
                     /* (closes also pipe_fd[0]): */
                     xfclose_check(&pipef, "child's pipef");
                 }
@@ -796,28 +796,28 @@ end_job(cl_t * line, int status, FILE * mailf, short mailpos,
     m = (mail_output == 1) ? " (mailing output)" : "";
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
         if (!is_nolog(line->cl_option))
-            explain("Job %s completed%s", line->cl_shell, m);
+            explain("Job '%s' completed%s", line->cl_shell, m);
     }
     else if (WIFEXITED(status)) {
-        warn("Job %s terminated (exit status: %d)%s",
+        warn("Job '%s' terminated (exit status: %d)%s",
              line->cl_shell, WEXITSTATUS(status), m);
         /* there was an error : in order to inform the user by mail, we need
          * to add some data to mailf */
         if (mailf != NULL)
-            fprintf(mailf, "Job %s terminated (exit status: %d)%s",
+            fprintf(mailf, "Job '%s' terminated (exit status: %d)%s",
                     line->cl_shell, WEXITSTATUS(status), m);
     }
     else if (WIFSIGNALED(status)) {
-        error("Job %s terminated due to signal %d%s",
+        error("Job '%s' terminated due to signal %d%s",
               line->cl_shell, WTERMSIG(status), m);
         if (mailf != NULL)
-            fprintf(mailf, "Job %s terminated due to signal %d%s",
+            fprintf(mailf, "Job '%s' terminated due to signal %d%s",
                     line->cl_shell, WTERMSIG(status), m);
     }
     else {                      /* is this possible? */
-        error("Job %s terminated abnormally %s", line->cl_shell, m);
+        error("Job '%s' terminated abnormally %s", line->cl_shell, m);
         if (mailf != NULL)
-            fprintf(mailf, "Job %s terminated abnormally %s", line->cl_shell,
+            fprintf(mailf, "Job '%s' terminated abnormally %s", line->cl_shell,
                     m);
     }
 

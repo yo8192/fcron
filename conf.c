@@ -309,7 +309,7 @@ synchronize_file(char *file_name, int is_system_startup)
                             struct tm *ftime;
                             ftime = localtime(&new_l->cl_nextexe);
                             debug
-                                ("  from last conf: %s next exec %04d-%02d-%02d"
+                                ("  from last conf: '%s' next exec %04d-%02d-%02d"
                                  " wday:%d %02d:%02d:%02d (system time)",
                                  new_l->cl_shell, (ftime->tm_year + 1900),
                                  (ftime->tm_mon + 1), ftime->tm_mday,
@@ -857,7 +857,7 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
         else {
             /* job has been stopped during execution :
              * launch it again */
-            warn("job %s did not finish : running it again.", cl->cl_shell);
+            warn("job '%s' did not finish : running it again.", cl->cl_shell);
             set_serial_once(cl->cl_option);
             add_serial_job(cl, -1);
         }
@@ -914,7 +914,7 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
                 else {
                     /* run bootrun jobs */
                     cl->cl_remain = cl->cl_runfreq;
-                    debug("   boot-run %s", cl->cl_shell);
+                    debug("   boot-run '%s'", cl->cl_shell);
                     if (!is_lavg(cl->cl_option)) {
                         set_serial_once(cl->cl_option);
                         add_serial_job(cl, -1);
@@ -966,7 +966,7 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
                 if (cl->cl_nextexe < now || cl->cl_nextexe > TIME_T_MAX) {
                     /* there was an integer overflow! */
                     error
-                        ("Error while setting next exe time for job %s: cl_nextexe"
+                        ("Error while setting next exe time for job '%s': cl_nextexe"
                          " overflowed (case1). now=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
                          cl->cl_shell, now, cl->cl_timefreq, cl->cl_nextexe);
                     error
@@ -982,7 +982,7 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
                     /* either there was an integer overflow, or the slept time is incorrect
                      * (e.g. fcron didn't shut down cleanly and the fcrontab wasn't saved correctly) */
                     error
-                        ("Error while setting next exe time for job %s: cl_nextexe"
+                        ("Error while setting next exe time for job '%s': cl_nextexe"
                          " overflowed (case2). now=%lu, cl_timefreq=%lu, cl_nextexe=%lu. "
                          "Did fcron shut down cleanly?",
                          cl->cl_shell, now, cl->cl_timefreq, cl->cl_nextexe);
@@ -1000,7 +1000,7 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
     if (debug_opt && !(is_runonce(cl->cl_option) && is_hasrun(cl->cl_option))) {
         struct tm *ftime;
         ftime = localtime(&(cl->cl_nextexe));
-        debug("  cmd %s next exec %04d-%02d-%02d wday:%d %02d:%02d:%02d"
+        debug("  cmd '%s' next exec %04d-%02d-%02d wday:%d %02d:%02d:%02d"
               " (system time)",
               cl->cl_shell, (ftime->tm_year + 1900), (ftime->tm_mon + 1),
               ftime->tm_mday, ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
@@ -1062,7 +1062,7 @@ delete_file(const char *user_name)
         for (l = lavg_list_first(lavg_list); l != NULL;
              l = lavg_list_next(lavg_list))
             if (l->l_line->cl_file == file) {
-                debug("removing %s from lavg queue", l->l_line->cl_shell);
+                debug("removing '%s' from lavg queue", l->l_line->cl_shell);
                 lavg_list_remove_cur(lavg_list);
             }
 
@@ -1074,7 +1074,7 @@ delete_file(const char *user_name)
                         alloc_safe(serial_array_size * sizeof(cl_t *),
                                    "serial queue");
                 }
-                debug("removing %s from serial queue",
+                debug("removing '%s' from serial queue",
                       serial_array[i]->cl_shell);
                 serial_num--;
                 serial_array[i]->cl_numexe--;

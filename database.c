@@ -70,7 +70,7 @@ test_jobs(void)
         }
 
         if (is_runonce(j->j_line->cl_option) && is_hasrun(j->j_line->cl_option)) {
-            explain("Line %s has runonce set: not re-scheduling it.",
+            explain("Line '%s' has runonce set: not re-scheduling it.",
                     j->j_line->cl_shell);
             job_queue_remove(j->j_line);
         }
@@ -180,10 +180,10 @@ run_normal_job(cl_t * line, int info_fd)
         (is_exe_sev(line->cl_option) && line->cl_numexe < UCHAR_MAX)) {
         line->cl_numexe += 1;
         run_queue_job(line);
-        send_msg_fd(info_fd, "Job %s started.", line->cl_shell);
+        send_msg_fd(info_fd, "Job '%s' started.", line->cl_shell);
     }
     else {
-        warn_fd(info_fd, "    process already running: %s's %s",
+        warn_fd(info_fd, "    process already running: %s's '%s'",
                 line->cl_file->cf_user, line->cl_shell);
     }
 
@@ -332,18 +332,19 @@ add_serial_job(cl_t * line, int info_fd)
      * (we consider serial jobs currently running as in the queue) */
     if ((is_serial_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX) ||
         (!is_serial_sev(line->cl_option) && line->cl_numexe > 0)) {
-        send_msg_fd_debug(info_fd, "already in serial queue %s",
+        send_msg_fd_debug(info_fd, "already in serial queue '%s'",
                           line->cl_shell);
         return;
     }
 
-    send_msg_fd_debug(info_fd, "inserting in serial queue %s", line->cl_shell);
+    send_msg_fd_debug(info_fd, "inserting in serial queue '%s'",
+                      line->cl_shell);
 
     if (serial_num >= serial_array_size) {
         if (serial_num >= serial_queue_max) {
             error_fd(info_fd, "Could not add job : serial queue is full "
                      "(%d jobs). Consider using option serialonce, fcron's "
-                     "option -m and/or -q : %s", serial_queue_max,
+                     "option -m and/or -q : '%s'", serial_queue_max,
                      line->cl_shell);
             if (is_notice_notrun(line->cl_option))
                 mail_notrun(line, QUEUE_FULL, NULL);
@@ -398,19 +399,21 @@ add_lavg_job(cl_t * line, int info_fd)
      * (we consider serial jobs currently running as in the queue) */
     if ((is_lavg_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX) ||
         (!is_lavg_sev(line->cl_option) && line->cl_numexe > 0)) {
-        send_msg_fd_debug(info_fd, "already in lavg queue %s", line->cl_shell);
+        send_msg_fd_debug(info_fd, "already in lavg queue '%s'",
+                          line->cl_shell);
         return;
     }
 /*  	// */
-    send_msg_fd_debug(info_fd, "inserting in lavg queue %s", line->cl_shell);
+    send_msg_fd_debug(info_fd, "inserting in lavg queue '%s'", line->cl_shell);
 /*  	// */
 
     /* append job to the list of lavg job */
     lavg_entry = lavg_list_add_line(lavg_list, line);
     if (lavg_entry == NULL) {
-        error_fd(info_fd, "Could not add job : lavg queue is full (%d jobs)."
+        error_fd(info_fd,
+                 "Could not add job '%s' : lavg queue is full (%d jobs)."
                  " Consider using options lavgonce, until, strict and/or "
-                 "fcron's option -q.", lavg_list->max_entries, line->cl_shell);
+                 "fcron's option -q.", line->cl_shell, lavg_list->max_entries);
         if (is_notice_notrun(line->cl_option))
             mail_notrun(line, QUEUE_FULL, NULL);
         return;
@@ -537,7 +540,7 @@ wait_all(int *counter)
                 }
                 else {
 
-                    debug("job finished: %s", e->e_line->cl_shell);
+                    debug("job finished: '%s'", e->e_line->cl_shell);
                     e->e_line->cl_numexe -= 1;
                     e->e_line->cl_file->cf_running -= 1;
 
@@ -761,7 +764,7 @@ goto_beginning_next_period_periodical(cl_t * line, struct tm *ftime)
 
     if (debug_opt)
         set_wday(ftime);
-    debug("   %s beginning of next period %04d-%02d-%02d wday:%d %02d:%02d "
+    debug("   '%s' beginning of next period %04d-%02d-%02d wday:%d %02d:%02d "
           "(tzdiff=%d, timezone=%s)", line->cl_shell, (ftime->tm_year + 1900),
           (ftime->tm_mon + 1), ftime->tm_mday, ftime->tm_wday,
           ftime->tm_hour, ftime->tm_min, line->cl_file->cf_tzdiff,
@@ -890,7 +893,7 @@ move_time_to(int where, cl_t * line, struct tm *ftime)
                         ftime->tm_mon = 0;
                         ftime->tm_year++;
                         if (--year_limit <= 0) {
-                            error("Can't found a non matching date for %s "
+                            error("Can't found a non matching date for '%s' "
                                   "in the next %d years. Maybe this line "
                                   "is corrupted : consider reinstalling "
                                   "the fcrontab", line->cl_shell,
@@ -944,14 +947,15 @@ move_time_to(int where, cl_t * line, struct tm *ftime)
         }
     }
 
-    debug("   %s %s %04d-%02d-%02d wday:%d %02d:%02d (tzdiff=%d, timezone=%s)",
-          line->cl_shell,
-          (where ==
-           END_OF_INTERVAL) ? "end of interval" : "begin of next period",
-          (ftime->tm_year + 1900), (ftime->tm_mon + 1), ftime->tm_mday,
-          ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
-          line->cl_file->cf_tzdiff,
-          (line->cl_tz != NULL) ? line->cl_tz : "localtime");
+    debug
+        ("   '%s' %s %04d-%02d-%02d wday:%d %02d:%02d (tzdiff=%d, timezone=%s)",
+         line->cl_shell,
+         (where ==
+          END_OF_INTERVAL) ? "end of interval" : "begin of next period",
+         (ftime->tm_year + 1900), (ftime->tm_mon + 1), ftime->tm_mday,
+         ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
+         line->cl_file->cf_tzdiff,
+         (line->cl_tz != NULL) ? line->cl_tz : "localtime");
 }
 
 
@@ -1013,7 +1017,7 @@ set_next_exe(cl_t * line, char option, int info_fd)
         if (i >= 12) {
             ftime.tm_year++;
             if (--year_limit <= 0) {
-                error("Can't found a matching date for %s in the next %d"
+                error("Can't found a matching date for '%s' in the next %d"
                       " years. Maybe this line is corrupted : consider"
                       " reinstalling the fcrontab.",
                       line->cl_shell, MAXYEAR_SCHEDULE_TIME);
@@ -1155,12 +1159,13 @@ set_next_exe(cl_t * line, char option, int info_fd)
             struct tm int_end;
             time_t int_end_timet;
 
-            debug("   cmd: %s begin int exec %04d-%02d-%02d wday:%d %02d:%02d "
-                  "(tzdiff=%d, timezone=%s)", line->cl_shell,
-                  (ftime.tm_year + 1900), (ftime.tm_mon + 1), ftime.tm_mday,
-                  ftime.tm_wday, ftime.tm_hour, ftime.tm_min,
-                  line->cl_file->cf_tzdiff,
-                  (line->cl_tz != NULL) ? line->cl_tz : "localtime");
+            debug
+                ("   cmd: '%s' begin int exec %04d-%02d-%02d wday:%d %02d:%02d "
+                 "(tzdiff=%d, timezone=%s)", line->cl_shell,
+                 (ftime.tm_year + 1900), (ftime.tm_mon + 1), ftime.tm_mday,
+                 ftime.tm_wday, ftime.tm_hour, ftime.tm_min,
+                 line->cl_file->cf_tzdiff,
+                 (line->cl_tz != NULL) ? line->cl_tz : "localtime");
 
             memcpy(&int_end, &ftime, sizeof(int_end));
             move_time_to(END_OF_INTERVAL, line, &int_end);
@@ -1189,7 +1194,7 @@ set_next_exe(cl_t * line, char option, int info_fd)
                 memcpy(&ftime, ft, sizeof(ftime));
             }
             send_msg_fd_debug(info_fd,
-                              "   cmd: %s next exec %04d-%02d-%02d wday:%d "
+                              "   cmd: '%s' next exec %04d-%02d-%02d wday:%d "
                               "%02d:%02d:%02d (tzdiff=%d, timezone=%s)",
                               line->cl_shell, (ftime.tm_year + 1900),
                               (ftime.tm_mon + 1), ftime.tm_mday, ftime.tm_wday,
@@ -1209,7 +1214,7 @@ set_next_exe(cl_t * line, char option, int info_fd)
          * an unknown bug in this function.
          */
         if (line->cl_nextexe <= now) {
-            error("BUG ??? Fcron thinks the next exe time of %s is %ld, "
+            error("BUG ??? Fcron thinks the next exe time of '%s' is %ld, "
                   "hence before now (%ld). To avoid infinite loop, nextexe"
                   " will be set at now+5s.", line->cl_shell, line->cl_nextexe);
             line->cl_nextexe = now + 5;
@@ -1235,11 +1240,11 @@ set_next_exe(cl_t * line, char option, int info_fd)
             if (line->cl_nextexe <= basetime) {
                 /* either there was an integer overflow, or the slept time is incorrect
                  * (e.g. fcron didn't shut down cleanly and the fcrontab wasn't saved correctly) */
-                error("Error while setting next exe time for job %s: cl_nextexe"
-                      " overflowed (case3). basetime=%lu, cl_timefreq=%lu, cl_nextexe=%lu. "
-                      "Did fcron shut down cleanly?",
-                      line->cl_shell, basetime, line->cl_timefreq,
-                      line->cl_nextexe);
+                error
+                    ("Error while setting next exe time for job '%s': cl_nextexe"
+                     " overflowed (case3). basetime=%lu, cl_timefreq=%lu, cl_nextexe=%lu. "
+                     "Did fcron shut down cleanly?", line->cl_shell, basetime,
+                     line->cl_timefreq, line->cl_nextexe);
                 error
                     ("Setting cl_nextexe to now+cl_timefreq to prevent an infinite loop.");
                 line->cl_nextexe = now + line->cl_timefreq;
@@ -1255,7 +1260,7 @@ set_next_exe(cl_t * line, char option, int info_fd)
         memcpy(&ftime, ft, sizeof(struct tm));
 
         send_msg_fd_debug(info_fd,
-                          "   cmd: %s next exec %04d-%02d-%02d wday:%d "
+                          "   cmd: '%s' next exec %04d-%02d-%02d wday:%d "
                           "%02d:%02d:%02d (system time)", line->cl_shell,
                           (ftime.tm_year + 1900), (ftime.tm_mon + 1),
                           ftime.tm_mday, ftime.tm_wday, ftime.tm_hour,
@@ -1282,7 +1287,7 @@ set_next_exe_notrun(cl_t * line, char context)
     int tz_changed = 0;
 
 /*  // */
-    debug("  set_next_exe_notrun : %s %d", line->cl_shell, context);
+    debug("  set_next_exe_notrun : '%s' %d", line->cl_shell, context);
 /*  // */
 
 
@@ -1362,7 +1367,7 @@ mail_notrun(cl_t * line, char context, struct tm *since)
 
     switch (pid = fork()) {
     case -1:
-        error_e("Fork error : could not mail for not run %s", line->cl_shell);
+        error_e("Fork error : could not mail for not run '%s'", line->cl_shell);
         return;
     case 0:
         /* child */
@@ -1371,7 +1376,7 @@ mail_notrun(cl_t * line, char context, struct tm *since)
         /* parent */
 
 /*  // */
-        debug("Reporting by mail non execution of %s (pid %d)",
+        debug("Reporting by mail non execution of '%s' (pid %d)",
               line->cl_shell, pid);
 /*  // */
 
@@ -1398,7 +1403,7 @@ mail_notrun(cl_t * line, char context, struct tm *since)
 
     switch (context) {
     case SYSDOWN:
-        fprintf(mailf, "Line %s has not run since and including "
+        fprintf(mailf, "Line '%s' has not run since and including "
                 "%04d-%02d-%02d wday:%d %02d:%02d (timezone=%s)\n"
                 "due to system's down state.\n",
                 line->cl_shell, (since->tm_year + 1900), (since->tm_mon + 1),
@@ -1410,7 +1415,7 @@ mail_notrun(cl_t * line, char context, struct tm *since)
                 time.tm_mday, time.tm_wday, time.tm_hour, time.tm_min);
         break;
     case LAVG:
-        fprintf(mailf, "Line %s has not run since and including "
+        fprintf(mailf, "Line '%s' has not run since and including "
                 "%04d-%02d-%02d wday:%d %02d:%02d (timezone=%s)\n",
                 line->cl_shell, (since->tm_year + 1900), (since->tm_mon + 1),
                 since->tm_mday, since->tm_wday, since->tm_hour, since->tm_min,
@@ -1425,7 +1430,8 @@ mail_notrun(cl_t * line, char context, struct tm *since)
                 time.tm_min, (line->cl_tz) ? line->cl_tz : "system's");
         break;
     case QUEUE_FULL:
-        fprintf(mailf, "Line %s couldn't be added to lavg or serial queue which"
+        fprintf(mailf,
+                "Line '%s' couldn't be added to lavg or serial queue which"
                 " is full ( %04d-%02d-%02d wday:%d %02d:%02d (timezone=%s)).\n",
                 line->cl_shell, (time.tm_year + 1900), (time.tm_mon + 1),
                 time.tm_mday, time.tm_wday, time.tm_hour, time.tm_min,
@@ -1433,7 +1439,7 @@ mail_notrun(cl_t * line, char context, struct tm *since)
         fprintf(mailf,
                 "Consider using options lavgonce, until, strict, "
                 "serialonce and/or fcron's option -m.\n");
-        fprintf(mailf, "Note that job %s has not run.\n", line->cl_shell);
+        fprintf(mailf, "Note that job '%s' has not run.\n", line->cl_shell);
         break;
     }
 
@@ -1478,7 +1484,7 @@ check_lavg(time_t lim)
             && l->l_until < now) {
             if (!is_run_if_late(l->l_line->cl_option)) {
                 if (!is_nolog(l->l_line->cl_option))
-                    explain("Interval of execution exceeded : %s (not run)",
+                    explain("Interval of execution exceeded : '%s' (not run)",
                             l->l_line->cl_shell);
 
                 /* set time of the next execution and send a mail if needed */
@@ -1493,7 +1499,7 @@ check_lavg(time_t lim)
                 lavg_list_remove_cur(lavg_list);
             }
             else {
-                debug("until %s %d", l->l_line->cl_shell, l->l_until);
+                debug("until '%s' %d", l->l_line->cl_shell, l->l_until);
                 run_lavg_job(l);
                 lavg_list_remove_cur(lavg_list);
             }
@@ -1530,7 +1536,7 @@ check_lavg(time_t lim)
                     || l_avg[2] < l->l_line->cl_lavg[2])
             )
             ) {
-            debug("lavg %s %s %.0f:%d %.0f:%d %.0f:%d",
+            debug("lavg '%s' %s %.0f:%d %.0f:%d %.0f:%d",
                   l->l_line->cl_shell,
                   (is_lor(l->l_line->cl_option)) ? "or" : "and",
                   l_avg[0], l->l_line->cl_lavg[0],
