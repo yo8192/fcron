@@ -418,15 +418,15 @@ print_fields(int fd, unsigned char *details)
     /* print a line describing the field types used in print_line() */
 {
     char fields[TERM_LEN];
-    char field_user[] = " USER  ";
     char field_id[] = "ID   ";
-    char field_rq[] = " R&Q ";
-    char field_options[] = " OPTIONS  ";
-    char field_schedule[] = " SCHEDULE        ";
-    char field_until[] = " LAVG 1,5,15 UNTIL       STRICT";
-    char field_pid[] = " PID    ";
-    char field_index[] = " INDEX";
-    char field_cmd[] = " CMD";
+    char field_user[] = "|USER     ";
+    char field_rq[] = "|R&Q ";
+    char field_options[] = "|OPTIONS  ";
+    char field_schedule[] = "|SCHEDULE        ";
+    char field_until[] = "|LAVG 1,5,15 UNTIL       STRICT";
+    char field_pid[] = "|PID    ";
+    char field_index[] = "|INDEX";
+    char field_cmd[] = "|CMD";
     char field_endline[] = "\n";
     int len = 0;
 
@@ -464,14 +464,14 @@ print_line(int fd, struct cl_t *line, unsigned char *details, pid_t pid,
     len = snprintf(buf, sizeof(buf), "%-5ld", line->cl_id);
     if (bit_test(details, FIELD_USER))
         len +=
-            snprintf(buf + len, sizeof(buf) - len, " %-6s",
+            snprintf(buf + len, sizeof(buf) - len, "|%-9s",
                      line->cl_file->cf_user);
     if (bit_test(details, FIELD_PID))
-        len += snprintf(buf + len, sizeof(buf) - len, " %-7d", (int)pid);
+        len += snprintf(buf + len, sizeof(buf) - len, "|%-7d", (int)pid);
     if (bit_test(details, FIELD_INDEX))
-        len += snprintf(buf + len, sizeof(buf) - len, " %-5d", index);
+        len += snprintf(buf + len, sizeof(buf) - len, "|%-5d", index);
     if (bit_test(details, FIELD_RQ))
-        len += snprintf(buf + len, sizeof(buf) - len, " %-4d", line->cl_numexe);
+        len += snprintf(buf + len, sizeof(buf) - len, "|%-4d", line->cl_numexe);
     if (bit_test(details, FIELD_OPTIONS)) {
         char opt[9];
         int i = 0;
@@ -485,10 +485,10 @@ print_line(int fd, struct cl_t *line, unsigned char *details, pid_t pid,
         if (is_exe_sev(line->cl_option))
             i += snprintf(opt + i, sizeof(opt) - i, "%.*sES", i, ",");
 
-        len += snprintf(buf + len, sizeof(buf) - len, " %-9s", opt);
+        len += snprintf(buf + len, sizeof(buf) - len, "|%-9s", opt);
     }
     if (bit_test(details, FIELD_LAVG)) {
-        len += snprintf(buf + len, sizeof(buf) - len, " %.1f,%.1f,%.1f",
+        len += snprintf(buf + len, sizeof(buf) - len, "|%.1f,%.1f,%.1f",
                         ((double)((line->cl_lavg)[0])) / 10,
                         ((double)((line->cl_lavg)[1])) / 10,
                         ((double)((line->cl_lavg)[2])) / 10);
@@ -509,11 +509,11 @@ print_line(int fd, struct cl_t *line, unsigned char *details, pid_t pid,
     if (bit_test(details, FIELD_SCHEDULE)) {
         ftime = localtime(&(line->cl_nextexe));
         len +=
-            snprintf(buf + len, sizeof(buf) - len, " %04d-%02d-%02d %02d:%02d",
+            snprintf(buf + len, sizeof(buf) - len, "|%04d-%02d-%02d %02d:%02d",
                      (ftime->tm_year + 1900), (ftime->tm_mon + 1),
                      ftime->tm_mday, ftime->tm_hour, ftime->tm_min);
     }
-    len += snprintf(buf + len, sizeof(buf) - len, " %s\n", line->cl_shell);
+    len += snprintf(buf + len, sizeof(buf) - len, "|%s\n", line->cl_shell);
 
     if (send(fd, buf, (len < sizeof(buf)) ? len : sizeof(buf), 0) < 0)
         error_e("error in send()");
