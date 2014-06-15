@@ -44,6 +44,9 @@ RETSIGTYPE sigterm_handler(int x);
 RETSIGTYPE sigchild_handler(int x);
 RETSIGTYPE sigusr1_handler(int x);
 RETSIGTYPE sigusr2_handler(int x);
+RETSIGTYPE sigcont_handler(int x);
+long int get_suspend_duration(time_t slept_from);
+void check_suspend(time_t slept_from, time_t planned_sleep);
 int parseopt(int argc, char *argv[]);
 void get_lock(void);
 int is_system_reboot(void);
@@ -85,6 +88,7 @@ gid_t rootgid = 0;
 char sig_conf = 0;              /* is 1 when we got a SIGHUP, 2 for a SIGUSR1 */
 char sig_chld = 0;              /* is 1 when we got a SIGCHLD */
 char sig_debug = 0;             /* is 1 when we got a SIGUSR2 */
+char sig_cont = 0;              /* is 1 when we got a SIGCONT */
 
 /* jobs database */
 struct cf_t *file_base;         /* point to the first file of the list */
@@ -520,6 +524,165 @@ sigusr2_handler(int x)
     sig_debug = 1;
 }
 
+RETSIGTYPE
+sigcont_handler(int x)
+  /* used to notify fcron of a system resume after suspend.
+   * However this signal could also be received in other cases. */
+{
+    sig_cont = 1;
+}
+
+long int
+get_suspend_duration(time_t slept_from)
+  /* Return the amount of time the system was suspended (to mem or disk).
+   * Return 0 on error.
+   *
+   * The idea is that:
+   * 1) the OS sends the STOP signal to the main fcron process when suspending
+   * 2) the OS writes the suspend duration (as a string) into suspendfile,
+   *    and then sends the CONT signal to the main fcron process when resuming.
+   *
+   * The main reason to do it this way instead of killing fcron and restarting
+   * it on resume is to better handle jobs that may already be running.
+   * (e.g. don't run them again when the machine resumes) */
+{
+    int fd = -1;
+    char buf[TERM_LEN];
+    int read_len = 0;
+    long int suspend_duration = 0; /* default value to return on error */
+    struct stat s;
+
+    if (sig_cont <= 0) {
+        /* signal not raised -- do nothing */
+        return 0;
+    }
+
+    /* the signal CONT was raised: reset the signal and check the suspendfile */
+    sig_cont = 0;
+
+    fd = open(suspendfile, O_RDONLY | O_NONBLOCK);
+    if (fd == -1) {
+        /* If the file doesn't exist, then we assume the user/system
+         * did a manual 'kill -STOP' / 'kill -CONT' and doesn't intend
+         * for fcron to account for any suspend time.
+         * This is not considered as an error. */
+        if (errno != ENOENT) {
+            error_e("Could not open suspend file '%s'", suspendfile);
+        }
+        goto cleanup_return;
+    }
+
+    /* check the file is a 'normal' file (e.g. not a link) and only writable
+     * by root -- don't allow attacker to affect job schedules,
+     * or delete the suspendfile */
+    if (fstat(fd, &s) < 0) {
+        error_e("could not fstat() suspend file '%s'", suspendfile);
+        goto cleanup_return;
+    }
+    if (!S_ISREG(s.st_mode) || s.st_nlink != 1) {
+        error_e("suspend file %s is not a regular file", suspendfile);
+        goto cleanup_return;
+    }
+
+    if (s.st_mode & S_IWOTH || s.st_uid != rootuid || s.st_gid != rootgid) {
+        error("suspend file %s must be owned by %s:%s and not writable by"
+                " others.", suspendfile, ROOTNAME, ROOTGROUP);
+        goto cleanup_return;
+    }
+
+    /* read the content of the suspendfile into the buffer */
+    read_len = read(fd, buf, sizeof(buf) - 1);
+    if (read_len < 0) {
+        /* we have to run this immediately or errno may be changed */
+        error_e("Could not read suspend file '%s'", suspendfile);
+        goto unlink_cleanup_return;
+    }
+    if (read_len < 0) {
+        goto unlink_cleanup_return;
+    }
+    buf[read_len] = '\0';
+
+    errno = 0;
+    suspend_duration = strtol(buf, NULL, 10);
+    if (errno != 0) {
+        error_e("Count not parse suspend duration '%s'", buf);
+        suspend_duration = 0;
+        goto unlink_cleanup_return;
+    }
+    else if (suspend_duration < 0) {
+        warn("Read negative suspend_duration (%ld): ignoring.");
+        suspend_duration = 0;
+        goto unlink_cleanup_return;
+    }
+    else {
+        debug("Read suspend_duration of '%ld' from suspend file '%s'",
+              suspend_duration, suspendfile);
+
+        if (now < slept_from + suspend_duration) {
+            long int time_slept = now - slept_from;
+
+            /* we can have a couple of seconds more due to rounding up,
+             * but anything more should be an invalid value in suspendfile */
+            explain("Suspend duration %lds in suspend file '%s' is longer than "
+                    "we slept.  This could be due to rounding. "
+                    "Reverting to time slept %lds.",
+                    suspend_duration, suspendfile, time_slept);
+            suspend_duration = time_slept;
+        }
+    }
+
+unlink_cleanup_return:
+    if (unlink(suspendfile) < 0) {
+        warn_e("Could not remove suspend file '%s'", suspendfile);
+        return 0;
+    }
+
+cleanup_return:
+    if (fd >= 0 && xclose(&fd) < 0) {
+        warn_e("Could not xclose() suspend file '%s'", suspendfile);
+    }
+
+#ifdef HAVE_SIGNAL
+    signal(SIGCONT, sigcont_handler);
+    siginterrupt(SIGCONT, 0);
+#endif
+
+    return suspend_duration;
+
+}
+
+void
+check_suspend(time_t slept_from, time_t planned_sleep)
+    /* Check if the machine was suspended (to mem or disk), and if so
+     * reschedule jobs accordingly */
+{
+    long int suspend_duration;  /* amount of time the system was suspended */
+    long int actual_sleep;      /* time we actually slept */
+
+    suspend_duration = get_suspend_duration(slept_from);
+
+    /* Also check if there was an unaccounted sleep duration, in case
+     * the OS is not configured to let fcron properly know about suspends
+     * via suspendfile.
+     * This is not perfect as we may miss some suspend time if fcron
+     * is woken up before the timer expiry, e.g. due to a signal
+     * or activity on a socket (fcrondyn).
+     * NOTE: the +5 second is arbitrary -- just a way to make sure
+     * we don't get any false positive.  If the suspend or hibernate
+     * is very short it seems fine to simply ignore it anyway */
+    actual_sleep = now - slept_from;
+    if (suspend_duration <= 0 && (actual_sleep - planned_sleep) > 5) {
+        suspend_duration = actual_sleep - planned_sleep;
+    }
+
+    if (suspend_duration > 0) {
+        explain("suspend/hibernate detected: we woke up after %lus"
+                " instead of %lus. The system was suspended for %lus.",
+                actual_sleep, planned_sleep, suspend_duration);
+        reschedule_all_on_resume(suspend_duration);
+    }
+}
+
 
 int
 main(int argc, char **argv)
@@ -641,6 +804,7 @@ main(int argc, char **argv)
     explain("%s[%d] " VERSION_QUOTED " started", prog_name, daemon_pid);
 
 #ifdef HAVE_SIGNAL
+    /* FIXME: check for errors */
     signal(SIGTERM, sigterm_handler);
     signal(SIGHUP, sighup_handler);
     siginterrupt(SIGHUP, 0);
@@ -650,14 +814,18 @@ main(int argc, char **argv)
     siginterrupt(SIGUSR1, 0);
     signal(SIGUSR2, sigusr2_handler);
     siginterrupt(SIGUSR2, 0);
+    signal(SIGCONT, sigcont_handler);
+    siginterrupt(SIGCONT, 0);
     /* we don't want SIGPIPE to kill fcron, and don't need to handle it */
     signal(SIGPIPE, SIG_IGN);
 #elif HAVE_SIGSET
+    /* FIXME: check for errors */
     sigset(SIGTERM, sigterm_handler);
     sigset(SIGHUP, sighup_handler);
     sigset(SIGCHLD, sigchild_handler);
     sigset(SIGUSR1, sigusr1_handler);
     sigset(SIGUSR2, sigusr2_handler);
+    sigset(SIGCONT, sigcont_handler);
     sigset(SIGPIPE, SIG_IGN);
 #endif
 
@@ -774,6 +942,7 @@ main_loop()
     time_t save;                /* time remaining until next save */
     time_t stime;               /* time to sleep until next job
                                  * execution */
+    time_t slept_from;          /* time it was when we went into sleep */
 #ifdef HAVE_GETTIMEOFDAY
     struct timeval tv;          /* we use usec field to get more precision */
 #endif
@@ -799,6 +968,9 @@ main_loop()
     debug("initial sleep time : %ld", stime);
 
     for (;;) {
+
+        /* remember when we started to sleep -- this is to detect suspend/hibernate */
+        slept_from = time(NULL);
 
 #ifdef HAVE_GETTIMEOFDAY
 #ifdef FCRONDYN
@@ -829,9 +1001,11 @@ main_loop()
 
         now = time(NULL);
 
+        debug("\n");
+
         check_signal();
 
-        debug("\n");
+        check_suspend(slept_from, stime);
 
         test_jobs();
 

@@ -42,18 +42,24 @@ optional. Trailing blanks are also ignored.
 <variablelist>
 		<title>Valid variables in a fcron.conf file</title>
 		<varlistentry>
-		    <term><varname>fcrontabs</varname>=<replaceable>directory</replaceable> 
+		    <term><varname>fcrontabs</varname>=<replaceable>directory</replaceable>
 (<filename>&fcrontabsdir;</filename>)</term>
 		    <listitem>
 			<para>&Fcron; spool directory.</para>
 		    </listitem>
 		</varlistentry>
 		<varlistentry>
-		    <term><varname>pidfile</varname>=<replaceable>file-path</replaceable> 
+		    <term><varname>pidfile</varname>=<replaceable>file-path</replaceable>
 (<filename>&fcron.pid;</filename>)</term>
 		    <listitem>
 			<para>Location of &fcron; pid file (needed by &fcrontab;
 to work properly).</para>
+		    </listitem>
+		<varlistentry>
+		    <term><varname>suspendfile</varname>=<replaceable>file-path</replaceable>
+(<filename>&suspendfile;</filename>)</term>
+		    <listitem>
+			<para>Location of &fcron; suspend file. This should be used to let fcron know how long the system was suspended (to memory or disk), so as task schedules can be updated accordingly.</para>
 		    </listitem>
 		</varlistentry>
 		<varlistentry>

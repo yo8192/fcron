@@ -40,6 +40,12 @@ extern void set_next_exe_notrun(struct cl_t *line, char context);
 #define SYSDOWN 2               /* set_next_exe_notrun() : context */
 #define QUEUE_FULL 3            /* set_next_exe_notrun() : context */
 #define SYSDOWN_RUNATREBOOT 4   /* set_next_exe_notrun() : context */
+extern void set_next_exe_startup(struct cl_t *cl, const int context,
+                                 const time_t sleep_duration);
+#define CONTEXT_DEFAULT 1       /* a new file was loaded (and the machine didn't just boot) */
+#define CONTEXT_BOOT 2          /* the machine just booted */
+#define CONTEXT_RESUME 3        /* the machine just resumed from suspend/hibernation */
+extern void reschedule_all_on_resume(const time_t sleep_duration);
 extern void mail_notrun(struct cl_t *line, char context, struct tm *since);
 extern void mail_notrun_time_t(cl_t * line, char context, time_t since_time_t);
 extern job_t *job_queue_remove(cl_t * line);

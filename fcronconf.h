@@ -34,6 +34,7 @@ extern char *fcronallow;
 extern char *fcrondeny;
 extern char *fcrontabs;
 extern char *pidfile;
+extern char *suspendfile;
 extern char *fifofile;
 extern char *editor;
 extern char *shell;

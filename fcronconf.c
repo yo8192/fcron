@@ -37,6 +37,7 @@ extern gid_t rootgid;
 char *fcronconf = NULL;
 char *fcrontabs = NULL;
 char *pidfile = NULL;
+char *suspendfile = NULL;
 char *fifofile = NULL;
 char *fcronallow = NULL;
 char *fcrondeny = NULL;
@@ -53,6 +54,7 @@ init_conf(void)
         fcronconf = strdup2(ETC "/" FCRON_CONF);
     fcrontabs = strdup2(FCRONTABS);
     pidfile = strdup2(PIDFILE);
+    suspendfile = strdup2(SUSPEND_FILE);
     fifofile = strdup2(FIFOFILE);
     fcronallow = strdup2(ETC "/" FCRON_ALLOW);
     fcrondeny = strdup2(ETC "/" FCRON_DENY);
@@ -73,6 +75,7 @@ free_conf(void)
     Free_safe(fcronconf);
     Free_safe(fcrontabs);
     Free_safe(pidfile);
+    Free_safe(suspendfile);
     Free_safe(fifofile);
     Free_safe(fcronallow);
     Free_safe(fcrondeny);
@@ -164,6 +167,9 @@ read_conf(void)
         else if (strncmp(ptr1, "pidfile", namesize) == 0) {
             Set(pidfile, ptr2);
         }
+        else if (strncmp(ptr1, "suspendfile", namesize) == 0) {
+            Set(suspendfile, ptr2);
+        }
         else if (strncmp(ptr1, "fifofile", namesize) == 0) {
             Set(fifofile, ptr2);
         }
@@ -193,6 +199,7 @@ read_conf(void)
 /*  	debug("  fcrondeny=%s", fcrondeny); */
 /*  	debug("  fcrontabs=%s", fcrontabs); */
 /*  	debug("  pidfile=%s", pidfile); */
+/*  	debug("  suspendfile=%s", suspendfile); */
 /*   	debug("  fifofile=%s", fifofile); */
 /*  	debug("  editor=%s", editor); */
 /*  	debug("  shell=%s", shell); */

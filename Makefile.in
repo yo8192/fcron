@@ -30,6 +30,7 @@ PIDDIR		= @PIDDIR@
 FIFODIR		= @FIFODIR@
 PIDFILE		= @PIDFILE@
 REBOOT_LOCK	= @REBOOT_LOCK@
+SUSPEND_FILE	= @SUSPEND_FILE@
 FIFOFILE	= @FIFOFILE@
 FCRON_SHELL	= @FCRON_SHELL@
 SENDMAIL	= @SENDMAIL@
@@ -120,7 +121,7 @@ exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
 
 %.o: $(SRCDIR)/%.c $(HEADERSALL) $(SRCDIR)/%.h
 	$(CC) $(CFLAGS) -DPIDFILE="\"${PIDFILE}\"" -DREBOOT_LOCK="\"${REBOOT_LOCK}\"" \
-	-DFIFOFILE="\"${FIFOFILE}\"" -DETC="\"${ETC}\"" \
+	-DSUSPEND_FILE="\"${SUSPEND_FILE}\"" -DFIFOFILE="\"${FIFOFILE}\"" -DETC="\"${ETC}\"" \
 	-DFCRON_SHELL="\"${FCRON_SHELL}\"" -DFCRON_CONF="\"${FCRON_CONF}\"" \
 	-DFCRONTABS="\"${FCRONTABS}\"" \
 	-DFCRON_ALLOW="\"${FCRON_ALLOW}\"" -DFCRON_DENY="\"${FCRON_DENY}\"" \
@@ -130,7 +131,7 @@ exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
 
 initscripts:
 	@(if test ! -d script; then mkdir script ; fi ; \
-		for F in sysVinit-launcher fcron.sh fcron.init.suse fcron.init.systemd ; do \
+		for F in sysVinit-launcher fcron.sh fcron.init.suse fcron.init.systemd fcron.suspend.sh ; do \
 	    		$(SRCDIR)/script/gen-in.pl $(SRCDIR)/script/$${F}.in script/$${F} ./ ; \
 		done)
 

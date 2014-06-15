@@ -27,7 +27,13 @@ A copy of the license is included in gfdl.sgml.
 	       <para>Option to compile and install from git sources without generating the doc</para>
 	    </listitem>
 	    <listitem>
-	       <para>register in OS suspend/hibernate mechanism to stop fcron when going to sleep and start it again when resuming from sleep (see FAQ entry).</para>
+	       <para>add systemd suspend hooks for fcron (contribution welcome)</para>
+	    </listitem>
+	    <listitem>
+	       <para>add a 'runatresume' option, to run when the computer resumes? (similar to runatreboot)</para>
+	    </listitem>
+	    <listitem>
+	       <para>use ask_user() in boot-install</para>
 	    </listitem>
 	    <listitem>
 	       <para></para>

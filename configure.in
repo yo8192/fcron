@@ -304,10 +304,14 @@ AC_ARG_WITH(piddir,
 )
 AC_MSG_RESULT([$PIDDIR])
 PIDFILE="${PIDDIR}/fcron.pid"
+dnl Is it the first time fcron starts since the system rebooted:
 REBOOT_LOCK="${PIDDIR}/fcron.reboot"
+dnl Used to notify fcron the system was suspended, and for how long:
+SUSPEND_FILE="${PIDDIR}/fcron.suspend"
 AC_SUBST(PIDDIR)
 AC_SUBST(PIDFILE)
 AC_SUBST(REBOOT_LOCK)
+AC_SUBST(SUSPEND_FILE)
 
 FIFODIR="${localstatedir}/run"
 AC_MSG_CHECKING(location of fifo files)

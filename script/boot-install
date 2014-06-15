@@ -7,7 +7,7 @@
 #                    the DESTSBIN directory
 #                    the value of DEBUG
 #                    the value of FCRONTABS
-#                    the automatic answer
+#                    the automatic answer: 0 no, 1 yes, 2 ask
 #                    the src dir
 
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
@@ -31,8 +31,31 @@ DESTBIN=$2
 DEBUG=$3
 #DEBUG=1
 FCRONTABS=$4
-ANSWER=$5
+ANSWER=$5 # Automatic answer: 0->no, 1->yes, 2->ask
 SRCDIR=$6
+
+# Return y or n (defaults to y)
+# (uses the automatic answer if appropriate)
+ask_user() {
+    if test "$ANSWER" -eq 1 ; then
+        echo y
+    elif test "$ANSWER" -eq 0 ; then
+        echo n
+    fi
+
+    # If we get here, then ask the user interactively
+    ANS=
+    while test \( "$ANS" != "y" \) -a \( "$ANS" != "n" \) ; do
+        echo -n "Please answer with 'y' or 'n' (default: 'y'): " >/dev/stderr
+        read ANS NOTHING
+        test -z "$ANS" && ANS=y # Default value
+    done
+    echo $ANS
+
+}
+
+# Validate the command line arguments:
+# FIXME
 
 if test $DEBUG -eq 1; then
     STARTCMD="fcron -b -d"
@@ -264,6 +287,30 @@ echo "Installation process failed to install fcron in your init scripts :"
 echo "please do it manually."
 fi
 
+#
+# Now install the suspend script under the appropriate suspend framework
+#
+echo
+if test -d /usr/lib/systemd/system-sleep ; then
+    # systemd
+    SUSPEND_DEST=/usr/lib/systemd/system-sleep/fcron.sh
+    echo "This system appears to run systemd. Would you like to install the systemd"
+    echo "suspend script under $SUSPEND_DEST?"
+    if test "`ask_user`" = y; then
+        $INSPROG -c -m 754 script/fcron.suspend.sh $SUSPEND_DEST
+    fi
+elif test -d /etc/pm/sleep.d ; then
+    # pm-utils
+    SUSPEND_DEST=/etc/pm/sleep.d/74_fcron
+    echo "This system appears to run pm-utils. Would you like to install the pm-utils"
+    echo "suspend script under $SUSPEND_DEST?"
+    if test "`ask_user`" = y; then
+        $INSPROG -c -m 754 script/fcron.suspend.sh $SUSPEND_DEST
+    fi
+else
+    echo "This script didn't find any suspend system it supports."
+    echo "Please install an appropriate suspend script manually."
+fi
 
 if PID=`pidof fcron`; then
   KILL="kill -TERM $PID"

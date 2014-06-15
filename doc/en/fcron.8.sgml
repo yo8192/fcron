@@ -260,6 +260,12 @@ also toggles on/off the printing on debug info on syslog.</para>
 update (this signal is used by &fcrontab;(5))</para>
 		</listitem>
 	    </varlistentry>
+	    <varlistentry>
+		<term><constant>SIGCONT</constant></term>
+		<listitem>
+		    <para>Notify &fcron; that the system was just resumed from suspend (to memory or disk). This will trigger &fcron; to read the &suspendfile; and update the task schedules accordingly.</para>
+		</listitem>
+	    </varlistentry>
 	</variablelist>
     </refsect1>
 
@@ -300,6 +306,12 @@ name per line, special name "all" acts for everyone)</para>
 		<listitem>
 		    <para><productname>PAM</productname> configuration file for
 &fcron;. Take a look at &pam;(8) for more details.</para>
+		</listitem>
+	    </varlistentry>
+	    <varlistentry>
+		<term><filename>&suspendfile;</filename></term>
+		<listitem>
+		    <para>Location of &fcron; suspend file. This should be used to let &fcron; know how long the system was suspended (to memory or disk), so as task schedules can be updated accordingly. The file must be owned by &rootname;:&rootgroup;, and not writable by others. When the system resumes, write the number of seconds (as a string) the system was suspended into this file, and then send a <constant>SIGCONT</constant> signal to make fcron process (and then delete) that file.</para>
 		</listitem>
 	    </varlistentry>
 	</variablelist>

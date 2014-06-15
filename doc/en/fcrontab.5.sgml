@@ -82,9 +82,10 @@ you should use the option &optmailto; directly.
 
 	<refsect2 id="uptent">
 	    <title>Entries based on elapsed system up time</title>
-	    <para>The entries of commands which have to be run once every m
+	    <para>Jobs are scheduled to run once every m
 minutes of &fcron;'s execution (which is normally the same as m minutes of
-system's execution) are of the form</para>
+system's execution). The time a system is suspended (to memory or disk) is considered
+as down time. To configure such a job, use configuration lines of the form:</para>
 	    <programlisting>@options frequency command</programlisting>
 	    <para>where frequency is a time value of the form
 value*multiplier+value*multiplier+...+value-in-minutes as "12h02" or "3w2d5h1".
@@ -471,7 +472,7 @@ linkend="uptent">lines based on elapsed system up time</link> is recommended ins
 	    <programlisting># run check_laptop_logs.sh after every hour of system up time:
 @ 60 check_laptop_logs.sh
 # run check_web_server.sh and check_file_server.sh every night between midnight
-# and 3am, one by after the other:
+# and 3am, one at a time:
 %nightly,serial * 0-3 check_web_server.sh
 %nightly,serial * 0-3 check_file_server.sh
 # Run compress_home_made_app_log_files.sh once a month, only at night
@@ -515,7 +516,7 @@ abbreviation. The options are (default value in parentheses):</para>
 		    <term>b</term>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
-			<para>Run an &-line at &fcron;'s startup if it should
+			<para>Run an &-line at &fcron;'s startup (or system's resume after suspend/hibernation) if it should
 have run during system down time.</para>
 		    </listitem>
 		</varlistentry>
@@ -709,7 +710,7 @@ reduce disk access on a laptop.</para>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
 			<para>Should &fcron; mail user to report the
-non-execution of a %-job or an &-job? (because of system down state for both or
+non-execution of a %-job or an &-job? (because of system down state (including suspend/hibernation) for both or
 a too high system load average for the latter)</para>
 			<para>&seealso; options &optlavg;, &optstrict;.</para>
 		    </listitem>
