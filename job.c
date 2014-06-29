@@ -738,16 +738,16 @@ run_job(struct exe_t *exeent)
         /* read the pid of the job */
         ret = read_pipe(pipe_pid_fd[0], &(exeent->e_job_pid), sizeof(pid_t));
         if (ret != OK) {
-            if (ret == ERR)
+            if (ret == ERR) {
                 error("Could not read job pid because of closed pipe:"
                       " setting it to -1");
+            }
             else {
                 errno = ret;
                 error_e("Could not read job pid : setting it to -1");
             }
 
             exeent->e_job_pid = -1;
-            break;
         }
         xclose_check(&(pipe_pid_fd[0]), "parent's pipe_pid_fd[0]");
 
