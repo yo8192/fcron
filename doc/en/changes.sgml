@@ -20,6 +20,12 @@ A copy of the license is included in gfdl.sgml.
 	    <listitem>
 	       <para>Don't fully disable a @-line when something goes wrong (e.g. fcron didn't shut down cleanly).  The idea was to prevent infinite loops, but this was overkill.  Instead set its next execution to now+frequency.`</para>
 	    </listitem>
+	    <listitem>
+	       <para>Cosmetic changes in the log lines (quote the job shell commands) and fcrondyn (use the pipe char "|" as a column separator).</para>
+	    </listitem>
+	    <listitem>
+	       <para>Fixed file descriptor leak when executing jobs in case of NSS failures (thanks Pavel Stano).</para>
+	    </listitem>
       </itemizedlist>
 
       <itemizedlist>
