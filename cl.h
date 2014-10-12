@@ -41,6 +41,7 @@ typedef struct cl_t {
     struct cf_t *cl_file;       /* the file in which the line is           */
     char *cl_shell;             /* shell command                           */
     char *cl_runas;             /* determine permissions of the job        */
+    char *cl_mailfrom;          /* use this as email From header           */
     char *cl_mailto;            /* mail output to cl_mailto                */
     char *cl_tz;                /* time zone of the line                   */
     unsigned long cl_id;        /* line's unique id number                 */

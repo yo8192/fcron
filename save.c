@@ -273,6 +273,10 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
             Save_lint(fd, S_JITTER_T, line->cl_jitter, write_buf,
                       &write_buf_used);
         }
+        if (line->cl_mailfrom != NULL && line->cl_mailfrom[0] != '\0') {
+            Save_str(fd, S_MAILFROM_T, line->cl_mailfrom, write_buf,
+                     &write_buf_used);
+        }
 
         if (is_freq(line->cl_option)) {
             /* save the frequency to run the line */

@@ -24,10 +24,6 @@ A copy of the license is included in gfdl.sgml.
 	 <title>High priority</title>
 	 <itemizedlist>
 	    <listitem>
-	       <para>add From: to emails. Similarly to other crons, use: "From: %s (fcron Daemon)" with %s
-               being either the user fcron runs at (typically 'fcron') or the value of MAILFROM.</para>
-	    </listitem>
-	    <listitem>
 	       <para>Option to compile and install from git sources without generating the doc</para>
 	    </listitem>
 	    <listitem>
