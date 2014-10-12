@@ -116,6 +116,7 @@ delete_file(cf_t * file)
     while ((line = cur_line) != NULL) {
         cur_line = line->cl_next;
         Free_safe(line->cl_shell);
+        Free_safe(line->cl_mailfrom);
         Free_safe(line->cl_mailto);
         Free_safe(line->cl_runas);
         Free_safe(line);

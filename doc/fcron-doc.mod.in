@@ -94,6 +94,7 @@
 <!ENTITY optlavgonce '<link linkend="fcrontab.5.lavgonce"><varname>lavgonce</varname></link>'>
 <!ENTITY optlavgor '<link linkend="fcrontab.5.lavgor"><varname>lavgor</varname></link>'>
 <!ENTITY optmail '<link linkend="fcrontab.5.mail"><varname>mail</varname></link>'>
+<!ENTITY optmailfrom '<link linkend="fcrontab.5.mailfrom"><varname>mailfrom</varname></link>'>
 <!ENTITY optmailto '<link linkend="fcrontab.5.mailto"><varname>mailto</varname></link>'>
 <!ENTITY optnice '<link linkend="fcrontab.5.nice"><varname>nice</varname></link>'>
 <!ENTITY optnolog '<link linkend="fcrontab.5.nolog"><varname>nolog</varname></link>'>

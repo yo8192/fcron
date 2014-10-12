@@ -283,6 +283,7 @@ read_file(char *filename, int fd)
         error_e("could not fflush() file_name");
 
     Free_safe(default_line.cl_runas);
+    Free_safe(default_line.cl_mailfrom);
     Free_safe(default_line.cl_mailto);
     Free_safe(default_line.cl_tz);
 
@@ -345,10 +346,15 @@ read_env(char *ptr, cf_t * cf)
         return;
     }
 
-    /* the MAILTO assignment is, in fact, an fcron option :
+    /* the MAILFROM/MAILTO assignment is, in fact, an fcron option :
      *  we don't store it in the same way. */
     /* please note that we check if the mailto is valid in conf.c */
-    if (strcmp(name, "MAILTO") == 0) {
+    if (strcmp(name, "MAILFROM") == 0) {
+        Set(default_line.cl_mailfrom, val);
+    }
+    else if (strcmp(name, "MAILTO") == 0) {
+        /* cl_mailto must not be NULL (as expected in
+         * conf.c:add_line_to_file()), so we check if the length is >= 0 */
         if (strcmp(val, "\0") == 0) {
             clear_mail(default_line.cl_option);
             clear_mailzerolength(default_line.cl_option);
@@ -866,6 +872,27 @@ read_opt(char *ptr, cl_t * cl)
             }
             if (debug_opt)
                 fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+        }
+
+        else if (strcmp(opt_name, "mailfrom") == 0) {
+            int len = -1;
+
+            if (!in_brackets) {
+                Handle_err;
+            }
+
+            /* Also please note that we check if the mailfrom is valid in conf.c */
+            len = assign_option_string(&(cl->cl_mailfrom), ptr);
+            if (len < 0) {
+                Handle_err;
+            }
+            else {
+                ptr += len;
+            }
+
+            if (debug_opt)
+                fprintf(stderr, "  Opt : \"%s\" \"%s\"\n", opt_name,
+                        cl->cl_mailfrom);
         }
 
         else if (strcmp(opt_name, "mailto") == 0) {

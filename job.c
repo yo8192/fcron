@@ -286,42 +286,49 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     int mailfd = temp_file(NULL);
     FILE *mailf = fdopen(mailfd, "r+");
     char hostname[USER_NAME_LEN];
-    /* is this a complete mail address ? (ie. with a "@", not only a username) */
-    char add_hostname = 0;
+    char *mailfrom = line->cl_runas;    /* default value if not explicitely defined for that cl */
+    /* hostname to add to email addresses (depending on if they have a '@') */
+    char *hostname_from = "";
+    char *hostname_to = "";
     int i = 0;
 
     if (mailf == NULL)
         die_e("Could not fdopen() mailfd");
 
+    if (line->cl_mailfrom != NULL) {
+        mailfrom = line->cl_mailfrom;
+    }
+
 #ifdef HAVE_GETHOSTNAME
-    if (gethostname(hostname, sizeof(hostname)) != 0) {
+    /* first letter will be '@' if hostname is defined */
+    if (gethostname((hostname + 1), sizeof(hostname) - 1) != 0) {
         error_e("Could not get hostname");
         hostname[0] = '\0';
     }
     else {
         /* it is unspecified whether a truncated hostname is NUL-terminated */
-        hostname[USER_NAME_LEN - 1] = '\0';
+        hostname[0] = '@';
+        hostname[sizeof(hostname) - 1] = '\0';
 
-        /* check if mailto is a complete mail address */
-        add_hostname = (strchr(line->cl_mailto, '@') == NULL) ? 1 : 0;
+        /* check if mailfrom/mailto are complete email addresses */
+        hostname_from = (strchr(mailfrom, '@') == NULL) ? hostname : "";
+        hostname_to = (strchr(line->cl_mailto, '@') == NULL) ? hostname : "";
     }
 #else                           /* HAVE_GETHOSTNAME */
     hostname[0] = '\0';
 #endif                          /* HAVE_GETHOSTNAME */
 
     /* write mail header */
-    if (add_hostname)
-        fprintf(mailf, "To: %s@%s\n", line->cl_mailto, hostname);
-    else
-        fprintf(mailf, "To: %s\n", line->cl_mailto);
+    fprintf(mailf, "From: %s%s (fcron)\n", mailfrom, hostname_from);
+    fprintf(mailf, "To: %s%s\n", line->cl_mailto, hostname_to);
 
     if (subject)
-        fprintf(mailf, "Subject: fcron <%s@%s> %s: %s\n",
-                line->cl_file->cf_user, (hostname[0] != '\0') ? hostname : "?",
+        fprintf(mailf, "Subject: fcron <%s%s> %s: %s\n",
+                line->cl_file->cf_user, (hostname[0] != '\0') ? hostname : "@?",
                 subject, line->cl_shell);
     else
-        fprintf(mailf, "Subject: fcron <%s@%s> %s\n", line->cl_file->cf_user,
-                (hostname[0] != '\0') ? hostname : "?", line->cl_shell);
+        fprintf(mailf, "Subject: fcron <%s%s> %s\n", line->cl_file->cf_user,
+                (hostname[0] != '\0') ? hostname : "@?", line->cl_shell);
 
     if (content_type == NULL) {
         fprintf(mailf, "Content-Type: text/plain; charset=%s\n",
