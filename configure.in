@@ -711,7 +711,7 @@ AC_ARG_WITH(debug,
     debug="0"
     ;;
   yes)
-    cflags="-DDEBUG -g -Wall -DFOREGROUND -DMALLOC_CHECK_=2 -Wpointer-arith -Wstrict-prototypes"
+    cflags="-DDEBUG -DCHECKRUNJOB -g -Wall -DFOREGROUND -DMALLOC_CHECK_=2 -Wpointer-arith -Wstrict-prototypes"
     bootinstall=0
     debug="1"
     ;;

@@ -1483,7 +1483,7 @@ read_freq(char *ptr, cf_t * cf)
         fprintf(stderr,
                 "%s:%d: Error while reading frequency %s: skipping line.\n",
                 file_name, line,
-                (cl->cl_timefreq < 10) ? "(lower than 10s) " : "");
+                (cl->cl_timefreq < 1) ? "(lower than 1s) " : "");
         goto exiterr;
     }
 
