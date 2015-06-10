@@ -957,7 +957,7 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
         }
     }
     else {                      /* is_td(cl->cl_option) */
-        if (cl->cl_timefreq < 10) {
+        if (cl->cl_timefreq < 1) {
             error("Invalid timefreq %ld for job '%s': setting to 1 day",
                   cl->cl_timefreq, cl->cl_shell);
             cl->cl_timefreq = 3600 * 24;

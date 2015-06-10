@@ -397,41 +397,48 @@ read_write_pipe(int fd, void *buf, size_t size, int action)
 
     while (size_processed < size) {
         errno = 0;
-        if (action == PIPE_READ)
+        if (action == PIPE_READ) {
             ret = read(fd, (char *)buf + size_processed, size);
-        else if (action == PIPE_WRITE)
+        }
+        else if (action == PIPE_WRITE) {
             ret = write(fd, (char *)buf + size_processed, size);
+        }
         else {
             error("Invalid action parameter for function read_write_pipe():"
                   " %d", action);
             return ERR;
         }
-        if (ret > 0)
+        if (ret > 0) {
             /* some data read correctly -- we still may need
              * one or several calls of read() to read the rest */
             size_processed += ret;
-        else if (ret < 0 && errno == EINTR)
+        }
+        else if (ret < 0 && errno == EINTR) {
             /* interrupted by a signal : let's try again */
             continue;
-        else {
-            /* error */
-
-            if (ret == 0) {
-                /* is it really an error when writing ? should we continue
-                 * in this case ? */
-                if (num_retry < 3) {
-                    num_retry++;
-                    error_e
-                        ("read_write_pipe(): read/write returned 0: retrying... (size: %d, size_processed: %d, num_retry: %d)",
-                         size, size_processed, num_retry);
-                    sleep(1);
-                    continue;
-                }
-                else
-                    return ERR;
+        }
+        else if (ret == 0) {
+            /* Notes:
+             * - is it really an error when writing ? should we simply 'continue'
+             *   in this case ?
+             * - read() on a pipe returning 0 means the pipe was closed at the other end.
+             *   We shouldn't need to retry multiple times (but it should never happen) */
+            if (num_retry < 3) {
+                num_retry++;
+                error_e
+                    ("read_write_pipe(): read/write returned 0: retrying... "
+                     "(size: %d, size_processed: %d, num_retry: %d)",
+                     size, size_processed, num_retry);
+                sleep(1);
+                continue;
             }
-            else
-                return errno;
+            else {
+                return ERR;
+            }
+        }
+        else {
+            /* in particular this includes write() returning -1 with errno=EPIPE */
+            return errno;
         }
     }
 
@@ -698,17 +705,6 @@ run_job(struct exe_t *exeent)
                     xfclose_check(&pipef, "child's pipef");
                 }
 
-                /* FIXME : FOLLOWING HACK USELESS ? */
-                /* FIXME : HACK
-                 * this is a try to fix the bug on sorcerer linux (no jobs
-                 * exectued at all, and
-                 * "Could not read job pid : setting it to -1: No child processes"
-                 * error messages) */
-                /* use a select() or similar to know when parent has read
-                 * the pid (with a timeout !) */
-                /* // */
-                sleep(2);
-                /* // */
 #ifdef CHECKRUNJOB
                 debug("run_job(): child: closing pipe with parent");
 #endif                          /* CHECKRUNJOB */
@@ -739,7 +735,7 @@ run_job(struct exe_t *exeent)
         exeent->e_ctrl_pid = pid;
 
 #ifdef CHECKRUNJOB
-        debug("run_job(): about to read grand-child pid...");
+        debug("run_job(): parent: about to read grand-child pid...");
 #endif                          /* CHECKRUNJOB */
 
         /* read the pid of the job */
@@ -760,7 +756,7 @@ run_job(struct exe_t *exeent)
 
 #ifdef CHECKRUNJOB
         debug
-            ("run_job(): finished reading pid of the job -- end of run_job().");
+            ("run_job(): parent: finished reading pid of the job -- end of run_job().");
 #endif                          /* CHECKRUNJOB */
 
     }

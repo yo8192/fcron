@@ -15,6 +15,9 @@ A copy of the license is included in gfdl.sgml.
       <itemizedlist>
 	 <title>From version 3.2.0 to 3.2.1</title>
            <listitem>
+             <para>@-line can now be run every second (minimum every 10s previously)</para>
+           </listitem>
+           <listitem>
              <para>add From: header to emails. Similarly to other crons, use: "From: %s (fcron)" with %s
              being either the user the job is run as or the value of MAILFROM.</para>
            </listitem>
