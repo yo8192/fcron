@@ -427,3 +427,51 @@ my_setenv_overwrite(const char *name, const char *value)
 #endif
 
 }
+
+time_t
+tmax(time_t x, time_t y)
+/* return the larger value (maximum) of x and y */
+{
+    if (x > y) {
+        return x;
+    }
+    else {
+        return y;
+    }
+}
+
+time_t
+tmin(time_t x, time_t y)
+/* return the smaller value (minimum) of x and y */
+{
+    if (x < y) {
+        return x;
+    }
+    else {
+        return y;
+    }
+}
+
+int
+imax(int x, int y)
+/* return the larger value (maximum) of x and y */
+{
+    if (x > y) {
+        return x;
+    }
+    else {
+        return y;
+    }
+}
+
+int
+imin(int x, int y)
+/* return the smaller value (minimum) of x and y */
+{
+    if (x < y) {
+        return x;
+    }
+    else {
+        return y;
+    }
+}
