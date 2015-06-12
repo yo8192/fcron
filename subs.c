@@ -24,6 +24,7 @@
 
 #include "global.h"
 #include "subs.h"
+#include <sys/time.h>
 
 uid_t
 get_user_uid_safe(char *username)
@@ -474,4 +475,21 @@ imin(int x, int y)
     else {
         return y;
     }
+}
+
+time_t
+my_time(void)
+/* return the current time as number of seconds since the Epoch. */
+{
+    /* Use gettimeofday() if available as this is more accurate
+     * than time() on recent Linux systems.
+     * (I suspect time() sacrifies accuracy for speed in the same way as
+     * clock_gettime()'s CLOCK_REALTIME_COARSE, and only updates on systems ticks) */
+#ifdef HAVE_GETTIMEOFDAY
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec;
+#else                           /* HAVE_GETTIMEOFDAY */
+    return time(NULL);
+#endif                          /* HAVE_GETTIMEOFDAY */
 }
