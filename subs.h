@@ -44,4 +44,10 @@ extern int get_word(char **str);
 extern void my_unsetenv(const char *name);
 extern void my_setenv_overwrite(const char *name, const char *value);
 
+extern time_t tmax(time_t x, time_t y);
+extern time_t tmin(time_t x, time_t y);
+extern int imax(int x, int y);
+extern int imin(int x, int y);
+
+extern time_t my_time(void);
 #endif                          /* __SUBS_H__ */
