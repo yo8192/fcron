@@ -70,7 +70,7 @@ tar -xzf fcron-X.Y.Z.src.tar.gz</command></screen>
 &fcron; will be installed: you can use the <command>configure </command>'s
 option <option>--prefix</option> to do that. For instance:
 			    </para>
-<screen><prompt>bash$ </prompt><command>./configure --prefix=/usr--sysconfdir=/etc</command></screen>
+<screen><prompt>bash$ </prompt><command>./configure --prefix=/usr --sysconfdir=/etc</command></screen>
 <para>(default is <option>prefix=/usr/local</option> and <option>sysconfdir=${prefix}/etc</option>).</para>
 			</listitem>
 			<listitem>
