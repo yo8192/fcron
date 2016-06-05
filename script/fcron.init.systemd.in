@@ -8,7 +8,7 @@ Before=shutdown.target
 [Service]
 Type=forking
 PIDFile=@@PIDFILE@
-ExecStart=@@DESTSBIN@/fcron
+ExecStart=@@DESTSBIN@/fcron -b
 ExecReload=/bin/kill -USR1 $MAINPID
 Restart=always
 KillMode=process
