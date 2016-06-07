@@ -603,7 +603,7 @@ useful when used in conjunction with option &optvolatile;.</para>
 			<para>Set the values of the 1, 5 and 15-minute (in this
 order) system load average values below which the job should run. The values
 have a maximum of 1 decimal (i.e. "2.3"): if there are more than 1 decimal, 
-the value will be round off. Set a value to 0 to ignore the corresponding
+the value will be rounded off. Set a value to 0 to ignore the corresponding
 load average (or all of the values to run the job regardless of the load
 average).</para>
 			<para>&seealso; options &optlavg1;, &optlavg5;,
