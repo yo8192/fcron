@@ -248,7 +248,7 @@ install-boot: install
 install-restart: install
 ifeq ($(DEBUG), 1)
 	kill -TERM `pidof fcron` || exit 0
-	/etc/init.d/fcron restart
+	service fcron restart
 endif
 
 uninstall:
