@@ -27,10 +27,16 @@ A copy of the license is included in gfdl.sgml.
 	       <para>Option to compile and install from git sources without generating the doc</para>
 	    </listitem>
 	    <listitem>
+	       <para>On Linux systems, replace suspendfile by clock_gettime() calls: CLOCK_BOOTTIME - CLOCK_MONOTONIC will give us the total suspend duration.  Should be simpler, more elegant and accurate.</para>
+	    </listitem>
+	    <listitem>
+	       <para>On Linux systems, use timerfd_create()/timerfd_settime(TFD_TIMER_ABSTIME|TFD_TIMER_CANCEL_ON_SET) to get notified of time jumps.  On other systems, keep SIGCONT with a hook in systemd/pm-utils.</para>
+	    </listitem>
+	    <listitem>
 	       <para>add systemd suspend hooks for fcron (contribution welcome)</para>
 	    </listitem>
 	    <listitem>
-	       <para>add a 'runatresume' option, to run when the computer resumes? (similar to runatreboot)</para>
+	       <para>add a 'runatresume' (or 'runonclockchanges'?) option, to run when the computer resumes? (similar to runatreboot)</para>
 	    </listitem>
 	    <listitem>
 	       <para>use ask_user() in boot-install</para>

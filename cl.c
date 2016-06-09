@@ -51,7 +51,9 @@ dups_cl(cl_t * orig)
     debug("%s: Set cl->cl_runas=%s", __func__,
           (cl->cl_runas == NULL) ? "null" : cl->cl_runas);
 
+    cl->cl_mailfrom = NULL;
     cl->cl_mailto = NULL;
+    Set(cl->cl_mailfrom, orig->cl_mailfrom);
     Set(cl->cl_mailto, orig->cl_mailto);
 
     cl->cl_tz = NULL;
@@ -67,6 +69,7 @@ free_line(cl_t * cl)
     if (cl != NULL) {
         Free_safe(cl->cl_shell);
         Free_safe(cl->cl_runas);
+        Free_safe(cl->cl_mailfrom);
         Free_safe(cl->cl_mailto);
         Free_safe(cl->cl_tz);
         Free_safe(cl);

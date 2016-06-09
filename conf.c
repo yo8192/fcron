@@ -652,6 +652,11 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
             Read_strn(cl->cl_runas, size, "Error while reading runas field");
             break;
 
+        case S_MAILFROM_T:
+            Read_strn(cl->cl_mailfrom, size,
+                      "Error while reading mailfrom field");
+            break;
+
         case S_MAILTO_T:
             Read_strn(cl->cl_mailto, size, "Error while reading mailto field");
             break;
@@ -781,6 +786,7 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
         /* line is not yet in the line list of the file : free it */
         Free_safe(cl->cl_shell);
         Free_safe(cl->cl_runas);
+        Free_safe(cl->cl_mailfrom);
         Free_safe(cl->cl_mailto);
         Free_safe(cl);
     }
@@ -830,18 +836,26 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
      * struct cf_t may be required */
     cl->cl_file = cf;
 
-    /* check if the mailto field is valid */
+    /* check if the mailfrom and mailto fields are safe */
+    if (cl->cl_mailfrom && (*(cl->cl_mailfrom) == '-' ||
+                            strcspn(cl->cl_mailfrom,
+                                    " \t\n;|") != strlen(cl->cl_mailfrom))) {
+        error
+            ("mailfrom field \'%s\' is not safe : unsetting to use default value.",
+             cl->cl_mailfrom);
+        Free_safe(cl->cl_mailfrom);
+    }
     if (cl->cl_mailto && (*(cl->cl_mailto) == '-' ||
                           strcspn(cl->cl_mailto,
-                                  " \t\n") != strlen(cl->cl_mailto))) {
-        error("mailto field \'%s\' is not valid : set to owner %s.",
+                                  " \t\n;|") != strlen(cl->cl_mailto))) {
+        error("mailto field \'%s\' is not safe : setting to owner %s.",
               cl->cl_mailto, cl->cl_file->cf_user);
         Set(cl->cl_mailto, cl->cl_file->cf_user);
     }
 
     /* make sure the timefreq is valid on @-lines or we could end up with
      * infinite loops */
-    if (!is_td(cl->cl_option) && cl->cl_timefreq < 10) {
+    if (!is_td(cl->cl_option) && cl->cl_timefreq < 1) {
         error("Invalid timefreq %ld for job '%s': setting to 1 day",
               cl->cl_timefreq, cl->cl_shell);
         cl->cl_timefreq = 3600 * 24;

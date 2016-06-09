@@ -24,6 +24,7 @@
 
 #include "global.h"
 #include "subs.h"
+#include <sys/time.h>
 
 uid_t
 get_user_uid_safe(char *username)
@@ -426,4 +427,69 @@ my_setenv_overwrite(const char *name, const char *value)
 
 #endif
 
+}
+
+time_t
+tmax(time_t x, time_t y)
+/* return the larger value (maximum) of x and y */
+{
+    if (x > y) {
+        return x;
+    }
+    else {
+        return y;
+    }
+}
+
+time_t
+tmin(time_t x, time_t y)
+/* return the smaller value (minimum) of x and y */
+{
+    if (x < y) {
+        return x;
+    }
+    else {
+        return y;
+    }
+}
+
+int
+imax(int x, int y)
+/* return the larger value (maximum) of x and y */
+{
+    if (x > y) {
+        return x;
+    }
+    else {
+        return y;
+    }
+}
+
+int
+imin(int x, int y)
+/* return the smaller value (minimum) of x and y */
+{
+    if (x < y) {
+        return x;
+    }
+    else {
+        return y;
+    }
+}
+
+time_t
+my_time(void)
+/* return the current time as number of seconds since the Epoch. */
+{
+    /* Use gettimeofday() if available as this is more accurate
+     * than time() on recent Linux systems.
+     * (I suspect time() sacrifies accuracy for speed in the same way as
+     * clock_gettime()'s CLOCK_REALTIME_COARSE, and only updates on systems ticks) */
+#ifdef HAVE_GETTIMEOFDAY
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec;
+#else                           /* HAVE_GETTIMEOFDAY */
+    return time(NULL);
+#endif                          /* HAVE_GETTIMEOFDAY */
 }

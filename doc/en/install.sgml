@@ -70,7 +70,7 @@ tar -xzf fcron-X.Y.Z.src.tar.gz</command></screen>
 &fcron; will be installed: you can use the <command>configure </command>'s
 option <option>--prefix</option> to do that. For instance:
 			    </para>
-<screen><prompt>bash$ </prompt><command>./configure --prefix=/usr--sysconfdir=/etc</command></screen>
+<screen><prompt>bash$ </prompt><command>./configure --prefix=/usr --sysconfdir=/etc</command></screen>
 <para>(default is <option>prefix=/usr/local</option> and <option>sysconfdir=${prefix}/etc</option>).</para>
 			</listitem>
 			<listitem>
@@ -159,6 +159,13 @@ is on the top of the file and clearly delimited).</para>
 	<itemizedlist>
 	    <listitem>
 		<para>
+                &fcron; requires a <computeroutput>fcron</computeroutput> user and a
+                <computeroutput>fcron</computeroutput> group.  If they don't exist already,
+                <command>make install</command> will propose to create them for you.
+		</para>
+	    </listitem>
+	    <listitem>
+		<para>
 			This is a <productname>POSIX</productname> conforming
 software. You must have a <productname>POSIX</productname> compiler
 (<application>gcc</application> for example) in order to compile it.
@@ -168,7 +175,7 @@ software. You must have a <productname>POSIX</productname> compiler
 		<para>
 			This software has been written for
 <productname>GNU/Linux</productname> systems. If you want to port it on an other
-<productname>Unix</productname> platform (thank you if you do it), try to modify
+<productname>Unix</productname> platform (thank you if you do it), please try to modify
 - if possible - only the <application>configure</application> script. Please
 send me any modifications at &email; in order to include it in future releases.
 		    </para>

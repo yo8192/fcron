@@ -72,11 +72,11 @@ overridden by settings in the &fcrontabf;, but <envar>USER</envar> may not.
 Every other environment assignments defined in the user &fcrontabf; are then
 made, and the command is executed.</para>
             <para>By default, fcron will send emails using the email "Content-Type:" header of "text/plain" with the "charset=" parameter set to the charmap / codeset of the locale in which <link linkend="fcron.8">&fcron;(8)</link> is started up - i.e. either the default system locale, if no LC_* environment variables are set, or the locale specified by the LC_* environment variables (see locale(7)). You can use different character encodings for emailed fcron job output by setting the CONTENT_TYPE and CONTENT_TRANSFER_ENCODING variables in fcrontabs, to the correct values of the mail headers of those names.</para>
-	    <para>Plus, the special variable <varname>MAILTO</varname> allows
-you to tell &fcron; to whom it has to mail the command's output. Note that
-<varname>MAILTO</varname> is in fact equivalent to a global declaration of the
-option &optmailto; (see below). It is only used for backward compatibility, so
-you should use the option &optmailto; directly.
+	    <para>Additionally, the special variables <varname>MAILFROM</varname> and
+<varname>MAILTO</varname> allow you to tell &fcron; from/to whom it should email
+the command's output. Note that these are in fact equivalent to global declarations of the
+options &optmailfrom; and &optmailto; (see below). They are used for backward compatibility,
+and it is recommended that you use the options &optmailfrom; and &optmailto; directly instead.
 </para>
 	</refsect2>
 
@@ -604,7 +604,7 @@ useful when used in conjunction with option &optvolatile;.</para>
 			<para>Set the values of the 1, 5 and 15-minute (in this
 order) system load average values below which the job should run. The values
 have a maximum of 1 decimal (i.e. "2.3"): if there are more than 1 decimal, 
-the value will be round off. Set a value to 0 to ignore the corresponding
+the value will be rounded off. Set a value to 0 to ignore the corresponding
 load average (or all of the values to run the job regardless of the load
 average).</para>
 			<para>&seealso; options &optlavg1;, &optlavg5;,
@@ -667,6 +667,20 @@ system load average values.</para>
 		    </listitem>
 		</varlistentry>
 
+		<varlistentry id="fcrontab.5.mailfrom">
+		    <term>mailfrom</term>
+		    <listitem>
+			<para><emphasis><type>email-address</type></emphasis>(<constant>user job is run as</constant>)</para>
+			<para>Use this as the 'From:' address when mailing job outputs.
+                        It can be either a single user-name or a fully qualified email address.
+                        In the former case, &fcron; will add the hostname automatically.
+                        Setting &optmailfrom; to an empty value is equivalent to
+resetting it to the default value of the name of the user the job is run as.</para>
+			<para>&seealso; options &optmail;, &optforcemail;,
+&opterroronlymail;, &optnolog;, &optmailto;.</para>
+		    </listitem>
+		</varlistentry>
+
 		<varlistentry id="fcrontab.5.mailto">
 		    <term>mailto</term>
 		    <listitem>
@@ -674,10 +688,11 @@ system load average values.</para>
 of file's owner</constant>)</para>
 			<para>Mail output (if needed) to
 "<replaceable>email-address</replaceable>". It can be either a single user-name
-or a fully qualified email address. A &optmailto; declared and empty (string
+or a fully qualified email address. In the former case, &fcron; will add the hostname automatically.
+A &optmailto; declared and empty (string
 "") is equivalent to "<token>mail(false)</token>".</para>
 			<para>&seealso; options &optmail;, &optforcemail;,
-&opterroronlymail;, &optnolog;.</para>
+&opterroronlymail;, &optnolog;, &optmailfrom;.</para>
 		    </listitem>
 		</varlistentry>
 

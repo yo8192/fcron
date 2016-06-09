@@ -286,42 +286,49 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     int mailfd = temp_file(NULL);
     FILE *mailf = fdopen(mailfd, "r+");
     char hostname[USER_NAME_LEN];
-    /* is this a complete mail address ? (ie. with a "@", not only a username) */
-    char add_hostname = 0;
+    char *mailfrom = line->cl_runas;    /* default value if not explicitely defined for that cl */
+    /* hostname to add to email addresses (depending on if they have a '@') */
+    char *hostname_from = "";
+    char *hostname_to = "";
     int i = 0;
 
     if (mailf == NULL)
         die_e("Could not fdopen() mailfd");
 
+    if (line->cl_mailfrom != NULL) {
+        mailfrom = line->cl_mailfrom;
+    }
+
 #ifdef HAVE_GETHOSTNAME
-    if (gethostname(hostname, sizeof(hostname)) != 0) {
+    /* first letter will be '@' if hostname is defined */
+    if (gethostname((hostname + 1), sizeof(hostname) - 1) != 0) {
         error_e("Could not get hostname");
         hostname[0] = '\0';
     }
     else {
         /* it is unspecified whether a truncated hostname is NUL-terminated */
-        hostname[USER_NAME_LEN - 1] = '\0';
+        hostname[0] = '@';
+        hostname[sizeof(hostname) - 1] = '\0';
 
-        /* check if mailto is a complete mail address */
-        add_hostname = (strchr(line->cl_mailto, '@') == NULL) ? 1 : 0;
+        /* check if mailfrom/mailto are complete email addresses */
+        hostname_from = (strchr(mailfrom, '@') == NULL) ? hostname : "";
+        hostname_to = (strchr(line->cl_mailto, '@') == NULL) ? hostname : "";
     }
 #else                           /* HAVE_GETHOSTNAME */
     hostname[0] = '\0';
 #endif                          /* HAVE_GETHOSTNAME */
 
     /* write mail header */
-    if (add_hostname)
-        fprintf(mailf, "To: %s@%s\n", line->cl_mailto, hostname);
-    else
-        fprintf(mailf, "To: %s\n", line->cl_mailto);
+    fprintf(mailf, "From: %s%s (fcron)\n", mailfrom, hostname_from);
+    fprintf(mailf, "To: %s%s\n", line->cl_mailto, hostname_to);
 
     if (subject)
-        fprintf(mailf, "Subject: fcron <%s@%s> %s: %s\n",
-                line->cl_file->cf_user, (hostname[0] != '\0') ? hostname : "?",
+        fprintf(mailf, "Subject: fcron <%s%s> %s: %s\n",
+                line->cl_file->cf_user, (hostname[0] != '\0') ? hostname : "@?",
                 subject, line->cl_shell);
     else
-        fprintf(mailf, "Subject: fcron <%s@%s> %s\n", line->cl_file->cf_user,
-                (hostname[0] != '\0') ? hostname : "?", line->cl_shell);
+        fprintf(mailf, "Subject: fcron <%s%s> %s\n", line->cl_file->cf_user,
+                (hostname[0] != '\0') ? hostname : "@?", line->cl_shell);
 
     if (content_type == NULL) {
         fprintf(mailf, "Content-Type: text/plain; charset=%s\n",
@@ -390,41 +397,48 @@ read_write_pipe(int fd, void *buf, size_t size, int action)
 
     while (size_processed < size) {
         errno = 0;
-        if (action == PIPE_READ)
+        if (action == PIPE_READ) {
             ret = read(fd, (char *)buf + size_processed, size);
-        else if (action == PIPE_WRITE)
+        }
+        else if (action == PIPE_WRITE) {
             ret = write(fd, (char *)buf + size_processed, size);
+        }
         else {
             error("Invalid action parameter for function read_write_pipe():"
                   " %d", action);
             return ERR;
         }
-        if (ret > 0)
+        if (ret > 0) {
             /* some data read correctly -- we still may need
              * one or several calls of read() to read the rest */
             size_processed += ret;
-        else if (ret < 0 && errno == EINTR)
+        }
+        else if (ret < 0 && errno == EINTR) {
             /* interrupted by a signal : let's try again */
             continue;
-        else {
-            /* error */
-
-            if (ret == 0) {
-                /* is it really an error when writing ? should we continue
-                 * in this case ? */
-                if (num_retry < 3) {
-                    num_retry++;
-                    error_e
-                        ("read_write_pipe(): read/write returned 0: retrying... (size: %d, size_processed: %d, num_retry: %d)",
-                         size, size_processed, num_retry);
-                    sleep(1);
-                    continue;
-                }
-                else
-                    return ERR;
+        }
+        else if (ret == 0) {
+            /* Notes:
+             * - is it really an error when writing ? should we simply 'continue'
+             *   in this case ?
+             * - read() on a pipe returning 0 means the pipe was closed at the other end.
+             *   We shouldn't need to retry multiple times (but it should never happen) */
+            if (num_retry < 3) {
+                num_retry++;
+                error_e
+                    ("read_write_pipe(): read/write returned 0: retrying... "
+                     "(size: %d, size_processed: %d, num_retry: %d)",
+                     size, size_processed, num_retry);
+                sleep(1);
+                continue;
             }
-            else
-                return errno;
+            else {
+                return ERR;
+            }
+        }
+        else {
+            /* in particular this includes write() returning -1 with errno=EPIPE */
+            return errno;
         }
     }
 
@@ -691,17 +705,6 @@ run_job(struct exe_t *exeent)
                     xfclose_check(&pipef, "child's pipef");
                 }
 
-                /* FIXME : FOLLOWING HACK USELESS ? */
-                /* FIXME : HACK
-                 * this is a try to fix the bug on sorcerer linux (no jobs
-                 * exectued at all, and
-                 * "Could not read job pid : setting it to -1: No child processes"
-                 * error messages) */
-                /* use a select() or similar to know when parent has read
-                 * the pid (with a timeout !) */
-                /* // */
-                sleep(2);
-                /* // */
 #ifdef CHECKRUNJOB
                 debug("run_job(): child: closing pipe with parent");
 #endif                          /* CHECKRUNJOB */
@@ -732,28 +735,28 @@ run_job(struct exe_t *exeent)
         exeent->e_ctrl_pid = pid;
 
 #ifdef CHECKRUNJOB
-        debug("run_job(): about to read grand-child pid...");
+        debug("run_job(): parent: about to read grand-child pid...");
 #endif                          /* CHECKRUNJOB */
 
         /* read the pid of the job */
         ret = read_pipe(pipe_pid_fd[0], &(exeent->e_job_pid), sizeof(pid_t));
         if (ret != OK) {
-            if (ret == ERR)
+            if (ret == ERR) {
                 error("Could not read job pid because of closed pipe:"
                       " setting it to -1");
+            }
             else {
                 errno = ret;
                 error_e("Could not read job pid : setting it to -1");
             }
 
             exeent->e_job_pid = -1;
-            break;
         }
         xclose_check(&(pipe_pid_fd[0]), "parent's pipe_pid_fd[0]");
 
 #ifdef CHECKRUNJOB
         debug
-            ("run_job(): finished reading pid of the job -- end of run_job().");
+            ("run_job(): parent: finished reading pid of the job -- end of run_job().");
 #endif                          /* CHECKRUNJOB */
 
     }

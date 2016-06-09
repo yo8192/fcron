@@ -10,7 +10,7 @@ AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.57)
 m4_include([m4/ax_lib_readline.m4])
 
-vers="3.2.0"
+vers="3.2.1"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -59,8 +59,6 @@ AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h crypt.h shadow.h libaudit.h)
 AC_CHECK_HEADERS(sys/resource.h)
 AC_CHECK_HEADERS(grp.h)
 
-AC_CHECK_SIZEOF(time_t)
-
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_PID_T
@@ -69,7 +67,11 @@ AC_HEADER_TIME
 AC_STRUCT_TM
 AC_TYPE_UID_T
 
+dnl Check exitence of types
+AC_CHECK_TYPE(ssize_t, int)
+
 dnl Define sizeof constants
+AC_CHECK_SIZEOF(time_t)
 AC_CHECK_SIZEOF(pid_t)
 AC_CHECK_SIZEOF(time_t)
 AC_CHECK_SIZEOF(short int)
@@ -114,6 +116,7 @@ AC_CHECK_FUNCS(setlinebuf)
 AC_CHECK_FUNCS(signal)
 AC_CHECK_FUNCS(sigset)
 
+AC_CHECK_FUNCS(gettimeofday, [gettimeofday=1], [gettimeofday=0])
 AC_CHECK_FUNCS(seteuid, [seteuid=1], [seteuid=0])
 AC_CHECK_FUNCS(setegid, [setegid=1], [setegid=0])
 AC_CHECK_FUNCS(setresuid, [setresuid=1], [setresuid=0])
@@ -475,7 +478,12 @@ WARNING :
 
 
 if test "$fcrondyn" = ""; then
-  fcrondyn=1
+  dnl As it stands gettimeofday() is required to have fcrondyn
+  if test "$gettimeofday" = 1; then
+    fcrondyn=1
+  else
+    fcrondyn=0
+  fi
 fi
 AC_MSG_CHECKING(if fcrondyn should be compiled)
 AC_ARG_WITH(fcrondyn,
@@ -486,18 +494,18 @@ AC_ARG_WITH(fcrondyn,
     AC_MSG_RESULT(no)
     ;;
   yes)
-    if test "$crypt" -eq 1; then
+    if test "$crypt" -eq 1 || test "$gettimeofday" -eq 1; then
       fcrondyn=1
       AC_MSG_RESULT(yes)
     else
-      AC_MSG_ERROR(Need a crypt() function.)
+      AC_MSG_ERROR(Need a crypt() and gettimeofday() function to enable fcrondyn.)
     fi
     ;;
   *)
     AC_MSG_ERROR(Must be set to either "yes" or "no".)
     ;;
   esac ],
-  if test "$fcrondyn" = "1" && test "$crypt" -eq 1; then
+  if test "$fcrondyn" = "1" && test "$crypt" -eq 1 && test "$gettimeofday" -eq 1; then
     AC_MSG_RESULT(yes)
   else
     fcrondyn=0
@@ -715,7 +723,7 @@ AC_ARG_WITH(debug,
     debug="0"
     ;;
   yes)
-    cflags="-DDEBUG -g -Wall -DFOREGROUND -DMALLOC_CHECK_=2 -Wpointer-arith -Wstrict-prototypes"
+    cflags="-DDEBUG -DCHECKRUNJOB -g -Wall -DFOREGROUND -DMALLOC_CHECK_=2 -Wpointer-arith -Wstrict-prototypes"
     bootinstall=0
     debug="1"
     ;;

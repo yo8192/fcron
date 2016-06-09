@@ -1475,7 +1475,7 @@ set_next_exe_startup(struct cl_t *cl, const int context,
         }
     }
     else {                      /* is_td(cl->cl_option) */
-        if (cl->cl_timefreq < 10) {
+        if (cl->cl_timefreq < 1) {
             error("Invalid timefreq %ld for job '%s': setting to 1 day",
                   cl->cl_timefreq, cl->cl_shell);
             cl->cl_timefreq = 3600 * 24;
@@ -1665,9 +1665,9 @@ mail_notrun(cl_t * line, char context, struct tm *since)
 time_t
 check_lavg(time_t lim)
     /* run a job based on system load average if one should be run
-     * and return the time to sleep */
+     * and return the next time fcron should wake */
 {
-    time_t tts = 0;
+    time_t nwt = now;
     lavg_t *l = NULL;
 
 #ifdef NOLOADAVG
@@ -1678,8 +1678,8 @@ check_lavg(time_t lim)
     }
 
 
-    tts = time_to_sleep(lim);
-    return tts;
+    nwt = next_wake_time(lim);
+    return nwt;
 #else
 
     int i = 0;
@@ -1714,10 +1714,10 @@ check_lavg(time_t lim)
         }
 
     /* we do this set here as the nextexe of lavg line may change before */
-    tts = time_to_sleep(lim);
+    nwt = next_wake_time(lim);
 
     if (lavg_list->num_entries == 0)
-        return tts;
+        return nwt;
 
     if ((i = getloadavg(l_avg, 3)) != 3)
         debug("got only %d lavg values", i);
@@ -1757,35 +1757,34 @@ check_lavg(time_t lim)
     }
 
 
-    if (lavg_list->num_entries == 0)
-        return tts;
-    else
-        return (LAVG_SLEEP < tts) ? LAVG_SLEEP : tts;
+    if (lavg_list->num_entries == 0) {
+        return nwt;
+    }
+    else {
+        return tmin(now + LAVG_SLEEP, nwt);
+    }
 
 #endif                          /* def NOLOADAVG */
 
 }
 
 time_t
-time_to_sleep(time_t lim)
-  /* return the time to sleep until next task have to be executed. */
+next_wake_time(time_t lim)
+  /* return the earliest between lim (e.g. when to save to disk)
+   * and the next time fcron should run a job */
 {
-    /* we set tts to a big value, unless some problems can occurs
-     * with files without any line */
-    time_t tts = lim;
-    time_t ti = time(NULL);
+    time_t nwt = lim;
 
     /* note : jobs in queue_base are sorted */
     if (queue_base != NULL) {
         if (queue_base->j_line->cl_nextexe < lim)
-            tts = queue_base->j_line->cl_nextexe;
+            nwt = queue_base->j_line->cl_nextexe;
     }
 
-    tts = tts - ti;
-    if (tts < 0)
-        tts = 0;
+    if (nwt < now)
+        nwt = now;
 
 /*      debug("Time to sleep: %lds", tts); */
 
-    return tts;
+    return nwt;
 }

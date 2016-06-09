@@ -13,12 +13,32 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
-	 <title>From version 3.1.3 to 3.2.0</title>
+	 <title>From version 3.2.0 to 3.2.1</title>
+           <listitem>
+             <para>@-line can now be run every second (minimum every 10s previously)</para>
+           </listitem>
+            <listitem>
+               <para>Fixed occasional 1s slippage.  This was due to a race condition between when time_to_sleep is run and when we compute how long to sleep for, which could happen in the following second: if that happened we end up sleeping for 1s instead of not sleeping at all.  The fix was to replace time_to_sleep() by next_wake_time().</para>
+            </listitem>
+           <listitem>
+             <para>add From: header to emails. Similarly to other crons, use: "From: %s (fcron)" with %s
+             being either the user the job is run as or the value of MAILFROM.</para>
+           </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+         <title>From version 3.1.3 to 3.2.0</title>
 	    <listitem>
 	       <para>Print date as %Y-%m-%d (the ISO 8601 date format), to avoid being ambiguous in international context.  Also always use the ':' as hour:minute separator (there was a couple of 'h' instead).</para>
 	    </listitem>
 	    <listitem>
 	       <para>Don't fully disable a @-line when something goes wrong (e.g. fcron didn't shut down cleanly).  The idea was to prevent infinite loops, but this was overkill.  Instead set its next execution to now+frequency.`</para>
+	    </listitem>
+	    <listitem>
+	       <para>Cosmetic changes in the log lines (quote the job shell commands) and fcrondyn (use the pipe char "|" as a column separator).</para>
+	    </listitem>
+	    <listitem>
+	       <para>Fixed file descriptor leak when executing jobs in case of NSS failures (thanks Pavel Stano).</para>
 	    </listitem>
       </itemizedlist>
 
