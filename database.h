@@ -29,7 +29,7 @@
 extern void test_jobs(void);
 extern void wait_chld(void);
 extern void wait_all(int *counter);
-extern time_t time_to_sleep(time_t lim);
+extern time_t next_wake_time(time_t lim);
 extern time_t check_lavg(time_t lim);
 extern void set_next_exe(struct cl_t *line, char option, int info_fd);
 #define NO_GOTO 1               /* set_next_exe() : no goto_non_matching() */

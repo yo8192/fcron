@@ -58,6 +58,7 @@ char foreground = 0;            /* set to 1 when we are on foreground, else 0 */
 #endif
 
 time_t first_sleep = FIRST_SLEEP;
+const time_t min_sleep_usec = 1000;     /* 1ms -- we won't sleep for less than this time */
 time_t save_time = SAVE;
 char once = 0;                  /* set to 1 if fcron shall return immediately after running
                                  * all jobs that are due at the time when fcron is started */
@@ -191,7 +192,7 @@ xexit(int exit_value)
 {
     cf_t *f = NULL;
 
-    now = time(NULL);
+    now = my_time();
 
     /* we save all files now and after having waiting for all
      * job being executed because we might get a SIGKILL
@@ -650,7 +651,8 @@ main(int argc, char **argv)
     siginterrupt(SIGUSR1, 0);
     signal(SIGUSR2, sigusr2_handler);
     siginterrupt(SIGUSR2, 0);
-    /* we don't want SIGPIPE to kill fcron, and don't need to handle it */
+    /* we don't want SIGPIPE to kill fcron, and don't need to handle it as when ignored
+     * write() on a pipe closed at the other end will return EPIPE */
     signal(SIGPIPE, SIG_IGN);
 #elif HAVE_SIGSET
     sigset(SIGTERM, sigterm_handler);
@@ -772,71 +774,119 @@ main_loop()
    *             sleep, and then test all jobs and execute if needed. */
 {
     time_t save;                /* time remaining until next save */
-    time_t stime;               /* time to sleep until next job
-                                 * execution */
+    time_t nwt;                 /* next wake time */
 #ifdef HAVE_GETTIMEOFDAY
-    struct timeval tv;          /* we use usec field to get more precision */
+    struct timeval now_tv;      /* we use usec field to get more precision */
 #endif
-#ifdef FCRONDYN
+#if defined(FCRONDYN) && defined(HAVE_GETTIMEOFDAY)
     int retcode = 0;
+    struct timeval sleep_tv;    /* we use usec field to get more precision */
 #endif
 
     debug("Entering main loop");
 
-    now = time(NULL);
+    now = my_time();
 
     synchronize_dir(".", is_system_startup());
 
     /* synchronize save with jobs execution */
     save = now + save_time;
 
-    if (serial_num > 0 || once)
-        stime = first_sleep;
-    else if ((stime = time_to_sleep(save)) < first_sleep)
+    if (serial_num > 0 || once) {
+        nwt = now + first_sleep;
+    }
+    else {
         /* force first execution after first_sleep sec : execution of jobs
          * during system boot time is not what we want */
-        stime = first_sleep;
-    debug("initial sleep time : %ld", stime);
+        nwt = tmax(next_wake_time(save), now + first_sleep);
+    }
+    debug("initial wake time : %s", ctime(&nwt));
 
     for (;;) {
 
 #ifdef HAVE_GETTIMEOFDAY
 #ifdef FCRONDYN
-        gettimeofday(&tv, NULL);
-        tv.tv_sec = (stime > 1) ? stime - 1 : 0;
-        /* we set tv_usec to slightly more than necessary so as
-         * we don't wake up too early, in which case we would
-         * have to sleep again for some time */
-        tv.tv_usec = 1001000 - tv.tv_usec;
-        /* On some systems (BSD, etc), tv_usec cannot be greater than 999999 */
-        if (tv.tv_usec > 999999)
-            tv.tv_usec = 999999;
+        gettimeofday(&now_tv, NULL);
+        debug("now gettimeofday tv_sec=%ld, tv_usec=%ld %s", now_tv.tv_sec,
+              now_tv.tv_usec, ctime(&nwt));
+
+        if (nwt <= now_tv.tv_sec) {
+            sleep_tv.tv_sec = 0;
+            sleep_tv.tv_usec = 0;
+        }
+        else {
+            /* compensate for any time spent in the loop,
+             * so as we wake up exactly at the beginning of the second */
+            sleep_tv.tv_sec = nwt - now_tv.tv_sec - 1;
+            /* we set tv_usec to slightly more than necessary so as we don't wake
+             * up too early (e.g. due to rounding to the system clock granularity),
+             * in which case we would have to go back to sleep again */
+            sleep_tv.tv_usec = 1000000 + min_sleep_usec - now_tv.tv_usec;
+        }
+
+        if (sleep_tv.tv_usec > 999999) {
+            /* On some systems (BSD, etc), tv_usec cannot be greater than 999999 */
+            sleep_tv.tv_usec = 999999;
+        }
+        else if (sleep_tv.tv_sec == 0 && sleep_tv.tv_usec < min_sleep_usec) {
+            /* to prevent any infinite loop, sleep at least 1ms */
+            debug
+                ("We'll sleep for a tiny bit to avoid any risk of infinite loop");
+            sleep_tv.tv_usec = min_sleep_usec;
+        }
         /* note: read_set is set in socket.c */
-        if ((retcode = select(set_max_fd + 1, &read_set, NULL, NULL, &tv)) < 0
+        debug("nwt=%s, sleep sec=%ld, usec=%ld", ctime(&nwt), sleep_tv.tv_sec,
+              sleep_tv.tv_usec);
+        if ((retcode =
+             select(set_max_fd + 1, &read_set, NULL, NULL, &sleep_tv)) < 0
             && errno != EINTR)
             die_e("select returned %d", errno);
-#else
-        if (stime > 1)
-            sleep(stime - 1);
-        gettimeofday(&tv, NULL);
+#else                           /* FCRONDYN */
+        if (nwt - now > 0) {
+            sleep(nwt - now - 1);
+        }
+        gettimeofday(&now_tv, NULL);
         /* we set tv_usec to slightly more than necessary to avoid
          * infinite loop */
-        usleep(1001000 - tv.tv_usec);
+        usleep(1000000 + min_sleep_usec - now_tv.tv_usec);
 #endif                          /* FCRONDYN */
-#else
-        sleep(stime);
+#else                           /* HAVE_GETTIMEOFDAY */
+        if (nwt - now > 0) {
+            sleep(nwt - now);
+        }
 #endif                          /* HAVE_GETTIMEOFDAY */
 
-        now = time(NULL);
+        debug("\n");
+        now = my_time();
+#ifdef HAVE_GETTIMEOFDAY
+        if (debug_opt) {
+            gettimeofday(&now_tv, NULL);
+            debug("now=%ld now_tv sec=%ld usec=%ld", now, now_tv.tv_sec,
+                  now_tv.tv_usec);
+        }
+#endif
 
         check_signal();
-
-        debug("\n");
+#ifdef HAVE_GETTIMEOFDAY
+        if (debug_opt) {
+            gettimeofday(&now_tv, NULL);
+            debug("after check_signal: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
+                  now_tv.tv_usec);
+        }
+#endif
 
         test_jobs();
+#ifdef HAVE_GETTIMEOFDAY
+        if (debug_opt) {
+            gettimeofday(&now_tv, NULL);
+            debug("after test_jobs: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
+                  now_tv.tv_usec);
+        }
+#endif
 
-        while (serial_num > 0 && serial_running < serial_max_running)
+        while (serial_num > 0 && serial_running < serial_max_running) {
             run_serial_job();
+        }
 
         if (once) {
             explain("Running with option once : exiting ... ");
@@ -848,15 +898,29 @@ main_loop()
             /* save all files */
             save_file(NULL);
         }
+#ifdef HAVE_GETTIMEOFDAY
+        if (debug_opt) {
+            gettimeofday(&now_tv, NULL);
+            debug("after save: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
+                  now_tv.tv_usec);
+        }
+#endif
 
-#ifdef FCRONDYN
+#if defined(FCRONDYN) && defined(HAVE_GETTIMEOFDAY)
         /* check if there's a new connection, a new command to answer, etc ... */
         /* we do that *after* other checks, to avoid Denial Of Service attacks */
         check_socket(retcode);
 #endif
 
-        stime = check_lavg(save);
-        debug("next sleep time : %ld", stime);
+        nwt = check_lavg(save);
+#ifdef HAVE_GETTIMEOFDAY
+        if (debug_opt) {
+            gettimeofday(&now_tv, NULL);
+            debug("after check_lavg: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
+                  now_tv.tv_usec);
+        }
+#endif
+        debug("next wake time : %s", ctime(&nwt));
 
         check_signal();
 
