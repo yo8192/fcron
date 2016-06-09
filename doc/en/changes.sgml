@@ -17,6 +17,9 @@ A copy of the license is included in gfdl.sgml.
            <listitem>
              <para>@-line can now be run every second (minimum every 10s previously)</para>
            </listitem>
+            <listitem>
+               <para>Fixed occasional 1s slippage.  This was due to a race condition between when time_to_sleep is run and when we compute how long to sleep for, which could happen in the following second: if that happened we end up sleeping for 1s instead of not sleeping at all.  The fix was to replace time_to_sleep() by next_wake_time().</para>
+            </listitem>
            <listitem>
              <para>add From: header to emails. Similarly to other crons, use: "From: %s (fcron)" with %s
              being either the user the job is run as or the value of MAILFROM.</para>
