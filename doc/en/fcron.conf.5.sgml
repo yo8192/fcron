@@ -59,7 +59,7 @@ to work properly).</para>
 		    <term><varname>suspendfile</varname>=<replaceable>file-path</replaceable>
 (<filename>&suspendfile;</filename>)</term>
 		    <listitem>
-			<para>Location of &fcron; suspend file. This should be used to let fcron know how long the system was suspended (to memory or disk), so as task schedules can be updated accordingly.</para>
+			<para>Location of &fcron; suspend file. On non-Linux systems, this should be used to let fcron know how long the system was suspended (to memory or disk), so as task schedules can be updated accordingly.</para>
 		    </listitem>
 		</varlistentry>
 		<varlistentry>

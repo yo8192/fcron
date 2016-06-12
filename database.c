@@ -1509,7 +1509,14 @@ set_next_exe_startup(struct cl_t *cl, const int context,
         else {
             if (cl->cl_nextexe != LONG_MAX) {
                 cl->cl_nextexe += sleep_duration;
-                if (cl->cl_nextexe < now || cl->cl_nextexe > TIME_T_MAX) {
+
+                if (cl->cl_nextexe < now && context == CONTEXT_RESUME) {
+                    /* userland processes including fcron may not run for a short
+                     * time before suspend, or after resume, so we can end up in this situation.
+                     * it's not really an error though, and it's best to simply run that job now */
+                    cl->cl_nextexe = now;
+                }
+                else if (cl->cl_nextexe < now || cl->cl_nextexe > TIME_T_MAX) {
                     /* either there was an integer overflow, or the sleep_duration time is incorrect
                      * (e.g. fcron didn't shut down cleanly and the fcrontab wasn't saved correctly) */
                     error

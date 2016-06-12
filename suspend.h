@@ -28,9 +28,11 @@
 
 #include "config.h"
 #include "global.h"
+#include "select.h"
 
 /* functions prototypes */
-extern long int read_suspend_duration(time_t slept_from);
-extern void check_suspend(time_t slept_from, time_t nwt, char *sig_cont);
+extern void init_suspend(select_instance * si);
+extern void check_suspend(time_t slept_from, time_t nwt, char *sig_cont,
+                          select_instance * si);
 
 #endif                          /* __SUSPEND_H__ */

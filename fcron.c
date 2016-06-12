@@ -829,6 +829,7 @@ main_loop()
 #ifdef FCRONDYN
     fcrondyn_socket_init(&main_select);
 #endif
+    init_suspend(&main_select);
 #endif
 
     now = my_time();
@@ -893,17 +894,17 @@ main_loop()
 
         debug("\n");
         now = my_time();
-        debug_print_tstamp("just woke up")
+        debug_print_tstamp("just woke up");
 
-            check_signal();
-        check_suspend(slept_from, nwt, &sig_cont);
+        check_signal();
+        check_suspend(slept_from, nwt, &sig_cont, &main_select);
         reset_sig_cont();
-        debug_print_tstamp("after check_signal and suspend")
+        debug_print_tstamp("after check_signal and suspend");
 
-            test_jobs();
-        debug_print_tstamp("after test_jobs")
+        test_jobs();
+        debug_print_tstamp("after test_jobs");
 
-            while (serial_num > 0 && serial_running < serial_max_running) {
+        while (serial_num > 0 && serial_running < serial_max_running) {
             run_serial_job();
         }
 
@@ -917,16 +918,16 @@ main_loop()
             /* save all files */
             save_file(NULL);
         }
-        debug_print_tstamp("after save")
+        debug_print_tstamp("after save");
 #if defined(FCRONDYN) && defined(HAVE_GETTIMEOFDAY)
-            /* check if there's a new connection, a new command to answer, etc ... */
-            /* we do that *after* other checks, to avoid Denial Of Service attacks */
-            fcrondyn_socket_check(&main_select);
+        /* check if there's a new connection, a new command to answer, etc ... */
+        /* we do that *after* other checks, to avoid Denial Of Service attacks */
+        fcrondyn_socket_check(&main_select);
 #endif
 
         nwt = check_lavg(save);
-        debug_print_tstamp("after check_lavg")
-            debug("next wake time : %s", ctime(&nwt));
+        debug_print_tstamp("after check_lavg");
+        debug("next wake time : %s", ctime(&nwt));
 
         check_signal();
 

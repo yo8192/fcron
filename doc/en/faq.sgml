@@ -96,9 +96,10 @@ every day at 2:30, it will run at 3:30 the day of this kind of DST change.
 	    <answer>
 	       <para>fcron now fully supports suspend (to memory or disk).
                On resume it will adjust the task schedules accordingly, run runatreboot tasks if appropriate, and report non-execution of noticenotrun tasks.</para>
-               <para>fcron will try to notice suspends by itself without external help,
-               by checking if it wakes up later than it expected after a sleep.
-               However this is far from bullet-proof, as fcron may not notice
+               <para>fcron will try to notice suspends by itself without external help.
+	       On Linux it can do so reliably via system APIs, but on other OSes it will instead
+               check if it wakes up later than it expected after a sleep.
+               This is far from bullet-proof, as fcron may not notice
                the computer was suspended or under-estimate the suspend duration.
                This is because fcron can be woken up by external events such
                as receiving a signal or fcrondyn interation. There is also a risk
@@ -106,7 +107,7 @@ every day at 2:30, it will run at 3:30 the day of this kind of DST change.
                clock correctly after resume. If so, it may compute an incorrect
                the time and date of the execution of a job (please see the entry
                about system clock adjustment in the present FAQ).</para>
-               <para>Because of this, it is recommended to explicitly 'tell' fcron
+               <para>Because of this, on non-Linux systems it is recommended to explicitly 'tell' fcron
                about suspends and the precise suspend duration:
 		<orderedlist>
 		    <listitem>
@@ -122,6 +123,9 @@ every day at 2:30, it will run at 3:30 the day of this kind of DST change.
                         <para>Wake up fcron and tell it to process the suspend file and reschedule tasks accordingly:
                         <programlisting>$ kill -CONT $(cat &fcron.pid;)</programlisting></para>
 		</orderedlist>
+	       <para>An example script implementing this for pm-utils and systemd is included: fcron.suspend.sh.
+		Note that it is however not needed on Linux.  Contribution of equivalent scripts for other
+		systems is welcome.</para>
 	       <para>Alternatively you could have fcron stop on suspend and restart on resume.
                However the main drawback would then be that tasks running at the time of suspend
                would be run again at resume, even though they may not have been stopped and finish on resume
