@@ -152,7 +152,7 @@
  * which is a (not long) int (32bits).
  * As a time_t of INT_MAX=2^31 is 'only' in year 2038, we try to use a larger value
  * if we can. */
-// FIXME: test on 32bit system
+/* // FIXME: test on 32bit system */
 /* 2^33 = 8589934592, so LONG is 64bits at least */
 #if (LONG_MAX > INT_MAX) && (LONG_MAX > 8589934592)
 /* defined as time_t of 1st Jan of year (SHRT_MAX-1900) at 00:00:00 */

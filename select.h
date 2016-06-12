@@ -21,38 +21,34 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
+/* This file contains helper functions around an instance of select() */
 
-/* This file describe the communication protocol between fcron and fcrondyn */
+#ifndef __SELECT_H__
+#define __SELECT_H__
 
-#ifndef __SOCKET_H__
-#define __SOCKET_H__
+#include "config.h"
 
-#include "dyncom.h"
-#ifdef HAVE_SYS_RESOURCE_H
-/* needed by setpriority() */
-#include <sys/resource.h>
+#ifdef HAVE_SYS_SELECT_H
+#   include <sys/select.h>
+#endif
+#ifdef HAVE_SYS_TYPES_H
+#   include <sys/types.h>
 #endif
 
-/* public var defined by socket.c */
-extern fd_set read_set;
-extern int set_max_fd;
+
+typedef struct select_instance {
+    /* public (read-only) */
+    int retcode; /* return value of the last call of select() */
+    fd_set readfds; /* to check the status of fds after select_call */
+    /* private */
+    fd_set __readfds_master; /* select() modifies readfds, so we maintain a list in parallel */
+    int __fd_max;
+} select_instance;
 
 /* functions prototypes */
-extern void init_socket(void);
-extern void check_socket(int num);
-extern void close_socket(void);
+extern void select_init(struct select_instance *si);
+extern void select_add_read(select_instance *si, int fd);
+extern void select_rm_read(select_instance *si, int fd);
+extern void select_call(struct select_instance *si, struct timeval *timeout);
 
-
-
-/* struct used by fcron : */
-typedef struct fcrondyn_cl {
-    struct fcrondyn_cl *fcl_next;
-    int fcl_sock_fd;
-    char *fcl_user;
-    time_t fcl_idle_since;
-    int fcl_cmd_len;
-    long int *fcl_cmd;
-} fcrondyn_cl;
-
-
-#endif                          /* __SOCKET_H__ */
+#endif                          /* __SELECT_H__ */

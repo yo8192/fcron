@@ -29,8 +29,9 @@
 #include "job.h"
 #include "temp_file.h"
 #include "fcronconf.h"
+#include "select.h"
 #ifdef FCRONDYN
-#include "socket.h"
+#include "fcrondyn_svr.h"
 #endif
 
 
@@ -45,7 +46,7 @@ RETSIGTYPE sigchild_handler(int x);
 RETSIGTYPE sigusr1_handler(int x);
 RETSIGTYPE sigusr2_handler(int x);
 RETSIGTYPE sigcont_handler(int x);
-long int get_suspend_duration(time_t slept_from);
+long int read_suspend_duration(time_t slept_from);
 void check_suspend(time_t slept_from, time_t nwt);
 int parseopt(int argc, char *argv[]);
 void get_lock(void);
@@ -112,7 +113,6 @@ short int lavg_serial_running;  /* number of serialized lavg job being running *
 
 exe_list_t *exe_list;           /* jobs which are executed */
 
-time_t begin_sleep;             /* the time at which sleep began */
 time_t now;                     /* the current time */
 
 #ifdef HAVE_LIBPAM
@@ -204,7 +204,7 @@ xexit(int exit_value)
     save_file(NULL);
 
 #ifdef FCRONDYN
-    close_socket();
+    fcrondyn_socket_close(NULL);
 #endif
 
     f = file_base;
@@ -534,8 +534,9 @@ sigcont_handler(int x)
 }
 
 long int
-get_suspend_duration(time_t slept_from)
-  /* Return the amount of time the system was suspended (to mem or disk).
+read_suspend_duration(time_t slept_from)
+  /* Return the amount of time the system was suspended (to mem or disk),
+   * as read from suspendfile.
    * Return 0 on error.
    *
    * The idea is that:
@@ -660,7 +661,7 @@ check_suspend(time_t slept_from, time_t nwt)
     long int suspend_duration;  /* amount of time the system was suspended */
     long int time_diff;         /* estimate of suspend_duration (as fallback) */
 
-    suspend_duration = get_suspend_duration(slept_from);
+    suspend_duration = read_suspend_duration(slept_from);
 
     /* Also check if there was an unaccounted sleep duration, in case
      * the OS is not configured to let fcron properly know about suspends
@@ -852,11 +853,6 @@ main(int argc, char **argv)
     lavg_list->max_entries = lavg_queue_max;
     lavg_serial_running = 0;
 
-#ifdef FCRONDYN
-    /* initialize socket */
-    init_socket();
-#endif
-
     /* initialize random number generator :
      * WARNING : easy to guess !!! */
     /* we use the hostname and tv_usec in order to get different seeds
@@ -947,14 +943,19 @@ main_loop()
     time_t slept_from;          /* time it was when we went into sleep */
     time_t nwt;                 /* next wake time */
 #ifdef HAVE_GETTIMEOFDAY
+    struct select_instance main_select;
     struct timeval now_tv;      /* we use usec field to get more precision */
-#endif
-#if defined(FCRONDYN) && defined(HAVE_GETTIMEOFDAY)
-    int retcode = 0;
     struct timeval sleep_tv;    /* we use usec field to get more precision */
 #endif
 
     debug("Entering main loop");
+
+#ifdef HAVE_GETTIMEOFDAY
+    select_init(&main_select);
+#ifdef FCRONDYN
+    fcrondyn_socket_init(&main_select);
+#endif
+#endif
 
     now = my_time();
 
@@ -979,7 +980,6 @@ main_loop()
         slept_from = time(NULL);
 
 #ifdef HAVE_GETTIMEOFDAY
-#ifdef FCRONDYN
         gettimeofday(&now_tv, NULL);
         debug("now gettimeofday tv_sec=%ld, tv_usec=%ld %s", now_tv.tv_sec,
               now_tv.tv_usec, ctime(&nwt));
@@ -1011,19 +1011,7 @@ main_loop()
         /* note: read_set is set in socket.c */
         debug("nwt=%s, sleep sec=%ld, usec=%ld", ctime(&nwt), sleep_tv.tv_sec,
               sleep_tv.tv_usec);
-        if ((retcode =
-             select(set_max_fd + 1, &read_set, NULL, NULL, &sleep_tv)) < 0
-            && errno != EINTR)
-            die_e("select returned %d", errno);
-#else                           /* FCRONDYN */
-        if (nwt - now > 0) {
-            sleep(nwt - now - 1);
-        }
-        gettimeofday(&now_tv, NULL);
-        /* we set tv_usec to slightly more than necessary to avoid
-         * infinite loop */
-        usleep(1000000 + min_sleep_usec - now_tv.tv_usec);
-#endif                          /* FCRONDYN */
+        select_call(&main_select, &sleep_tv);
 #else                           /* HAVE_GETTIMEOFDAY */
         if (nwt - now > 0) {
             sleep(nwt - now);
@@ -1087,7 +1075,7 @@ main_loop()
 #if defined(FCRONDYN) && defined(HAVE_GETTIMEOFDAY)
         /* check if there's a new connection, a new command to answer, etc ... */
         /* we do that *after* other checks, to avoid Denial Of Service attacks */
-        check_socket(retcode);
+        fcrondyn_socket_check(&main_select);
 #endif
 
         nwt = check_lavg(save);
