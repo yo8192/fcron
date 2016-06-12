@@ -7,10 +7,10 @@
 #                    the DESTSBIN directory
 #                    the value of DEBUG
 #                    the value of FCRONTABS
-#                    the automatic answer
+#                    the automatic answer: 0 no, 1 yes, 2 ask
 #                    the src dir
 
-PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin"
+PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin:/usr/local/sbin:/usr/local/bin"
 if test -d /usr/ucb; then
     PATH=/usr/ucb:$PATH
 fi
@@ -40,11 +40,20 @@ else
     STARTCMD="fcron -b"
 fi    
 
-if test `uname -s` = "FreeBSD"; then
-  IS_FREEBSD=1
-else
-  IS_FREEBSD=0
+# Useful to decide what to install where later:
+OS=`uname -s`
+INIT_D_ROOTDIR=""
+if test -d /etc/init.d/; then
+    INIT_D_ROOTDIR="/etc"
+elif test -d /etc/rc.d/init.d/; then
+    INIT_D_ROOTDIR="/etc/rc.d"
 fi
+if test -d /lib/systemd/system ; then
+	SYSTEMD_ROOTDIR=/lib/systemd
+elif test -d /usr/lib/systemd/system ; then
+	SYSTEMD_ROOTDIR=/usr/lib/systemd
+fi
+
 
 # Check now if there is an old ( < 1.1.x ) version of fcrontab on the system.
 # We do that here because if user say "no" too early, the PREVIOUS_VERSION would
@@ -82,13 +91,14 @@ echo
 
 echo
 echo "The script proposes the following location to do it :"
-if test $IS_FREEBSD -eq 1; then
+if test "$OS" = "FreeBSD" ; then
   echo "  /usr/local/etc/rc.d/fcron.sh"
 fi
-if test -d /etc/init.d/; then
-  echo "  /etc/init.d/fcron"
-elif test -d /etc/rc.d/init.d/; then
-  echo "  /etc/rc.d/init.d/fcron"
+if test -n "$SYSTEMD_ROOTDIR"; then
+  echo "  $SYSTEMD_ROOTDIR/system/"
+fi
+if test -n "$INIT_D_ROOTDIR"; then
+  echo "  $INIT_D_ROOTDIR/init.d/"
 fi
 if test -f /etc/rc.d/rc.local; then
   echo "  /etc/rc.d/rc.local"
@@ -99,11 +109,11 @@ fi
 echo
 
 INSTALL="nothing"
-SYSV=0
+INSTALL_TYPE=""
 STOPPED=0
 INSTALLED=0
 
-if test $IS_FREEBSD -eq 1; then 
+if test "$OS" = "FreeBSD" ; then
   if test -x /usr/local/etc/rc.d/fcron.sh; then
     echo "Fcron is already in /usr/local/etc/rc.d/."
     INSTALLED=1
@@ -137,18 +147,11 @@ fi
 
 
 INSTALL="nothing"
-ROOTDIR=""
-if test -d /etc/init.d/; then
-    ROOTDIR="/etc"
-elif test -d /etc/rc.d/init.d/; then
-    ROOTDIR="/etc/rc.d"
-fi
-if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
+if test \( ! "$INSTALLED" -eq 1 \) -a \( "$SYSTEMD_ROOTDIR" != "" \); then
   if test $ANSWER -eq 2; then
     while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
     do
-      echo "Would you like to add fcron in the directory $ROOTDIR/init.d/ and in runlevel 2, 3, 4 and 5"
-      echo "(directories $ROOTDIR/rc{2,3,4,5}.d/) ?"
+      echo "Would you like to install fcron as a systemd service in the directory $SYSTEMD_ROOTDIR/system/ ?"
       echo -n "Please answer with 'y' or 'n' (default: 'y'): "
       read INSTALL NOTHING
     done
@@ -159,27 +162,54 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
     INSTALL="n"
   fi
   if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-    $INSPROG -c -m 755 script/sysVinit-launcher $ROOTDIR/init.d/fcron
+    $INSPROG -c -m 755 script/fcron.init.systemd $SYSTEMD_ROOTDIR/system/fcron.service
+    systemctl daemon-reload
+    INSTALLED=1
+    INSTALL_TYPE=SYSTEMD
+  else
+    INSTALLED=0
+  fi
+
+fi
+
+INSTALL="nothing"
+if test \( ! "$INSTALLED" -eq 1 \) -a \( "$INIT_D_ROOTDIR" != "" \); then
+  if test $ANSWER -eq 2; then
+    while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
+    do
+      echo "Would you like to add fcron in the directory $INIT_D_ROOTDIR/init.d/ and in runlevel 2, 3, 4 and 5"
+      echo "(directories $INIT_D_ROOTDIR/rc{2,3,4,5}.d/) ?"
+      echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+      read INSTALL NOTHING
+    done
+  # automatic answer given by configure script (option --with-answer-all)
+  elif test $ANSWER -eq 1; then
+    INSTALL="y"
+  else
+    INSTALL="n"
+  fi
+  if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
+    $INSPROG -c -m 755 script/sysVinit-launcher $INIT_D_ROOTDIR/init.d/fcron
     if test $DEBUG -eq 1; then
-      cat $ROOTDIR/init.d/fcron | sed 's: -b: -b -d:' >$ROOTDIR/init.d/fcron2
-      mv -f $ROOTDIR/init.d/fcron2 $ROOTDIR/init.d/fcron
-      chmod +x $ROOTDIR/init.d/fcron
+      cat $INIT_D_ROOTDIR/init.d/fcron | sed 's: -b: -b -d:' >$INIT_D_ROOTDIR/init.d/fcron2
+      mv -f $INIT_D_ROOTDIR/init.d/fcron2 $INIT_D_ROOTDIR/init.d/fcron
+      chmod +x $INIT_D_ROOTDIR/init.d/fcron
     fi
-    chmod +x $ROOTDIR/init.d/fcron
+    chmod +x $INIT_D_ROOTDIR/init.d/fcron
 
     for j in 2 3 4 5
     do
-    cd $ROOTDIR/rc$j.d/ ; ln -f -s ../init.d/fcron S40fcron
+    cd $INIT_D_ROOTDIR/rc$j.d/ ; ln -f -s ../init.d/fcron S40fcron
     done
 
     for j in 0 6
     do
-    cd $ROOTDIR/rc$j.d/ ; ln -f -s ../init.d/fcron K60fcron
+    cd $INIT_D_ROOTDIR/rc$j.d/ ; ln -f -s ../init.d/fcron K60fcron
     done
     cd $startdir
 
     INSTALLED=1
-    SYSV=1
+    INSTALL_TYPE=SYSV
   else
     INSTALLED=0      
   fi
@@ -187,76 +217,40 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( "$ROOTDIR" != "" \); then
 fi
 
 INSTALL="nothing"
-if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc.d/rc.local \); then
-  # Slackware
-  if ! cat /etc/rc.d/rc.local | grep "$STARTCMD"; then
-    if cat /etc/rc.d/rc.local | grep fcron; then	
-      echo "Fcron seems to be in /etc/rc.d/rc.local, but not with the appropriate options :"
-      echo "you should probably correct this file in order to run fcron with $STARTCMD."
-      INSTALLED=1
-    else
-      if test $ANSWER -eq 2; then
-        while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
-        do
-          echo "Would you like to add $STARTCMD in the file /etc/rc.d/rc.local ?"
-          echo -n "Please answer with 'y' or 'n' (default: 'y'): "
-          read INSTALL NOTHING
-        done
-      # automatic answer given by configure script (option --with-answer-all)
-      elif test $ANSWER -eq 1; then
-        INSTALL="y"
-      else
-        INSTALL="n"
-      fi
-      if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-        echo $STARTCMD >> /etc/rc.d/rc.local
+for LOCATION in /etc/rc.d/rc.local /etc/rc.local ; do
+  if test \( ! "$INSTALLED" -eq 1 \) -a \( -f $LOCATION \); then
+    if ! cat $LOCATION | grep "$STARTCMD"; then
+      if cat $LOCATION | grep fcron; then
+        echo "Fcron seems to be in $LOCATION, but not with the appropriate options :"
+        echo "you should probably correct this file in order to run fcron with $STARTCMD."
         INSTALLED=1
       else
-        INSTALLED=0
+        if test $ANSWER -eq 2; then
+          while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
+          do
+            echo "Would you like to add $STARTCMD in the file $LOCATION ?"
+            echo -n "Please answer with 'y' or 'n' (default: 'y'): "
+            read INSTALL NOTHING
+          done
+        # automatic answer given by configure script (option --with-answer-all)
+        elif test $ANSWER -eq 1; then
+          INSTALL="y"
+        else
+          INSTALL="n"
+        fi
+        if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
+          echo $STARTCMD >> $LOCATION
+          INSTALLED=1
+        else
+          INSTALLED=0
+        fi
       fi
-    fi
-  else
-    echo "Fcron is already in /etc/rc.d/rc.local."
-    INSTALLED=1
-  fi
-fi 
-
-
-INSTALL="nothing"
-
-if test \( ! "$INSTALLED" -eq 1 \) -a \( -f /etc/rc.local \) ; then
-  if ! cat /etc/rc.local | grep "$STARTCMD"; then
-    if cat /etc/rc.local | grep fcron; then	
-      echo "Fcron seems to be in /etc/rc.local, but not with the appropriate options :"
-      echo "you should probably correct this file in order to run fcron with $STARTCMD."
-      INSTALLED=1
     else
-      if test $ANSWER -eq 2; then
-        while test \( ! -z "$INSTALL" \) -a \( "$INSTALL" != "y" \) -a \( "$INSTALL" != "n" \);
-        do
-          echo "Would you like to add $STARTCMD in the file /etc/rc.local ?"
-          echo -n "Please answer with 'y' or 'n' (default: 'y'): "
-          read INSTALL NOTHING
-        done
-      # automatic answer given by configure script (option --with-answer-all)
-      elif test $ANSWER -eq 1; then
-        INSTALL="y"
-      else
-        INSTALL="n"
-      fi
-      if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
-        echo $STARTCMD >> /etc/rc.local
-        INSTALLED=1
-      else
-        INSTALLED=0
-      fi
+      echo "Fcron is already in $LOCATION."
+      INSTALLED=1
     fi
-  else
-    echo "Fcron is already in /etc/rc.local."
-    INSTALLED=1
   fi
-fi
-
+done
 
 if test "$INSTALLED" -eq 0; then
 echo
@@ -264,6 +258,34 @@ echo "Installation process failed to install fcron in your init scripts :"
 echo "please do it manually."
 fi
 
+#
+# Now install the suspend script under the appropriate suspend framework
+# Note that we don't need this on Linux as fcron works this out
+# by itself using systems API.
+#
+if test "$OS" != Linux ; then
+    echo
+    if test -n "$SYSTEMD_ROOTDIR" ; then
+        # systemd
+        SUSPEND_DEST=$SYSTEMD_ROOTDIR/system-sleep/fcron.sh
+        echo "This system appears to run systemd. Would you like to install the systemd"
+        echo "suspend script under $SUSPEND_DEST?"
+        if test "`ask_user`" = y; then
+            $INSPROG -c -m 754 script/fcron.suspend.sh $SUSPEND_DEST
+        fi
+    elif test -d /etc/pm/sleep.d ; then
+        # pm-utils
+        SUSPEND_DEST=/etc/pm/sleep.d/74_fcron
+        echo "This system appears to run pm-utils. Would you like to install the pm-utils"
+        echo "suspend script under $SUSPEND_DEST?"
+        if test "`ask_user`" = y; then
+            $INSPROG -c -m 754 script/fcron.suspend.sh $SUSPEND_DEST
+        fi
+    else
+        echo "This script didn't find any suspend system it supports."
+        echo "Please install an appropriate suspend script manually."
+    fi
+fi # uname != Linux
 
 if PID=`pidof fcron`; then
   KILL="kill -TERM $PID"
@@ -288,11 +310,11 @@ if test $NEED_UPDATE -eq 0; then
     KILL=""
     COMMENT=""
   fi
-  if test "$SYSV" -eq 1; then
-    CMD="$ROOTDIR/init.d/fcron start"
-  else
-    CMD=$STARTCMD
-  fi
+  case "$INSTALL_TYPE" in
+    SYSTEMD) CMD="service fcron start" ;;
+    SYSV) CMD="$INIT_D_ROOTDIR/init.d/fcron start" ;;
+    *) CMD=$STARTCMD ;;
+  esac
   if test $ANSWER -eq 2; then
     while test \( ! -z "$RESTART" \) -a \( "$RESTART" != "y" \) -a \( "$RESTART" != "n" \);
     do
@@ -395,7 +417,7 @@ else # test $NEED_UPDATE -eq 0
   START="nothing"
   COMMENT=""
   if test "$SYSV" -eq 1; then
-    CMD="$ROOTDIR/init.d/fcron start"
+    CMD="$INIT_D_ROOTDIR/init.d/fcron start"
   else
     CMD=$STARTCMD
   fi
@@ -417,3 +439,5 @@ else # test $NEED_UPDATE -eq 0
   fi
 
 fi
+
+exit 0
