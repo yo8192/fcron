@@ -1,5 +1,5 @@
 #!/bin/sh
-# Uninstall fcron under SysV system.
+# Unregister fcron from being a daemon (auto start by system: SysV, etc)
 #
 
 
@@ -10,19 +10,25 @@ fi
 
 if test `uname -s` = "FreeBSD"; then
   rm -f /usr/local/etc/rc.d/fcron.sh
+elif test -d /lib/systemd/system ; then
+  rm -f /lib/systemd/system/fcron.service
+  systemctl daemon-reload
+elif test -d /usr/lib/systemd/system ; then
+  rm -f /usr/lib/systemd/system/fcron.service
+  systemctl daemon-reload
 else
-  ROOTDIR=""
+  INIT_D_ROOTDIR=""
   if test -f /etc/rc.d/init.d/fcron; then
-    ROOTDIR="/etc/rc.d"
+    INIT_D_ROOTDIR="/etc/rc.d"
   elif test -f /etc/init.d/fcron; then
-    ROOTDIR="/etc"
+    INIT_D_ROOTDIR="/etc"
   fi
-  if test $ROOTDIR != ""; then
-    rm -f $ROOTDIR/init.d/fcron
+  if test $INIT_D_ROOTDIR != ""; then
+    rm -f $INIT_D_ROOTDIR/init.d/fcron
 
     for i in 0 1 2 3 4 5 6
     do
-    rm -f $ROOTDIR/rc$i.d/???fcron
+    rm -f $INIT_D_ROOTDIR/rc$i.d/???fcron
     done
 
   else

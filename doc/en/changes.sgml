@@ -24,6 +24,9 @@ A copy of the license is included in gfdl.sgml.
              <para>add From: header to emails. Similarly to other crons, use: "From: %s (fcron)" with %s
              being either the user the job is run as or the value of MAILFROM.</para>
            </listitem>
+           <listitem>
+               <para>The installation script now supports systemd fully.</para>
+           </listitem>
       </itemizedlist>
 
       <itemizedlist>
