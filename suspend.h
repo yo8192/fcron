@@ -21,33 +21,16 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
+/* code to handle system suspend/hibernate and resume */
 
-/* This file describe the communication protocol between fcron and fcrondyn */
+#ifndef __SUSPEND_H__
+#define __SUSPEND_H__
 
-#ifndef __FCRONDYN_SVR_H__
-#define __FCRONDYN_SVR_H__
-
-#include "dyncom.h"
-#include "select.h"
-#ifdef HAVE_SYS_RESOURCE_H
-/* needed by setpriority() */
-#include <sys/resource.h>
-#endif
+#include "config.h"
+#include "global.h"
 
 /* functions prototypes */
-extern void fcrondyn_socket_init(select_instance * si);
-extern void fcrondyn_socket_check(select_instance * si);
-extern void fcrondyn_socket_close(select_instance * si);
+extern long int read_suspend_duration(time_t slept_from);
+extern void check_suspend(time_t slept_from, time_t nwt, char *sig_cont);
 
-/* struct used by fcron : */
-typedef struct fcrondyn_cl {
-    struct fcrondyn_cl *fcl_next;
-    int fcl_sock_fd;
-    char *fcl_user;
-    time_t fcl_idle_since;
-    int fcl_cmd_len;
-    long int *fcl_cmd;
-} fcrondyn_cl;
-
-
-#endif                          /* __FCRONDYN_SVR_H__ */
+#endif                          /* __SUSPEND_H__ */

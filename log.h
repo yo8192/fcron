@@ -26,7 +26,7 @@
 #define __LOG_H__
 
 #ifdef HAVE_LIBPAM
-#   include "pam.h"
+#include "pam.h"
 #endif
 
 extern char debug_opt;

@@ -30,6 +30,7 @@
 #include "temp_file.h"
 #include "fcronconf.h"
 #include "select.h"
+#include "suspend.h"
 #ifdef FCRONDYN
 #include "fcrondyn_svr.h"
 #endif
@@ -37,6 +38,7 @@
 
 void main_loop(void);
 void check_signal(void);
+void reset_sig_cont(void);
 void info(void);
 void usage(void);
 void print_schedule(void);
@@ -46,8 +48,6 @@ RETSIGTYPE sigchild_handler(int x);
 RETSIGTYPE sigusr1_handler(int x);
 RETSIGTYPE sigusr2_handler(int x);
 RETSIGTYPE sigcont_handler(int x);
-long int read_suspend_duration(time_t slept_from);
-void check_suspend(time_t slept_from, time_t nwt);
 int parseopt(int argc, char *argv[]);
 void get_lock(void);
 int is_system_reboot(void);
@@ -533,161 +533,6 @@ sigcont_handler(int x)
     sig_cont = 1;
 }
 
-long int
-read_suspend_duration(time_t slept_from)
-  /* Return the amount of time the system was suspended (to mem or disk),
-   * as read from suspendfile.
-   * Return 0 on error.
-   *
-   * The idea is that:
-   * 1) the OS sends the STOP signal to the main fcron process when suspending
-   * 2) the OS writes the suspend duration (as a string) into suspendfile,
-   *    and then sends the CONT signal to the main fcron process when resuming.
-   *
-   * The main reason to do it this way instead of killing fcron and restarting
-   * it on resume is to better handle jobs that may already be running.
-   * (e.g. don't run them again when the machine resumes) */
-{
-    int fd = -1;
-    char buf[TERM_LEN];
-    int read_len = 0;
-    long int suspend_duration = 0;      /* default value to return on error */
-    struct stat s;
-
-    if (sig_cont <= 0) {
-        /* signal not raised -- do nothing */
-        return 0;
-    }
-
-    /* the signal CONT was raised: reset the signal and check the suspendfile */
-    sig_cont = 0;
-
-    fd = open(suspendfile, O_RDONLY | O_NONBLOCK);
-    if (fd == -1) {
-        /* If the file doesn't exist, then we assume the user/system
-         * did a manual 'kill -STOP' / 'kill -CONT' and doesn't intend
-         * for fcron to account for any suspend time.
-         * This is not considered as an error. */
-        if (errno != ENOENT) {
-            error_e("Could not open suspend file '%s'", suspendfile);
-        }
-        goto cleanup_return;
-    }
-
-    /* check the file is a 'normal' file (e.g. not a link) and only writable
-     * by root -- don't allow attacker to affect job schedules,
-     * or delete the suspendfile */
-    if (fstat(fd, &s) < 0) {
-        error_e("could not fstat() suspend file '%s'", suspendfile);
-        goto cleanup_return;
-    }
-    if (!S_ISREG(s.st_mode) || s.st_nlink != 1) {
-        error_e("suspend file %s is not a regular file", suspendfile);
-        goto cleanup_return;
-    }
-
-    if (s.st_mode & S_IWOTH || s.st_uid != rootuid || s.st_gid != rootgid) {
-        error("suspend file %s must be owned by %s:%s and not writable by"
-              " others.", suspendfile, ROOTNAME, ROOTGROUP);
-        goto cleanup_return;
-    }
-
-    /* read the content of the suspendfile into the buffer */
-    read_len = read(fd, buf, sizeof(buf) - 1);
-    if (read_len < 0) {
-        /* we have to run this immediately or errno may be changed */
-        error_e("Could not read suspend file '%s'", suspendfile);
-        goto unlink_cleanup_return;
-    }
-    if (read_len < 0) {
-        goto unlink_cleanup_return;
-    }
-    buf[read_len] = '\0';
-
-    errno = 0;
-    suspend_duration = strtol(buf, NULL, 10);
-    if (errno != 0) {
-        error_e("Count not parse suspend duration '%s'", buf);
-        suspend_duration = 0;
-        goto unlink_cleanup_return;
-    }
-    else if (suspend_duration < 0) {
-        warn("Read negative suspend_duration (%ld): ignoring.");
-        suspend_duration = 0;
-        goto unlink_cleanup_return;
-    }
-    else {
-        debug("Read suspend_duration of '%ld' from suspend file '%s'",
-              suspend_duration, suspendfile);
-
-        if (now < slept_from + suspend_duration) {
-            long int time_slept = now - slept_from;
-
-            /* we can have a couple of seconds more due to rounding up,
-             * but anything more should be an invalid value in suspendfile */
-            explain("Suspend duration %lds in suspend file '%s' is longer than "
-                    "we slept.  This could be due to rounding. "
-                    "Reverting to time slept %lds.",
-                    suspend_duration, suspendfile, time_slept);
-            suspend_duration = time_slept;
-        }
-    }
-
- unlink_cleanup_return:
-    if (unlink(suspendfile) < 0) {
-        warn_e("Could not remove suspend file '%s'", suspendfile);
-        return 0;
-    }
-
- cleanup_return:
-    if (fd >= 0 && xclose(&fd) < 0) {
-        warn_e("Could not xclose() suspend file '%s'", suspendfile);
-    }
-
-#ifdef HAVE_SIGNAL
-    signal(SIGCONT, sigcont_handler);
-    siginterrupt(SIGCONT, 0);
-#endif
-
-    return suspend_duration;
-
-}
-
-void
-check_suspend(time_t slept_from, time_t nwt)
-    /* Check if the machine was suspended (to mem or disk), and if so
-     * reschedule jobs accordingly */
-{
-    long int suspend_duration;  /* amount of time the system was suspended */
-    long int time_diff;         /* estimate of suspend_duration (as fallback) */
-
-    suspend_duration = read_suspend_duration(slept_from);
-
-    /* Also check if there was an unaccounted sleep duration, in case
-     * the OS is not configured to let fcron properly know about suspends
-     * via suspendfile.
-     * This is not perfect as we may miss some suspend time if fcron
-     * is woken up before the timer expiry, e.g. due to a signal
-     * or activity on a socket (fcrondyn).
-     * NOTE: the +5 second is arbitrary -- just a way to make sure
-     * we don't get any false positive.  If the suspend or hibernate
-     * is very short it seems fine to simply ignore it anyway */
-    time_diff = now - nwt;
-    if (suspend_duration <= 0 && time_diff > 5) {
-        suspend_duration = time_diff;
-    }
-
-    if (suspend_duration > 0) {
-        long int actual_sleep = now - slept_from;
-        long int scheduled_sleep = nwt - slept_from;
-        explain("suspend/hibernate detected: we woke up after %lus"
-                " instead of %lus. The system was suspended for %lus.",
-                actual_sleep, scheduled_sleep, suspend_duration);
-        reschedule_all_on_resume(suspend_duration);
-    }
-}
-
-
 int
 main(int argc, char **argv)
 {
@@ -899,6 +744,7 @@ check_signal()
         siginterrupt(SIGCHLD, 0);
 #endif
     }
+
     if (sig_conf > 0) {
 
         if (sig_conf == 1) {
@@ -921,6 +767,7 @@ check_signal()
         }
 
     }
+
     if (sig_debug > 0) {
         print_schedule();
         debug_opt = (debug_opt > 0) ? 0 : 1;
@@ -933,6 +780,33 @@ check_signal()
     }
 
 }
+
+void
+reset_sig_cont(void)
+   /* reinitialize the SIGCONT handler if it was raised */
+{
+    if (sig_cont > 0) {
+
+        sig_cont = 0;
+#ifdef HAVE_SIGNAL
+        signal(SIGCONT, sigcont_handler);
+        siginterrupt(SIGCONT, 0);
+#endif
+    }
+}
+
+#ifdef HAVE_GETTIMEOFDAY
+#define debug_print_tstamp(where_str) \
+        { \
+        if (debug_opt) { \
+            gettimeofday(&now_tv, NULL); \
+            debug(where_str ": now=%ld now_tv sec=%ld usec=%ld", now, now_tv.tv_sec, \
+                  now_tv.tv_usec); \
+        } \
+    }
+#else
+#define debug_print_tstamp(where_str) { ; }
+#endif
 
 void
 main_loop()
@@ -1008,7 +882,6 @@ main_loop()
                 ("We'll sleep for a tiny bit to avoid any risk of infinite loop");
             sleep_tv.tv_usec = min_sleep_usec;
         }
-        /* note: read_set is set in socket.c */
         debug("nwt=%s, sleep sec=%ld, usec=%ld", ctime(&nwt), sleep_tv.tv_sec,
               sleep_tv.tv_usec);
         select_call(&main_select, &sleep_tv);
@@ -1020,37 +893,17 @@ main_loop()
 
         debug("\n");
         now = my_time();
-#ifdef HAVE_GETTIMEOFDAY
-        if (debug_opt) {
-            gettimeofday(&now_tv, NULL);
-            debug("now=%ld now_tv sec=%ld usec=%ld", now, now_tv.tv_sec,
-                  now_tv.tv_usec);
-        }
-#endif
+        debug_print_tstamp("just woke up")
 
-        debug("\n");
+            check_signal();
+        check_suspend(slept_from, nwt, &sig_cont);
+        reset_sig_cont();
+        debug_print_tstamp("after check_signal and suspend")
 
-        check_signal();
+            test_jobs();
+        debug_print_tstamp("after test_jobs")
 
-        check_suspend(slept_from, nwt);
-#ifdef HAVE_GETTIMEOFDAY
-        if (debug_opt) {
-            gettimeofday(&now_tv, NULL);
-            debug("after check_signal: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
-                  now_tv.tv_usec);
-        }
-#endif
-
-        test_jobs();
-#ifdef HAVE_GETTIMEOFDAY
-        if (debug_opt) {
-            gettimeofday(&now_tv, NULL);
-            debug("after test_jobs: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
-                  now_tv.tv_usec);
-        }
-#endif
-
-        while (serial_num > 0 && serial_running < serial_max_running) {
+            while (serial_num > 0 && serial_running < serial_max_running) {
             run_serial_job();
         }
 
@@ -1064,29 +917,16 @@ main_loop()
             /* save all files */
             save_file(NULL);
         }
-#ifdef HAVE_GETTIMEOFDAY
-        if (debug_opt) {
-            gettimeofday(&now_tv, NULL);
-            debug("after save: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
-                  now_tv.tv_usec);
-        }
-#endif
-
+        debug_print_tstamp("after save")
 #if defined(FCRONDYN) && defined(HAVE_GETTIMEOFDAY)
-        /* check if there's a new connection, a new command to answer, etc ... */
-        /* we do that *after* other checks, to avoid Denial Of Service attacks */
-        fcrondyn_socket_check(&main_select);
+            /* check if there's a new connection, a new command to answer, etc ... */
+            /* we do that *after* other checks, to avoid Denial Of Service attacks */
+            fcrondyn_socket_check(&main_select);
 #endif
 
         nwt = check_lavg(save);
-#ifdef HAVE_GETTIMEOFDAY
-        if (debug_opt) {
-            gettimeofday(&now_tv, NULL);
-            debug("after check_lavg: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
-                  now_tv.tv_usec);
-        }
-#endif
-        debug("next wake time : %s", ctime(&nwt));
+        debug_print_tstamp("after check_lavg")
+            debug("next wake time : %s", ctime(&nwt));
 
         check_signal();
 

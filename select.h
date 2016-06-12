@@ -29,26 +29,26 @@
 #include "config.h"
 
 #ifdef HAVE_SYS_SELECT_H
-#   include <sys/select.h>
+#include <sys/select.h>
 #endif
 #ifdef HAVE_SYS_TYPES_H
-#   include <sys/types.h>
+#include <sys/types.h>
 #endif
 
 
 typedef struct select_instance {
     /* public (read-only) */
-    int retcode; /* return value of the last call of select() */
-    fd_set readfds; /* to check the status of fds after select_call */
+    int retcode;                /* return value of the last call of select() */
+    fd_set readfds;             /* to check the status of fds after select_call */
     /* private */
-    fd_set __readfds_master; /* select() modifies readfds, so we maintain a list in parallel */
+    fd_set __readfds_master;    /* select() modifies readfds, so we maintain a list in parallel */
     int __fd_max;
 } select_instance;
 
 /* functions prototypes */
 extern void select_init(struct select_instance *si);
-extern void select_add_read(select_instance *si, int fd);
-extern void select_rm_read(select_instance *si, int fd);
+extern void select_add_read(select_instance * si, int fd);
+extern void select_rm_read(select_instance * si, int fd);
 extern void select_call(struct select_instance *si, struct timeval *timeout);
 
 #endif                          /* __SELECT_H__ */

@@ -75,7 +75,7 @@ CFLAGS += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
 ifeq ($(FCRONDYN), 1)
 LIBOBJS := $(LIBOBJS)
 endif
-OBJSD := fcron.o cl.o subs.o mem.o save.o temp_file.o log.o database.o job.o conf.o u_list.o exe_list.o lavg_list.o env_list.o fcronconf.o filesubs.o select.o fcrondyn_svr.o $(LIBOBJS)
+OBJSD := fcron.o cl.o subs.o mem.o save.o temp_file.o log.o database.o job.o conf.o u_list.o exe_list.o lavg_list.o env_list.o fcronconf.o filesubs.o select.o fcrondyn_svr.o suspend.o $(LIBOBJS)
 OBJSTAB := fcrontab.o cl.o subs.o mem.o save.o temp_file.o  log.o fileconf.o allow.o read_string.o u_list.o env_list.o fcronconf.o filesubs.o
 OBJSDYN := fcrondyn.o subs.o mem.o log.o allow.o read_string.o fcronconf.o filesubs.o
 OBJCONV := convert-fcrontab.o cl.o subs.o mem.o save.o log.o u_list.o env_list.o fcronconf.o filesubs.o

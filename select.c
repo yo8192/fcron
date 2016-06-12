@@ -39,7 +39,7 @@ select_init(struct select_instance *si)
 }
 
 void
-select_add_read(select_instance *si, int fd)
+select_add_read(select_instance * si, int fd)
     /* Add a fd to the read set */
 {
     FD_SET(fd, &si->__readfds_master);
@@ -51,7 +51,7 @@ select_add_read(select_instance *si, int fd)
 }
 
 void
-select_rm_read(select_instance *si, int fd)
+select_rm_read(select_instance * si, int fd)
     /* remove a fd to the read set */
 {
     FD_CLR(fd, &si->__readfds_master);
@@ -59,9 +59,9 @@ select_rm_read(select_instance *si, int fd)
         /* fds in the fd_set may not be continuous, so we need
          * to check them all to find the new max */
         int i;
-        for (i=fd; i >= 0; i--) {
+        for (i = fd; i >= 0; i--) {
             if (FD_ISSET(i, &si->__readfds_master))
-            si->__fd_max = i;
+                si->__fd_max = i;
         }
     }
     debug("select: removed fd %d (fd_max=%d)", fd, si->__fd_max);
@@ -79,4 +79,3 @@ select_call(struct select_instance *si, struct timeval *timeout)
         die_e("select returned %d", errno);
     }
 }
-

@@ -33,7 +33,7 @@
 
 
 void remove_connection(struct fcrondyn_cl **client,
-                       struct fcrondyn_cl *prev_client, select_instance *si);
+                       struct fcrondyn_cl *prev_client, select_instance * si);
 void exe_cmd(struct fcrondyn_cl *client);
 #ifdef SO_PEERCRED              /* linux */
 void auth_client_so_peercred(struct fcrondyn_cl *client);
@@ -104,7 +104,7 @@ char err_others_nallowed_str[] =
 
 
 void
-fcrondyn_socket_init(select_instance *si)
+fcrondyn_socket_init(select_instance * si)
     /* do everything needed to get a working listening socket */
 {
     struct sockaddr_un addr;
@@ -842,7 +842,8 @@ exe_cmd(struct fcrondyn_cl *client)
 }
 
 void
-remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client, select_instance *si)
+remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client,
+                  select_instance * si)
 /* close the connection, remove it from the list 
 and make client points to the next entry */
 {
@@ -866,7 +867,7 @@ and make client points to the next entry */
 }
 
 void
-fcrondyn_socket_check(select_instance *si)
+fcrondyn_socket_check(select_instance * si)
     /* check for new connection, command, connection closed */
 {
     int fd = -1, avoid_fd = -1;
@@ -984,7 +985,7 @@ fcrondyn_socket_check(select_instance *si)
 
 
 void
-fcrondyn_socket_close(select_instance *si)
+fcrondyn_socket_close(select_instance * si)
     /* close connections, close socket, remove socket file.
      * If si is not NULL, then remove the fds from si's readfds */
 {
