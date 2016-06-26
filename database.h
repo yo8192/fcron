@@ -39,7 +39,7 @@ extern void set_next_exe_notrun(struct cl_t *line, char context);
 #define LAVG 1                  /* set_next_exe_notrun() : context */
 #define SYSDOWN 2               /* set_next_exe_notrun() : context */
 #define QUEUE_FULL 3            /* set_next_exe_notrun() : context */
-#define SYSDOWN_RUNATREBOOT 4   /* set_next_exe_notrun() : context */
+#define SYSDOWN_RUNATREBOOT 4   /* set_next_exe_notrun() : context - runatreboot or runatresume */
 extern void set_next_exe_startup(struct cl_t *cl, const int context,
                                  const time_t sleep_duration);
 #define CONTEXT_DEFAULT 1       /* a new file was loaded (and the machine didn't just boot) */

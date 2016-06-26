@@ -392,7 +392,7 @@ will run only ONCE either at 2:15, 3:15 OR 4:15.</para>
 linkend="uptent">lines based on elapsed system up time</link> is recommended instead.</para>
 	    <para>A task using a Vixie cron shortcut is of the form:</para>
 	    <programlisting>shortcut command</programlisting>
-	    <para>Below is a list of available shortcuts with their fcron equivalent:</para>
+	    <para>Below is a list of available shortcuts, plus some fcron-specific additions, with their fcron equivalent:</para>
 	    <table>
 		<title>Vixie cron shortcuts </title>
 		<tgroup cols="2">
@@ -409,6 +409,12 @@ linkend="uptent">lines based on elapsed system up time</link> is recommended ins
 			    <entry>@reboot </entry>
 			    <entry>Run once, at startup </entry>
 			    <entry>@runatreboot,runonce(true)</entry>
+			    <entry>   </entry>
+			</row>
+			<row>
+			    <entry>@resume </entry>
+			    <entry>Run once, at resume from suspend/hibernate </entry>
+			    <entry>@runatresume,runonce(true)</entry>
 			    <entry>   </entry>
 			</row>
 			<row>

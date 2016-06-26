@@ -664,6 +664,18 @@ read_opt(char *ptr, cl_t * cl)
         }
 
 
+        else if (strcmp(opt_name, "runatresume") == 0) {
+            if (in_brackets && (ptr = get_bool(ptr, &i)) == NULL)
+                Handle_err;
+            if (i == 0)
+                clear_runatresume(cl->cl_option);
+            else
+                set_runatresume(cl->cl_option);
+            if (debug_opt)
+                fprintf(stderr, "  Opt : \"%s\" %d\n", opt_name, i);
+        }
+
+
         else if (strcmp(opt_name, "runonce") == 0) {
             if (in_brackets && (ptr = get_bool(ptr, &i)) == NULL)
                 Handle_err;
@@ -1336,6 +1348,20 @@ read_shortcut(char *ptr, cf_t * cf)
 
         if (debug_opt)
             fprintf(stderr, "  Shc : @reboot\n");
+    }
+    if (strcmp(shortcut, "resume") == 0) {
+        set_freq(cl->cl_option);
+        set_runatresume(cl->cl_option);
+        set_runonce(cl->cl_option);
+        clear_volatile(cl->cl_option);
+        cl->cl_runfreq = 0;
+        cl->cl_first = 0;
+        /* the job will not be rescheduled after the first execution (flag is_hasrun),
+         * we set timefreq to LONG_MAX just in case */
+        cl->cl_timefreq = LONG_MAX;
+
+        if (debug_opt)
+            fprintf(stderr, "  Shc : @resume\n");
     }
     else if (strcmp(shortcut, "yearly") == 0
              || strcmp(shortcut, "annually") == 0) {

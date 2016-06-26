@@ -1391,7 +1391,8 @@ set_next_exe_startup(struct cl_t *cl, const int context,
     }
 
     if (context == CONTEXT_BOOT
-        || (context == CONTEXT_DEFAULT && is_volatile(cl->cl_option))) {
+        || (context == CONTEXT_DEFAULT && is_volatile(cl->cl_option))
+        || (context == CONTEXT_RESUME && is_runatresume(cl->cl_option))) {
         clear_hasrun(cl->cl_option);
     }
 
@@ -1404,7 +1405,8 @@ set_next_exe_startup(struct cl_t *cl, const int context,
     else if (is_td(cl->cl_option)) {
 
         /* set the time and date of the next execution  */
-        if (context == CONTEXT_BOOT && is_runatreboot(cl->cl_option)) {
+        if ((context == CONTEXT_BOOT && is_runatreboot(cl->cl_option))
+            || (context == CONTEXT_RESUME && is_runatresume(cl->cl_option))) {
 
             if (is_notice_notrun(cl->cl_option)) {
 
@@ -1482,7 +1484,8 @@ set_next_exe_startup(struct cl_t *cl, const int context,
         }
 
         /* standard @-lines */
-        if (context == CONTEXT_BOOT && is_runatreboot(cl->cl_option)) {
+        if ((context == CONTEXT_BOOT && is_runatreboot(cl->cl_option))
+            || (context == CONTEXT_RESUME && is_runatresume(cl->cl_option))) {
             cl->cl_nextexe = now;
         }
         else if (is_new_file || is_volatile(cl->cl_option)

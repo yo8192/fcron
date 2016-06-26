@@ -21,6 +21,9 @@ A copy of the license is included in gfdl.sgml.
                <para>Refactored the socket (for fcrondyn), suspend and select code.</para>
             </listitem>
             <listitem>
+               <para>Added a new option 'runatresume' (as well as a Vixie-cron-style '@resume' shortcut), to run a job when the system resumes from suspend/hibernation.</para>
+            </listitem>
+             <listitem>
                <para>The installation script now supports systemd fully.</para>
             </listitem>
       </itemizedlist>

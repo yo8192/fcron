@@ -95,7 +95,7 @@ every day at 2:30, it will run at 3:30 the day of this kind of DST change.
 	    </question>
 	    <answer>
 	       <para>fcron now fully supports suspend (to memory or disk).
-               On resume it will adjust the task schedules accordingly, run runatreboot tasks if appropriate, and report non-execution of noticenotrun tasks.</para>
+               On resume it will adjust the task schedules accordingly, run runatresume tasks if any, and report non-execution of noticenotrun tasks.</para>
                <para>fcron will try to notice suspends by itself without external help.
 	       On Linux it can do so reliably via system APIs, but on other OSes it will instead
                check if it wakes up later than it expected after a sleep.
