@@ -17,7 +17,7 @@ AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
 VERSION="$vers"
 AC_SUBST(VERSION)
 
-copyright_quoted="\"2000-2014\""
+copyright_quoted="\"2000-2016\""
 AC_DEFINE_UNQUOTED(COPYRIGHT_QUOTED, $copyright_quoted)
 
 
