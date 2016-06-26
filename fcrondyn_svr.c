@@ -24,16 +24,16 @@
 
 /* This file contains all fcron's code (server) to handle communication with fcrondyn */
 
-
 #include "fcron.h"
-#include "socket.h"
+#include "fcrondyn_svr.h"
+#include "select.h"
 #include "getloadavg.h"
 #include "database.h"
 #include "fcronconf.h"
 
 
 void remove_connection(struct fcrondyn_cl **client,
-                       struct fcrondyn_cl *prev_client);
+                       struct fcrondyn_cl *prev_client, select_instance * si);
 void exe_cmd(struct fcrondyn_cl *client);
 #ifdef SO_PEERCRED              /* linux */
 void auth_client_so_peercred(struct fcrondyn_cl *client);
@@ -52,14 +52,9 @@ void cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t * e,
 void cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd,
                      exe_t * e);
 void cmd_run(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root);
-void add_to_select_set(int fd, fd_set * set, int *max_fd);
-void remove_from_select_set(int fd, fd_set * set, int *max_fd);
 
 fcrondyn_cl *fcrondyn_cl_base;  /* list of connected fcrondyn clients */
 int fcrondyn_cl_num = 0;        /* number of fcrondyn clients currently connected */
-fd_set read_set;                /* client fds list : cmd waiting ? */
-fd_set master_set;              /* master set : needed since select() modify read_set */
-int set_max_fd = 0;             /* needed by select() */
 int listen_fd = -1;             /* fd which catches incoming connection */
 int auth_fail = 0;              /* number of auth failure */
 time_t auth_nofail_since = 0;   /* we refuse auth since x due to too many failures */
@@ -109,48 +104,12 @@ char err_others_nallowed_str[] =
 
 
 void
-add_to_select_set(int fd, fd_set * set, int *max_fd)
-    /* add fd to set, and update max_fd if necessary (for select()) */
-{
-    FD_SET(fd, set);
-    if (fd > *max_fd)
-        *max_fd = fd;
-}
-
-
-void
-remove_from_select_set(int fd, fd_set * set, int *max_fd)
-    /* remove fd to set, and update max_fd if necessary (for select()) */
-{
-    FD_CLR(fd, set);
-    if (fd == *max_fd) {
-        /* find the biggest fd in order to update max_fd */
-        struct fcrondyn_cl *client;
-        int tmp_max_fd = listen_fd;
-
-        for (client = fcrondyn_cl_base; client != NULL;
-             client = client->fcl_next) {
-            if (client->fcl_sock_fd > tmp_max_fd)
-                tmp_max_fd = client->fcl_sock_fd;
-        }
-
-        /* update max_fd */
-        *max_fd = tmp_max_fd;
-    }
-}
-
-
-void
-init_socket(void)
+fcrondyn_socket_init(select_instance * si)
     /* do everything needed to get a working listening socket */
 {
     struct sockaddr_un addr;
     int len = 0;
     int sun_len = 0;
-
-    /* used in fcron.c:main_loop():select() */
-    FD_ZERO(&read_set);
-    FD_ZERO(&master_set);
 
     if ((listen_fd = socket(PF_UNIX, SOCK_STREAM, 0)) == -1) {
         error_e("Could not create socket : fcrondyn won't work");
@@ -201,16 +160,13 @@ init_socket(void)
     }
 
     /* no error */
-    add_to_select_set(listen_fd, &master_set, &set_max_fd);
+    select_add_read(si, listen_fd);
 
-    /* copy master in read_fs, because read_fs will be modified by select() */
-    read_set = master_set;
-    debug("Socket initialized : listen_fd : %d set_max_fd : %d ", listen_fd,
-          set_max_fd);
+    debug("Socket initialized : listen_fd : %d", listen_fd);
     return;
 
  err:
-    close_socket();
+    fcrondyn_socket_close(si);
 
 }
 
@@ -886,13 +842,14 @@ exe_cmd(struct fcrondyn_cl *client)
 }
 
 void
-remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client)
+remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client,
+                  select_instance * si)
 /* close the connection, remove it from the list 
 and make client points to the next entry */
 {
     debug("closing connection : fd : %d", (*client)->fcl_sock_fd);
     shutdown((*client)->fcl_sock_fd, SHUT_RDWR);
-    remove_from_select_set((*client)->fcl_sock_fd, &master_set, &set_max_fd);
+    select_rm_read(si, (*client)->fcl_sock_fd);
     xclose_check(&((*client)->fcl_sock_fd), "client fd");
     if (prev_client == NULL) {
         fcrondyn_cl_base = (*client)->fcl_next;
@@ -910,7 +867,7 @@ and make client points to the next entry */
 }
 
 void
-check_socket(int num)
+fcrondyn_socket_check(select_instance * si)
     /* check for new connection, command, connection closed */
 {
     int fd = -1, avoid_fd = -1;
@@ -920,19 +877,19 @@ check_socket(int num)
     int read_len = 0;
     struct fcrondyn_cl *client = NULL, *prev_client = NULL;
 
-    if (num <= 0)
+    if (si->retcode <= 0)
         /* no socket to check : go directly to the end of that function */
-        goto final_settings;
+        return;
 
     debug("Checking socket ...");
 
-    if (FD_ISSET(listen_fd, &read_set)) {
+    if (FD_ISSET(listen_fd, &si->readfds)) {
         debug("got new connection ...");
         fd = accept(listen_fd, (struct sockaddr *)&client_addr, &addr_len);
         if (fd == -1) {
             error_e
                 ("could not accept new connection : isset(listen_fd = %d) = %d",
-                 listen_fd, FD_ISSET(listen_fd, &read_set));
+                 listen_fd, FD_ISSET(listen_fd, &si->readfds));
         }
         else {
             fcntl(fd, F_SETFD, 1);
@@ -957,7 +914,7 @@ check_socket(int num)
                 /* to avoid trying to read from it in this call */
                 avoid_fd = fd;
 
-                add_to_select_set(fd, &master_set, &set_max_fd);
+                select_add_read(si, fd);
                 fcrondyn_cl_num += 1;
 
                 debug("Added connection fd : %d - %d connections", fd,
@@ -974,19 +931,19 @@ check_socket(int num)
 
     client = fcrondyn_cl_base;
     while (client != NULL) {
-        if (!FD_ISSET(client->fcl_sock_fd, &read_set)
+        if (!FD_ISSET(client->fcl_sock_fd, &si->readfds)
             || client->fcl_sock_fd == avoid_fd) {
             /* check if the connection has not been idle for too long ... */
             if (client->fcl_user == NULL
                 && now - client->fcl_idle_since > MAX_AUTH_TIME) {
                 warn("Connection with no auth for more than %ds : closing it.",
                      MAX_AUTH_TIME);
-                remove_connection(&client, prev_client);
+                remove_connection(&client, prev_client, si);
             }
             else if (now - client->fcl_idle_since > MAX_IDLE_TIME) {
                 warn("Connection of %s is idle for more than %ds : closing it.",
                      client->fcl_user, MAX_IDLE_TIME);
-                remove_connection(&client, prev_client);
+                remove_connection(&client, prev_client, si);
             }
             else {
                 /* nothing to do on this one ... check the next one */
@@ -1000,7 +957,7 @@ check_socket(int num)
              recv(client->fcl_sock_fd, buf_int, sizeof(buf_int), 0)) <= 0) {
             if (read_len == 0) {
                 /* connection closed by client */
-                remove_connection(&client, prev_client);
+                remove_connection(&client, prev_client, si);
             }
             else {
                 error_e("error recv() from sock fd %d", client->fcl_sock_fd);
@@ -1024,15 +981,13 @@ check_socket(int num)
         }
     }
 
- final_settings:
-    /* copy master_set in read_set, because read_set is modified by select() */
-    read_set = master_set;
 }
 
 
 void
-close_socket(void)
-    /* close connections, close socket, remove socket file */
+fcrondyn_socket_close(select_instance * si)
+    /* close connections, close socket, remove socket file.
+     * If si is not NULL, then remove the fds from si's readfds */
 {
     struct fcrondyn_cl *client, *client_buf = NULL;
 
@@ -1045,6 +1000,9 @@ close_socket(void)
         while (client != NULL) {
             shutdown(client->fcl_sock_fd, SHUT_RDWR);
             xclose_check(&(client->fcl_sock_fd), "client fd");
+            if (si != NULL) {
+                select_rm_read(si, client->fcl_sock_fd);
+            }
 
             client_buf = client->fcl_next;
             Free_safe(client);

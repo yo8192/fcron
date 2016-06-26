@@ -7,8 +7,9 @@
 # The spool directory where fcron stores its files
 fcrontabs	=	@@FCRONTABS@
 
-# The locations of the pid file and the fifo file
+# The locations of the pid file, suspend file and the fifo file
 pidfile		=	@@PIDFILE@
+suspendfile	=	@@SUSPEND_FILE@
 fifofile	=	@@FIFOFILE@
 
 # allow/deny files to determine which users are allowed to use fcrontab

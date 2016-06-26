@@ -10,7 +10,7 @@ AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.57)
 m4_include([m4/ax_lib_readline.m4])
 
-vers="3.2.1"
+vers="3.3.0"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
@@ -54,7 +54,7 @@ AC_CHECK_HEADERS(errno.h sys/fcntl.h getopt.h limits.h)
 AC_CHECK_HEADERS(stdarg.h)
 AC_CHECK_HEADERS(termios.h)
 AC_CHECK_HEADERS(strings.h)
-AC_CHECK_HEADERS(sys/types.h sys/socket.h sys/un.h)
+AC_CHECK_HEADERS(sys/select.h sys/timerfd.h sys/types.h sys/socket.h sys/un.h)
 AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h crypt.h shadow.h libaudit.h)
 AC_CHECK_HEADERS(sys/resource.h)
 AC_CHECK_HEADERS(grp.h)
@@ -307,10 +307,14 @@ AC_ARG_WITH(piddir,
 )
 AC_MSG_RESULT([$PIDDIR])
 PIDFILE="${PIDDIR}/fcron.pid"
+dnl Is it the first time fcron starts since the system rebooted:
 REBOOT_LOCK="${PIDDIR}/fcron.reboot"
+dnl Used to notify fcron the system was suspended, and for how long:
+SUSPEND_FILE="${PIDDIR}/fcron.suspend"
 AC_SUBST(PIDDIR)
 AC_SUBST(PIDFILE)
 AC_SUBST(REBOOT_LOCK)
+AC_SUBST(SUSPEND_FILE)
 
 FIFODIR="${localstatedir}/run"
 AC_MSG_CHECKING(location of fifo files)

@@ -1,7 +1,7 @@
 /*
- * FCRON - periodic command scheduler
+ * FCRON - periodic command scheduler 
  *
- *  Copyright 2000-2016 Thibault Godouet <fcron@free.fr>
+ *  Copyright 2000-2014 Thibault Godouet <fcron@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -12,37 +12,27 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *
+ * 
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
+ * 
  *  The GNU General Public License can also be found in the file
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
+/* code to handle system suspend/hibernate and resume */
 
-#ifndef __FCRONCONF_H__
-#define __FCRONCONF_H__
+#ifndef __SUSPEND_H__
+#define __SUSPEND_H__
 
-
-/* global variables */
-
-/* fcron.conf parameters */
-extern char *fcronconf;
-extern char *fcronallow;
-extern char *fcrondeny;
-extern char *fcrontabs;
-extern char *pidfile;
-extern char *suspendfile;
-extern char *fifofile;
-extern char *editor;
-extern char *shell;
-extern char *sendmail;
-/* end of global variables */
+#include "config.h"
+#include "global.h"
+#include "select.h"
 
 /* functions prototypes */
-extern void read_conf(void);
-extern void free_conf(void);
+extern void init_suspend(select_instance * si);
+extern void check_suspend(time_t slept_from, time_t nwt, char *sig_cont,
+                          select_instance * si);
 
-#endif                          /* __FCRONCONF_H__ */
+#endif                          /* __SUSPEND_H__ */

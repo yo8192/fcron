@@ -25,6 +25,10 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
+#ifdef HAVE_LIBPAM
+#include "pam.h"
+#endif
+
 extern char debug_opt;
 extern char *logfile_path;      /* path to a file to log to. Set to NULL to disable logging to a file */
 extern int dosyslog;            /* set to 1 when we log messages to syslog, else 0 */

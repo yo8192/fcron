@@ -816,7 +816,7 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
                  time_t t_save, int is_system_startup)
     /* check if the line is valid, and if yes, add it to the file cf */
 {
-    time_t slept = now - t_save;
+    time_t sleep_duration = now - t_save;
 
     if (cl->cl_shell == NULL || cl->cl_runas == NULL || cl->cl_mailto == NULL) {
         error("Line is not valid (empty shell, runas or mailto field)"
@@ -853,173 +853,16 @@ add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
         Set(cl->cl_mailto, cl->cl_file->cf_user);
     }
 
-    /* job has been stopped during execution: insert it in lavg or serial queue
-     * if it was in one at fcron's stops.  */
-    /* NOTE: runatreboot is prioritary over jobs that were still running
-     * when fcron stops, because the former will get run quicker as they are not
-     * put into the serial queue. runatreboot jobs will be handled later on. */
-    if (cl->cl_numexe > 0 && !is_runatreboot(cl->cl_option)) {
-
-        cl->cl_numexe = 0;
-        if (is_lavg(cl->cl_option)) {
-            if (!is_strict(cl->cl_option))
-                add_lavg_job(cl, -1);
-        }
-        else if (is_serial(cl->cl_option)
-                 || is_serial_once(cl->cl_option))
-            add_serial_job(cl, -1);
-        else {
-            /* job has been stopped during execution :
-             * launch it again */
-            warn("job '%s' did not finish : running it again.", cl->cl_shell);
-            set_serial_once(cl->cl_option);
-            add_serial_job(cl, -1);
-        }
+    /* make sure the timefreq is valid on @-lines or we could end up with
+     * infinite loops */
+    if (!is_td(cl->cl_option) && cl->cl_timefreq < 1) {
+        error("Invalid timefreq %ld for job '%s': setting to 1 day",
+              cl->cl_timefreq, cl->cl_shell);
+        cl->cl_timefreq = 3600 * 24;
     }
 
-    if (is_system_startup || is_volatile(cl->cl_option)) {
-        clear_hasrun(cl->cl_option);
-    }
-
-    if (is_runonce(cl->cl_option) && is_hasrun(cl->cl_option)) {
-        /* if we get here, then is_system_startup is_volatile are both false */
-        /* do nothing: don't re-schedule or add to the job queue */
-        explain("job '%s' with runonce set has already run since last "
-                "system startup: not re-scheduling.", cl->cl_shell);
-    }
-    else if (is_td(cl->cl_option)) {
-
-        /* set the time and date of the next execution  */
-        if (is_system_startup && is_runatreboot(cl->cl_option)) {
-
-            if (is_notice_notrun(cl->cl_option)) {
-
-                if (cl->cl_runfreq == 1) {
-                    /* %-line */
-                    set_next_exe_notrun(cl, SYSDOWN_RUNATREBOOT);
-                }
-                else {
-                    /* set next exe and mail user */
-                    time_t since = cl->cl_nextexe;
-
-                    cl->cl_nextexe = now;
-                    mail_notrun_time_t(cl, SYSDOWN, since);
-                }
-
-            }
-            else {
-                cl->cl_nextexe = now;
-            }
-
-            insert_nextexe(cl);
-
-        }
-        else if (cl->cl_nextexe <= now) {
-            if (cl->cl_nextexe == 0)
-                /* the is a line from a new file */
-                set_next_exe(cl, NO_GOTO, -1);
-            else if (cl->cl_runfreq == 1 && is_notice_notrun(cl->cl_option))
-                set_next_exe_notrun(cl, SYSDOWN);
-            else if (is_bootrun(cl->cl_option) && t_save != 0
-                     && cl->cl_runfreq != 1) {
-                if (cl->cl_remain > 0 && --cl->cl_remain > 0) {
-                    debug("    cl_remain: %d", cl->cl_remain);
-                }
-                else {
-                    /* run bootrun jobs */
-                    cl->cl_remain = cl->cl_runfreq;
-                    debug("   boot-run '%s'", cl->cl_shell);
-                    if (!is_lavg(cl->cl_option)) {
-                        set_serial_once(cl->cl_option);
-                        add_serial_job(cl, -1);
-                    }
-                    else
-                        add_lavg_job(cl, -1);
-                }
-                set_next_exe(cl, STD, -1);
-            }
-            else {
-                if (is_notice_notrun(cl->cl_option)) {
-                    /* set next exe and mail user */
-                    time_t since = cl->cl_nextexe;
-
-                    set_next_exe(cl, NO_GOTO, -1);
-                    mail_notrun_time_t(cl, SYSDOWN, since);
-
-                }
-                else
-                    set_next_exe(cl, NO_GOTO, -1);
-            }
-        }
-        else {
-            /* value of nextexe is valid : just insert line in queue */
-            insert_nextexe(cl);
-        }
-    }
-    else {                      /* is_td(cl->cl_option) */
-        if (cl->cl_timefreq < 1) {
-            error("Invalid timefreq %ld for job '%s': setting to 1 day",
-                  cl->cl_timefreq, cl->cl_shell);
-            cl->cl_timefreq = 3600 * 24;
-        }
-
-        /* standard @-lines */
-        if (is_system_startup && is_runatreboot(cl->cl_option)) {
-            cl->cl_nextexe = now;
-        }
-        /* t_save == 0 means this is a new file, hence a new line */
-        else if (t_save == 0 || is_volatile(cl->cl_option)
-                 || (is_system_startup && (is_rebootreset(cl->cl_option)
-                                           || is_runonce(cl->cl_option)))) {
-            /* cl_first is always saved to disk for a volatile line */
-            if (cl->cl_first == LONG_MAX) {
-                cl->cl_nextexe = TIME_T_MAX;
-            }
-            else {
-                cl->cl_nextexe = now + cl->cl_first;
-                if (cl->cl_nextexe < now || cl->cl_nextexe > TIME_T_MAX) {
-                    /* there was an integer overflow! */
-                    error
-                        ("Error while setting next exe time for job '%s': cl_nextexe"
-                         " overflowed (case1). now=%lu, cl_timefreq=%lu, cl_nextexe=%lu.",
-                         cl->cl_shell, now, cl->cl_timefreq, cl->cl_nextexe);
-                    error
-                        ("Setting cl_nextexe to TIME_T_MAX to prevent an infinite loop.");
-                    cl->cl_nextexe = TIME_T_MAX;
-                }
-            }
-        }
-        else {
-            if (cl->cl_nextexe != LONG_MAX) {
-                cl->cl_nextexe += slept;
-                if (cl->cl_nextexe < now || cl->cl_nextexe > TIME_T_MAX) {
-                    /* either there was an integer overflow, or the slept time is incorrect
-                     * (e.g. fcron didn't shut down cleanly and the fcrontab wasn't saved correctly) */
-                    error
-                        ("Error while setting next exe time for job '%s': cl_nextexe"
-                         " overflowed (case2). now=%lu, cl_timefreq=%lu, cl_nextexe=%lu. "
-                         "Did fcron shut down cleanly?",
-                         cl->cl_shell, now, cl->cl_timefreq, cl->cl_nextexe);
-                    error
-                        ("Setting cl_nextexe to now+cl_timefreq to prevent an infinite loop.");
-                    cl->cl_nextexe = now + cl->cl_timefreq;
-                    error("next execution will now be at %ld.", cl->cl_nextexe);
-                }
-            }
-        }
-
-        insert_nextexe(cl);
-    }
-
-    if (debug_opt && !(is_runonce(cl->cl_option) && is_hasrun(cl->cl_option))) {
-        struct tm *ftime;
-        ftime = localtime(&(cl->cl_nextexe));
-        debug("  cmd '%s' next exec %04d-%02d-%02d wday:%d %02d:%02d:%02d"
-              " (system time)",
-              cl->cl_shell, (ftime->tm_year + 1900), (ftime->tm_mon + 1),
-              ftime->tm_mday, ftime->tm_wday, ftime->tm_hour, ftime->tm_min,
-              ftime->tm_sec);
-    }
+    set_next_exe_startup(cl, is_system_startup ? CONTEXT_BOOT : CONTEXT_DEFAULT,
+                         sleep_duration);
 
     /* add the current line to the list, and allocate a new line */
     if ((cl->cl_id = next_id++) >= ULONG_MAX - 1) {

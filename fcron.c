@@ -29,13 +29,16 @@
 #include "job.h"
 #include "temp_file.h"
 #include "fcronconf.h"
+#include "select.h"
+#include "suspend.h"
 #ifdef FCRONDYN
-#include "socket.h"
+#include "fcrondyn_svr.h"
 #endif
 
 
 void main_loop(void);
 void check_signal(void);
+void reset_sig_cont(void);
 void info(void);
 void usage(void);
 void print_schedule(void);
@@ -44,6 +47,7 @@ RETSIGTYPE sigterm_handler(int x);
 RETSIGTYPE sigchild_handler(int x);
 RETSIGTYPE sigusr1_handler(int x);
 RETSIGTYPE sigusr2_handler(int x);
+RETSIGTYPE sigcont_handler(int x);
 int parseopt(int argc, char *argv[]);
 void get_lock(void);
 int is_system_reboot(void);
@@ -86,6 +90,7 @@ gid_t rootgid = 0;
 char sig_conf = 0;              /* is 1 when we got a SIGHUP, 2 for a SIGUSR1 */
 char sig_chld = 0;              /* is 1 when we got a SIGCHLD */
 char sig_debug = 0;             /* is 1 when we got a SIGUSR2 */
+char sig_cont = 0;              /* is 1 when we got a SIGCONT */
 
 /* jobs database */
 struct cf_t *file_base;         /* point to the first file of the list */
@@ -108,7 +113,6 @@ short int lavg_serial_running;  /* number of serialized lavg job being running *
 
 exe_list_t *exe_list;           /* jobs which are executed */
 
-time_t begin_sleep;             /* the time at which sleep began */
 time_t now;                     /* the current time */
 
 #ifdef HAVE_LIBPAM
@@ -200,7 +204,7 @@ xexit(int exit_value)
     save_file(NULL);
 
 #ifdef FCRONDYN
-    close_socket();
+    fcrondyn_socket_close(NULL);
 #endif
 
     f = file_base;
@@ -521,6 +525,13 @@ sigusr2_handler(int x)
     sig_debug = 1;
 }
 
+RETSIGTYPE
+sigcont_handler(int x)
+  /* used to notify fcron of a system resume after suspend.
+   * However this signal could also be received in other cases. */
+{
+    sig_cont = 1;
+}
 
 int
 main(int argc, char **argv)
@@ -642,6 +653,7 @@ main(int argc, char **argv)
     explain("%s[%d] " VERSION_QUOTED " started", prog_name, daemon_pid);
 
 #ifdef HAVE_SIGNAL
+    /* FIXME: check for errors */
     signal(SIGTERM, sigterm_handler);
     signal(SIGHUP, sighup_handler);
     siginterrupt(SIGHUP, 0);
@@ -651,15 +663,19 @@ main(int argc, char **argv)
     siginterrupt(SIGUSR1, 0);
     signal(SIGUSR2, sigusr2_handler);
     siginterrupt(SIGUSR2, 0);
+    signal(SIGCONT, sigcont_handler);
+    siginterrupt(SIGCONT, 0);
     /* we don't want SIGPIPE to kill fcron, and don't need to handle it as when ignored
      * write() on a pipe closed at the other end will return EPIPE */
     signal(SIGPIPE, SIG_IGN);
 #elif HAVE_SIGSET
+    /* FIXME: check for errors */
     sigset(SIGTERM, sigterm_handler);
     sigset(SIGHUP, sighup_handler);
     sigset(SIGCHLD, sigchild_handler);
     sigset(SIGUSR1, sigusr1_handler);
     sigset(SIGUSR2, sigusr2_handler);
+    sigset(SIGCONT, sigcont_handler);
     sigset(SIGPIPE, SIG_IGN);
 #endif
 
@@ -681,11 +697,6 @@ main(int argc, char **argv)
     lavg_list = lavg_list_init();
     lavg_list->max_entries = lavg_queue_max;
     lavg_serial_running = 0;
-
-#ifdef FCRONDYN
-    /* initialize socket */
-    init_socket();
-#endif
 
     /* initialize random number generator :
      * WARNING : easy to guess !!! */
@@ -733,6 +744,7 @@ check_signal()
         siginterrupt(SIGCHLD, 0);
 #endif
     }
+
     if (sig_conf > 0) {
 
         if (sig_conf == 1) {
@@ -755,6 +767,7 @@ check_signal()
         }
 
     }
+
     if (sig_debug > 0) {
         print_schedule();
         debug_opt = (debug_opt > 0) ? 0 : 1;
@@ -769,21 +782,55 @@ check_signal()
 }
 
 void
+reset_sig_cont(void)
+   /* reinitialize the SIGCONT handler if it was raised */
+{
+    if (sig_cont > 0) {
+
+        sig_cont = 0;
+#ifdef HAVE_SIGNAL
+        signal(SIGCONT, sigcont_handler);
+        siginterrupt(SIGCONT, 0);
+#endif
+    }
+}
+
+#ifdef HAVE_GETTIMEOFDAY
+#define debug_print_tstamp(where_str) \
+        { \
+        if (debug_opt) { \
+            gettimeofday(&now_tv, NULL); \
+            debug(where_str ": now=%ld now_tv sec=%ld usec=%ld", now, now_tv.tv_sec, \
+                  now_tv.tv_usec); \
+        } \
+    }
+#else
+#define debug_print_tstamp(where_str) { ; }
+#endif
+
+void
 main_loop()
   /* main loop - get the time to sleep until next job execution,
    *             sleep, and then test all jobs and execute if needed. */
 {
     time_t save;                /* time remaining until next save */
+    time_t slept_from;          /* time it was when we went into sleep */
     time_t nwt;                 /* next wake time */
 #ifdef HAVE_GETTIMEOFDAY
+    struct select_instance main_select;
     struct timeval now_tv;      /* we use usec field to get more precision */
-#endif
-#if defined(FCRONDYN) && defined(HAVE_GETTIMEOFDAY)
-    int retcode = 0;
     struct timeval sleep_tv;    /* we use usec field to get more precision */
 #endif
 
     debug("Entering main loop");
+
+#ifdef HAVE_GETTIMEOFDAY
+    select_init(&main_select);
+#ifdef FCRONDYN
+    fcrondyn_socket_init(&main_select);
+#endif
+    init_suspend(&main_select);
+#endif
 
     now = my_time();
 
@@ -804,8 +851,10 @@ main_loop()
 
     for (;;) {
 
+        /* remember when we started to sleep -- this is to detect suspend/hibernate */
+        slept_from = time(NULL);
+
 #ifdef HAVE_GETTIMEOFDAY
-#ifdef FCRONDYN
         gettimeofday(&now_tv, NULL);
         debug("now gettimeofday tv_sec=%ld, tv_usec=%ld %s", now_tv.tv_sec,
               now_tv.tv_usec, ctime(&nwt));
@@ -834,22 +883,9 @@ main_loop()
                 ("We'll sleep for a tiny bit to avoid any risk of infinite loop");
             sleep_tv.tv_usec = min_sleep_usec;
         }
-        /* note: read_set is set in socket.c */
         debug("nwt=%s, sleep sec=%ld, usec=%ld", ctime(&nwt), sleep_tv.tv_sec,
               sleep_tv.tv_usec);
-        if ((retcode =
-             select(set_max_fd + 1, &read_set, NULL, NULL, &sleep_tv)) < 0
-            && errno != EINTR)
-            die_e("select returned %d", errno);
-#else                           /* FCRONDYN */
-        if (nwt - now > 0) {
-            sleep(nwt - now - 1);
-        }
-        gettimeofday(&now_tv, NULL);
-        /* we set tv_usec to slightly more than necessary to avoid
-         * infinite loop */
-        usleep(1000000 + min_sleep_usec - now_tv.tv_usec);
-#endif                          /* FCRONDYN */
+        select_call(&main_select, &sleep_tv);
 #else                           /* HAVE_GETTIMEOFDAY */
         if (nwt - now > 0) {
             sleep(nwt - now);
@@ -858,31 +894,15 @@ main_loop()
 
         debug("\n");
         now = my_time();
-#ifdef HAVE_GETTIMEOFDAY
-        if (debug_opt) {
-            gettimeofday(&now_tv, NULL);
-            debug("now=%ld now_tv sec=%ld usec=%ld", now, now_tv.tv_sec,
-                  now_tv.tv_usec);
-        }
-#endif
+        debug_print_tstamp("just woke up");
 
         check_signal();
-#ifdef HAVE_GETTIMEOFDAY
-        if (debug_opt) {
-            gettimeofday(&now_tv, NULL);
-            debug("after check_signal: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
-                  now_tv.tv_usec);
-        }
-#endif
+        check_suspend(slept_from, nwt, &sig_cont, &main_select);
+        reset_sig_cont();
+        debug_print_tstamp("after check_signal and suspend");
 
         test_jobs();
-#ifdef HAVE_GETTIMEOFDAY
-        if (debug_opt) {
-            gettimeofday(&now_tv, NULL);
-            debug("after test_jobs: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
-                  now_tv.tv_usec);
-        }
-#endif
+        debug_print_tstamp("after test_jobs");
 
         while (serial_num > 0 && serial_running < serial_max_running) {
             run_serial_job();
@@ -898,28 +918,15 @@ main_loop()
             /* save all files */
             save_file(NULL);
         }
-#ifdef HAVE_GETTIMEOFDAY
-        if (debug_opt) {
-            gettimeofday(&now_tv, NULL);
-            debug("after save: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
-                  now_tv.tv_usec);
-        }
-#endif
-
+        debug_print_tstamp("after save");
 #if defined(FCRONDYN) && defined(HAVE_GETTIMEOFDAY)
         /* check if there's a new connection, a new command to answer, etc ... */
         /* we do that *after* other checks, to avoid Denial Of Service attacks */
-        check_socket(retcode);
+        fcrondyn_socket_check(&main_select);
 #endif
 
         nwt = check_lavg(save);
-#ifdef HAVE_GETTIMEOFDAY
-        if (debug_opt) {
-            gettimeofday(&now_tv, NULL);
-            debug("after check_lavg: now_tv sec=%ld usec=%ld", now_tv.tv_sec,
-                  now_tv.tv_usec);
-        }
-#endif
+        debug_print_tstamp("after check_lavg");
         debug("next wake time : %s", ctime(&nwt));
 
         check_signal();

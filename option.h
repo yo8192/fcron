@@ -95,6 +95,7 @@
   28     runatreboot: if set then run the job at each system startup
   29     runonce: if set then run the job only once
   30     hasrun: set if the job has been run at least once
+  31     runatresume: if set then run the job at each system resume (from suspend/hibernation)
 
 */
 
@@ -438,7 +439,7 @@
 	(_bit_clear(opt, 24))
 
 /*
-  bit 25 : set to 1 : if fcron is running in the forground, then also let jobs print
+  bit 25 : set to 1 : if fcron is running in the foreground, then also let jobs print
                       to stderr/stdout instead of mailing or discarding it
            set to 0 : if fcron is not running in the foreground or this bit is not
 	              set, then treat it as specified with the other options
@@ -500,7 +501,8 @@
 
 /*
   bit 30 : set to 1 : the job has run at least once since system reboot
-                      (or since fcron restart if volatile is set)
+                      (or since fcron restart if volatile is set,
+                      or since last resume if runatresume is set)
            set to 0 : job hasn't run yet
 */
 #define	is_hasrun(opt) \
@@ -509,5 +511,16 @@
 	(_bit_set(opt, 30))
 #define clear_hasrun(opt) \
 	(_bit_clear(opt, 30))
+
+/*
+  bit 31 : set to 1 : run the job immediately after the system resume (from suspend/hibernation)
+           set to 0 : leave the nextexe time as it
+*/
+#define	is_runatresume(opt) \
+    (_bit_test(opt, 31))
+#define	set_runatresume(opt) \
+    (_bit_set(opt, 31))
+#define clear_runatresume(opt) \
+    (_bit_clear(opt, 31))
 
 #endif                          /* __OPTIONH__ */
