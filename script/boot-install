@@ -31,8 +31,31 @@ DESTBIN=$2
 DEBUG=$3
 #DEBUG=1
 FCRONTABS=$4
-ANSWER=$5
+ANSWER=$5 # Automatic answer: 0->no, 1->yes, 2->ask
 SRCDIR=$6
+
+# Return y or n (defaults to y)
+# (uses the automatic answer if appropriate)
+ask_user() {
+    if test "$ANSWER" -eq 1 ; then
+        echo y
+    elif test "$ANSWER" -eq 0 ; then
+        echo n
+    fi
+
+    # If we get here, then ask the user interactively
+    ANS=
+    while test \( "$ANS" != "y" \) -a \( "$ANS" != "n" \) ; do
+        echo -n "Please answer with 'y' or 'n' (default: 'y'): " >/dev/stderr
+        read ANS NOTHING
+        test -z "$ANS" && ANS=y # Default value
+    done
+    echo $ANS
+
+}
+
+# Validate the command line arguments:
+# FIXME
 
 if test $DEBUG -eq 1; then
     STARTCMD="fcron -b -d"
