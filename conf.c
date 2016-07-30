@@ -883,8 +883,6 @@ delete_file(const char *user_name)
     cf_t *prev_file = NULL;
     cl_t *line;
     cl_t *cur_line;
-    struct job_t *j = NULL;
-    struct job_t *prev_j;
     int i, k;
     struct cl_t **s_a = NULL;
     exe_t *e = NULL;
@@ -966,18 +964,7 @@ delete_file(const char *user_name)
             cur_line = line->cl_next;
 
             /* remove from the main queue */
-            prev_j = NULL;
-            for (j = queue_base; j != NULL; j = j->j_next)
-                if (j->j_line == line) {
-                    if (prev_j != NULL)
-                        prev_j->j_next = j->j_next;
-                    else
-                        queue_base = j->j_next;
-                    Free_safe(j);
-                    break;
-                }
-                else
-                    prev_j = j;
+            job_queue_remove(line);
 
             /* free line itself */
             free_line(line);
