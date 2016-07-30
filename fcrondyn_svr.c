@@ -765,7 +765,7 @@ cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t * e)
 
 void
 cmd_run(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
-    /* Run a job and rescheduled if requested  */
+    /* Run a job and reschedule if requested  */
 {
 
     struct job_t *j = NULL;
@@ -793,7 +793,7 @@ cmd_run(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
         }
     }
 
-    /* we don't come here if a job has been found */
+    /* we won't get here if a job has been found */
     Send_err_msg_end(fd, err_job_nfound_str);
 
 }
