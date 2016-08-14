@@ -39,6 +39,8 @@ void move_time_to(int where, cl_t * line, struct tm *ftime);
 void run_serial_job(void);
 void run_lavg_job(lavg_t * l);
 void run_queue_job(cl_t * line);
+int is_loop_in_queue(void);
+
 
 void
 test_jobs(void)
@@ -246,6 +248,29 @@ run_queue_job(cl_t * line)
 
 }
 
+int
+is_loop_in_queue(void)
+    /* Check that we don't have a loop in the queue_base list.
+     * Return 1 if there is a loop, 0 otherwise.
+     * Only intended to be used when running in debug mode really. */
+{
+    const int max_entries = 1000000 ;
+    int i = 0;
+    struct job_t *j;
+
+    if (queue_base == NULL) {
+        return 0;
+    }
+
+    for (j = queue_base, i = 0; j != NULL; j = j->j_next, i++) {
+        if (i > max_entries) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 job_t *
 job_queue_remove(cl_t * line)
     /* remove a job from the queue list
@@ -257,6 +282,12 @@ job_queue_remove(cl_t * line)
 
     if (queue_base == NULL)
         return NULL;
+
+    if (debug_opt && is_loop_in_queue()) {
+        error("Loop found in job queue before removing line '%s': aborting",
+              line->cl_shell);
+        abort();
+    }
 
     /* find the job in the list */
     for (j = queue_base; j != NULL; jprev = j, j = j->j_next) {
@@ -270,6 +301,13 @@ job_queue_remove(cl_t * line)
                 queue_base = j->j_next;
 
             Free_safe(j);
+
+            if (debug_opt && is_loop_in_queue()) {
+                error("Loop found in job queue after removing line '%s': aborting.",
+                      line->cl_shell);
+                abort();
+            }
+
             return jprev;
         }
     }
@@ -286,6 +324,12 @@ insert_nextexe(cl_t * line)
     struct job_t *j = NULL;
     struct job_t *jprev = NULL;
 
+    if (debug_opt && is_loop_in_queue()) {
+        error("Detected loop in queue_base before adding job '%s' to the queue: aborting.",
+              line->cl_shell);
+        abort();
+    }
+
     Alloc(newjob, job_t);
     newjob->j_line = line;
     newjob->j_next = NULL;
@@ -297,13 +341,15 @@ insert_nextexe(cl_t * line)
     }
 
     jprev = job_queue_remove(line);
-    j = (jprev) ? jprev : queue_base;
 
     /* check if we should start from queue_base or from jprev
      * (in some cases, e.g. fcrontab has just been edited, the line should
      *  be moved *forward* in the queue) */
     if (jprev == NULL || line->cl_nextexe < jprev->j_line->cl_nextexe) {
         j = queue_base;
+    }
+    else {
+        j = jprev;
     }
 
     /* a job can only be moved back */
@@ -315,10 +361,18 @@ insert_nextexe(cl_t * line)
 
     newjob->j_next = j;
 
-    if (jprev == NULL)
+    if (jprev == NULL) {
         queue_base = newjob;
-    else
+    }
+    else {
         jprev->j_next = newjob;
+    }
+
+    if (debug_opt && is_loop_in_queue()) {
+        error("Detected loop in queue_base after adding job '%s' to the queue: aborting.",
+               line->cl_shell);
+        abort();
+    }
 
 }
 
