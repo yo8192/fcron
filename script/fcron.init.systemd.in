@@ -12,6 +12,8 @@ ExecStart=@@DESTSBIN@/fcron -b
 ExecReload=/bin/kill -USR1 $MAINPID
 Restart=always
 KillMode=process
+# 128MB
+LimitCORE=134217728
 
 [Install]
 WantedBy=multi-user.target
