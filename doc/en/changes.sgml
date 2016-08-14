@@ -18,13 +18,10 @@ A copy of the license is included in gfdl.sgml.
                <para>fcron now handles computer suspend/resume.  On Linux systems, fcron can detect resumes and measure the suspend time.  On other OSes, a script must be run at suspend and resume via system hooks.</para>
             </listitem>
             <listitem>
-               <para>Refactored the socket (for fcrondyn), suspend and select code.</para>
-            </listitem>
-            <listitem>
                <para>Added a new option 'runatresume' (as well as a Vixie-cron-style '@resume' shortcut), to run a job when the system resumes from suspend/hibernation.</para>
             </listitem>
-             <listitem>
-               <para>The installation script now supports systemd fully.</para>
+            <listitem>
+               <para>Refactored the socket (for fcrondyn), suspend and select code.</para>
             </listitem>
       </itemizedlist>
 
