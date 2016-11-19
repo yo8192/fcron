@@ -826,7 +826,7 @@ AC_ARG_WITH(audit,
     ;;
   esac ]
 )
-if test useaudit = "0"; then
+if test "$useaudit" = "0"; then
   AC_MSG_RESULT(no)
 elif test "$useaudit" = "1" && test "$auditavail" != 1; then
   useaudit=0
