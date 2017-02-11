@@ -235,11 +235,11 @@ endif
 # strip executables
 strip: install-staged
 ifneq ($(DEBUG), 1)
-	strip $(DESTDIR)$(DESTSBIN)/fcron
-	strip $(DESTDIR)$(DESTBIN)/fcrontab
-	strip $(DESTDIR)$(DESTBIN)/fcronsighup
+	$(STRIP) $(DESTDIR)$(DESTSBIN)/fcron
+	$(STRIP) $(DESTDIR)$(DESTBIN)/fcrontab
+	$(STRIP) $(DESTDIR)$(DESTBIN)/fcronsighup
 ifeq ($(FCRONDYN), 1)
-	strip $(DESTDIR)$(DESTBIN)/fcrondyn
+	$(STRIP) $(DESTDIR)$(DESTBIN)/fcrondyn
 endif
 endif
 
