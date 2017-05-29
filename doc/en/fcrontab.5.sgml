@@ -26,8 +26,8 @@ A copy of the license is included in gfdl.sgml.
 	<title>Description</title>
 	<para>A &fcrontabf; is a file containing all tables used by the
 &fcron;(8) daemon. In other words, it is the means for a user to tell the daemon
-"execute this command at this moment". Each user has his own &fcrontabf;, whose
-commands are executed as his owner (only root can run a job as another using the
+"execute this command at this moment". Each user has their own &fcrontabf;, whose
+commands are executed as their owner (only root can run a job as another using the
 option &optrunas; (see below)).</para>
 	<para>Blank lines, line beginning by a hash sign (#) (which are
 considered comments), leading blanks and tabs are ignored. Each line in a

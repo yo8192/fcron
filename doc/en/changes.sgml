@@ -130,7 +130,7 @@ A copy of the license is included in gfdl.sgml.
             <para>Vixie cron compatibility: added options @reboot, @daily, @hourly, etc. Also added more generic options runatreboot, rebootreset and runonce.</para>
          </listitem>
 	 <listitem>
-	    <para>Pass fcrondyn client credentials through the socket when possible so as the user doesn't need to type his password when using fcrondyn.</para>
+	    <para>Pass fcrondyn client credentials through the socket when possible so as the user doesn't need to type their password when using fcrondyn.</para>
          </listitem>
          <listitem>
             <para>added audit (libaudit) support</para>
