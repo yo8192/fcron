@@ -186,7 +186,10 @@ if test \( ! "$INSTALLED" -eq 1 \) -a \( "$SYSTEMD_ROOTDIR" != "" \); then
   fi
   if test \( -z "$INSTALL" \) -o \( "$INSTALL" = "y" \); then
     $INSPROG -c -m 755 script/fcron.init.systemd $SYSTEMD_ROOTDIR/system/fcron.service
+    $INSPROG -c -m 755 script/fcron.init.systemd.reboot $SYSTEMD_ROOTDIR/system/fcronreboot.service
     systemctl daemon-reload
+    systemctl enable fcron.service
+    systemctl enable fcronreboot.service
     INSTALLED=1
     INSTALL_TYPE=SYSTEMD
   else
@@ -359,7 +362,7 @@ if test $NEED_UPDATE -eq 0; then
   fi
   if test \( -z "$RESTART" \) -o \( "$RESTART" = "y" \); then
     $KILL
-    sleep 2   # wait for fcron to stop
+    sleep 5   # wait for fcron to stop
     $CMD
   fi
 

@@ -8,6 +8,7 @@
 fcrontabs	=	@@FCRONTABS@
 
 # The locations of the pid file, suspend file and the fifo file
+# Note: if you change these paths, you will need to change your start-up scripts
 pidfile		=	@@PIDFILE@
 suspendfile	=	@@SUSPEND_FILE@
 fifofile	=	@@FIFOFILE@

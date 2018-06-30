@@ -98,7 +98,7 @@ endif
 ifeq ($(FCRONDYN), 1)
 all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf initscripts documentation
 else
-all: fcron fcrontab convert-fcrontab files/fcron.conf
+all: fcron fcrontab convert-fcrontab files/fcron.conf initscripts documentation
 endif
 
 fcron: $(OBJSD)
@@ -131,7 +131,7 @@ exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
 
 initscripts:
 	@(if test ! -d script; then mkdir script ; fi ; \
-		for F in sysVinit-launcher fcron.sh fcron.init.suse fcron.init.systemd fcron.suspend.sh ; do \
+		for F in sysVinit-launcher fcron.sh fcron.init.suse fcron.init.systemd fcron.init.systemd.reboot fcron.suspend.sh ; do \
 	    		$(SRCDIR)/script/gen-in.pl $(SRCDIR)/script/$${F}.in script/$${F} ./ ; \
 		done)
 
@@ -145,6 +145,7 @@ endif
 ifneq ($(SYSTEMD_DIR), no)
 	if test ! -d $(DESTDIR)$(SYSTEMD_DIR); then $(INSTALL) -m 755 -d $(DESTDIR)$(SYSTEMD_DIR) ; fi
 	$(INSTALL) -m 644 script/fcron.init.systemd $(DESTDIR)$(SYSTEMD_DIR)/fcron.service
+	$(INSTALL) -m 644 script/fcron.init.systemd.reboot $(DESTDIR)$(SYSTEMD_DIR)/fcronreboot.service
 endif
 
 install-staged: all
@@ -271,7 +272,7 @@ ciclean: clean
 
 vclean: ciclean
 	rm -f config.log config.status config.h config.cache Makefile PREVIOUS_VERSION \
-            files/fcron.conf script/fcron.init.suse script/fcron.init.systemd \
+            files/fcron.conf script/fcron.init.suse script/fcron.init.systemd script/fcron.init.systemd.reboot \
             script/fcron.sh script/sysVinit-launcher
 	$(MAKE) -C doc clean
 

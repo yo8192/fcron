@@ -3,4 +3,5 @@ fcron.sh
 sysVinit-launcher
 fcron.init.suse
 fcron.init.systemd
+fcron.init.systemd.reboot
 fcron.suspend.sh
