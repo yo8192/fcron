@@ -4,8 +4,8 @@
 # description: fcron is a scheduler especially useful for people \
 #              who are not running their system all the time.
 # processname: fcron
-# pidfile: /var/run/fcron.pid
-# config: /var/spool/fcron/*
+# pidfile: @@PIDFILE@
+# config: @@FCRONTABS@/*
 
 ### BEGIN INIT INFO
 # Provides:          fcron
