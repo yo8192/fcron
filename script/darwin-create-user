@@ -1,0 +1,13 @@
+#!/bin/sh
+# Create user on Darwin systems
+
+# take 3 arguments :    username
+#                       user id
+#                       group id
+
+USERNAME=$1
+USERID=$2
+GROUPID=$3
+
+sudo dscl . -create /Users/$USERNAME UniqueID $USERID
+sudo dscl . -create /Users/$USERNAME PrimaryGroupID $GROUPID
