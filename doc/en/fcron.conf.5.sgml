@@ -32,7 +32,7 @@ linkend="fcron.8">&fcron;</link>(8).</para>
 	</abstract>
 	<para>Blank lines, line beginning by a hash sign (#) (which are
 considered comments), leading blanks and tabs are ignored. Each line in a
-&fcron.conf file is of the form
+&fcron.conf; file is of the form
  <blockquote>
 		<para>name = value</para>
 	    </blockquote> where the blanks around equal-sign (=) are ignored and
@@ -55,6 +55,7 @@ optional. Trailing blanks are also ignored.
 			<para>Location of &fcron; pid file (needed by &fcrontab;
 to work properly).</para>
 		    </listitem>
+		</varlistentry>
 		<varlistentry>
 		    <term><varname>suspendfile</varname>=<replaceable>file-path</replaceable>
 (<filename>&suspendfile;</filename>)</term>
@@ -125,9 +126,9 @@ refer to.</para>
 	    <varlistentry>
 		<term><filename>&etc;/&fcron.conf.location;</filename></term>
 		<listitem>
-		    <para>Configuration file for &fcron;, &fcrontab and
+		    <para>Configuration file for &fcron;, &fcrontab; and
 &fcrondyn;: contains paths (spool dir, pid file) and default programs to use
-(editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf</link>(5) for
+(editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf;</link>(5) for
 more details.</para>
 		</listitem>
 	    </varlistentry>

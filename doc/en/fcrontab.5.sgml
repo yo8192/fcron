@@ -161,7 +161,7 @@ time</title>
 	<refsect2 id="fcrontab.5.tadent">
 	    <title>Entries based on time and date</title>
 	    <para>The second type of &fcrontabf;'s entries begins by an optional
-"&", which can be immediately followed by an optional number defining the
+"&amp;", which can be immediately followed by an optional number defining the
 frequency of execution (this is equivalent to option &optrunfreq;) or a
 declaration of options; it has five time and date fields, and a shell command
 :</para>
@@ -503,7 +503,7 @@ linkend="uptent">lines based on elapsed system up time</link> is recommended ins
 	    <para>The options can be set either for every line below the
 declaration or for an individual line. In the first case, the setting is done on
 a whole line immediately after an exclamation mark (!), while it is done after a
-"&", a "%" or a "@" depending on the type of scheduling in the second case. Note
+"&amp;", a "%" or a "@" depending on the type of scheduling in the second case. Note
 that an option declaration in a schedule overrides the global declaration of
 that same option.</para>
 	    <para>Options are separated by commas (,) and their arguments, if
@@ -522,7 +522,7 @@ abbreviation. The options are (default value in parentheses):</para>
 		    <term>b</term>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
-			<para>Run an &-line at &fcron;'s startup (or system's resume after suspend/hibernation) if it should
+			<para>Run an &amp;-line at &fcron;'s startup (or system's resume after suspend/hibernation) if it should
 have run during system down time.</para>
 		    </listitem>
 		</varlistentry>
@@ -596,7 +596,7 @@ useful when used in conjunction with option &optvolatile;.</para>
 		    <term>jitter</term>
 		    <listitem>
 			<para><emphasis><type>integer</type></emphasis>(<constant>0</constant>)</para>
-			<para>Run the task between 0 and jitter seconds later than it should have been run. This options only applies to &-lines and is intended for systems where many jobs are supposed to be started at the same minute: the jitter option will randomly spread the start of all those jobs across the first jitter seconds of the minute instead of starting all of them at the first second of the minute. The argument must be between 0 and 255 (inclusive).</para>
+			<para>Run the task between 0 and jitter seconds later than it should have been run. This options only applies to &amp;-lines and is intended for systems where many jobs are supposed to be started at the same minute: the jitter option will randomly spread the start of all those jobs across the first jitter seconds of the minute instead of starting all of them at the first second of the minute. The argument must be between 0 and 255 (inclusive).</para>
 			<para>&seealso; option &optrandom;.</para>
 		    </listitem>
 		</varlistentry>
@@ -731,7 +731,7 @@ reduce disk access on a laptop.</para>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
 			<para>Should &fcron; mail user to report the
-non-execution of a %-job or an &-job? (because of system down state (including suspend/hibernation) for both or
+non-execution of a %-job or an &amp;-job? (because of system down state (including suspend/hibernation) for both or
 a too high system load average for the latter)</para>
 			<para>&seealso; options &optlavg;, &optstrict;.</para>
 		    </listitem>
@@ -790,7 +790,7 @@ permissions and environment (only root is allowed to use this option).</para>
 			<para>If set to true, the task will be run at system startup (i.e. immediately after the &argfirstsleep; delay -- by default, &firstsleep; seconds -- when the &fcron; daemon starts the first time after the OS has booted). This is in addition to the regular schedule which won't be modified by this option.</para>
                         <para>For instance, if a program should be started automatically and run from 7am to 6pm, you could use the following dfcrontab definitions:</para>
                         <programlisting>&amp;runatreboot 0 6 * * 1-5 start_my_program.sh
-& 0 7 * * 1-5 stop_my_program.sh</programlisting>
+&amp; 0 7 * * 1-5 stop_my_program.sh</programlisting>
 			<para>&seealso; options &optvolatile;, &optrunonce;, &optrebootreset;.</para>
 		    </listitem>
 		</varlistentry>
@@ -881,7 +881,7 @@ not run) or be let there until the system load average allows its execution
 		     <para>WARNING: this option is deprecated: use option timezone instead!</para>
 			<para>Time zone difference (in hours, between -24 and
 24) between the system time, and the local real time. This option allows a user
-to define its & and %-lines in the local time. Note that this value is set for a
+to define its &amp; and %-lines in the local time. Note that this value is set for a
 whole fcrontab file, and only the last definition is taken into account. tzdiff is quite stupid: it doesn't handle daylight saving changes, while option timezone does, so you should use the latter.</para>
 			<para>&seealso; options &opttimezone;.</para>
 		    </listitem>
@@ -992,10 +992,10 @@ TEXT= " Hello\
 5 9 * * sat,sun echo "Good morning Thibault!" 
 
 # run every even days of march at 18:00, except on 16th 
-0 18 2-30/2~16 Mar * echo "It's time to go back home!" 
+0 18 2-30/2~16 Mar * echo "It's time to go back home!"
 
 # the line above is equivalent to 
-& 0 18 2-30/2~16 Mar * echo "It's time to go back home!" 
+&amp; 0 18 2-30/2~16 Mar * echo "It's time to go back home!" 
 
 # reset options to default and set runfreq for lines below 
 !reset,runfreq(7) 
@@ -1003,7 +1003,7 @@ TEXT= " Hello\
 # run once every 7 matches (thanks to the declaration above), 
 # so if system is running every day at 10:00, this will be 
 # run once a week 
-& 0 10 * * * echo "if you got this message last time 7 days ago,\
+&amp; 0 10 * * * echo "if you got this message last time 7 days ago,\
  this computer has been running every day at 10:00 last week.\
  If you got the message 8 days ago, then the system has been down \
  one day at 10:00 since you got it, etc" 
@@ -1033,7 +1033,7 @@ TEXT= " Hello\
 		<listitem>
 		    <para>Configuration file for &fcron;, &fcrontab; and
 &fcrondyn;: contains paths (spool dir, pid file) and default programs to use
-(editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf(5)</link> for
+(editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf;(5)</link> for
 more details.</para>
 		</listitem>
 	    </varlistentry>

@@ -62,7 +62,7 @@ A copy of the license is included in gfdl.sgml.
 &Fcron; should be started from <filename>/etc/rc</filename> or
 <filename>/etc/rc.local</filename>. Unless the <option>-f</option> (or
 <option>--foreground</option>) option is given, it will return immediately, so
-you don't need to start it with '&'.</para>
+you don't need to start it with '&amp;'.</para>
 	<para>
 &Fcron; loads users &fcrontabf;s (see <link
 linkend="fcrontab.5">&fcrontab;(5)</link>) files previously installed by

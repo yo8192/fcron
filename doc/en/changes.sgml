@@ -384,6 +384,7 @@ A copy of the license is included in gfdl.sgml.
 	    <para>made fcrontab behave better when there is no space left in the
 	       spool directory (used to truncate the fcrontab source file).
 	    </para>
+	 </listitem>
 	 <listitem>
 	    <para>Added a script, check_system_crontabs, to emulate Vixie cron's
 	       behavior about /etc/crontab and /etc/cron.d. Please have a look
@@ -701,7 +702,7 @@ A copy of the license is included in gfdl.sgml.
 	 <listitem>
 	    <para>added some more checks in fileconf.c: allow user to use
 	       hours, days, hourly, daily, etc options only with %-lines: it is
-	       ignored if set for a &-line, which is quite confusing for users
+	       ignored if set for a &amp;-line, which is quite confusing for users
 	       who may type, for instance "&amp;hourly" instead of
 	       "%hourly".</para>
 	 </listitem>
@@ -893,7 +894,7 @@ A copy of the license is included in gfdl.sgml.
 	       well, it seems to be more logical like that :)) .</para>
 	 </listitem>
 	 <listitem>
-	    <para>bug fix: using options first with a &-line may have led to
+	    <para>bug fix: using options first with a &amp;-line may have led to
 	       some problems during the first read by fcron (mail send
 	       erroneously if noticenotrun was used, bad set of the first
 	       execution's time and date or immediate execution if bootrun was
@@ -1146,7 +1147,7 @@ A copy of the license is included in gfdl.sgml.
 	 </listitem>
 	 <listitem>
 	    <para>bug corrected: fcrontab now defines correctly the remain
-	       value of a line based on time and date beginning with a "&" but
+	       value of a line based on time and date beginning with a "&amp;" but
 	       without runfreq definition.</para>
 	 </listitem>
 	 <listitem>

@@ -108,7 +108,7 @@ every day at 2:30, it will run at 3:30 the day of this kind of DST change.
                the time and date of the execution of a job (please see the entry
                about system clock adjustment in the present FAQ).</para>
                <para>Because of this, on non-Linux systems it is recommended to explicitly 'tell' fcron
-               about suspends and the precise suspend duration:
+               about suspends and the precise suspend duration:</para>
 		<orderedlist>
 		    <listitem>
                         <para>send a SIGSTOP signal to fcron when going into suspend:
@@ -122,6 +122,7 @@ every day at 2:30, it will run at 3:30 the day of this kind of DST change.
 		    <listitem>
                         <para>Wake up fcron and tell it to process the suspend file and reschedule tasks accordingly:
                         <programlisting>$ kill -CONT $(cat &fcron.pid;)</programlisting></para>
+		    </listitem>
 		</orderedlist>
 	       <para>An example script implementing this for pm-utils and systemd is included: fcron.suspend.sh.
 		Note that it is however not needed on Linux.  Contribution of equivalent scripts for other
@@ -371,19 +372,19 @@ and set appropriately the paths:</para>
 		  <link linkend="fcrontab.5">&fcrontab;(5),</link> and choose the
 		  type of line which is the most appropriate for your needs (this is
 		  likely to be a @-line or a %-line).</para>
-               <para>On a Debian/Ubuntu, the default /etc/anacrontab looks like:<para>
+               <para>On a Debian/Ubuntu, the default /etc/anacrontab looks like:</para>
 <programlisting>1       5       cron.daily       nice run-parts --report /etc/cron.daily
 7       10      cron.weekly      nice run-parts --report /etc/cron.weekly
 @monthly        15      cron.monthly nice run-parts --report /etc/cron.monthly
 </programlisting>
-               <para>A close fcron equivalent would be (see &optserial;):<para>
+               <para>A close fcron equivalent would be (see &optserial;):</para>
 <programlisting># Run once a day/week/month, and ensure only one of those tasks is run at a time:
 !reset
 !serial,nice(10)
 %daily * * run-parts --report /etc/cron.daily
 %weekly * * run-parts --report /etc/cron.weekly
 %monthly * * * run-parts --report /etc/cron.monthly</programlisting>
-               <para>Or you could go for something a bit more specific (see &optlavg;, &optnoticenotrun;):<para>
+               <para>Or you could go for something a bit more specific (see &optlavg;, &optnoticenotrun;):</para>
 <programlisting># Only run the tasks out of office-hours when the system load is low
 # and send an email to the user if fcron couldn't run the job:
 !reset
