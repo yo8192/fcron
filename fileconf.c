@@ -1279,7 +1279,7 @@ check_username(char *ptr, cf_t * cf, cl_t * cl)
     strncpy(username, ptr, indx);
     username[indx] = '\0';
 
-    if ((userpwent = getpwnam(username)) != NULL) {
+    if (username[0]!='\0' && (userpwent=getpwnam(username))!=NULL) {
         /* found the user */
         ptr = ptr + indx;       /* move ptr to the next word */
         Skip_blanks(ptr);
