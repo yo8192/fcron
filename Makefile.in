@@ -88,11 +88,11 @@ RCSNOCI:=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|config.log\|config
 
 RUN_NON_PRIVILEGED := @RUN_NON_PRIVILEGED@
 ifeq ($(RUN_NON_PRIVILEGED), 1)
-	BINMODE:=111
-	BINMODESIGHUP:=111
+	BINMODE:=711
+	BINMODESIGHUP:=711
 else
-	BINMODE:=6111
-	BINMODESIGHUP:=4110
+	BINMODE:=6711
+	BINMODESIGHUP:=4710
 endif
 
 ifeq ($(FCRONDYN), 1)
@@ -197,7 +197,7 @@ perms: install-staged strip
 
 	chown $(ROOTNAME) $(DESTDIR)$(DESTSBIN)/fcron
 	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTSBIN)/fcron
-	chmod 110 $(DESTDIR)$(DESTSBIN)/fcron
+	chmod 710 $(DESTDIR)$(DESTSBIN)/fcron
 
 	chown $(USERNAME) $(DESTDIR)$(DESTBIN)/fcrontab
 	chgrp $(GROUPNAME) $(DESTDIR)$(DESTBIN)/fcrontab
