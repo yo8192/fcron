@@ -85,6 +85,7 @@ A copy of the license is included in gfdl.sgml.
 	    <para>made fcrontab behave better when there is no space left in the
 	       spool directory (used to truncate the fcrontab source file).
 	    </para>
+	 </listitem>
 	 <listitem>
 	    <para>Added a script, check_system_crontabs, to emulate Vixie cron's
 	       behavior about /etc/crontab and /etc/cron.d. Please have a look
