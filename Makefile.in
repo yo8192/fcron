@@ -146,6 +146,7 @@ ifneq ($(SYSTEMD_DIR), no)
 	if test ! -d $(DESTDIR)$(SYSTEMD_DIR); then $(INSTALL) -m 755 -d $(DESTDIR)$(SYSTEMD_DIR) ; fi
 	$(INSTALL) -m 644 script/fcron.init.systemd $(DESTDIR)$(SYSTEMD_DIR)/fcron.service
 	$(INSTALL) -m 644 script/fcron.init.systemd.reboot $(DESTDIR)$(SYSTEMD_DIR)/fcronreboot.service
+	systemctl daemon-reload
 endif
 
 install-staged: all
