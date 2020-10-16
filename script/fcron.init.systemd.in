@@ -6,9 +6,9 @@ After=remote-fs.target syslog.target time-sync.target
 Before=shutdown.target
 
 [Service]
-Type=forking
+Type=simple
 PIDFile=@@PIDFILE@
-ExecStart=@@DESTSBIN@/fcron -b
+ExecStart=@@DESTSBIN@/fcron -f
 ExecReload=/bin/kill -USR1 $MAINPID
 Restart=always
 KillMode=process
