@@ -1,0 +1,14 @@
+# systemd service configuration file for fcron
+# Remove 'reboot' file to ensure '@reboot' jobs run on next system boot.
+
+[Unit]
+Description=fcron reboot file clean-up
+DefaultDependencies=no
+Before=shutdown.target reboot.target halt.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/rm -f @@REBOOT_LOCK@
+
+[Install]
+WantedBy=shutdown.target reboot.target halt.target
