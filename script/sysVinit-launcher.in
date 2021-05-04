@@ -33,21 +33,29 @@ TARGETS="{start|stop|status|restart|reload|force-reload}"
 # Source function library.
 # the 'status' function is considered to be here only if $FUNCTION = 1 and
 # the condrestart action is only implemented in that case
-if test -f /etc/init.d/functions; then
+if test -x /usr/bin/uname && test `/usr/bin/uname` = SunOS; then
+    STARTCMD="$EXEC -b"
+    STOPCMD="pkill -TERM fcron"
+    FINALECHO=":"
+    ECHON="echo"
+elif test -f /etc/init.d/functions; then
     . /etc/init.d/functions
     FUNCTION=1
     STARTCMD="daemon $EXEC -b"
     STOPCMD="killproc fcron"
     FINALECHO="echo"
+    ECHON="echo -n"
     TARGETS="{start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
 elif start-stop-daemon --version > /dev/null; then
     STARTCMD="start-stop-daemon --start --quiet --exec $EXEC -- -b"
     STOPCMD="start-stop-daemon --stop --quiet --exec $EXEC"
     FINALECHO="echo ."
+    ECHON="echo -n"
 else
     STARTCMD="$EXEC -b"
     STOPCMD="killall -TERM $EXEC"
     FINALECHO="echo ."
+    ECHON="echo -n"
 fi
 
 RETVAL=0
@@ -60,7 +68,7 @@ case "$1" in
 	    status fcron >/dev/null 2>&1 && exit 0
 	fi
 	[ -x "$EXEC" ] || exit 5
-	echo -n "Starting fcron"
+	$ECHON "Starting fcron"
 	$STARTCMD
 	RETVAL=$?
 	if test -d /var/lock/subsys/; then
@@ -72,7 +80,7 @@ case "$1" in
 	if test $FUNCTION -eq 1; then
 	    status fcron >/dev/null 2>&1 || exit 0
 	fi
-	echo -n "Shutting down fcron"
+	$ECHON "Shutting down fcron"
 	$STOPCMD
 	RETVAL=$?
 	if test -d /var/lock/subsys/; then
