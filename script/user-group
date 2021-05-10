@@ -30,12 +30,20 @@ INSTALLED=0
 
 if test `uname -s` = "FreeBSD"; then
   IS_FREEBSD=1
+  IS_DARWIN=0
+elif test `uname -s` = "Darwin"; then
+  IS_FREEBSD=0
+  IS_DARWIN=1
 else
   IS_FREEBSD=0
+  IS_DARWIN=0
 fi
 
 if test $IS_FREEBSD -eq 1; then
   CMD="pw groupadd $GROUPNAME"
+elif test $IS_DARWIN -eq 1; then
+  GROUPID=601
+  CMD="sudo dscl . -create /Groups/$GROUPNAME PrimaryGroupID $GROUPID"
 else
   CMD="groupadd $GROUPNAME"
 fi
@@ -94,6 +102,9 @@ else
   CMD=""
   if test "$IS_FREEBSD" -eq 1; then
     CMD="pw useradd $USERNAME -c $USERNAME"
+  elif test $IS_DARWIN -eq 1; then
+    USERID=601
+    CMD="sh $SRCDIR/script/darwin-create-user $USERNAME $USERID $GROUPID"
   elif useradd -D 2> /dev/null; then
     CMD="useradd -c '$USERNAME' -g $GROUPNAME $USERNAME"
   elif adduser -D 2> /dev/null; then
