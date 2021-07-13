@@ -45,8 +45,6 @@
 #ifdef WITH_SELINUX
 #include <selinux.h>
 #include <get_context_list.h>
-#include <selinux/flask.h>
-#include <selinux/av_permissions.h>
 #endif
 
 #ifdef HAVE_GETOPT_H
