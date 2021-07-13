@@ -453,7 +453,7 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
     int has_read_cl_first = 0;  /* have we read S_FIRST_T? */
 #ifdef WITH_SELINUX
     int flask_enabled = is_selinux_enabled();
-    int retval;
+    int retval = -1;
     struct av_decision avd;
     char *user_name = NULL;
 #endif
@@ -540,11 +540,27 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
         if (get_default_context(user_name, NULL, &cf->cf_user_context))
             error_e("NO CONTEXT for Linux user '%s' (SELinux user '%s')",
                     cf->cf_user, user_name);
-        retval =
-            security_compute_av(cf->cf_user_context, cf->cf_file_context,
-                                SECCLASS_FILE, FILE__ENTRYPOINT, &avd);
 
-        if (retval || ((FILE__ENTRYPOINT & avd.allowed) != FILE__ENTRYPOINT)) {
+        security_class_t tclass = string_to_security_class("file");
+        if (!tclass) {
+            error_e("Failed to translate security class file\n");
+            // FIXME need correct return!
+        }
+
+        access_vector_t bit = string_to_av_perm(tclass, "entrypoint");
+        if (!bit){
+            error_e("Failed to translate security class file\n");
+            // FIXME need correct return!
+        }
+
+        if ( (tclass) && (bit) )
+        {
+            retval =
+                security_compute_av(cf->cf_user_context, cf->cf_file_context,
+                                tclass, bit, &avd);
+        }
+
+        if (retval || ((bit & avd.allowed) != bit)) {
             syslog(LOG_ERR, "ENTRYPOINT FAILED for Linux user '%s' "
                    "(CONTEXT %s) for file CONTEXT %s", cf->cf_user,
                    cf->cf_user_context, cf->cf_file_context);
