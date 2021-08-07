@@ -541,34 +541,33 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
             error_e("NO CONTEXT for Linux user '%s' (SELinux user '%s')",
                     cf->cf_user, user_name);
 
-        security_class_t tclass = string_to_security_class("file");
-        if (!tclass) {
+        /* we no longer need those - clean them up */
+        Free_safe(sename);
+        Free_safe(selevl);
+
+        security_class_t sec_class = string_to_security_class("file");
+        if (!sec_class) {
+            error_e("Failed to translate security class 'file'\n");
+            goto err;
+        }
+
+        access_vector_t access_vec = string_to_av_perm(sec_class, "entrypoint");
+        if (!access_vec) {
             error_e("Failed to translate security class file\n");
-            // FIXME need correct return!
+            goto err;
         }
 
-        access_vector_t bit = string_to_av_perm(tclass, "entrypoint");
-        if (!bit){
-            error_e("Failed to translate security class file\n");
-            // FIXME need correct return!
-        }
+        /* if we get here, sec_class and access_vec are both defined */
+        retval = security_compute_av(cf->cf_user_context, cf->cf_file_context,
+                                sec_class, access_vec, &avd);
 
-        if ( (tclass) && (bit) )
-        {
-            retval =
-                security_compute_av(cf->cf_user_context, cf->cf_file_context,
-                                tclass, bit, &avd);
-        }
-
-        if (retval || ((bit & avd.allowed) != bit)) {
+        if (retval || ((access_vec & avd.allowed) != access_vec)) {
             syslog(LOG_ERR, "ENTRYPOINT FAILED for Linux user '%s' "
                    "(CONTEXT %s) for file CONTEXT %s", cf->cf_user,
                    cf->cf_user_context, cf->cf_file_context);
             goto err;
         }
 
-        Free_safe(sename);
-        Free_safe(selevl);
     }
 #endif
 
