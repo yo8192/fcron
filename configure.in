@@ -10,14 +10,14 @@ AC_CONFIG_HEADER(config.h)
 AC_PREREQ(2.57)
 m4_include([m4/ax_lib_readline.m4])
 
-vers="3.3.0"
+vers="3.3.1"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
 VERSION="$vers"
 AC_SUBST(VERSION)
 
-copyright_quoted="\"2000-2016\""
+copyright_quoted="\"2000-2021\""
 AC_DEFINE_UNQUOTED(COPYRIGHT_QUOTED, $copyright_quoted)
 
 
