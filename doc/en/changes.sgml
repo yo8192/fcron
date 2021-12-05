@@ -13,7 +13,23 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
-	 <title>From version 3.2.1 to 3.3.0</title>
+            <title>From version 3.3.0 to 3.3.1</title>
+            <listitem>
+               <para>Updated SELinux code to stop using deprecated headers (fixes build on more recent systems)</para>
+            </listitem>
+            <listitem>
+               <para>Install programs with R/W perms for the owner</para>
+            </listitem>
+            <listitem>
+               <para>Fixed @reboot when using systemd</para>
+            </listitem>
+            <listitem>
+               <para>Various other fixes and improvements in doc, install and boot scripts (in particular under systemd)</para>
+            </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+            <title>From version 3.2.1 to 3.3.0</title>
             <listitem>
                <para>fcron now handles computer suspend/resume.  On Linux systems, fcron can detect resumes and measure the suspend time.  On other OSes, a script must be run at suspend and resume via system hooks.</para>
             </listitem>
