@@ -1349,7 +1349,7 @@ read_shortcut(char *ptr, cf_t * cf)
         if (debug_opt)
             fprintf(stderr, "  Shc : @reboot\n");
     }
-    if (strcmp(shortcut, "resume") == 0) {
+    else if (strcmp(shortcut, "resume") == 0) {
         set_freq(cl->cl_option);
         set_runatresume(cl->cl_option);
         set_runonce(cl->cl_option);
