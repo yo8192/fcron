@@ -40,7 +40,7 @@ LDFLAGS		:= @LDFLAGS@
 CPPFLAGS	:= @CPPFLAGS@ -I. -I${SRCDIR}
 LIBS		:= @LIBS@
 LIBOBJS		:= @LIBOBJS@
-DEFS		:= @DEFS@ 
+DEFS		:= @DEFS@
 CC		:= @CC@
 INSTALL		:= @INSTALL@
 STRIP		:= @STRIP@
@@ -55,6 +55,7 @@ ANSWERALL	:= @ANSWERALL@
 USEPAM		:= @USEPAM@
 FCRONDYN	:= @FCRONDYN@
 SYSTEMD_DIR     := @SYSTEMD_DIR@
+DISPLAYNAME := @DISPLAYNAME@
 
 # Options
 #	-DDEBUG		even more verbose
@@ -63,7 +64,7 @@ SYSTEMD_DIR     := @SYSTEMD_DIR@
 #	-DFOREGROUND=[0|1]    default run in foreground ?
 #OPTION=	-DCHECKJOBS
 #OPTION=	-O3 -mcpu=i686
-OPTION := 
+OPTION :=
 
 
 ####################################
@@ -126,7 +127,7 @@ exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
 	-DFCRONTABS="\"${FCRONTABS}\"" \
 	-DFCRON_ALLOW="\"${FCRON_ALLOW}\"" -DFCRON_DENY="\"${FCRON_DENY}\"" \
 	-DFCRON_SHELL="\"${FCRON_SHELL}\"" -DSENDMAIL="\"${SENDMAIL}\"" \
-	-DFCRON_EDITOR="\"${FCRON_EDITOR}\"" -DBINDIREX="\"${DESTBIN}\"" \
+	-DFCRON_EDITOR="\"${FCRON_EDITOR}\"" \-DDISPLAYNAME="\"${DISPLAYNAME}\"" -DBINDIREX="\"${DESTBIN}\"" \
 	-c $<
 
 initscripts:
@@ -138,7 +139,7 @@ initscripts:
 documentation:
 	$(MAKE) -C doc doc-if-none
 
-install: install-staged strip perms 
+install: install-staged strip perms
 ifeq ($(BOOTINSTALL), 1)
 	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS) $(ANSWERALL) $(SRCDIR)
 endif
@@ -180,16 +181,16 @@ endif
 perms: install-staged strip
 # Note : we don't use "chown user:group file" because some systems use ":"
 #        and others "." as separator.
-	chown $(ROOTNAME) $(DESTDIR)$(DESTSBIN) 
-	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTSBIN) 
-	chown $(ROOTNAME) $(DESTDIR)$(DESTBIN) 
-	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTBIN) 
-	chown $(ROOTNAME) $(DESTDIR)$(ETC) 
-	chgrp $(ROOTGROUP) $(DESTDIR)$(ETC) 
-	chown $(ROOTNAME) $(DESTDIR)$(FIFODIR) 
-	chgrp $(ROOTGROUP) $(DESTDIR)$(FIFODIR) 
-	chown $(ROOTNAME) $(DESTDIR)$(PIDDIR) 
-	chgrp $(ROOTGROUP) $(DESTDIR)$(PIDDIR) 
+	chown $(ROOTNAME) $(DESTDIR)$(DESTSBIN)
+	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTSBIN)
+	chown $(ROOTNAME) $(DESTDIR)$(DESTBIN)
+	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTBIN)
+	chown $(ROOTNAME) $(DESTDIR)$(ETC)
+	chgrp $(ROOTGROUP) $(DESTDIR)$(ETC)
+	chown $(ROOTNAME) $(DESTDIR)$(FIFODIR)
+	chgrp $(ROOTGROUP) $(DESTDIR)$(FIFODIR)
+	chown $(ROOTNAME) $(DESTDIR)$(PIDDIR)
+	chgrp $(ROOTGROUP) $(DESTDIR)$(PIDDIR)
 
 # change spool dir mode
 	chown $(USERNAME) $(DESTDIR)$(FCRONTABS)
@@ -245,7 +246,7 @@ ifeq ($(FCRONDYN), 1)
 endif
 endif
 
-install-boot: install 
+install-boot: install
 	$(SRCDIR)/script/boot-install "$(INSTALL) -o $(ROOTNAME)" $(DESTSBIN) $(DEBUG) $(FCRONTABS)  $(ANSWERALL) $(SRCDIR)
 
 install-restart: install
@@ -291,7 +292,7 @@ indent:
             --dont-cuddle-else *.c *.h
 
 configure: configure.in
-# update configure script, then Makefile and config.h, and finally 
+# update configure script, then Makefile and config.h, and finally
 # run make tar using the new Makefile (needed because the version
 # is set in the configure.in file)
 	autoconf

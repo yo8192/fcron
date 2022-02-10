@@ -1,5 +1,5 @@
 /*
- * FCRON - periodic command scheduler 
+ * FCRON - periodic command scheduler
  *
  *  Copyright 2000-2021 Thibault Godouet <fcron@free.fr>
  *
@@ -12,11 +12,11 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- * 
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  *  The GNU General Public License can also be found in the file
  *  `LICENSE' that comes with the fcron source distribution.
  */
@@ -318,8 +318,9 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     hostname[0] = '\0';
 #endif                          /* HAVE_GETHOSTNAME */
 
-    /* write mail header */
-    fprintf(mailf, "From: %s%s (fcron)\n", mailfrom, hostname_from);
+    /* write mail header. displayname comes from fcron.conf */
+    fprintf(mailf, "From: %s %s%s\n", displayname != NULL ? displayname : "",
+            mailfrom, hostname_from);
     fprintf(mailf, "To: %s%s\n", line->cl_mailto, hostname_to);
 
     if (subject)
@@ -447,7 +448,7 @@ read_write_pipe(int fd, void *buf, size_t size, int action)
 
 int
 read_pipe(int fd, void *buf, size_t size)
-    /* Read data from pipe. 
+    /* Read data from pipe.
      * Handles signal interruptions, and read in several passes.
      * Returns ERR in case of a closed pipe, the errno from read
      * for other errors, and OK if everything was read successfully */
@@ -457,7 +458,7 @@ read_pipe(int fd, void *buf, size_t size)
 
 int
 write_pipe(int fd, void *buf, size_t size)
-    /* Read data from pipe. 
+    /* Read data from pipe.
      * Handles signal interruptions, and read in several passes.
      * Returns ERR in case of a closed pipe, the errno from write
      * for other errors, and OK if everything was read successfully */

@@ -44,6 +44,7 @@ char *fcrondeny = NULL;
 char *shell = NULL;
 char *sendmail = NULL;
 char *editor = NULL;
+char *displayname = NULL;
 
 void
 init_conf(void)
@@ -66,6 +67,7 @@ init_conf(void)
     sendmail = strdup2(SENDMAIL);
 #endif
     editor = strdup2(FCRON_EDITOR);
+    displayname = strdup2(DISPLAYNAME);
 }
 
 void
@@ -82,6 +84,7 @@ free_conf(void)
     Free_safe(shell);
     Free_safe(sendmail);
     Free_safe(editor);
+    Free_safe(displayname);
 }
 
 void
@@ -187,6 +190,9 @@ read_conf(void)
         }
         else if (strncmp(ptr1, "editor", namesize) == 0) {
             Set(editor, ptr2);
+        }
+        else if (strncmp(ptr1, "displayname", namesize) == 0) {
+            Set(displayname, ptr2);
         }
         else
             error("Unknown var name at line %s : line ignored", buf);
