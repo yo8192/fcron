@@ -128,10 +128,10 @@ AC_CHECK_LIB(kstat, kstat_open, [kstat=1], [kstat=0])
 if test $getloadavg -eq 1; then
 dnl Nothing to do ...
   AC_FUNC_GETLOADAVG
-  AC_MSG_CHECKING(function to use for lavg* options)  
+  AC_MSG_CHECKING(function to use for lavg* options)
   AC_MSG_RESULT(getloadavg())
 elif test $kstat -eq 1;  then
-  AC_MSG_CHECKING(function to use for lavg* options)  
+  AC_MSG_CHECKING(function to use for lavg* options)
   LIBS="$LIBS -lkstat"
   AC_LIBOBJ([getloadavg])
   AC_DEFINE_UNQUOTED(HAVE_KSTAT, 1)
@@ -139,7 +139,7 @@ elif test $kstat -eq 1;  then
 else
 dnl Try to use the /proc/loadavg file ...
   AC_FUNC_GETLOADAVG
-  AC_MSG_CHECKING(function to use for lavg* options)  
+  AC_MSG_CHECKING(function to use for lavg* options)
   AC_MSG_RESULT(/proc/loadavg)
 fi
 AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv unsetenv gethostname)
@@ -200,7 +200,7 @@ dnl ---------------------------------------------------------------------
 fcron_enable_checks=yes
 AC_ARG_ENABLE(checks,
 [  --disable-checks   Don't verify that programs exist on the host ], dnl '
-[ case "$enableval" in 
+[ case "$enableval" in
    no)
      fcron_enable_checks=no
      ;;
@@ -212,7 +212,7 @@ AC_ARG_ENABLE(checks,
      ;;
   esac
 ])
-     
+
 
 dnl ---------------------------------------------------------------------
 dnl Programs ...
@@ -320,6 +320,11 @@ fi
 AC_MSG_RESULT([$FCRON_EDITOR])
 AC_SUBST([FCRON_EDITOR])
 
+DISPLAYNAME=
+AC_MSG_RESULT([$DISPLAYNAME])
+AC_SUBST([DISPLAYNAME])
+
+
 dnl ---------------------------------------------------------------------
 dnl Paths ...
 
@@ -397,7 +402,7 @@ AC_ARG_WITH(proc,
 [ case "$withval" in
   no)
     AC_MSG_WARN([
-Without proc, you won't be able to use the lavg* options 
+Without proc, you won't be able to use the lavg* options
 ])
     AC_DEFINE(NOLOADAVG)
     ;;
@@ -483,7 +488,7 @@ AC_ARG_WITH(run-non-privileged,
     AC_MSG_WARN([
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-WARNING : 
+WARNING :
 	This option allows a non privileged user to run fcron. When used,
 	fcron does not change its rights before running a job (i.e.,
 	if joe runs fcron, every job will run as joe).
@@ -591,7 +596,7 @@ AC_ARG_WITH(rootname,
   *)
 	rootname=$withval
     ;;
-  esac 
+  esac
 ])
 
 if test $fcron_enable_checks = 'yes'; then
@@ -924,13 +929,13 @@ AC_ARG_WITH(pam,
     AC_MSG_ERROR(Must be set to either "yes" or "no".)
     ;;
   esac ],
-  if test "$usepam" = "1"; then 
+  if test "$usepam" = "1"; then
     AC_MSG_RESULT(yes)
     AC_CHECK_LIB(pam, pam_acct_mgmt)
   else
     usepam=0
     AC_MSG_RESULT(no)
-  fi    
+  fi
 )
 if test "$usepam" != "0" && echo "$LIBS" | grep -- "-lpam" > /dev/null ; then
   usepam=1
@@ -959,7 +964,7 @@ AC_ARG_WITH(selinux,
     else
 	AC_MSG_RESULT(not available)
         AC_MSG_ERROR([
-  You requested the use of SELinux, but SELinux is considered 
+  You requested the use of SELinux, but SELinux is considered
   as not available by configure script.
 ])
     fi
@@ -999,7 +1004,7 @@ AC_MSG_CHECKING(Looking for docbook2man converter)
 AC_ARG_WITH(db2man,
 [ --with-db2man=PATH(or 'no')	set PATH to a docbook2man converter.],
 [ case "$withval" in
-  no) 
+  no)
     DB2MAN=""
     AC_MSG_RESULT(none)
     ;;
@@ -1028,7 +1033,7 @@ AC_ARG_WITH(db2man-spec,
 [ --with-db2man-spec=PATH	set the PATH to docbook2man-spec file
 				(needed if no db2man converter is set).],
 [ case "$withval" in
-  no) 
+  no)
     DB2MAN_SPEC=""
     AC_MSG_RESULT(none)
     ;;
@@ -1070,7 +1075,7 @@ AC_MSG_CHECKING(Looking for dsssl stylsheets)
 AC_ARG_WITH(dsssl-dir,
 [ --with-dsssl-dir=DIR	change the default location of DSSSL stylesheets.],
 [ case "$withval" in
-  no) 
+  no)
     DSSSL_DIR=""
     AC_MSG_RESULT(none)
     ;;
