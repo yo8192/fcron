@@ -362,7 +362,7 @@ auth_client_password(struct fcrondyn_cl *client)
 
 #define Test_add_field(FIELD_NB, FIELD_STR) \
     if ( (bit_test(details, FIELD_NB)) ) { \
-        strncat(fields, FIELD_STR, sizeof(fields)-1 - len); \
+        strncat(fields, FIELD_STR, sizeof(fields) - len -1); \
         len += (sizeof(FIELD_STR)-1); \
     }
 #define Add_field(FIELD_STR) \
@@ -399,9 +399,12 @@ print_fields(int fd, unsigned char *details)
     Add_field(field_cmd);
     Add_field(field_endline);
 
-    fields[TERM_LEN - 1] = '\0';
+    /* Extra safety (which should be redundant as strncat (used in Add_field
+       and Test_add_field) always null-terminate the string: */
+    fields[sizeof(fields) - 1] = '\0';
 
-    if (send(fd, fields, (len < sizeof(fields)) ? len : sizeof(fields), 0) < 0)
+    /* add +1 to include the final end-of-string "\0" */
+    if (send(fd, fields, (len+1 < sizeof(fields)) ? len+1 : sizeof(fields), 0) < 0)
         error_e("error in send()");
 
 }
@@ -471,7 +474,12 @@ print_line(int fd, struct cl_t *line, unsigned char *details, pid_t pid,
     }
     len += snprintf(buf + len, sizeof(buf) - len, "|%s\n", line->cl_shell);
 
-    if (send(fd, buf, (len < sizeof(buf)) ? len : sizeof(buf), 0) < 0)
+    /* as extra safety to make sure the string is always null-terminated
+      (even though snprintf man page suggests it does it already) */
+    buf[sizeof(buf) - 1] = '\0';
+
+    /* add +1 to include the final end-of-string "\0" */
+    if (send(fd, buf, (len+1 < sizeof(buf)) ? len+1 : sizeof(buf), 0) < 0)
         error_e("error in send()");
 
 }
@@ -530,7 +538,7 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
             getloadavg(lavg, 3);
             i = snprintf(lavg_str, sizeof(lavg_str), "Current load average : "
                          "%.1f, %.1f, %.1f\n", lavg[0], lavg[1], lavg[2]);
-            send(fd, lavg_str, i, 0);
+            send(fd, lavg_str, (i+1 < sizeof(lavg_str))? i+1 : sizeof(lavg_str), 0);
 
             bit_set(fields, FIELD_LAVG);
         }

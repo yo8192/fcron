@@ -581,12 +581,16 @@ talk_fcron(char *cmd_str, int fd)
     while ((read_len = recv(fd, buf, sizeof(buf) - 1, 0)) >= 0
            || errno == EINTR) {
 
+        if (debug_opt) {
+            fprintf(stderr, "read_len=%ld\n", read_len);
+        }
+
         if (errno == EINTR && debug_opt)
             fprintf(stderr, "got EINTR ...\n");
         else if (read_len > sizeof(buf)) {
             /* weird ... no data yet ? */
             if (debug_opt)
-                fprintf(stderr, "no data yet ?");
+                fprintf(stderr, "no data yet ?\n");
         }
         else if (read_len <= 0) {
             if (debug_opt)
@@ -598,13 +602,23 @@ talk_fcron(char *cmd_str, int fd)
         else {
             /* ensure the string is terminated by a '\0' for when we'll printf() it */
             buf[read_len] = '\0';
-            printf("%s", buf);
+
+            int printed_len = 0;
+            while (printed_len < read_len) {
+                int str_len = strlen(buf + printed_len);
+                printf("%s", buf + printed_len);
+                if (str_len > 0 && buf[printed_len+str_len-1] != '\n') {
+                    printf("\n");
+                }
+                printed_len += str_len + 1; /* +1 to account for the end-of-string '\0' marker */
+            }
 
             /* check for the end of command output marker */
             if (read_len >= sizeof(END_STR) &&
-                strncmp(&buf[read_len - sizeof(END_STR)], END_STR,
-                        sizeof(END_STR)) == 0)
+                memcmp(&buf[read_len - sizeof(END_STR)], END_STR,
+                        sizeof(END_STR)) == 0) {
                 break;
+            }
         }
     }
     if (read_len < 0) {
