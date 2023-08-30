@@ -1,0 +1,34 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: install dependencies
+      run: apt install docbook docbook-xsl docbook-xml docbook-util manpages-dev
+
+    - name: configure
+      run: ./configure
+
+    - name: Build the doc
+      run: make doc
+
+    - name: Upload GitHub Pages artifact
+      uses: actions/upload-pages-artifact@v2.0.0
+      with:
+        # Artifact name
+        #name: # optional, default is github-pages
+        # Path of the directory containing the static assets.
+        path:  doc/en/HTML/ # default is _site/
+        # Duration after which artifact will expire in days.
+        retention-days: 7 # optional, default is 1
