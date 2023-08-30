@@ -24,7 +24,7 @@ jobs:
       run: ./configure --without-sendmail
 
     - name: Build the doc
-      run: cd doc && make
+      run: make updatedoc
 
     - name: Upload GitHub Pages artifact
       uses: actions/upload-pages-artifact@v2.0.0
