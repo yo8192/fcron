@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  build_doc:
 
     runs-on: ubuntu-latest
 
@@ -35,3 +35,28 @@ jobs:
         path:  doc/en/HTML/ # default is _site/
         # Duration after which artifact will expire in days.
         retention-days: 7 # optional, default is 1
+
+  deploy_doc:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy GitHub Pages site
+      uses: actions/deploy-pages@v1.2.9
+      with:
+        # Should this action only emit build telemetry instead of deploying the build artifact?
+        #emit_telemetry: # optional, default is false
+        # The status of the previous build.
+        #conclusion: # optional
+        # GitHub token
+        #token: # default is ${{ github.token }}
+        # Time in milliseconds after which to timeout and cancel the deployment (default: 10 minutes)
+        #timeout: # optional, default is 600000
+        # Maximum number of status report errors before cancelling a deployment (default: 10)
+        #error_count: # optional, default is 10
+        # Time in milliseconds between two deployment status report (default: 5 seconds)
+        #reporting_interval: # optional, default is 5000
+        # Name of the artifact to deploy
+        #artifact_name: # optional, default is github-pages
+        # Is this attempting to deploy a pull request as a GitHub Pages preview site? (NOTE: This feature is only in alpha currently and is not available to the public!)
+        #preview: # optional, default is false
