@@ -17,6 +17,9 @@ jobs:
     - name: install dependencies
       run: sudo apt install -y docbook docbook-xsl docbook-xml docbook-utils manpages-dev
 
+    - name: Create the configure script with autoconf
+      run: autoconf
+
     - name: configure
       run: ./configure
 
