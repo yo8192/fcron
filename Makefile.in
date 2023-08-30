@@ -71,7 +71,7 @@ OPTION :=
 ####################################
 
 VERSION := @VERSION@
-CFLAGS += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS)
+CFLAGS += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS) $(LDFLAGS)
 ifeq ($(FCRONDYN), 1)
 LIBOBJS := $(LIBOBJS)
 endif
