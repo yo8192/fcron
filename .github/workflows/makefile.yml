@@ -21,7 +21,7 @@ jobs:
       run: autoconf
 
     - name: configure
-      run: ./configure
+      run: ./configure --without-sendmail
 
     - name: Build the doc
       run: make doc
