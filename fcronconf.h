@@ -39,6 +39,7 @@ extern char *fifofile;
 extern char *editor;
 extern char *shell;
 extern char *sendmail;
+extern char *displayname;
 /* end of global variables */
 
 /* functions prototypes */
