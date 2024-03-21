@@ -378,7 +378,7 @@ print_fields(int fd, unsigned char *details)
     char field_user[] = "|USER     ";
     char field_rq[] = "|R&Q ";
     char field_options[] = "|OPTIONS  ";
-    char field_schedule[] = "|SCHEDULE        ";
+    char field_schedule[] = "|SCHEDULE           ";
     char field_until[] = "|LAVG 1,5,15 UNTIL       STRICT";
     char field_pid[] = "|PID    ";
     char field_index[] = "|INDEX";
