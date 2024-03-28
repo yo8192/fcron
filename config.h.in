@@ -177,6 +177,9 @@
 #undef FOREGROUND
 #undef RUN_NON_PRIVILEGED
 
+/* 0 for no delay for any user, 60s is the default */
+#undef MAX_FCRONTAB_LOAD_DELAY_SECONDS
+
 /* Define if we should use sete[ug]id() funcs */
 #undef USE_SETE_ID
 
