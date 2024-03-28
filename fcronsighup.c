@@ -86,10 +86,18 @@ sig_daemon(void)
     /* SIGHUP is sent once 10s before the next minute to avoid
      * some bad users to block daemon by sending it SIGHUP all the time */
 {
-    /* we don't need to make root wait */
-    if (uid != rootuid) {
-        time_t t = 0;
-        int sl = 0;
+    int max_delay_s = 60;
+#ifdef MAX_FCRONTAB_LOAD_DELAY_SECONDS
+    max_delay_s = MAX_FCRONTAB_LOAD_DELAY_SECONDS;
+#endif
+    if (uid == rootuid) {
+      /* we don't need to make root wait */
+      max_delay_s = 0;
+    }
+
+    if (max_delay_s > 0) {
+        time_t now_s = 0;
+        int delay_s = 0;
         FILE *fp = NULL;
         int fd = 0;
         struct tm *tm = NULL;
@@ -97,24 +105,25 @@ sig_daemon(void)
         char buf[PATH_LEN];
 
         sigfile[0] = '\0';
-        t = time(NULL);
-        tm = localtime(&t);
+        now_s = time(NULL);
 
-        if ((sl = 60 - (t % 60) - 10) < 0) {
-            if ((tm->tm_min = tm->tm_min + 2) >= 60) {
-                tm->tm_hour++;
-                tm->tm_min -= 60;
-            }
-            snprintf(buf, sizeof(buf), "%02d:%02d", tm->tm_hour, tm->tm_min);
-            sl = 60 - (t % 60) + 50;
+        /* target 10s before the end of the current minute */
+        delay_s = 50 - (now_s % 60);
+        if (delay_s < 0) {
+          /* target 10 before the end of the next minute */
+          delay_s += 60;
         }
-        else {
-            if (++tm->tm_min >= 60) {
-                tm->tm_hour++;
-                tm->tm_min -= 60;
-            }
-            snprintf(buf, sizeof(buf), "%02d:%02d", tm->tm_hour, tm->tm_min);
+
+        if (delay_s > max_delay_s) {
+          delay_s = max_delay_s;
         }
+
+        /* tm is now + delay */
+        tm = localtime(&now_s);
+        tm->tm_sec += delay_s;
+        mktime(tm);
+
+        snprintf(buf, sizeof(buf), "%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
         fprintf(stderr, "Modifications will be taken into account"
                 " at %s.\n", buf);
 
@@ -167,7 +176,7 @@ sig_daemon(void)
         }
 #endif                          /* ! HAVE_FLOCK */
 
-        sleep(sl);
+        sleep(delay_s);
 
         /* also closes the underlying file descriptor fd: */
         xfclose_check(&fp, sigfile);
@@ -178,7 +187,7 @@ sig_daemon(void)
             error_e("Could not remove %s");
     }
     else
-        /* we are root */
+        /* we are root, or config MAX_FCRONTAB_LOAD_DELAY_SECONDS=0 is set */
         fprintf(stderr,
                 "Modifications will be taken into account" " right now.\n");
 
