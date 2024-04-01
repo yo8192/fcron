@@ -96,36 +96,34 @@ sig_daemon(void)
     }
 
     if (max_delay_s > 0) {
-        time_t now_s = 0;
+        time_t now_epoch = 0;
         int delay_s = 0;
+        time_t *target_time_epoch = NULL;
+        struct tm *target_time_tm = NULL;
         FILE *fp = NULL;
         int fd = 0;
-        struct tm *tm = NULL;
         char sigfile[PATH_LEN];
-        char buf[PATH_LEN];
 
         sigfile[0] = '\0';
-        now_s = time(NULL);
+        now_epoch = time(NULL);
 
-        /* target 10s before the end of the current minute */
-        delay_s = 50 - (now_s % 60);
-        if (delay_s < 0) {
-          /* target 10 before the end of the next minute */
-          delay_s += 60;
+        if (now_epoch % 60 < 50) {
+          /* clocktime is < ##:##:50, so target 10s before the end of the current minute */
+          delay_s = 50 - (now_epoch % 60);
+        } else {
+          /* clocktime is >= ##:##:50, so target 10s before the end of the next minute */
+          delay_s = 50 + (60 - (now_epoch % 60));
         }
 
         if (delay_s > max_delay_s) {
           delay_s = max_delay_s;
         }
 
-        /* tm is now + delay */
-        tm = localtime(&now_s);
-        tm->tm_sec += delay_s;
-        mktime(tm);
+        target_time_epoch = now_epoch + delay_s;
+        target_time_tm = localtime(&target_time_epoch);
 
-        snprintf(buf, sizeof(buf), "%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
-        fprintf(stderr, "Modifications will be taken into account"
-                " at %s.\n", buf);
+        fprintf(stderr, "Modifications will be taken into account at %02d:%02d:%02d.\n",
+          target_time_tm->tm_hour, target_time_tm->tm_min, target_time_tm->tm_sec);
 
         /* if fcrontabs is too long, snprintf will not be able to add "/fcrontab.sig"
          * string at the end of sigfile */
