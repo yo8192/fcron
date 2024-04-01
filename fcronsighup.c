@@ -87,8 +87,8 @@ sig_daemon(void)
      * some bad users to block daemon by sending it SIGHUP all the time */
 {
     int max_delay_s = 60;
-#ifdef MAX_FCRONTAB_LOAD_DELAY_SECONDS
-    max_delay_s = MAX_FCRONTAB_LOAD_DELAY_SECONDS;
+#ifdef MAX_FCRONTAB_RELOAD_DELAY_SECONDS
+    max_delay_s = MAX_FCRONTAB_RELOAD_DELAY_SECONDS;
 #endif
     if (uid == rootuid) {
       /* we don't need to make root wait */
@@ -187,7 +187,7 @@ sig_daemon(void)
             error_e("Could not remove %s");
     }
     else
-        /* we are root, or config MAX_FCRONTAB_LOAD_DELAY_SECONDS=0 is set */
+        /* we are root, or config MAX_FCRONTAB_RELOAD_DELAY_SECONDS=0 is set */
         fprintf(stderr,
                 "Modifications will be taken into account" " right now.\n");
 
