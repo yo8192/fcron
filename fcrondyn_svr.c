@@ -58,6 +58,7 @@ int fcrondyn_cl_num = 0;        /* number of fcrondyn clients currently connecte
 int listen_fd = -1;             /* fd which catches incoming connection */
 int auth_fail = 0;              /* number of auth failure */
 time_t auth_nofail_since = 0;   /* we refuse auth since x due to too many failures */
+static char truncated[] = " (truncated)\n";
 
 /* some error messages ... */
 char err_no_err_str[] = "Command successfully completed.\n";
@@ -474,14 +475,21 @@ print_line(int fd, struct cl_t *line, unsigned char *details, pid_t pid,
     }
     len += snprintf(buf + len, sizeof(buf) - len, "|%s\n", line->cl_shell);
 
+    /* snprintf() returns the length of what would have been written (excluding terminating null byte)
+      if not limited by maxlen */
+    if (len+1 > sizeof(buf)) {
+        /* the shell command string was too long and was truncated */
+        strcpy(buf + sizeof(buf) - sizeof(truncated), truncated);
+    }
+
     /* as extra safety to make sure the string is always null-terminated
       (even though snprintf man page suggests it does it already) */
     buf[sizeof(buf) - 1] = '\0';
 
     /* add +1 to include the final end-of-string "\0" */
-    if (send(fd, buf, (len+1 < sizeof(buf)) ? len+1 : sizeof(buf), 0) < 0)
+    if (send(fd, buf, (len+1 < sizeof(buf)) ? len+1 : sizeof(buf), 0) < 0) {
         error_e("error in send()");
-
+    }
 }
 
 
