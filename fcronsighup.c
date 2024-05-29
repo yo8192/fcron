@@ -86,37 +86,44 @@ sig_daemon(void)
     /* SIGHUP is sent once 10s before the next minute to avoid
      * some bad users to block daemon by sending it SIGHUP all the time */
 {
-    /* we don't need to make root wait */
-    if (uid != rootuid) {
-        time_t t = 0;
-        int sl = 0;
+    int max_delay_s = 60;
+#ifdef MAX_FCRONTAB_RELOAD_DELAY_SECONDS
+    max_delay_s = MAX_FCRONTAB_RELOAD_DELAY_SECONDS;
+#endif
+    if (uid == rootuid) {
+      /* we don't need to make root wait */
+      max_delay_s = 0;
+    }
+
+    if (max_delay_s > 0) {
+        time_t now_epoch = 0;
+        int delay_s = 0;
+        time_t *target_time_epoch = NULL;
+        struct tm *target_time_tm = NULL;
         FILE *fp = NULL;
         int fd = 0;
-        struct tm *tm = NULL;
         char sigfile[PATH_LEN];
-        char buf[PATH_LEN];
 
         sigfile[0] = '\0';
-        t = time(NULL);
-        tm = localtime(&t);
+        now_epoch = time(NULL);
 
-        if ((sl = 60 - (t % 60) - 10) < 0) {
-            if ((tm->tm_min = tm->tm_min + 2) >= 60) {
-                tm->tm_hour++;
-                tm->tm_min -= 60;
-            }
-            snprintf(buf, sizeof(buf), "%02d:%02d", tm->tm_hour, tm->tm_min);
-            sl = 60 - (t % 60) + 50;
+        if (now_epoch % 60 < 50) {
+          /* clocktime is < ##:##:50, so target 10s before the end of the current minute */
+          delay_s = 50 - (now_epoch % 60);
+        } else {
+          /* clocktime is >= ##:##:50, so target 10s before the end of the next minute */
+          delay_s = 50 + (60 - (now_epoch % 60));
         }
-        else {
-            if (++tm->tm_min >= 60) {
-                tm->tm_hour++;
-                tm->tm_min -= 60;
-            }
-            snprintf(buf, sizeof(buf), "%02d:%02d", tm->tm_hour, tm->tm_min);
+
+        if (delay_s > max_delay_s) {
+          delay_s = max_delay_s;
         }
-        fprintf(stderr, "Modifications will be taken into account"
-                " at %s.\n", buf);
+
+        target_time_epoch = now_epoch + delay_s;
+        target_time_tm = localtime(&target_time_epoch);
+
+        fprintf(stderr, "Modifications will be taken into account at %02d:%02d:%02d.\n",
+          target_time_tm->tm_hour, target_time_tm->tm_min, target_time_tm->tm_sec);
 
         /* if fcrontabs is too long, snprintf will not be able to add "/fcrontab.sig"
          * string at the end of sigfile */
@@ -167,7 +174,7 @@ sig_daemon(void)
         }
 #endif                          /* ! HAVE_FLOCK */
 
-        sleep(sl);
+        sleep(delay_s);
 
         /* also closes the underlying file descriptor fd: */
         xfclose_check(&fp, sigfile);
@@ -178,7 +185,7 @@ sig_daemon(void)
             error_e("Could not remove %s");
     }
     else
-        /* we are root */
+        /* we are root, or config MAX_FCRONTAB_RELOAD_DELAY_SECONDS=0 is set */
         fprintf(stderr,
                 "Modifications will be taken into account" " right now.\n");
 

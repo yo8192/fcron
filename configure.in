@@ -476,6 +476,33 @@ WARNING :
   AC_MSG_RESULT(no)
 )
 
+max_fcrontab_reload_delay_seconds=60
+AC_MSG_CHECKING(max fcrontab reload delay seconds)
+AC_ARG_WITH(max-fcrontab-reload-delay-seconds,
+[  --with-max-fcrontab-reload-delay-seconds=INTEGER
+	The maximum delay, in seconds, before (re)loading the fcrontab as a non-root user
+	(there is never any delay for root). By default, the delay to (re)load the fcrontab
+	for a non-root user is at least one full second and at most sixty seconds,
+	depending on circumstances when the (re)load happens.
+	A value of 0 for this argument means no delay for any user, ever.
+	A value between 1 and 59 (inclusive) will ensure that the non-root delay is always at least 1s,
+	  and never more than the given number of seconds.
+	A value greater than or equal to 60 has no effect.],
+[
+  case "$withval" in
+    ("" | *[!0123456789]*)
+      AC_MSG_ERROR(Invalid argument : please use a non-negative integer.)
+      ;;
+    *)
+      max_fcrontab_reload_delay_seconds="$withval"
+      ;;
+  esac
+
+  AC_MSG_RESULT([$withval])
+])
+MAX_FCRONTAB_RELOAD_DELAY_SECONDS="$max_fcrontab_reload_delay_seconds"
+AC_SUBST(MAX_FCRONTAB_RELOAD_DELAY_SECONDS)
+AC_DEFINE_UNQUOTED([MAX_FCRONTAB_RELOAD_DELAY_SECONDS], [$max_fcrontab_reload_delay_seconds])
 
 if test "$fcrondyn" = ""; then
   dnl As it stands gettimeofday() is required to have fcrondyn
@@ -1094,6 +1121,21 @@ if test "$run_non_privileged" -eq 1; then
 	echo "yes"
 else
 	echo "no"
+fi
+
+echo "Max fcrontab reload delay seconds : $max_fcrontab_reload_delay_seconds"
+
+if test "$max_fcrontab_reload_delay_seconds" -lt "1" ; then
+  AC_MSG_WARN([
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+WARNING:
+This option --with-max-fcrontab-reload-delay-seconds=0, allows a
+  non-privileged user to immediately (re)load fcrontab.
+This allows the possibility of SIGHUP denial of service to block the daemon.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ])
 fi
 
 echo -n "Load average support :              "
