@@ -280,56 +280,56 @@ sig_dfl(void)
 #define DQUOTE '\"'
 #define BSLASH '\\'
 #define SPECIALS "()<>[].,:;@"
-#define MAIL_LINE_LEN 998 			/* RFC5322 */
+#define MAIL_LINE_LEN 998             /* RFC5322 */
 
 char *
 make_mailbox(char *displayname, char *mail_from, char *hostname)
-	/* Produce a "mailbox" header as per RFC5322 sec. 3.2.3
-	 * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3> */
+    /* Produce a "mailbox" header as per RFC5322 sec. 3.2.3
+     * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3> */
 {
-	char specials[sizeof(SPECIALS) + 2];
-	char need_quotes = 0, need_anglebrackets = 0;
-	char c = '\0';
-	char *bpos = NULL, *dpos = NULL;
-	char *buf1 = NULL, *buf2 = NULL;
+    char specials[sizeof(SPECIALS) + 2];
+    char need_quotes = 0, need_anglebrackets = 0;
+    char c = '\0';
+    char *bpos = NULL, *dpos = NULL;
+    char *buf1 = NULL, *buf2 = NULL;
 
-	snprintf(specials, sizeof(specials), "%s%c%c", SPECIALS, DQUOTE, BSLASH);
+    snprintf(specials, sizeof(specials), "%s%c%c", SPECIALS, DQUOTE, BSLASH);
 
-	/* This should actually be shorter 'cause the header name is prepended
-	 * downstream */
-	buf1 = (char *)calloc(MAIL_LINE_LEN+1, sizeof(char));
-	buf2 = (char *)calloc(MAIL_LINE_LEN+1, sizeof(char));
+    /* This should actually be shorter 'cause the header name is prepended
+     * downstream */
+    buf1 = (char *)calloc(MAIL_LINE_LEN+1, sizeof(char));
+    buf2 = (char *)calloc(MAIL_LINE_LEN+1, sizeof(char));
 
-	/* walk the displayname and rebuild it in buf1 */
-	dpos = displayname;
-	bpos = buf1;
-	while (*dpos) {
-		c = *dpos++;
-		if (strchr(specials, c)) {
-			/* insert escape */
-			if (c == DQUOTE) *bpos++ = BSLASH;
-			need_quotes = 1;
-		}
-		*bpos++ = c;
-	}
+    /* walk the displayname and rebuild it in buf1 */
+    dpos = displayname;
+    bpos = buf1;
+    while (*dpos) {
+        c = *dpos++;
+        if (strchr(specials, c)) {
+            /* insert escape */
+            if (c == DQUOTE) *bpos++ = BSLASH;
+            need_quotes = 1;
+        }
+        *bpos++ = c;
+    }
 
-	need_anglebrackets = strlen(buf1) > 0;
+    need_anglebrackets = strlen(buf1) > 0;
 
-	if (need_quotes)
-		snprintf(buf2, MAIL_LINE_LEN, "\"%s\"", buf1);
-	else
-		buf2 = strncpy(buf2, buf1, MAIL_LINE_LEN);
+    if (need_quotes)
+        snprintf(buf2, MAIL_LINE_LEN, "\"%s\"", buf1);
+    else
+        buf2 = strncpy(buf2, buf1, MAIL_LINE_LEN);
 
-	/* no @ here, it's handled upstream */
-	if (need_anglebrackets)
-		snprintf(buf1, MAIL_LINE_LEN, "%s %c%s%s%c",
-				 buf2, '<', mail_from, hostname, '>');
-	else
-		snprintf(buf1, MAIL_LINE_LEN, "%s%s", mail_from, hostname);
+    /* no @ here, it's handled upstream */
+    if (need_anglebrackets)
+        snprintf(buf1, MAIL_LINE_LEN, "%s %c%s%s%c",
+                 buf2, '<', mail_from, hostname, '>');
+    else
+        snprintf(buf1, MAIL_LINE_LEN, "%s%s", mail_from, hostname);
 
-	Free_safe(buf2);
+    Free_safe(buf2);
 
-	return buf1;
+    return buf1;
 }
 
 FILE *
@@ -375,7 +375,7 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
 
     /* write mail header. displayname comes from fcron.conf */
     fprintf(mailf, "From: %s\n",
-			make_mailbox(displayname, mailfrom, hostname_from));
+            make_mailbox(displayname, mailfrom, hostname_from));
 
     fprintf(mailf, "To: %s%s\n", line->cl_mailto, hostname_to);
 
