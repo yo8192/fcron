@@ -1,0 +1,20 @@
+# Prototype makefile, while waiting for integration of a test framework
+SRCDIR		:= ..
+
+SRCST := mailbox_addr.c
+OBJST := $(patsubst %.c,%.o,$(SRCST))
+EXEST := $(patsubst %.c,%,$(SRCST))
+
+OBJSD := $(addprefix $(SRCDIR)/,log.o job.o mem.o filesubs.o subs.o fcronconf.o temp_file.o env_list.o u_list.o)
+
+
+.PHONY: clean tests
+
+CFLAGS += -I$(SRCDIR)
+
+tests: $(OBJSD)
+	$(CC) $(CFLAGS) $(OBJSD) $(LIBS) $(SRCST) -o $(EXEST)
+	./$(EXEST)
+
+clean:
+	rm -f *.o core $(EXEST)

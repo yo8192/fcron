@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Fcron documentation
 Copyright 2000-2021 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
@@ -10,154 +10,228 @@ A copy of the license is included in gfdl.sgml.
 
 
 <refentry id="fcron.conf.5">
-    <refmeta>
-	<refentrytitle>fcron.conf</refentrytitle>
-	<manvolnum>5</manvolnum>
-	<refmiscinfo>Fcron &version; <![%devrelease; [
-(<emphasis>development</emphasis> release)]]></refmiscinfo>
-	<refmiscinfo>&date;</refmiscinfo>
-    </refmeta>
-    <refnamediv>
-	<refname>fcron.conf</refname>
-	<refpurpose>configuration file for fcron and fcrontab</refpurpose>
-    </refnamediv>
+	<refmeta>
+		<refentrytitle>fcron.conf</refentrytitle>
+		<manvolnum>5</manvolnum>
+		<refmiscinfo>Fcron &version;
+			<![%devrelease; [(<emphasis>development</emphasis> release)]]>
+		</refmiscinfo>
+		<refmiscinfo>&date;</refmiscinfo>
+	</refmeta>
+	<refnamediv>
+		<refname>fcron.conf</refname>
+		<refpurpose>configuration file for fcron and fcrontab</refpurpose>
+	</refnamediv>
 
-    <refsect1>
-	<title>Description</title>
-	<abstract>
-	    <para>This page describes the syntax used for the configuration file
-of <link linkend="fcrontab.1">&fcrontab;</link>(1), <link
-linkend="fcrondyn.1">&fcrondyn;</link>(1) and <link
-linkend="fcron.8">&fcron;</link>(8).</para>
-	</abstract>
-	<para>Blank lines, line beginning by a hash sign (#) (which are
-considered comments), leading blanks and tabs are ignored. Each line in a
-&fcron.conf; file is of the form
- <blockquote>
-		<para>name = value</para>
-	    </blockquote> where the blanks around equal-sign (=) are ignored and
-optional. Trailing blanks are also ignored.
-</para>
-	<para>The following names are recognized (default value in parentheses):
-<variablelist>
-		<title>Valid variables in a fcron.conf file</title>
-		<varlistentry>
-		    <term><varname>fcrontabs</varname>=<replaceable>directory</replaceable>
-(<filename>&fcrontabsdir;</filename>)</term>
-		    <listitem>
-			<para>&Fcron; spool directory.</para>
-		    </listitem>
-		</varlistentry>
-		<varlistentry>
-		    <term><varname>pidfile</varname>=<replaceable>file-path</replaceable>
-(<filename>&fcron.pid;</filename>)</term>
-		    <listitem>
-			<para>Location of &fcron; pid file (needed by &fcrontab;
-to work properly).</para>
-		    </listitem>
-		</varlistentry>
-		<varlistentry>
-		    <term><varname>suspendfile</varname>=<replaceable>file-path</replaceable>
-(<filename>&suspendfile;</filename>)</term>
-		    <listitem>
-			<para>Location of &fcron; suspend file. On non-Linux systems, this should be used to let fcron know how long the system was suspended (to memory or disk), so as task schedules can be updated accordingly.</para>
-		    </listitem>
-		</varlistentry>
-		<varlistentry>
-		    <term><varname>fifofile</varname>=<replaceable>file-path</replaceable> 
-(<filename>&fcron.fifo;</filename>)</term>
-		    <listitem>
-			<para>Location of &fcron; fifo file (needed by
-&fcrondyn; to communicate with &fcron;).</para>
-		    </listitem>
-		</varlistentry>
-		<varlistentry>
-		    <term><varname>fcronallow</varname>=<replaceable>file-path</replaceable> 
-(<filename>&etc;/&fcron.allow;</filename>)</term>
-		    <listitem>
-			<para>Location of fcron.allow file.</para>
-		    </listitem>
-		</varlistentry>
-		<varlistentry>
-		    <term><varname>fcrondeny</varname>=<replaceable>file-path</replaceable> 
-(<filename>&etc;/&fcron.deny;</filename>)</term>
-		    <listitem>
-			<para>Location of fcron.deny file.</para>
-		    </listitem>
-		</varlistentry>
-		<varlistentry>
-		    <term><varname>shell</varname>=<replaceable>file-path</replaceable> 
-(<filename>&shell;</filename>)</term>
-		    <listitem>
-			<para>Location of default shell called by &fcron; when
-running a job. When &fcron; runs a job, &fcron; uses the value of <envar>SHELL</envar> from the fcrontab if any, otherwise it uses the value from <filename>fcron.conf</filename> if any, or in last resort the value from <filename>/etc/passwd</filename>.</para>
-		    </listitem>
-		</varlistentry>
-		<varlistentry>
-		    <term><varname>sendmail</varname>=<replaceable>file-path</replaceable> 
-(<filename>&sendmail;</filename>)</term>
-		    <listitem>
-			<para>Location of mailer program called by &fcron; to
-send job output.</para>
-		    </listitem>
-		</varlistentry>
-		<varlistentry>
-		    <term><varname>editor</varname>=<replaceable>file-path</replaceable> 
-(<filename>&editor;</filename>)</term>
-		    <listitem>
-			<para>Location of default editor used when invoking
-"fcrontab -e".</para>
-		    </listitem>
-		</varlistentry>
-	    </variablelist> File-paths and directories are complete and absolute
-(i.e. beginning by a "/").</para>
-	<para>To run several instances of &fcron; simultaneously on the same
-system, you must use a different configuration file for each instance. Each
-instance must have a different <varname>fcrontabs</varname>,
-<varname>pidfile</varname> and <varname>fifofile</varname>. Then, use <link
-linkend="fcron.8">&fcron;</link>(8)'s command line option
-<parameter>-c</parameter> to select which config file (so which instance) you
-refer to.</para>
-    </refsect1>
+	<refsect1>
+		<title>Description</title>
+		<abstract>
+			<para>
+				This page describes the syntax used for the configuration file
+				of <link linkend="fcrontab.1">&fcrontab;</link>(1),
+				<link linkend="fcrondyn.1">&fcrondyn;</link>(1) and
+				<link linkend="fcron.8">&fcron;</link>(8).
+			</para>
+		</abstract>
+		<para>
+			Blank lines, line beginning by a hash sign (#) (which are
+			considered comments), leading blanks and tabs are ignored. Each line in a
+			&fcron.conf; file is of the form
+			<blockquote>
+				<para>name = value</para>
+			</blockquote>
+			where the blanks around equal-sign (=) are ignored and
+			optional. Trailing blanks are also ignored.
+		</para>
+		<para>
+			The following names are recognized (default value in parentheses):
+			<variablelist>
+				<title>Valid variables in a fcron.conf file</title>
+				<varlistentry>
+					<term>
+						<varname>fcrontabs</varname>=<replaceable>directory</replaceable>
+						(<filename>&fcrontabsdir;</filename>)
+					</term>
+					<listitem>
+						<para>&Fcron; spool directory.</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<varname>pidfile</varname>=<replaceable>file-path</replaceable>
+						(<filename>&fcron.pid;</filename>)
+					</term>
+					<listitem>
+						<para>
+							Location of &fcron; pid file (needed by &fcrontab;
+							to work properly).
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<varname>suspendfile</varname>=<replaceable>file-path</replaceable>
+						(<filename>&suspendfile;</filename>)</term>
+					<listitem>
+						<para>
+							Location of &fcron; suspend file. On non-Linux
+							systems, this should be used to let fcron know how
+							long the system was suspended (to memory or disk),
+							so as task schedules can be updated accordingly.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<varname>fifofile</varname>=<replaceable>file-path</replaceable>
+						(<filename>&fcron.fifo;</filename>)
+					</term>
+					<listitem>
+						<para>
+							Location of &fcron; fifo file (needed by
+							&fcrondyn; to communicate with &fcron;).
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<varname>fcronallow</varname>=<replaceable>file-path</replaceable>
+						(<filename>&etc;/&fcron.allow;</filename>)
+					</term>
+					<listitem>
+						<para>Location of fcron.allow file.</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<varname>fcrondeny</varname>=<replaceable>file-path</replaceable>
+						(<filename>&etc;/&fcron.deny;</filename>)
+					</term>
+					<listitem>
+						<para>Location of fcron.deny file.</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<varname>shell</varname>=<replaceable>file-path</replaceable>
+						(<filename>&shell;</filename>)
+					</term>
+					<listitem>
+						<para>
+							Location of default shell called by &fcron; when
+							running a job. When &fcron; runs a job, &fcron;
+							uses the value of <envar>SHELL</envar> from the
+							fcrontab if any, otherwise it uses the value from
+							<filename>fcron.conf</filename> if any, or in last
+							resort the value from
+							<filename>/etc/passwd</filename>.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<varname>sendmail</varname>=<replaceable>file-path</replaceable>
+						(<filename>&sendmail;</filename>)
+					</term>
+					<listitem>
+						<para>
+							Location of mailer program called by &fcron; to
+							send job output.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<varname>editor</varname>=<replaceable>file-path</replaceable>
+						(<filename>&editor;</filename>)
+					</term>
+					<listitem>
+						<para>
+							Location of default editor used when invoking
+							"fcrontab -e".
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<varname>displayname</varname>=<replaceable>string</replaceable>
+						(<option>&displayname;</option>)
+					</term>
+					<listitem>
+						<para>
+							Display name for the "From: " header of mails sent
+							by us. N.B. &fcron has been following Vixie cron's
+							default email header format which is not fully
+							compliant with RFC 5322 (see <ulink
+							url="https://github.com/yo8192/fcron/issues/15">Issue
+							#15 </ulink>).  During this transition phase, to
+							achieve full RFC compliance, you may set a display
+							name. Leaving it empty will preserve the old
+							behavior.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+			File-paths and directories are complete and absolute
+			(i.e. beginning by a "/").
+		</para>
+		<para>
+			To run several instances of &fcron; simultaneously on the same
+			system, you must use a different configuration file for each
+			instance. Each instance must have a different
+			<varname>fcrontabs</varname>, <varname>pidfile</varname> and
+			<varname>fifofile</varname>. Then, use <link
+			linkend="fcron.8">&fcron;</link>(8)'s command line option
+			<parameter>-c</parameter> to select which config file (so which
+			instance) you refer to.
+		</para>
+	</refsect1>
 
-    <refsect1>
-	<title>Files</title>
-	<variablelist>
-	    <varlistentry>
-		<term><filename>&etc;/&fcron.conf.location;</filename></term>
-		<listitem>
-		    <para>Configuration file for &fcron;, &fcrontab; and
-&fcrondyn;: contains paths (spool dir, pid file) and default programs to use
-(editor, shell, etc). See <link linkend="fcron.conf.5">&fcron.conf;</link>(5) for
-more details.</para>
-		</listitem>
-	    </varlistentry>
-	    <varlistentry>
-		<term><filename>&etc;/&fcron.allow;</filename></term>
-		<listitem>
-		    <para>Users allowed to use &fcrontab; and &fcrondyn; (one
-name per line, special name "all" acts for everyone)</para>
-		</listitem>
-	    </varlistentry>
-	    <varlistentry>
-		<term><filename>&etc;/&fcron.deny;</filename></term>
-		<listitem>
-		    <para>Users who are not allowed to use &fcrontab; and
-&fcrondyn; (same format as allow file)</para>
-		</listitem>
-	    </varlistentry>
-	    <varlistentry>
-		<term><filename>&etc;/pam.d/fcron</filename> (or
-<filename>&etc;/pam.conf</filename>)</term>
-		<listitem>
-		    <para><productname>PAM</productname> configuration file for
-&fcron;. Take a look at &pam;(8) for more details.</para>
-		</listitem>
-	    </varlistentry>
-	</variablelist>
-    </refsect1>
+	<refsect1>
+		<title>Files</title>
+		<variablelist>
+			<varlistentry>
+				<term><filename>&etc;/&fcron.conf.location;</filename></term>
+				<listitem>
+					<para>
+						Configuration file for &fcron;, &fcrontab; and
+						&fcrondyn;: contains paths (spool dir, pid file) and
+						default programs to use (editor, shell, etc). See
+						<link linkend="fcron.conf.5">&fcron.conf;</link>(5)
+						for more details.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><filename>&etc;/&fcron.allow;</filename></term>
+				<listitem>
+					<para>Users allowed to use &fcrontab; and &fcrondyn; (one
+						name per line, special name "all" acts for everyone)</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><filename>&etc;/&fcron.deny;</filename></term>
+				<listitem>
+					<para>
+						Users who are not allowed to use &fcrontab; and
+						&fcrondyn; (same format as allow file)
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term><filename>&etc;/pam.d/fcron</filename> (or
+					<filename>&etc;/pam.conf</filename>)</term>
+				<listitem>
+					<para>
+						<productname>PAM</productname> configuration file for
+						&fcron;. Take a look at &pam;(8) for more details.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
 
-    &manpage-foot;
+	&manpage-foot;
 
 </refentry>
 
