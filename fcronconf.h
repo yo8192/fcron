@@ -25,6 +25,10 @@
 #ifndef __FCRONCONF_H__
 #define __FCRONCONF_H__
 
+/* RFC5322's special mailbox address charcters */
+#define DQUOTE '\"'
+#define BSLASH '\\'
+#define SPECIAL_MBOX_CHARS "()<>[].,:;@\"\\"
 
 /* global variables */
 

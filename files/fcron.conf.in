@@ -24,6 +24,6 @@ sendmail	=	@@SENDMAIL@
 # Location of the default editor for "fcrontab -e"
 editor		=	@@FCRON_EDITOR@
 
-# Display name for the "From: " header of mails sent by us. Watch out! It
-# might cause rejections from picky SMTPDs.
+# Display name for the "From: " header of mails sent by us. Default is
+# unset/empty. Please read fcron.conf(5) before setting it!
 displayname =   @@DISPLAYNAME@

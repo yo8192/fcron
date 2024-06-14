@@ -414,6 +414,24 @@ AC_MSG_RESULT($docdir)
 DOCDIR="$docdir"
 AC_SUBST(DOCDIR)
 
+testdir="${datadir}/test"
+AC_MSG_CHECKING(location of test directory)
+AC_ARG_WITH(testdir,
+[  --with-testdir=PATH	Directory containing test executables.],
+[ case "$withval" in
+  no)
+    AC_MSG_ERROR(Need TESTDIR.)
+    ;;
+  yes)
+    ;;
+  *)
+    testdir="$withval"
+    ;;
+  esac ])
+
+AC_MSG_RESULT($testdir)
+TESTDIR="$testdir"
+AC_SUBST(TESTDIR)
 
 dnl systemd init system
 SYSTEMD_DIR="no"
@@ -1074,7 +1092,7 @@ dnl Final settings
 dnl ---------------------------------------------------------------------
 
 
-AC_OUTPUT(Makefile doc/Makefile doc/stylesheets/fcron-doc.dsl)
+AC_OUTPUT(Makefile doc/Makefile doc/stylesheets/fcron-doc.dsl test/Makefile)
 
 
 dnl ---------------------------------------------------------------------
@@ -1175,6 +1193,7 @@ echo "spool dir:                          $sp"
 echo "etc dir:                            $sysconfdir"
 echo "doc dir:                            $docdir"
 echo "man dir:                            $mandir "
+echo "test dir:                           $testdir "
 
 
 echo

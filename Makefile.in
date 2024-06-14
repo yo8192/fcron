@@ -96,6 +96,7 @@ else
 	BINMODESIGHUP:=4710
 endif
 
+export
 ifeq ($(FCRONDYN), 1)
 all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf initscripts documentation
 else
@@ -138,6 +139,11 @@ initscripts:
 
 documentation:
 	$(MAKE) -C doc doc-if-none
+
+.PHONY: test
+test:
+	$(MAKE) -C test tests
+
 
 install: install-staged strip perms
 ifeq ($(BOOTINSTALL), 1)
@@ -267,6 +273,7 @@ clean:
 	rm -f *.o core
 	rm -f fcron fcrontab fcrondyn fcronsighup convert-fcrontab files/fcron.conf
 	$(MAKE) -C doc clean
+	$(MAKE) -C test clean
 
 ciclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
@@ -277,6 +284,7 @@ vclean: ciclean
             files/fcron.conf script/fcron.init.suse script/fcron.init.systemd script/fcron.init.systemd.reboot \
             script/fcron.sh script/sysVinit-launcher
 	$(MAKE) -C doc clean
+	$(MAKE) -C test clean
 
 
 files/fcron.conf: $(SRCDIR)/files/fcron.conf.in config.h

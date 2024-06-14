@@ -277,59 +277,39 @@ sig_dfl(void)
     signal(SIGPIPE, SIG_DFL);
 }
 
-#define DQUOTE '\"'
-#define BSLASH '\\'
-#define SPECIALS "()<>[].,:;@"
-#define MAIL_LINE_LEN 998             /* RFC5322 */
-
 char *
-make_mailbox(char *displayname, char *mail_from, char *hostname)
+make_mailbox_addr(char *displayname, char *mail_from, char *hostname)
     /* Produce a "mailbox" header as per RFC5322 sec. 3.2.3
-     * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3> */
+     * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
+     * Returns: the formatted mailbox header or NULL on errors like buffer
+     * overflow. */
 {
-    char specials[sizeof(SPECIALS) + 2];
-    char need_quotes = 0, need_anglebrackets = 0;
-    char c = '\0';
-    char *bpos = NULL, *dpos = NULL;
-    char *buf1 = NULL, *buf2 = NULL;
+    char *buf = NULL;
+    uint written = 0;
+    char need_anglebrackets = strlen(displayname);
 
-    snprintf(specials, sizeof(specials), "%s%c%c", SPECIALS, DQUOTE, BSLASH);
+    /* Shorter than max because the header prefix "From: " are added
+       downstream. */
+    const uint buf_len = MAIL_LINE_LEN_MAX - 6;
 
-    /* This should actually be shorter 'cause the header name is prepended
-     * downstream */
-    buf1 = (char *)calloc(MAIL_LINE_LEN+1, sizeof(char));
-    buf2 = (char *)calloc(MAIL_LINE_LEN+1, sizeof(char));
+    buf = (char *)alloc_safe(buf_len * sizeof(char), "mailbox addr buffer");
 
-    /* walk the displayname and rebuild it in buf1 */
-    dpos = displayname;
-    bpos = buf1;
-    while (*dpos) {
-        c = *dpos++;
-        if (strchr(specials, c)) {
-            /* insert escape */
-            if (c == DQUOTE) *bpos++ = BSLASH;
-            need_quotes = 1;
-        }
-        *bpos++ = c;
-    }
-
-    need_anglebrackets = strlen(buf1) > 0;
-
-    if (need_quotes)
-        snprintf(buf2, MAIL_LINE_LEN, "\"%s\"", buf1);
-    else
-        buf2 = strncpy(buf2, buf1, MAIL_LINE_LEN);
+    need_anglebrackets = strlen(displayname) > 0;
 
     /* no @ here, it's handled upstream */
     if (need_anglebrackets)
-        snprintf(buf1, MAIL_LINE_LEN, "%s %c%s%s%c",
-                 buf2, '<', mail_from, hostname, '>');
+        written = snprintf(buf, buf_len, "%s %c%s%s%c",
+                           displayname, '<', mail_from, hostname, '>');
     else
-        snprintf(buf1, MAIL_LINE_LEN, "%s%s", mail_from, hostname);
+        written = snprintf(buf, buf_len, "%s%s", mail_from, hostname);
 
-    Free_safe(buf2);
+    if (written >= buf_len) {
+        error("Mailbox addr exceeds %u chars", buf_len);
+        Free_safe(buf);
+        return NULL;
+    }
 
-    return buf1;
+    return buf;
 }
 
 FILE *
@@ -345,6 +325,7 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     /* hostname to add to email addresses (depending on if they have a '@') */
     char *hostname_from = "";
     char *hostname_to = "";
+    char *mailbox_addr = "";
     int i = 0;
 
     if (mailf == NULL)
@@ -373,9 +354,22 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     hostname[0] = '\0';
 #endif                          /* HAVE_GETHOSTNAME */
 
-    /* write mail header. displayname comes from fcron.conf */
-    fprintf(mailf, "From: %s\n",
-            make_mailbox(displayname, mailfrom, hostname_from));
+    /* write mail header. 'displayname' comes from fcronconf.h */
+    if (strlen(displayname) > 0){
+        /* New behavior -- RFC-compliant */
+        mailbox_addr = make_mailbox_addr(displayname, mailfrom, hostname_from);
+        if (mailbox_addr) {
+            fprintf(mailf, "From: %s\n", mailbox_addr);
+            Free_safe(mailbox_addr);
+        }
+        else {
+            error("could not make the mailbox address");
+            fprintf(mailf, "From: %s%s\n", mailfrom, hostname_from);
+        }
+    }
+    else
+        /* Old behavior */
+        fprintf(mailf, "From: %s%s (fcron)\n", mailfrom, hostname_from);
 
     fprintf(mailf, "To: %s%s\n", line->cl_mailto, hostname_to);
 

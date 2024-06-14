@@ -46,6 +46,68 @@ char *sendmail = NULL;
 char *editor = NULL;
 char *displayname = NULL;
 
+char
+*format_displayname(char *displayname)
+    /* Format the input string according to RFC5322 sec. 3.2.3.
+     * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
+     * Returns: the formatted displayname (possibly unchanged) or NULL on
+     * errors like buffer overflow. */
+{
+    char need_quotes = 0;
+    char c = '\0';
+    char *bpos = NULL, *dpos = NULL;
+    char *buf1 = NULL, *buf2 = NULL;
+
+    /* Shorter than max because of the option prefix "displayname = " */
+    const uint buf_len = LINE_LEN - 14;
+    uint cwritten = 0;
+
+    if (strlen(displayname) == 0) return displayname;
+
+    /* +1 for terminator */
+    buf1 = (char *)alloc_safe(buf_len * sizeof(char), "1st buffer");
+    buf2 = (char *)alloc_safe(buf_len * sizeof(char), "2nd buffer");
+
+    /* walk the displayname and rebuild it in buf1 */
+    bpos = buf1;
+    for (dpos = displayname; *dpos; *dpos++) {
+        c = *dpos;
+        if (strchr(SPECIAL_MBOX_CHARS, c)) {
+            /* insert escape */
+            if (c == DQUOTE) {
+                *bpos++ = BSLASH;
+                ++cwritten;
+            }
+            need_quotes = 1;
+        }
+        if (cwritten >= buf_len) {
+            error("Formatted 'displayname' exceeds %u chars", buf_len);
+            Free_safe(buf1);
+            Free_safe(buf2);
+            return NULL;
+        }
+        *bpos++ = c;
+        ++cwritten;
+    }
+
+    if (need_quotes) {
+        if (snprintf(buf2, buf_len, "\"%s\"", buf1) >= buf_len){
+            error("Formatted 'displayname' exceeds %u chars", buf_len);
+            Free_safe(buf1);
+            Free_safe(buf2);
+            return NULL;
+        }
+        Free_safe(buf1);
+
+        return buf2;
+    }
+
+    /* unchanged */
+    Free_safe(buf2);
+
+    return buf1;
+}
+
 void
 init_conf(void)
 /* initialises config with compiled in constants */
@@ -192,7 +254,8 @@ read_conf(void)
             Set(editor, ptr2);
         }
         else if (strncmp(ptr1, "displayname", namesize) == 0) {
-            Set(displayname, ptr2);
+            ptr2 = format_displayname(ptr2);
+            Set(displayname, ptr2 ? ptr2 : "");
         }
         else
             error("Unknown var name at line %s : line ignored", buf);
