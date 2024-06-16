@@ -1077,7 +1077,7 @@ dnl Final settings
 dnl ---------------------------------------------------------------------
 
 
-AC_CONFIG_FILES([Makefile doc/Makefile test/Makefile doc/stylesheets/fcron-doc.dsl])
+AC_CONFIG_FILES([Makefile doc/Makefile doc/stylesheets/fcron-doc.dsl])
 AC_OUTPUT
 
 

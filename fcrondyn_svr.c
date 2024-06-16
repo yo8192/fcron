@@ -26,6 +26,7 @@
 
 #include "fcron.h"
 #include "fcrondyn_svr.h"
+#include "fcrondyn_svr_priv.h"
 #include "select.h"
 #include "getloadavg.h"
 #include "database.h"
@@ -90,19 +91,6 @@ char err_others_nallowed_str[] =
           send(FD, MSG, sizeof(MSG), 0); \
           Tell_no_more_data(FD); \
         }
-
-/* which bit corresponds to which field ? */
-#define FIELD_USER 0
-#define FIELD_RQ 1
-#define FIELD_PID 2
-#define FIELD_SCHEDULE 3
-#define FIELD_LAVG 4
-#define FIELD_INDEX 5
-#define FIELD_OPTIONS 6
-
-/* the number of char we need (8 bits (i.e. fields) per char) */
-#define FIELD_NUM_SIZE 1
-
 
 void
 fcrondyn_socket_init(select_instance *si)

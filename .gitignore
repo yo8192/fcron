@@ -16,7 +16,6 @@ files/fcron.conf
 convert-fcrontab
 doc/stylesheets/fcron-doc.dsl
 doc/fcron-doc.mod
-exe_list_test
 MANIFEST
 VERSION
 PREVIOUS_VERSION
@@ -27,8 +26,5 @@ doc/fr/HTML/*
 doc/fr/man/*
 doc/fr/txt/*
 configure
-test/mailbox_addr
-tests/test-open*
-tests/test-types*
-tests/test-uidgid*
+tests/*_test
 debug/

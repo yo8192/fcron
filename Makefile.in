@@ -76,12 +76,16 @@ CFLAGS        += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS) $(LDFLAGS)
 ifeq ($(FCRONDYN), 1)
 	LIBOBJS   := $(LIBOBJS)
 endif
-OBJSD         := fcron.o cl.o subs.o mem.o save.o temp_file.o log.o database.o job.o conf.o u_list.o exe_list.o lavg_list.o env_list.o fcronconf.o mail.o filesubs.o select.o fcrondyn_svr.o suspend.o $(LIBOBJS)
-OBJSTAB       := fcrontab.o cl.o subs.o mem.o save.o temp_file.o log.o fileconf.o allow.o read_string.o u_list.o env_list.o fcronconf.o mail.o filesubs.o
+OBJSD_MAIN    := fcron.o
+OBJSD_NO_MAIN := cl.o subs.o mem.o save.o temp_file.o log.o database.o job.o conf.o u_list.o exe_list.o lavg_list.o env_list.o fcronconf.o mail.o filesubs.o select.o fcrondyn_svr.o suspend.o $(LIBOBJS)
+OBJSD         := $(OBJSD_MAIN) $(OBJSD_NO_MAIN)
+OBJSTAB       := fcrontab.o cl.o subs.o mem.o save.o temp_file.o  log.o fileconf.o allow.o read_string.o u_list.o env_list.o fcronconf.o mail.o filesubs.o
 OBJSDYN       := fcrondyn.o subs.o mem.o log.o allow.o read_string.o fcronconf.o mail.o filesubs.o
 OBJCONV       := convert-fcrontab.o cl.o subs.o mem.o save.o log.o u_list.o env_list.o fcronconf.o mail.o filesubs.o
 OBJSIG        := fcronsighup.o subs.o mem.o log.o allow.o fcronconf.o mail.o filesubs.o
 HEADERSALL    := config.h $(SRCDIR)/global.h $(SRCDIR)/cl.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/mem.h $(SRCDIR)/save.h $(SRCDIR)/option.h $(SRCDIR)/dyncom.h $(SRCDIR)/mail.h
+TESTS_DIR     := tests
+TESTS         := $(addprefix ${TESTS_DIR}/,fcrondyn_svr_test exe_list_test mail_test)
 
 # this is a regular expression :
 # do not ci automaticaly generated files and doc (done by doc's Makefile)
@@ -95,6 +99,8 @@ else
 	BINMODE        := 6711
 	BINMODESIGHUP  := 4710
 endif
+
+.PHONY: all tests initscripts documentation install install-staged perms strip install-boot install-restart uninstall clean ciclean vclean updatedoc indent ci tar
 
 ifeq ($(FCRONDYN), 1)
 all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf initscripts documentation
@@ -117,8 +123,26 @@ fcronsighup: $(OBJSIG)
 convert-fcrontab: $(OBJCONV)
 	$(CC) $(CFLAGS) -o $@ $(OBJCONV) $(LIBS)
 
-exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
-	$(CC) $(CFLAGS) -o $@  exe_list.o u_list.o exe_list_test.o log.o subs.o $(LIBS)
+$(TESTS_DIR)/%.test.o: %.o
+	# All for main() to be replaced by cmocka:
+	objcopy $< --globalize-symbol=main --weaken-symbol=main $@
+
+$(TESTS_DIR)/fcrondyn_svr_test: $(OBJSD_NO_MAIN) $(TESTS_DIR)/fcron.test.o $(TESTS_DIR)/fcrondyn_svr_test.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS) -lcmocka -Wno-implicit-function-declaration -Wl,--wrap=send
+	$@
+
+$(TESTS_DIR)/exe_list_test: $(OBJSD_NO_MAIN) $(TESTS_DIR)/fcron.test.o $(TESTS_DIR)/exe_list_test.o
+	$(CC) $(CFLAGS) -o $@  $^ $(LIBS) -lcmocka -Wno-implicit-function-declaration
+	$@
+
+$(TESTS_DIR)/mail_test: $(OBJSD_NO_MAIN) $(TESTS_DIR)/fcron.test.o $(TESTS_DIR)/mail_test.o
+	$(CC) $(CFLAGS) -o $@  $^ $(LIBS) -lcmocka -Wno-implicit-function-declaration
+	$@
+
+tests: $(TESTS)
+
+$(TESTS_DIR)/%.o: $(TESTS_DIR)/%.c
+	$(CC) $(CFLAGS) -o $@ -c $< -Wno-implicit-function-declaration -Wno-unused-variable
 
 %.o: $(SRCDIR)/%.c $(HEADERSALL) $(SRCDIR)/%.h
 	$(CC) $(CFLAGS) -DPIDFILE="\"${PIDFILE}\"" -DREBOOT_LOCK="\"${REBOOT_LOCK}\"" \
@@ -138,11 +162,6 @@ initscripts:
 
 documentation:
 	$(MAKE) -C doc doc-if-none
-
-.PHONY: test
-test: fcron
-	$(MAKE) -C test tests
-
 
 install: install-staged strip perms
 ifeq ($(BOOTINSTALL), 1)
@@ -269,10 +288,10 @@ uninstall:
 	$(SRCDIR)/script/boot-uninstall
 
 clean:
-	rm -f *.o core
+	rm -f *.o core $(TESTS_DIR)/*.o
 	rm -f fcron fcrontab fcrondyn fcronsighup convert-fcrontab files/fcron.conf
+	rm -f $(TESTS_DIR)/*_test
 	$(MAKE) -C doc clean
-	$(MAKE) -C test clean
 
 ciclean: clean
 	find ./ -name "*~" -exec rm -f {} \;
@@ -283,7 +302,6 @@ vclean: ciclean
             files/fcron.conf script/fcron.init.suse script/fcron.init.systemd script/fcron.init.systemd.reboot \
             script/fcron.sh script/sysVinit-launcher
 	$(MAKE) -C doc clean
-	$(MAKE) -C test clean
 
 
 files/fcron.conf: $(SRCDIR)/files/fcron.conf.in config.h
@@ -296,7 +314,7 @@ updatedoc:
 indent:
 	indent -linux -i4 --no-tabs --leave-optional-blank-lines \
             --start-left-side-of-comments --procnames-start-lines \
-            --dont-cuddle-else *.c *.h
+            --dont-cuddle-else *.c *.h tests/*.c
 
 configure: configure.in
 # update configure script, then Makefile and config.h, and finally
