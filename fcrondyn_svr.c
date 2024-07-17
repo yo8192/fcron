@@ -1,5 +1,5 @@
 /*
- * FCRON - periodic command scheduler 
+ * FCRON - periodic command scheduler
  *
  *  Copyright 2000-2021 Thibault Godouet <fcron@free.fr>
  *
@@ -12,11 +12,11 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- * 
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  *  The GNU General Public License can also be found in the file
  *  `LICENSE' that comes with the fcron source distribution.
  */
@@ -251,7 +251,9 @@ auth_client_so_peercred(struct fcrondyn_cl *client)
      * Sets client->fcl_user on success, don't do anything on failure
      * so that the client stays unauthenticated */
 {
-    const int true = 1;
+    /* [@PR #17] renamed (previously called 'true') to avoid conflict with
+       stdbool */
+    const int value = 1;
     /* There is no ucred.h (or equivalent) on linux to define struct ucred (!!)
      * so we do it here */
 #if ! ( defined(HAVE_CRED_H) && defined(HAVE_UCRED_H) \
@@ -266,8 +268,8 @@ auth_client_so_peercred(struct fcrondyn_cl *client)
     socklen_t cred_size = sizeof(cred);
     struct passwd *p_entry = NULL;
 
-    setsockopt(client->fcl_sock_fd, SOL_SOCKET, SO_PASSCRED, &true,
-               sizeof(true));
+    setsockopt(client->fcl_sock_fd, SOL_SOCKET, SO_PASSCRED, &value,
+               sizeof(value));
     if (getsockopt
         (client->fcl_sock_fd, SOL_SOCKET, SO_PEERCRED, &cred,
          &cred_size) != 0) {
@@ -861,7 +863,7 @@ exe_cmd(struct fcrondyn_cl *client)
 void
 remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client,
                   select_instance * si)
-/* close the connection, remove it from the list 
+/* close the connection, remove it from the list
 and make client points to the next entry */
 {
     debug("closing connection : fd : %d", (*client)->fcl_sock_fd);

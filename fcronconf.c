@@ -47,13 +47,14 @@ char *editor = NULL;
 char *displayname = NULL;
 
 char
-*format_displayname(char *displayname)
-    /* Format the input string according to RFC5322 sec. 3.2.3.
+*format_displayname(char *conf_value)
+    /* Format the input string `conf_value` according to RFC5322 sec. 3.2.3.
      * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
-     * Returns: the formatted displayname (possibly unchanged) or NULL on
-     * errors like buffer overflow. */
+     * Returns: either the formatted displayname (possibly unchanged or empty)
+     * as a new dynamically allocated string (must be properly freed by the
+     * caller) or NULL on errors like buffer overflow. */
 {
-    char need_quotes = 0;
+    bool need_quotes = false;
     char c = '\0';
     char *bpos = NULL, *dpos = NULL;
     char *buf1 = NULL, *buf2 = NULL;
@@ -62,15 +63,14 @@ char
     const uint buf_len = LINE_LEN - 14;
     uint cwritten = 0;
 
-    if (strlen(displayname) == 0) return displayname;
+    if (strlen(conf_value) == 0) return strdup2("");
 
-    /* +1 for terminator */
     buf1 = (char *)alloc_safe(buf_len * sizeof(char), "1st buffer");
     buf2 = (char *)alloc_safe(buf_len * sizeof(char), "2nd buffer");
 
-    /* walk the displayname and rebuild it in buf1 */
+    /* walk the conf_value and rebuild it in buf1 */
     bpos = buf1;
-    for (dpos = displayname; *dpos; *dpos++) {
+    for (dpos = conf_value; *dpos; *dpos++) {
         c = *dpos;
         if (strchr(SPECIAL_MBOX_CHARS, c)) {
             /* insert escape */
@@ -78,7 +78,7 @@ char
                 *bpos++ = BSLASH;
                 ++cwritten;
             }
-            need_quotes = 1;
+            need_quotes = true;
         }
         if (cwritten >= buf_len) {
             error("Formatted 'displayname' exceeds %u chars", buf_len);
@@ -254,8 +254,9 @@ read_conf(void)
             Set(editor, ptr2);
         }
         else if (strncmp(ptr1, "displayname", namesize) == 0) {
-            ptr2 = format_displayname(ptr2);
-            Set(displayname, ptr2 ? ptr2 : "");
+            char *output = format_displayname(ptr2);
+            Set(displayname, output ? output : "");
+            Free_safe(output);
         }
         else
             error("Unknown var name at line %s : line ignored", buf);

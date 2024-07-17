@@ -4,99 +4,98 @@
 
 # @configure_input@
 
-
 # The following should not be edited manually (use configure options)
 # If you must do it, BEWARE : some of the following is also defined
 # in config.h, so you must modify config.h AND Makefile in order
 # to set the same values in the two files.
 
-FCRON_ALLOW	= fcron.allow
-FCRON_DENY	= fcron.deny
-FCRON_CONF	= fcron.conf
+# Please, keep assignments aligned with spaces.
+FCRON_ALLOW    = fcron.allow
+FCRON_DENY     = fcron.deny
+FCRON_CONF     = fcron.conf
 
-SRCDIR		:= @srcdir@
+SRCDIR        := @srcdir@
 # Useful to build packages
 # you may want to use this var with a : 'make DESTDIR=dir install'
-DESTDIR		:=
+DESTDIR       :=
 
 # Where should we install it ?
-prefix		= @prefix@
-exec_prefix	= @exec_prefix@
-DESTSBIN	= @sbindir@
-DESTBIN		= @bindir@
-ETC		= @sysconfdir@
-FCRONTABS	= @FCRONTABS@
-PIDDIR		= @PIDDIR@
-FIFODIR		= @FIFODIR@
-PIDFILE		= @PIDFILE@
-REBOOT_LOCK	= @REBOOT_LOCK@
-SUSPEND_FILE	= @SUSPEND_FILE@
-FIFOFILE	= @FIFOFILE@
-FCRON_SHELL	= @FCRON_SHELL@
-SENDMAIL	= @SENDMAIL@
-FCRON_EDITOR	= @FCRON_EDITOR@
-OPTIM		:= @CFLAGS@
-LDFLAGS		:= @LDFLAGS@
-CPPFLAGS	:= @CPPFLAGS@ -I. -I${SRCDIR}
-LIBS		:= @LIBS@
-LIBOBJS		:= @LIBOBJS@
-DEFS		:= @DEFS@
-CC		:= @CC@
-INSTALL		:= @INSTALL@
-STRIP		:= @STRIP@
-ROOTNAME	:= @ROOTNAME@
-ROOTGROUP	:= @ROOTGROUP@
-USERNAME 	:= @USERNAME@
-GROUPNAME	:= @GROUPNAME@
-SYSFCRONTAB	:= @SYSFCRONTAB@
-DEBUG		:= @DEBUG@
-BOOTINSTALL	:= @BOOTINSTALL@
-ANSWERALL	:= @ANSWERALL@
-USEPAM		:= @USEPAM@
-FCRONDYN	:= @FCRONDYN@
-SYSTEMD_DIR     := @SYSTEMD_DIR@
-DISPLAYNAME := @DISPLAYNAME@
+prefix         = @prefix@
+exec_prefix    = @exec_prefix@
+DESTSBIN       = @sbindir@
+DESTBIN        = @bindir@
+ETC            = @sysconfdir@
+FCRONTABS      = @FCRONTABS@
+PIDDIR         = @PIDDIR@
+FIFODIR        = @FIFODIR@
+PIDFILE        = @PIDFILE@
+REBOOT_LOCK    = @REBOOT_LOCK@
+SUSPEND_FILE   = @SUSPEND_FILE@
+FIFOFILE       = @FIFOFILE@
+FCRON_SHELL    = @FCRON_SHELL@
+SENDMAIL       = @SENDMAIL@
+FCRON_EDITOR   = @FCRON_EDITOR@
+OPTIM         := @CFLAGS@
+LDFLAGS       := @LDFLAGS@
+CPPFLAGS      := @CPPFLAGS@ -I. -I${SRCDIR}
+LIBS          := @LIBS@
+LIBOBJS       := @LIBOBJS@
+DEFS          := @DEFS@
+CC            := @CC@
+INSTALL       := @INSTALL@
+STRIP         := @STRIP@
+ROOTNAME      := @ROOTNAME@
+ROOTGROUP     := @ROOTGROUP@
+USERNAME      := @USERNAME@
+GROUPNAME     := @GROUPNAME@
+SYSFCRONTAB   := @SYSFCRONTAB@
+DEBUG         := @DEBUG@
+BOOTINSTALL   := @BOOTINSTALL@
+ANSWERALL     := @ANSWERALL@
+USEPAM        := @USEPAM@
+FCRONDYN      := @FCRONDYN@
+SYSTEMD_DIR   := @SYSTEMD_DIR@
+DISPLAYNAME   := @DISPLAYNAME@
 
 # Options
-#	-DDEBUG		even more verbose
-#	-DCHECKJOBS     send a mail containing the exact shell command
-#			for each execution of each job.
-#	-DFOREGROUND=[0|1]    default run in foreground ?
-#OPTION=	-DCHECKJOBS
-#OPTION=	-O3 -mcpu=i686
-OPTION :=
+#   -DDEBUG             even more verbose
+#   -DCHECKJOBS         send a mail containing the exact shell command
+#                       for each execution of each job.
+#   -DFOREGROUND=[0|1]  default run in foreground ?
+#OPTION        = -DCHECKJOBS
+#OPTION        = -O3 -mcpu=i686
+OPTION        :=
 
 
 ####################################
 # Should not be changed under this #
 ####################################
 
-VERSION := @VERSION@
-CFLAGS += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS) $(LDFLAGS)
+VERSION       := @VERSION@
+CFLAGS        += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS) $(LDFLAGS)
 ifeq ($(FCRONDYN), 1)
-LIBOBJS := $(LIBOBJS)
+	LIBOBJS   := $(LIBOBJS)
 endif
-OBJSD := fcron.o cl.o subs.o mem.o save.o temp_file.o log.o database.o job.o conf.o u_list.o exe_list.o lavg_list.o env_list.o fcronconf.o filesubs.o select.o fcrondyn_svr.o suspend.o $(LIBOBJS)
-OBJSTAB := fcrontab.o cl.o subs.o mem.o save.o temp_file.o  log.o fileconf.o allow.o read_string.o u_list.o env_list.o fcronconf.o filesubs.o
-OBJSDYN := fcrondyn.o subs.o mem.o log.o allow.o read_string.o fcronconf.o filesubs.o
-OBJCONV := convert-fcrontab.o cl.o subs.o mem.o save.o log.o u_list.o env_list.o fcronconf.o filesubs.o
-OBJSIG := fcronsighup.o subs.o mem.o log.o allow.o fcronconf.o filesubs.o
-HEADERSALL := config.h $(SRCDIR)/global.h $(SRCDIR)/cl.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/mem.h $(SRCDIR)/save.h $(SRCDIR)/option.h $(SRCDIR)/dyncom.h
+OBJSD         := fcron.o cl.o subs.o mem.o save.o temp_file.o log.o database.o job.o conf.o u_list.o exe_list.o lavg_list.o env_list.o fcronconf.o filesubs.o select.o fcrondyn_svr.o suspend.o $(LIBOBJS)
+OBJSTAB       := fcrontab.o cl.o subs.o mem.o save.o temp_file.o  log.o fileconf.o allow.o read_string.o u_list.o env_list.o fcronconf.o filesubs.o
+OBJSDYN       := fcrondyn.o subs.o mem.o log.o allow.o read_string.o fcronconf.o filesubs.o
+OBJCONV       := convert-fcrontab.o cl.o subs.o mem.o save.o log.o u_list.o env_list.o fcronconf.o filesubs.o
+OBJSIG        := fcronsighup.o subs.o mem.o log.o allow.o fcronconf.o filesubs.o
+HEADERSALL    := config.h $(SRCDIR)/global.h $(SRCDIR)/cl.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/mem.h $(SRCDIR)/save.h $(SRCDIR)/option.h $(SRCDIR)/dyncom.h
 
 # this is a regular expression :
 # do not ci automaticaly generated files and doc (done by doc's Makefile)
-RCSNOCI:=.*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|config.log\|config.status\|config.h\|config.cache\|Makefile\|doc.*\|CVS.*\|.git.*\)
+RCSNOCI       := .*\(.html\|VERSION\|MANIFEST\|configure\|install.sh\|config.log\|config.status\|config.h\|config.cache\|Makefile\|doc.*\|CVS.*\|.git.*\)
 
 RUN_NON_PRIVILEGED := @RUN_NON_PRIVILEGED@
 ifeq ($(RUN_NON_PRIVILEGED), 1)
-	BINMODE:=711
-	BINMODESIGHUP:=711
+	BINMODE        := 711
+	BINMODESIGHUP  := 711
 else
-	BINMODE:=6711
-	BINMODESIGHUP:=4710
+	BINMODE        := 6711
+	BINMODESIGHUP  := 4710
 endif
 
-export
 ifeq ($(FCRONDYN), 1)
 all: fcron fcrontab fcrondyn convert-fcrontab files/fcron.conf initscripts documentation
 else

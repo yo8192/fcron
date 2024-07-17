@@ -1,5 +1,5 @@
 /*
- * FCRON - periodic command scheduler 
+ * FCRON - periodic command scheduler
  *
  *  Copyright 2000-2021 Thibault Godouet <fcron@free.fr>
  *
@@ -12,18 +12,18 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- * 
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  *  The GNU General Public License can also be found in the file
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
 
 
-/* 
+/*
    WARNING : this file should not be modified.
    Compilation's options are in config.h
 */
@@ -31,7 +31,7 @@
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
 
-/* config.h must be included before every other includes 
+/* config.h must be included before every other includes
  * (contains the compilation options) */
 #include "config.h"
 
@@ -69,6 +69,7 @@
 #include <stdarg.h>
 #endif
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

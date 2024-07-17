@@ -278,15 +278,16 @@ sig_dfl(void)
 }
 
 char *
-make_mailbox_addr(char *displayname, char *mail_from, char *hostname)
+make_mailbox_addr(char *displayname_conf, char *mail_from, char *hostname)
     /* Produce a "mailbox" header as per RFC5322 sec. 3.2.3
      * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
-     * Returns: the formatted mailbox header or NULL on errors like buffer
-     * overflow. */
+     * Returns: either the formatted mailbox header as a new dynamically
+     * allocated string (must be properly freed by the caller) or NULL on
+     * errors like buffer overflow. */
 {
     char *buf = NULL;
     uint written = 0;
-    char need_anglebrackets = strlen(displayname);
+    bool need_anglebrackets = false;
 
     /* Shorter than max because the header prefix "From: " are added
        downstream. */
@@ -294,12 +295,13 @@ make_mailbox_addr(char *displayname, char *mail_from, char *hostname)
 
     buf = (char *)alloc_safe(buf_len * sizeof(char), "mailbox addr buffer");
 
-    need_anglebrackets = strlen(displayname) > 0;
+    /* == strlen(),but faster */
+    need_anglebrackets = displayname_conf[0] != '\0';
 
     /* no @ here, it's handled upstream */
     if (need_anglebrackets)
         written = snprintf(buf, buf_len, "%s %c%s%s%c",
-                           displayname, '<', mail_from, hostname, '>');
+                           displayname_conf, '<', mail_from, hostname, '>');
     else
         written = snprintf(buf, buf_len, "%s%s", mail_from, hostname);
 
@@ -354,7 +356,7 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     hostname[0] = '\0';
 #endif                          /* HAVE_GETHOSTNAME */
 
-    /* write mail header. 'displayname' comes from fcronconf.h */
+    /* write mail header. Global 'displayname' comes from fcronconf.h */
     if (strlen(displayname) > 0){
         /* New behavior -- RFC-compliant */
         mailbox_addr = make_mailbox_addr(displayname, mailfrom, hostname_from);
