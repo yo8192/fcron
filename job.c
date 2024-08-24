@@ -278,43 +278,6 @@ sig_dfl(void)
     signal(SIGPIPE, SIG_DFL);
 }
 
-char *
-make_mailbox_addr(char *displayname_conf, char *mail_from, char *hostname)
-    /* Produce a "mailbox" header as per RFC5322 sec. 3.2.3
-     * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
-     * Returns: either the formatted mailbox header as a new dynamically
-     * allocated string (must be properly freed by the caller) or NULL on
-     * errors like buffer overflow. */
-{
-    char *buf = NULL;
-    uint written = 0;
-    bool need_anglebrackets = false;
-
-    const uint buf_len = MAIL_FROM_VALUE_LEN_MAX+1;
-
-    buf = (char *)alloc_safe(buf_len * sizeof(char), "mailbox addr buffer");
-
-    if (displayname_conf[0] != '\0') {
-        /* displayname_conf isn't an empty string */
-        need_anglebrackets = true;
-    }
-
-    /* no @ here, it's handled upstream */
-    if (need_anglebrackets)
-        written = snprintf(buf, buf_len, "%s %c%s%s%c",
-                           displayname_conf, '<', mail_from, hostname, '>');
-    else
-        written = snprintf(buf, buf_len, "%s%s", mail_from, hostname);
-
-    if (written >= buf_len) {
-        error("Mailbox addr exceeds %u chars", buf_len);
-        Free_safe(buf);
-        return NULL;
-    }
-
-    return buf;
-}
-
 FILE *
 create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
             char **env)

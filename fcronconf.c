@@ -47,63 +47,6 @@ char *sendmail = NULL;
 char *editor = NULL;
 char *displayname = NULL;
 
-char
-*format_displayname(char *displayname_conf)
-    /* Format the input string `conf_value` according to RFC5322 sec. 3.2.3.
-     * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
-     * Returns: either the formatted displayname (possibly unchanged or empty)
-     * as a new dynamically allocated string (must be properly freed by the
-     * caller) or NULL on errors like buffer overflow. */
-{
-    bool need_quotes = false;
-    char c = '\0';
-    char *ipos = NULL;  /* Input position */
-    char *output = NULL, *quoted_output = NULL;
-
-    const uint buf_len = MAIL_FROM_VALUE_LEN_MAX;
-    uint cwritten = 0;  /* how many chars we have written */
-
-    if (strlen(displayname_conf) == 0) return strdup2("");
-
-    output = (char *)alloc_safe(buf_len * sizeof(char), "output buffer");
-
-    /* walk the conf_value and rebuild it in buf1 */
-    for (ipos = displayname_conf; *ipos; ipos++) {
-        c = *ipos;
-        if (strchr(SPECIAL_MBOX_CHARS, c)) {
-            /* insert escape */
-            if (c == DQUOTE) {
-                output[cwritten] = BSLASH;
-                cwritten++;
-            }
-            need_quotes = true;
-        }
-        if (cwritten >= buf_len) {
-            error("Formatted 'displayname' exceeds %u chars", buf_len);
-            Free_safe(output);
-            return NULL;
-        }
-        output[cwritten] = c;
-        cwritten++;
-    }
-
-    if (need_quotes) {
-        quoted_output = (char *)alloc_safe(buf_len * sizeof(char), "quoted output buffer");
-        int needed_len = snprintf(quoted_output, buf_len, "\"%s\"", output);
-        if (needed_len >= buf_len){
-            error("Formatted 'displayname' too long: length:%u > max:%u chars", needed_len, buf_len);
-            Free_safe(output);
-            Free_safe(quoted_output);
-            return NULL;
-        }
-        Free_safe(output);
-
-        return quoted_output;
-    }
-
-    return output;
-}
-
 void
 init_conf(void)
 /* initialises config with compiled in constants */

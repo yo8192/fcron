@@ -4,7 +4,7 @@ LIBS   := @LIBS@
 SRCST  := mailbox_addr.c
 OBJST  := $(patsubst %.c,%.o,$(SRCST))
 EXEST  := $(patsubst %.c,%,$(SRCST))
-OBJSD  := $(addprefix $(SRCDIR)/,log.o job.o mem.o filesubs.o subs.o fcronconf.o temp_file.o env_list.o u_list.o)
+OBJSD  := $(addprefix $(SRCDIR)/,log.o job.o mem.o filesubs.o subs.o fcronconf.o mail.o temp_file.o env_list.o u_list.o)
 
 CFLAGS += -I$(SRCDIR)
 CFLAGS += @CFLAGS@
