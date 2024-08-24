@@ -69,7 +69,13 @@
 #include <stdarg.h>
 #endif
 
+#ifdef HAVE_STDBOOL_H
 #include <stdbool.h>
+#else
+#define bool    char
+#define true    1
+#define false   0
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
