@@ -1,5 +1,5 @@
 /*
- * FCRON - periodic command scheduler 
+ * FCRON - periodic command scheduler
  *
  *  Copyright 2000-2021 Thibault Godouet <fcron@free.fr>
  *
@@ -12,11 +12,11 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- * 
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  *  The GNU General Public License can also be found in the file
  *  `LICENSE' that comes with the fcron source distribution.
  */
@@ -26,6 +26,7 @@
 
 #include "job.h"
 #include "temp_file.h"
+
 
 void sig_dfl(void);
 void end_job(cl_t * line, int status, FILE * mailf, short mailpos,
@@ -276,6 +277,42 @@ sig_dfl(void)
     signal(SIGPIPE, SIG_DFL);
 }
 
+char *
+make_mailbox_addr(char *displayname_conf, char *mail_from, char *hostname)
+    /* Produce a "mailbox" header as per RFC5322 sec. 3.2.3
+     * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
+     * Returns: either the formatted mailbox header as a new dynamically
+     * allocated string (must be properly freed by the caller) or NULL on
+     * errors like buffer overflow. */
+{
+    char *buf = NULL;
+    uint written = 0;
+    bool need_anglebrackets = false;
+
+    /* Shorter than max because the header prefix "From: " are added
+       downstream. */
+    const uint buf_len = MAIL_LINE_LEN_MAX - 6;
+
+    buf = (char *)alloc_safe(buf_len * sizeof(char), "mailbox addr buffer");
+
+    /* == strlen(),but faster */
+    need_anglebrackets = displayname_conf[0] != '\0';
+
+    /* no @ here, it's handled upstream */
+    if (need_anglebrackets)
+        written = snprintf(buf, buf_len, "%s %c%s%s%c",
+                           displayname_conf, '<', mail_from, hostname, '>');
+    else
+        written = snprintf(buf, buf_len, "%s%s", mail_from, hostname);
+
+    if (written >= buf_len) {
+        error("Mailbox addr exceeds %u chars", buf_len);
+        Free_safe(buf);
+        return NULL;
+    }
+
+    return buf;
+}
 
 FILE *
 create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
@@ -290,6 +327,7 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     /* hostname to add to email addresses (depending on if they have a '@') */
     char *hostname_from = "";
     char *hostname_to = "";
+    char *mailbox_addr = "";
     int i = 0;
 
     if (mailf == NULL)
@@ -318,8 +356,23 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     hostname[0] = '\0';
 #endif                          /* HAVE_GETHOSTNAME */
 
-    /* write mail header */
-    fprintf(mailf, "From: %s%s (fcron)\n", mailfrom, hostname_from);
+    /* write mail header. Global 'displayname' comes from fcronconf.h */
+    if (strlen(displayname) > 0){
+        /* New behavior -- RFC-compliant */
+        mailbox_addr = make_mailbox_addr(displayname, mailfrom, hostname_from);
+        if (mailbox_addr) {
+            fprintf(mailf, "From: %s\n", mailbox_addr);
+            Free_safe(mailbox_addr);
+        }
+        else {
+            error("could not make the mailbox address");
+            fprintf(mailf, "From: %s%s\n", mailfrom, hostname_from);
+        }
+    }
+    else
+        /* Old behavior */
+        fprintf(mailf, "From: %s%s (fcron)\n", mailfrom, hostname_from);
+
     fprintf(mailf, "To: %s%s\n", line->cl_mailto, hostname_to);
 
     if (subject)
@@ -447,7 +500,7 @@ read_write_pipe(int fd, void *buf, size_t size, int action)
 
 int
 read_pipe(int fd, void *buf, size_t size)
-    /* Read data from pipe. 
+    /* Read data from pipe.
      * Handles signal interruptions, and read in several passes.
      * Returns ERR in case of a closed pipe, the errno from read
      * for other errors, and OK if everything was read successfully */
@@ -457,7 +510,7 @@ read_pipe(int fd, void *buf, size_t size)
 
 int
 write_pipe(int fd, void *buf, size_t size)
-    /* Read data from pipe. 
+    /* Read data from pipe.
      * Handles signal interruptions, and read in several passes.
      * Returns ERR in case of a closed pipe, the errno from write
      * for other errors, and OK if everything was read successfully */

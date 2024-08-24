@@ -1,5 +1,5 @@
 /*
- * FCRON - periodic command scheduler 
+ * FCRON - periodic command scheduler
  *
  *  Copyright 2000-2021 Thibault Godouet <fcron@free.fr>
  *
@@ -12,11 +12,11 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- * 
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  *  The GNU General Public License can also be found in the file
  *  `LICENSE' that comes with the fcron source distribution.
  */
@@ -24,6 +24,8 @@
 
 #ifndef __JOB_H__
 #define __JOB_H__
+
+#define MAIL_LINE_LEN_MAX 998 /* RFC5322's max line length */
 
 /* functions prototypes */
 extern void change_user_setup_env(struct cl_t *cl, char ***sendmailenv,

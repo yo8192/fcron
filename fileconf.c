@@ -1,5 +1,5 @@
 /*
- * FCRON - periodic command scheduler 
+ * FCRON - periodic command scheduler
  *
  *  Copyright 2000-2021 Thibault Godouet <fcron@free.fr>
  *
@@ -12,11 +12,11 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- * 
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  *  The GNU General Public License can also be found in the file
  *  `LICENSE' that comes with the fcron source distribution.
  */
@@ -458,41 +458,43 @@ assign_option_string(char **var, char *value)
 }
 
 
+/* [@PR #17] renamed labels 'true' and 'false' to avoid conflict with
+   stdbool */
 char *
 get_bool(char *ptr, int *i)
     /* get a bool value : either true (1) or false (0)
      * return NULL on error */
 {
     if (*ptr == '1')
-        goto true;
+        goto conf_true;
     else if (*ptr == '0')
-        goto false;
+        goto conf_false;
     else if (strncmp(ptr, "true", 4) == 0) {
         ptr += 3;
-        goto true;
+        goto conf_true;
     }
     else if (strncmp(ptr, "yes", 3) == 0) {
         ptr += 2;
-        goto true;
+        goto conf_true;
     }
     else if (strncmp(ptr, "false", 5) == 0) {
         ptr += 4;
-        goto false;
+        goto conf_false;
     }
     else if (strncmp(ptr, "no", 2) == 0) {
         ptr += 1;
-        goto false;
+        goto conf_false;
     }
     else
         return NULL;
 
- true:
-    *i = 1;
+ conf_true:
+    *i = true;
     ptr++;
     return ptr;
 
- false:
-    *i = 0;
+ conf_false:
+    *i = false;
     ptr++;
     return ptr;
 
@@ -1423,7 +1425,7 @@ read_shortcut(char *ptr, cf_t * cf)
     }
 
     /* The next char must be a space (no other option allowed when using
-     * a shortcut: if the user wants to use options, they should use the 
+     * a shortcut: if the user wants to use options, they should use the
      * native fcron lines */
     if (!isspace((int)*ptr)) {
         fprintf(stderr, "%s:%d: No space after shortcut: skipping line.\n",
@@ -1674,7 +1676,7 @@ read_period(char *ptr, cf_t * cf)
     /* skip the % */
     ptr++;
 
-    /* a runfreq set to 1 means : this is a periodical line 
+    /* a runfreq set to 1 means : this is a periodical line
      * (runfreq cannot be changed by read_opt() if already set to 1) */
     cl->cl_remain = cl->cl_runfreq = 1;
 
@@ -2028,7 +2030,7 @@ read_field(char *ptr, bitstr_t * ary, int max, const char **names)
 
 void
 delete_file(const char *user_name)
-    /* free a file if user_name is not null 
+    /* free a file if user_name is not null
      *   otherwise free all files */
 {
     cf_t *file = NULL;

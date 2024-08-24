@@ -23,3 +23,13 @@ sendmail	=	@@SENDMAIL@
 
 # Location of the default editor for "fcrontab -e"
 editor		=	@@FCRON_EDITOR@
+
+# Display name for the "From: " header of mails sent by us. Default is
+# unset/empty, which keeps the "From: " header as it was before this feature
+# was added -- not RFC5322-compliant, though. A sane RFC5322-compliant setting,
+# could be:
+#
+#   displayname = Fcron Deamon
+#
+# Please read fcron.conf(5) before setting it!
+displayname =   @@DISPLAYNAME@
