@@ -154,8 +154,8 @@ A copy of the license is included in gfdl.sgml.
 				</varlistentry>
 				<varlistentry>
 					<term>
-						<varname>displayname</varname>=<replaceable>string</replaceable>
-						(<option>&displayname;</option>)
+						<varname>maildisplayname</varname>=<replaceable>string</replaceable>
+						(<option>&maildisplayname;</option>)
 					</term>
 					<listitem>
 						<para>

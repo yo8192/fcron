@@ -181,9 +181,10 @@ AC_ARG_ENABLE(checks,
   esac
 ])
 
-DISPLAYNAME=
-AC_MSG_RESULT([$DISPLAYNAME])
-AC_SUBST([DISPLAYNAME])
+MAILDISPLAYNAME=""
+AC_MSG_CHECKING([mail display name])
+AC_MSG_RESULT([$MAILDISPLAYNAME])
+AC_SUBST([MAILDISPLAYNAME])
 
 
 dnl ---------------------------------------------------------------------

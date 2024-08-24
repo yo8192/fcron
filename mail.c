@@ -26,7 +26,7 @@
 #include "mail.h"
 
 char
-*format_displayname(char *displayname_conf)
+*format_maildisplayname(char *displayname_conf)
     /* Format the input string `conf_value` according to RFC5322 sec. 3.2.3.
      * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
      * Returns: either the formatted displayname (possibly unchanged or empty)

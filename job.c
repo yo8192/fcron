@@ -320,10 +320,10 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     hostname[0] = '\0';
 #endif                          /* HAVE_GETHOSTNAME */
 
-    /* write mail header. Global 'displayname' comes from fcronconf.h */
-    if (displayname[0] != '\0'){
+    /* write mail header. Global 'maildisplayname' comes from fcronconf.h */
+    if (maildisplayname[0] != '\0'){
         /* New behavior -- RFC-compliant */
-        mailbox_addr = make_mailbox_addr(displayname, mailfrom, hostname_from);
+        mailbox_addr = make_mailbox_addr(maildisplayname, mailfrom, hostname_from);
         if (! mailbox_addr) {
             warn("could not make the mailbox address");
         }

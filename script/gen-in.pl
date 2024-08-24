@@ -30,7 +30,7 @@ close(CONFIG);
 
 open(MAKEFILE, "$ARGV[2]/Makefile") or print "error while opening Makefile: $!\n" and exit;
 while ( <MAKEFILE> ) {
-    if ( /^\s*?(\w+?)\s*?=\s*?([^\s]+)\s/ ) {
+    if ( /^\s*?(\w+?)\s*?:?=\s*?([^\s].+?)\s*$/ ) {
 	$name = $1;
 	$value = $2;
 

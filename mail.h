@@ -29,7 +29,7 @@
 #define FROM_HEADER_KEY "From: "
 #define MAIL_FROM_VALUE_LEN_MAX (MAIL_LINE_LEN_MAX - sizeof(FROM_HEADER_KEY))
 
-extern char *format_displayname(char *displayname_conf);
+extern char *format_maildisplayname(char *displayname_conf);
 extern char *make_mailbox_addr(char *displayname_conf, char *mail_from, char *hostname);
 
 #endif                          /* __MAIL_H__ */

@@ -29,7 +29,7 @@ editor		=	@@FCRON_EDITOR@
 # was added -- not RFC5322-compliant, though.
 # The default will soon be the sane RFC5322-compliant:
 #
-#   displayname = Fcron Daemon
+#   maildisplayname = Fcron Daemon
 #
 # Please read fcron.conf(5) before setting it!
-displayname =   @@DISPLAYNAME@
+maildisplayname	=	@@MAILDISPLAYNAME@

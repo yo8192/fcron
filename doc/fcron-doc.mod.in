@@ -42,7 +42,7 @@
 <!ENTITY sysfcrontab "@@SYSFCRONTAB@">
 <!ENTITY rootname "@@ROOTNAME@">
 <!ENTITY rootgroup "@@ROOTGROUP@">
-<!ENTITY displayname "@@DISPLAYNAME@">
+<!ENTITY maildisplayname "@@MAILDISPLAYNAME@">
 
 <!-- shortcuts -->
 

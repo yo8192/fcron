@@ -20,42 +20,42 @@ SRCDIR        := @srcdir@
 DESTDIR       :=
 
 # Where should we install it ?
-prefix         = @prefix@
-exec_prefix    = @exec_prefix@
-DESTSBIN       = @sbindir@
-DESTBIN        = @bindir@
-ETC            = @sysconfdir@
-FCRONTABS      = @FCRONTABS@
-PIDDIR         = @PIDDIR@
-FIFODIR        = @FIFODIR@
-PIDFILE        = @PIDFILE@
-REBOOT_LOCK    = @REBOOT_LOCK@
-SUSPEND_FILE   = @SUSPEND_FILE@
-FIFOFILE       = @FIFOFILE@
-FCRON_SHELL    = @FCRON_SHELL@
-SENDMAIL       = @SENDMAIL@
-FCRON_EDITOR   = @FCRON_EDITOR@
-OPTIM         := @CFLAGS@
-LDFLAGS       := @LDFLAGS@
-CPPFLAGS      := @CPPFLAGS@ -I. -I${SRCDIR}
-LIBS          := @LIBS@
-LIBOBJS       := @LIBOBJS@
-DEFS          := @DEFS@
-CC            := @CC@
-INSTALL       := @INSTALL@
-STRIP         := @STRIP@
-ROOTNAME      := @ROOTNAME@
-ROOTGROUP     := @ROOTGROUP@
-USERNAME      := @USERNAME@
-GROUPNAME     := @GROUPNAME@
-SYSFCRONTAB   := @SYSFCRONTAB@
-DEBUG         := @DEBUG@
-BOOTINSTALL   := @BOOTINSTALL@
-ANSWERALL     := @ANSWERALL@
-USEPAM        := @USEPAM@
-FCRONDYN      := @FCRONDYN@
-SYSTEMD_DIR   := @SYSTEMD_DIR@
-DISPLAYNAME   := @DISPLAYNAME@
+prefix           = @prefix@
+exec_prefix      = @exec_prefix@
+DESTSBIN         = @sbindir@
+DESTBIN          = @bindir@
+ETC              = @sysconfdir@
+FCRONTABS        = @FCRONTABS@
+PIDDIR           = @PIDDIR@
+FIFODIR          = @FIFODIR@
+PIDFILE          = @PIDFILE@
+REBOOT_LOCK      = @REBOOT_LOCK@
+SUSPEND_FILE     = @SUSPEND_FILE@
+FIFOFILE         = @FIFOFILE@
+FCRON_SHELL      = @FCRON_SHELL@
+SENDMAIL         = @SENDMAIL@
+FCRON_EDITOR     = @FCRON_EDITOR@
+OPTIM           := @CFLAGS@
+LDFLAGS         := @LDFLAGS@
+CPPFLAGS        := @CPPFLAGS@ -I. -I${SRCDIR}
+LIBS            := @LIBS@
+LIBOBJS         := @LIBOBJS@
+DEFS            := @DEFS@
+CC              := @CC@
+INSTALL         := @INSTALL@
+STRIP           := @STRIP@
+ROOTNAME        := @ROOTNAME@
+ROOTGROUP       := @ROOTGROUP@
+USERNAME        := @USERNAME@
+GROUPNAME       := @GROUPNAME@
+SYSFCRONTAB     := @SYSFCRONTAB@
+DEBUG           := @DEBUG@
+BOOTINSTALL     := @BOOTINSTALL@
+ANSWERALL       := @ANSWERALL@
+USEPAM          := @USEPAM@
+FCRONDYN        := @FCRONDYN@
+SYSTEMD_DIR     := @SYSTEMD_DIR@
+MAILDISPLAYNAME := @MAILDISPLAYNAME@
 
 # Options
 #   -DDEBUG             even more verbose
@@ -127,7 +127,7 @@ exe_list_test: exe_list.o u_list.o exe_list_test.o log.o subs.o
 	-DFCRONTABS="\"${FCRONTABS}\"" \
 	-DFCRON_ALLOW="\"${FCRON_ALLOW}\"" -DFCRON_DENY="\"${FCRON_DENY}\"" \
 	-DFCRON_SHELL="\"${FCRON_SHELL}\"" -DSENDMAIL="\"${SENDMAIL}\"" \
-	-DFCRON_EDITOR="\"${FCRON_EDITOR}\"" \-DDISPLAYNAME="\"${DISPLAYNAME}\"" -DBINDIREX="\"${DESTBIN}\"" \
+	-DFCRON_EDITOR="\"${FCRON_EDITOR}\"" \-DMAILDISPLAYNAME="\"${MAILDISPLAYNAME}\"" -DBINDIREX="\"${DESTBIN}\"" \
 	-c $<
 
 initscripts:
@@ -140,7 +140,7 @@ documentation:
 	$(MAKE) -C doc doc-if-none
 
 .PHONY: test
-test:
+test: fcron
 	$(MAKE) -C test tests
 
 

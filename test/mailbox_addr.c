@@ -32,7 +32,7 @@ mode_t saved_umask;
 uid_t rootuid = 0;
 char *tmp_path = "";
 
-char *format_displayname(char *displayname);
+char *format_maildisplayname(char *displayname);
 char *make_mailbox_addr(char *displayname, char *mail_from, char *hostname);
 
 
@@ -40,7 +40,7 @@ void _test_format_displayname(char *test_desc, char *arg, char *expected)
 {
     char *output = NULL;
 
-    output = format_displayname(arg);
+    output = format_maildisplayname(arg);
     printf("%s: format_displayname('%s'): '%s' ?= '%s'\n",
            test_desc, arg, output, expected);
     assert(strcmp(output, expected) == 0);
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     char *displayname = NULL;
     char *output = NULL;
 
-    /* Mind that format_displayname() might modify input displayname, thus all
+    /* Mind that format_maildisplayname() might modify input displayname, thus all
        special characters must be tested */
     _test_format_displayname("empty displayname", "", "");
     _test_format_displayname("displayname with no special char",
@@ -120,24 +120,24 @@ int main(int argc, char* argv[])
 
     memset(displayname, 'a', MAIL_FROM_VALUE_LEN_MAX*2);
 
-    printf("=== format_displayname: one-char overflow with no expansion...\n");
+    printf("=== format_maildisplayname: one-char overflow with no expansion...\n");
     displayname[MAIL_FROM_VALUE_LEN_MAX+1] = '\0';
-    output = format_displayname(displayname);
+    output = format_maildisplayname(displayname);
     AssertEq("format_displayname: overflow with no expansion", output, NULL);
     Free_safe(output);
 
 
-    printf("=== format_displayname: max size with no special char...\n");
+    printf("=== format_maildisplayname: max size with no special char...\n");
     displayname[MAIL_FROM_VALUE_LEN_MAX] = '\0';
-    output = format_displayname(displayname);
+    output = format_maildisplayname(displayname);
     _test_format_displayname("format_displayname: max size with no special chars",
                              output, displayname);
     printf("format_displayname: max size with no special char: len(output)=%lu, MAIL_FROM_VALUE_LEN_MAX=%lu\n", strlen(output), MAIL_FROM_VALUE_LEN_MAX);
     Free_safe(output);
 
-    printf("=== format_displayname: overflow on max size with special char...\n");
+    printf("=== format_maildisplayname: overflow on max size with special char...\n");
     displayname[0] = DQUOTE;
-    output = format_displayname(displayname);
+    output = format_maildisplayname(displayname);
     AssertEq("format_displayname: overflow on max size with special char", output, NULL);
     Free_safe(output);
 
