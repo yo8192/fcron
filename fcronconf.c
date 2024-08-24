@@ -25,6 +25,7 @@
 #include "global.h"
 #include "mem.h"
 #include "fcronconf.h"
+#include "mail.h"
 #include "subs.h"
 
 void init_conf(void);
@@ -47,7 +48,7 @@ char *editor = NULL;
 char *displayname = NULL;
 
 char
-*format_displayname(char *conf_value)
+*format_displayname(char *displayname_conf)
     /* Format the input string `conf_value` according to RFC5322 sec. 3.2.3.
      * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
      * Returns: either the formatted displayname (possibly unchanged or empty)
@@ -56,56 +57,51 @@ char
 {
     bool need_quotes = false;
     char c = '\0';
-    char *bpos = NULL, *dpos = NULL;
-    char *buf1 = NULL, *buf2 = NULL;
+    char *ipos = NULL;  /* Input position */
+    char *output = NULL, *quoted_output = NULL;
 
-    /* Shorter than max because of the option prefix "displayname = " */
-    const uint buf_len = LINE_LEN - 14;
-    uint cwritten = 0;
+    const uint buf_len = MAIL_FROM_VALUE_LEN_MAX;
+    uint cwritten = 0;  /* how many chars we have written */
 
-    if (strlen(conf_value) == 0) return strdup2("");
+    if (strlen(displayname_conf) == 0) return strdup2("");
 
-    buf1 = (char *)alloc_safe(buf_len * sizeof(char), "1st buffer");
-    buf2 = (char *)alloc_safe(buf_len * sizeof(char), "2nd buffer");
+    output = (char *)alloc_safe(buf_len * sizeof(char), "output buffer");
 
     /* walk the conf_value and rebuild it in buf1 */
-    bpos = buf1;
-    for (dpos = conf_value; *dpos; *dpos++) {
-        c = *dpos;
+    for (ipos = displayname_conf; *ipos; ipos++) {
+        c = *ipos;
         if (strchr(SPECIAL_MBOX_CHARS, c)) {
             /* insert escape */
             if (c == DQUOTE) {
-                *bpos++ = BSLASH;
-                ++cwritten;
+                output[cwritten] = BSLASH;
+                cwritten++;
             }
             need_quotes = true;
         }
         if (cwritten >= buf_len) {
             error("Formatted 'displayname' exceeds %u chars", buf_len);
-            Free_safe(buf1);
-            Free_safe(buf2);
+            Free_safe(output);
             return NULL;
         }
-        *bpos++ = c;
-        ++cwritten;
+        output[cwritten] = c;
+        cwritten++;
     }
 
     if (need_quotes) {
-        if (snprintf(buf2, buf_len, "\"%s\"", buf1) >= buf_len){
-            error("Formatted 'displayname' exceeds %u chars", buf_len);
-            Free_safe(buf1);
-            Free_safe(buf2);
+        quoted_output = (char *)alloc_safe(buf_len * sizeof(char), "quoted output buffer");
+        int needed_len = snprintf(quoted_output, buf_len, "\"%s\"", output);
+        if (needed_len >= buf_len){
+            error("Formatted 'displayname' too long: length:%u > max:%u chars", needed_len, buf_len);
+            Free_safe(output);
+            Free_safe(quoted_output);
             return NULL;
         }
-        Free_safe(buf1);
+        Free_safe(output);
 
-        return buf2;
+        return quoted_output;
     }
 
-    /* unchanged */
-    Free_safe(buf2);
-
-    return buf1;
+    return output;
 }
 
 void

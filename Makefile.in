@@ -81,7 +81,7 @@ OBJSTAB       := fcrontab.o cl.o subs.o mem.o save.o temp_file.o  log.o fileconf
 OBJSDYN       := fcrondyn.o subs.o mem.o log.o allow.o read_string.o fcronconf.o filesubs.o
 OBJCONV       := convert-fcrontab.o cl.o subs.o mem.o save.o log.o u_list.o env_list.o fcronconf.o filesubs.o
 OBJSIG        := fcronsighup.o subs.o mem.o log.o allow.o fcronconf.o filesubs.o
-HEADERSALL    := config.h $(SRCDIR)/global.h $(SRCDIR)/cl.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/mem.h $(SRCDIR)/save.h $(SRCDIR)/option.h $(SRCDIR)/dyncom.h
+HEADERSALL    := config.h $(SRCDIR)/global.h $(SRCDIR)/cl.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/mem.h $(SRCDIR)/save.h $(SRCDIR)/option.h $(SRCDIR)/dyncom.h $(SRCDIR)/mail.h
 
 # this is a regular expression :
 # do not ci automaticaly generated files and doc (done by doc's Makefile)

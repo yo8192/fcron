@@ -25,6 +25,7 @@
 #include "fcron.h"
 
 #include "job.h"
+#include "mail.h"
 #include "temp_file.h"
 
 
@@ -289,14 +290,14 @@ make_mailbox_addr(char *displayname_conf, char *mail_from, char *hostname)
     uint written = 0;
     bool need_anglebrackets = false;
 
-    /* Shorter than max because the header prefix "From: " are added
-       downstream. */
-    const uint buf_len = MAIL_LINE_LEN_MAX - 6;
+    const uint buf_len = MAIL_FROM_VALUE_LEN_MAX+1;
 
     buf = (char *)alloc_safe(buf_len * sizeof(char), "mailbox addr buffer");
 
-    /* == strlen(),but faster */
-    need_anglebrackets = displayname_conf[0] != '\0';
+    if (displayname_conf[0] != '\0') {
+        /* displayname_conf isn't an empty string */
+        need_anglebrackets = true;
+    }
 
     /* no @ here, it's handled upstream */
     if (need_anglebrackets)
@@ -327,7 +328,7 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     /* hostname to add to email addresses (depending on if they have a '@') */
     char *hostname_from = "";
     char *hostname_to = "";
-    char *mailbox_addr = "";
+    char *mailbox_addr = NULL;
     int i = 0;
 
     if (mailf == NULL)
@@ -357,21 +358,21 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
 #endif                          /* HAVE_GETHOSTNAME */
 
     /* write mail header. Global 'displayname' comes from fcronconf.h */
-    if (strlen(displayname) > 0){
+    if (displayname[0] != '\0'){
         /* New behavior -- RFC-compliant */
         mailbox_addr = make_mailbox_addr(displayname, mailfrom, hostname_from);
-        if (mailbox_addr) {
-            fprintf(mailf, "From: %s\n", mailbox_addr);
-            Free_safe(mailbox_addr);
-        }
-        else {
-            error("could not make the mailbox address");
-            fprintf(mailf, "From: %s%s\n", mailfrom, hostname_from);
+        if (! mailbox_addr) {
+            warn("could not make the mailbox address");
         }
     }
-    else
+    if (mailbox_addr) {
+        fprintf(mailf, FROM_HEADER_KEY"%s\n", mailbox_addr);
+        Free_safe(mailbox_addr);
+    }
+    else {
         /* Old behavior */
-        fprintf(mailf, "From: %s%s (fcron)\n", mailfrom, hostname_from);
+        fprintf(mailf, FROM_HEADER_KEY"%s%s (fcron)\n", mailfrom, hostname_from);
+    }
 
     fprintf(mailf, "To: %s%s\n", line->cl_mailto, hostname_to);
 
