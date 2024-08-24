@@ -762,7 +762,7 @@ for most uses.</para>
 a new one every time the OS reboots. This is very similar to the option &optvolatile;
 but based on the OS reboots instead of fcron restarts.
 You may also want to use option &optfirst; if you use fcron that way.</para>
-			<para>&seealso; options &optfirst;, &optvolatile;, &optrunonce;, &optrunatreboot;, &runatresume;.</para>
+			<para>&seealso; options &optfirst;, &optvolatile;, &optrunonce;, &optrunatreboot;, &optrunatresume;.</para>
 		    </listitem>
 		</varlistentry>
 
@@ -791,7 +791,7 @@ permissions and environment (only root is allowed to use this option).</para>
                         <para>For instance, if a program should be started automatically right after boot and run from 7am to 6pm, you could use the following fcrontab definitions:</para>
                         <programlisting>&amp;runatreboot 0 6 * * 1-5 start_my_program.sh
 &amp; 0 7 * * 1-5 stop_my_program.sh</programlisting>
-			<para>&seealso; options &optvolatile;, &optrunonce;, &runatresume;, &optrebootreset;.</para>
+			<para>&seealso; options &optvolatile;, &optrunonce;, &optrunatresume;, &optrebootreset;.</para>
 		    </listitem>
 		</varlistentry>
 
@@ -803,7 +803,7 @@ permissions and environment (only root is allowed to use this option).</para>
                         <para>For instance, if a program should be started automatically right after a system resume, and run from 7am to 6pm, you could use the following fcrontab definitions:</para>
                         <programlisting>&amp;runatresume 0 6 * * 1-5 start_my_program.sh
 &amp; 0 7 * * 1-5 stop_my_program.sh</programlisting>
-			<para>&seealso; options &optvolatile;, &optrunonce;, &runatreboot;, &optrebootreset;.</para>
+			<para>&seealso; options &optvolatile;, &optrunonce;, &optrunatreboot;, &optrebootreset;.</para>
 		    </listitem>
 		</varlistentry>
 
@@ -823,7 +823,7 @@ linkend="uptent">lines based on elapsed system up time</link>).</para>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
 			<para>Do not re-schedule the task after it has run once, until the next OS reboot (if &optvolatile; is not set) or until the next &fcron; daemon restart (if &optvolatile; is set).</para>
-			<para>&seealso; options &optvolatile;, &optrebootreset;, &optrunatreboot;, &runatresume;.</para>
+			<para>&seealso; options &optvolatile;, &optrebootreset;, &optrunatreboot;, &optrunatresume;.</para>
 		    </listitem>
 		</varlistentry>
 

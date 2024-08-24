@@ -107,6 +107,7 @@
 <!ENTITY optreset '<link linkend="fcrontab.5.reset"><varname>reset</varname></link>'>
 <!ENTITY optrunas '<link linkend="fcrontab.5.runas"><varname>runas</varname></link>'>
 <!ENTITY optrunatreboot '<link linkend="fcrontab.5.runatreboot"><varname>runatreboot</varname></link>'>
+<!ENTITY optrunatresume '<link linkend="fcrontab.5.runatresume"><varname>runatresume</varname></link>'>
 <!ENTITY optrunfreq '<link linkend="fcrontab.5.runfreq"><varname>runfreq</varname></link>'>
 <!ENTITY optrunonce '<link linkend="fcrontab.5.runonce"><varname>runonce</varname></link>'>
 <!ENTITY optserial '<link linkend="fcrontab.5.serial"><varname>serial</varname></link>'>
