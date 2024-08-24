@@ -251,9 +251,7 @@ auth_client_so_peercred(struct fcrondyn_cl *client)
      * Sets client->fcl_user on success, don't do anything on failure
      * so that the client stays unauthenticated */
 {
-    /* [@PR #17] renamed (previously called 'true') to avoid conflict with
-       stdbool */
-    const int value = 1;
+    const int true_val = 1;
     /* There is no ucred.h (or equivalent) on linux to define struct ucred (!!)
      * so we do it here */
 #if ! ( defined(HAVE_CRED_H) && defined(HAVE_UCRED_H) \
@@ -268,8 +266,8 @@ auth_client_so_peercred(struct fcrondyn_cl *client)
     socklen_t cred_size = sizeof(cred);
     struct passwd *p_entry = NULL;
 
-    setsockopt(client->fcl_sock_fd, SOL_SOCKET, SO_PASSCRED, &value,
-               sizeof(value));
+    setsockopt(client->fcl_sock_fd, SOL_SOCKET, SO_PASSCRED, &true_val,
+               sizeof(true_val));
     if (getsockopt
         (client->fcl_sock_fd, SOL_SOCKET, SO_PEERCRED, &cred,
          &cred_size) != 0) {

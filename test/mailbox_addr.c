@@ -7,11 +7,18 @@
 #include "fcron.h"
 #include "job.h"
 #include "fcronconf.h"
+#include "mail.h"
 
-#define dasserteq(DESCR, RETURNED, EXPECTED) \
+#define AssertEq(DESCR, RETURNED, EXPECTED) \
 { \
-    printf("%s: %ld ?= %ld\n", (DESCR), (long)(RETURNED), (long)(EXPECTED)); \
+    printf("%s: check %ld == %ld\n", (DESCR), (long)(RETURNED), (long)(EXPECTED)); \
     assert((RETURNED) == (EXPECTED)); \
+}
+
+#define AssertNeq(DESCR, RETURNED, EXPECTED) \
+{ \
+    printf("%s: check %ld != %ld\n", (DESCR), (long)(RETURNED), (long)(EXPECTED)); \
+    assert((RETURNED) != (EXPECTED)); \
 }
 
 /* These globals should maybe come from a lib instead of the various exes? */
@@ -25,7 +32,7 @@ mode_t saved_umask;
 uid_t rootuid = 0;
 char *tmp_path = "";
 
-char *format_displayname(char *displayname);
+char *format_maildisplayname(char *displayname);
 char *make_mailbox_addr(char *displayname, char *mail_from, char *hostname);
 
 
@@ -33,7 +40,7 @@ void _test_format_displayname(char *test_desc, char *arg, char *expected)
 {
     char *output = NULL;
 
-    output = format_displayname(arg);
+    output = format_maildisplayname(arg);
     printf("%s: format_displayname('%s'): '%s' ?= '%s'\n",
            test_desc, arg, output, expected);
     assert(strcmp(output, expected) == 0);
@@ -58,7 +65,7 @@ int main(int argc, char* argv[])
     char *displayname = NULL;
     char *output = NULL;
 
-    /* Mind that format_displayname() might modify input displayname, thus all
+    /* Mind that format_maildisplayname() might modify input displayname, thus all
        special characters must be tested */
     _test_format_displayname("empty displayname", "", "");
     _test_format_displayname("displayname with no special char",
@@ -103,21 +110,56 @@ int main(int argc, char* argv[])
                             "Foo Bar", "baz", "@quux", "Foo Bar <baz@quux>");
 
 
-    /* overflow tests */
+    /*
+     * format_displayname() overflow tests
+     */
+
     displayname = (char *)realloc_safe(displayname,
-                                       LINE_LEN + 1 * sizeof(char),
+                                       MAIL_FROM_VALUE_LEN_MAX * 2 * sizeof(char),
                                        "displayname buffer");
-    memset(displayname, 'a', LINE_LEN);
-    displayname[LINE_LEN] = '\0';
+
+    memset(displayname, 'a', MAIL_FROM_VALUE_LEN_MAX*2);
+
+    printf("=== format_maildisplayname: one-char overflow with no expansion...\n");
+    displayname[MAIL_FROM_VALUE_LEN_MAX+1] = '\0';
+    output = format_maildisplayname(displayname);
+    AssertEq("format_displayname: overflow with no expansion", output, NULL);
+    Free_safe(output);
+
+
+    printf("=== format_maildisplayname: max size with no special char...\n");
+    displayname[MAIL_FROM_VALUE_LEN_MAX] = '\0';
+    output = format_maildisplayname(displayname);
+    _test_format_displayname("format_displayname: max size with no special chars",
+                             output, displayname);
+    printf("format_displayname: max size with no special char: len(output)=%lu, MAIL_FROM_VALUE_LEN_MAX=%lu\n", strlen(output), MAIL_FROM_VALUE_LEN_MAX);
+    Free_safe(output);
+
+    printf("=== format_maildisplayname: overflow on max size with special char...\n");
     displayname[0] = DQUOTE;
-
-    output = format_displayname(displayname);
-    dasserteq("format_displayname: overflow", output, NULL);
+    output = format_maildisplayname(displayname);
+    AssertEq("format_displayname: overflow on max size with special char", output, NULL);
     Free_safe(output);
 
+    /*
+     * make_mailbox_addr() overflow tests
+     */
+
+    printf("=== make_mailbox_addr: overflow on displayname at max size + 1...\n");
+    /* make_mailbox_addr() adds 3 chars: space, <, > */
+    displayname[MAIL_FROM_VALUE_LEN_MAX-strlen("baz")-strlen("@quux")-2] = '\0';
     output = make_mailbox_addr(displayname, "baz", "@quux");
-    dasserteq("make_mailbox_addr: overflow", output, NULL);
+    AssertEq("make_mailbox_addr: overflow", output, NULL);
     Free_safe(output);
+
+    printf("=== make_mailbox_addr: displayname at max size...\n");
+    /* make_mailbox_addr() adds 3 chars: space, <, > */
+    displayname[MAIL_FROM_VALUE_LEN_MAX-strlen("baz")-strlen("@quux")-3] = '\0';
+    output = make_mailbox_addr(displayname, "baz", "@quux");
+    printf("make_mailbox_addr: max size with no special char: len(output)=%lu, MAIL_FROM_VALUE_LEN_MAX=%lu\n", strlen(output), MAIL_FROM_VALUE_LEN_MAX);
+    AssertNeq("make_mailbox_addr: max size", output, NULL);
+    Free_safe(output);
+
 
     Free_safe(displayname);
 

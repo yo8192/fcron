@@ -22,20 +22,14 @@
  */
 
 
-#ifndef __JOB_H__
-#define __JOB_H__
+#ifndef __MAIL_H__
+#define __MAIL_H__
 
 #define MAIL_LINE_LEN_MAX 998 /* RFC5322's max line length */
 #define FROM_HEADER_KEY "From: "
+#define MAIL_FROM_VALUE_LEN_MAX (MAIL_LINE_LEN_MAX - sizeof(FROM_HEADER_KEY))
 
-/* functions prototypes */
-extern void change_user_setup_env(struct cl_t *cl, char ***sendmailenv,
-                                  char ***jobenv, char **curshell,
-                                  char **curhome, char **content_type,
-                                  char **encoding);
-extern int run_job(struct exe_t *exeent);
-extern FILE *create_mail(struct cl_t *line, char *subject, char *content_type,
-                         char *encoding, char **env);
-extern void launch_mailer(struct cl_t *line, FILE * mailf, char **env);
+extern char *format_maildisplayname(char *displayname_conf);
+extern char *make_mailbox_addr(char *displayname_conf, char *mail_from, char *hostname);
 
-#endif                          /* __JOB_H__ */
+#endif                          /* __MAIL_H__ */

@@ -25,6 +25,7 @@
 #include "global.h"
 #include "mem.h"
 #include "fcronconf.h"
+#include "mail.h"
 #include "subs.h"
 
 void init_conf(void);
@@ -44,69 +45,7 @@ char *fcrondeny = NULL;
 char *shell = NULL;
 char *sendmail = NULL;
 char *editor = NULL;
-char *displayname = NULL;
-
-char
-*format_displayname(char *conf_value)
-    /* Format the input string `conf_value` according to RFC5322 sec. 3.2.3.
-     * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
-     * Returns: either the formatted displayname (possibly unchanged or empty)
-     * as a new dynamically allocated string (must be properly freed by the
-     * caller) or NULL on errors like buffer overflow. */
-{
-    bool need_quotes = false;
-    char c = '\0';
-    char *bpos = NULL, *dpos = NULL;
-    char *buf1 = NULL, *buf2 = NULL;
-
-    /* Shorter than max because of the option prefix "displayname = " */
-    const uint buf_len = LINE_LEN - 14;
-    uint cwritten = 0;
-
-    if (strlen(conf_value) == 0) return strdup2("");
-
-    buf1 = (char *)alloc_safe(buf_len * sizeof(char), "1st buffer");
-    buf2 = (char *)alloc_safe(buf_len * sizeof(char), "2nd buffer");
-
-    /* walk the conf_value and rebuild it in buf1 */
-    bpos = buf1;
-    for (dpos = conf_value; *dpos; *dpos++) {
-        c = *dpos;
-        if (strchr(SPECIAL_MBOX_CHARS, c)) {
-            /* insert escape */
-            if (c == DQUOTE) {
-                *bpos++ = BSLASH;
-                ++cwritten;
-            }
-            need_quotes = true;
-        }
-        if (cwritten >= buf_len) {
-            error("Formatted 'displayname' exceeds %u chars", buf_len);
-            Free_safe(buf1);
-            Free_safe(buf2);
-            return NULL;
-        }
-        *bpos++ = c;
-        ++cwritten;
-    }
-
-    if (need_quotes) {
-        if (snprintf(buf2, buf_len, "\"%s\"", buf1) >= buf_len){
-            error("Formatted 'displayname' exceeds %u chars", buf_len);
-            Free_safe(buf1);
-            Free_safe(buf2);
-            return NULL;
-        }
-        Free_safe(buf1);
-
-        return buf2;
-    }
-
-    /* unchanged */
-    Free_safe(buf2);
-
-    return buf1;
-}
+char *maildisplayname = NULL;
 
 void
 init_conf(void)
@@ -129,7 +68,7 @@ init_conf(void)
     sendmail = strdup2(SENDMAIL);
 #endif
     editor = strdup2(FCRON_EDITOR);
-    displayname = strdup2(DISPLAYNAME);
+    maildisplayname = strdup2(MAILDISPLAYNAME);
 }
 
 void
@@ -146,7 +85,7 @@ free_conf(void)
     Free_safe(shell);
     Free_safe(sendmail);
     Free_safe(editor);
-    Free_safe(displayname);
+    Free_safe(maildisplayname);
 }
 
 void
@@ -253,9 +192,9 @@ read_conf(void)
         else if (strncmp(ptr1, "editor", namesize) == 0) {
             Set(editor, ptr2);
         }
-        else if (strncmp(ptr1, "displayname", namesize) == 0) {
-            char *output = format_displayname(ptr2);
-            Set(displayname, output ? output : "");
+        else if (strncmp(ptr1, "maildisplayname", namesize) == 0) {
+            char *output = format_maildisplayname(ptr2);
+            Set(maildisplayname, output ? output : "");
             Free_safe(output);
         }
         else

@@ -458,42 +458,40 @@ assign_option_string(char **var, char *value)
 }
 
 
-/* [@PR #17] renamed labels 'true' and 'false' to avoid conflict with
-   stdbool */
 char *
 get_bool(char *ptr, int *i)
     /* get a bool value : either true (1) or false (0)
      * return NULL on error */
 {
     if (*ptr == '1')
-        goto conf_true;
+        goto true_val;
     else if (*ptr == '0')
-        goto conf_false;
+        goto false_val;
     else if (strncmp(ptr, "true", 4) == 0) {
         ptr += 3;
-        goto conf_true;
+        goto true_val;
     }
     else if (strncmp(ptr, "yes", 3) == 0) {
         ptr += 2;
-        goto conf_true;
+        goto true_val;
     }
     else if (strncmp(ptr, "false", 5) == 0) {
         ptr += 4;
-        goto conf_false;
+        goto false_val;
     }
     else if (strncmp(ptr, "no", 2) == 0) {
         ptr += 1;
-        goto conf_false;
+        goto false_val;
     }
     else
         return NULL;
 
- conf_true:
+ true_val:
     *i = true;
     ptr++;
     return ptr;
 
- conf_false:
+ false_val:
     *i = false;
     ptr++;
     return ptr;

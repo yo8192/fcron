@@ -387,6 +387,9 @@
 /* Define if you have <shadow.h>.  */
 #undef HAVE_SHADOW_H
 
+/* Define if you have <stdbool.h>.  */
+#undef HAVE_STDBOOL_H
+
 /* Define if you have the unsetenv function.  */
 #undef HAVE_UNSETENV
 

@@ -25,6 +25,7 @@
 #include "fcron.h"
 
 #include "job.h"
+#include "mail.h"
 #include "temp_file.h"
 
 
@@ -277,43 +278,6 @@ sig_dfl(void)
     signal(SIGPIPE, SIG_DFL);
 }
 
-char *
-make_mailbox_addr(char *displayname_conf, char *mail_from, char *hostname)
-    /* Produce a "mailbox" header as per RFC5322 sec. 3.2.3
-     * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
-     * Returns: either the formatted mailbox header as a new dynamically
-     * allocated string (must be properly freed by the caller) or NULL on
-     * errors like buffer overflow. */
-{
-    char *buf = NULL;
-    uint written = 0;
-    bool need_anglebrackets = false;
-
-    /* Shorter than max because the header prefix "From: " are added
-       downstream. */
-    const uint buf_len = MAIL_LINE_LEN_MAX - 6;
-
-    buf = (char *)alloc_safe(buf_len * sizeof(char), "mailbox addr buffer");
-
-    /* == strlen(),but faster */
-    need_anglebrackets = displayname_conf[0] != '\0';
-
-    /* no @ here, it's handled upstream */
-    if (need_anglebrackets)
-        written = snprintf(buf, buf_len, "%s %c%s%s%c",
-                           displayname_conf, '<', mail_from, hostname, '>');
-    else
-        written = snprintf(buf, buf_len, "%s%s", mail_from, hostname);
-
-    if (written >= buf_len) {
-        error("Mailbox addr exceeds %u chars", buf_len);
-        Free_safe(buf);
-        return NULL;
-    }
-
-    return buf;
-}
-
 FILE *
 create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
             char **env)
@@ -327,7 +291,7 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     /* hostname to add to email addresses (depending on if they have a '@') */
     char *hostname_from = "";
     char *hostname_to = "";
-    char *mailbox_addr = "";
+    char *mailbox_addr = NULL;
     int i = 0;
 
     if (mailf == NULL)
@@ -356,22 +320,22 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
     hostname[0] = '\0';
 #endif                          /* HAVE_GETHOSTNAME */
 
-    /* write mail header. Global 'displayname' comes from fcronconf.h */
-    if (strlen(displayname) > 0){
+    /* write mail header. Global 'maildisplayname' comes from fcronconf.h */
+    if (maildisplayname[0] != '\0'){
         /* New behavior -- RFC-compliant */
-        mailbox_addr = make_mailbox_addr(displayname, mailfrom, hostname_from);
-        if (mailbox_addr) {
-            fprintf(mailf, "From: %s\n", mailbox_addr);
-            Free_safe(mailbox_addr);
-        }
-        else {
-            error("could not make the mailbox address");
-            fprintf(mailf, "From: %s%s\n", mailfrom, hostname_from);
+        mailbox_addr = make_mailbox_addr(maildisplayname, mailfrom, hostname_from);
+        if (! mailbox_addr) {
+            warn("could not make the mailbox address");
         }
     }
-    else
+    if (mailbox_addr) {
+        fprintf(mailf, FROM_HEADER_KEY"%s\n", mailbox_addr);
+        Free_safe(mailbox_addr);
+    }
+    else {
         /* Old behavior */
-        fprintf(mailf, "From: %s%s (fcron)\n", mailfrom, hostname_from);
+        fprintf(mailf, FROM_HEADER_KEY"%s%s (fcron)\n", mailfrom, hostname_from);
+    }
 
     fprintf(mailf, "To: %s%s\n", line->cl_mailto, hostname_to);
 
