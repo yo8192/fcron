@@ -1453,7 +1453,7 @@ set_next_exe_startup(struct cl_t *cl, const int context,
     if (is_runonce(cl->cl_option) && is_hasrun(cl->cl_option)) {
         /* if we get here, then context != CONTEXT_BOOT and_volatile is false */
         /* do nothing: don't re-schedule or add to the job queue */
-        explain("job '%s' with runonce set has already run since last "
+        explain("Job '%s' with runonce set has already run since last "
                 "system startup: not re-scheduling.", cl->cl_shell);
     }
     else if (is_td(cl->cl_option)) {
