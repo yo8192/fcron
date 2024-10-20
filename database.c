@@ -540,12 +540,12 @@ wait_chld(void)
             if (pid == e->e_ctrl_pid) {
                 if (e->e_line == NULL) {
                     /* the corresponding file has been removed from memory */
-                    debug("job finished: pid %d", pid);
+                    debug("Job finished: pid %d", pid);
                 }
                 else {
 
                     line = e->e_line;
-/*  		    debug("job finished: %s", line->cl_shell); */
+/*  		    debug("Job finished: %s", line->cl_shell); */
                     line->cl_numexe -= 1;
                     line->cl_file->cf_running -= 1;
 
@@ -590,11 +590,11 @@ wait_all(int *counter)
             if (pid == e->e_ctrl_pid) {
                 if (e->e_line == NULL) {
                     /* the corresponding file has been removed from memory */
-                    debug("job finished: pid %d", pid);
+                    debug("Job finished: pid %d", pid);
                 }
                 else {
 
-                    debug("job finished: '%s'", e->e_line->cl_shell);
+                    debug("Job finished: '%s'", e->e_line->cl_shell);
                     e->e_line->cl_numexe -= 1;
                     e->e_line->cl_file->cf_running -= 1;
 
@@ -1438,7 +1438,7 @@ set_next_exe_startup(struct cl_t *cl, const int context,
         else {
             /* job has been stopped during execution :
              * launch it again */
-            warn("job '%s' did not finish : running it again.", cl->cl_shell);
+            warn("Job '%s' did not finish : running it again.", cl->cl_shell);
             set_serial_once(cl->cl_option);
             add_serial_job(cl, -1);
         }
