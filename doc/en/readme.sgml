@@ -17,16 +17,17 @@ A copy of the license is included in gfdl.sgml.
 Cron</application>, so it implements most of its functionalities.</para>
 	<para>But contrary to <application>Vixie Cron</application>, &fcron;
 does not need your system to be up 7 days a week, 24 hours a day: it also works
-well with systems which are not running neither all the time nor regularly
+well with systems which are neither running all the time nor regularly
 (contrary to <application>anacrontab</application>).</para>
 	<para>In other words, &fcron; does both the job of <application>Vixie
 Cron</application> and <application>anacron</application>, but does even more
 and better :)) ...</para>
 
 	<para>To do so, &fcron; allows you to use the standard mode in which you
-tell it to execute one command at a given date and hour and to make it run a
-command according to its time of execution, which is normally the same as system
-up time. For example:
+tell it to execute one command at a given date and time. Alternatively you can
+instruct &fcron; to execute a command after a certain time of &fcron;'s runtime
+(which is normally the same as system up time because &fcron; is typically started
+on boot). For example:
 
             <blockquote>
 		<para>Run the task 'save /home/ directory' every 3h15 of system
@@ -34,7 +35,7 @@ up time.</para>
 	    </blockquote> and, of course, in order to make it really useful, the
 time remaining until next execution is saved each time the system is stopped.
 You can also say:
-	
+
             <blockquote>
 		<para>run that command once between 2am and 5am</para>
             </blockquote> which will be done if the system is running at any

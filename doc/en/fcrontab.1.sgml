@@ -18,7 +18,7 @@ A copy of the license is included in gfdl.sgml.
       </refmeta>
       <refnamediv>
 	 <refname>fcrontab</refname> <refpurpose>manipulate per-user fcrontab
-	    files</refpurpose>
+	    files which adhere to the format defined in fcrontab(5)</refpurpose>
       </refnamediv>
 
       <refsynopsisdiv id="fcrontab.1.synopsis">
@@ -53,22 +53,26 @@ A copy of the license is included in gfdl.sgml.
 	    linkend="fcron.8">&fcron;(8)</link> daemon. As &fcron; internally
 	    uses a non-human readable format (this is needed because &fcron;
 	    saves more informations than the user gives, for example the time
-	    and date of next execution), the user cannot edit directly his
-	    &fcrontabf; (the one used by &fcron;).</para> <para>When a user
+	    and date of next execution), the user cannot edit his &fcrontabf;
+		directly (the one used by &fcron;).</para> <para>When a user
 	    installs a &fcrontabf;, the source file is saved in the spool
-	    directory (<filename>&fcrontabsdir;</filename>) to allow future
-	    editions, and a formatted file is generated for the &fcron; daemon,
-	    which is signaled once about ten seconds before the next minute for
-	    all changes made previously. The daemon is not informed of the changes
+	    directory (<filename>&fcrontabsdir;</filename>) to allow it to be
+	    edited, and a formatted file is generated for the &fcron; daemon.
+		This formatted (non human readable) format is sent to the daemon
+		once per minute (about ten seconds before the full minute) with all
+		recent changes included. The daemon is not informed of the changes
 	    immediately but at most once a minute
 	    to keep ill disposed users from blocking the daemon by installing
-	    &fcrontabf;s over and over (ie. denial of service attack). We will call
+	    &fcrontabf;s over and over (i.e. denial of service attack). We will call
 	    "<emphasis>fcrontab</emphasis>" the source file of the &fcrontabf;
-	    in the following.</para> <para>A user can install a &fcrontabf; if
-	    he is listed in the <filename>&etc;/&fcron.allow;</filename> and not
-	    (unless by the keyword all) listed in
+	    in the following.</para>
+		<para>The fcrontab files that a user modifies has to follow the format
+		defined in <link linkend="fcrontab.5">&fcrontab;(5)</link> .</para>
+		<para>A user can install a &fcrontabf; if
+	    he is listed in <filename>&etc;/&fcron.allow;</filename> and not listed in
 	    <filename>&etc;/&fcron.deny;</filename> (see section "<link
-	    linkend="fcrontab.1.files">files</link>" below). If neither
+	    linkend="fcrontab.1.files">files</link>" below).
+		The keyword 'all' is a shorthand for all users. If neither
 	    <filename>fcron.allow</filename> nor <filename>fcron.deny</filename>
 	    exist, all users are allowed. None of these files have to exist, but
 	    if they do, the deny file takes precedence.</para> <para>The first
@@ -154,7 +158,7 @@ A copy of the license is included in gfdl.sgml.
 		     file <filename>&etc;/&fcron.conf.location;</filename>. To
 		     interact with a running &fcron; process, &fcrontab; must
 		     use the same config file as the process. That way, several
-		     &fcron; processes can run simultaneously on an only
+		     &fcron; processes can run simultaneously on a single
 		     system.</para>
 	       </listitem>
 	    </varlistentry>
