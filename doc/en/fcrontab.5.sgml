@@ -19,7 +19,7 @@ A copy of the license is included in gfdl.sgml.
     </refmeta>
     <refnamediv>
 	<refname>fcrontab</refname>
-	<refpurpose>file format to define the schedule that fcron should adhere to</refpurpose>
+	<refpurpose>file format to define the jobs that fcron should run, and their schedules.</refpurpose>
     </refnamediv>
 
     <refsect1>

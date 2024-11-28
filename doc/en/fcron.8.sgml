@@ -131,12 +131,12 @@ compiled to run in foreground as default.</para>
 		<term><option>--queuelen</option> <replaceable>num</replaceable></term>
 		<listitem>
 		    <para>Sets the size of the queue that is used to manage serial
-			jobs to <replaceable>num</replaceable>.
-			This means that at most <replaceable>num</replaceable> jobs can be
-			in the waiting state.
-			This also pertains to the lavg queue, i.e. at most
-			<replaceable>num</replaceable> jobs can wait until the system average
-			load drops below a certain value.
+			jobs and the lavg queue each to <replaceable>num</replaceable>.
+			This means that
+			(A) at most <replaceable>num</replaceable> serial jobs can be
+			in the waiting state and
+			(B) at most <replaceable>num</replaceable> jobs can wait until the
+			system average load drops below a certain value.
 			</para>
 		</listitem>
 	    </varlistentry>

@@ -25,7 +25,7 @@ and better :)) ...</para>
 
 	<para>To do so, &fcron; allows you to use the standard mode in which you
 tell it to execute one command at a given date and time. Alternatively you can
-instruct &fcron; to execute a command after a certain time of &fcron;'s runtime
+instruct &fcron; to execute a command after a certain duration of &fcron;'s runtime
 (which is normally the same as system up time because &fcron; is typically started
 on boot). For example:
 
