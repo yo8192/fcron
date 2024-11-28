@@ -130,7 +130,7 @@ compiled to run in foreground as default.</para>
 		<term><option>-q</option> <replaceable>num</replaceable></term>
 		<term><option>--queuelen</option> <replaceable>num</replaceable></term>
 		<listitem>
-		    <para>Sets the size of the queue that is used to manage serial
+		    <para>Sets the sizes of the queues that are used to manage serial
 			jobs and the lavg queue each to <replaceable>num</replaceable>.
 			This means that
 			(A) at most <replaceable>num</replaceable> serial jobs can be

@@ -64,7 +64,7 @@ A copy of the license is included in gfdl.sgml.
 	    to keep ill disposed users from blocking the daemon by installing
 	    &fcrontabf;s over and over (i.e. denial of service attack).
 		By default, the file is sent once per minute (about ten seconds before
-		the full minute) to the daemon, the parameter
+		the full minute) to the daemon, the build time parameter
 		<option>--with-max-fcrontab-reload-delay-seconds</option>
 		can be used to specify a different maximum time to send this data.
 		We will call
