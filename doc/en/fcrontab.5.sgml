@@ -19,7 +19,7 @@ A copy of the license is included in gfdl.sgml.
     </refmeta>
     <refnamediv>
 	<refname>fcrontab</refname>
-	<refpurpose>tables for driving fcron</refpurpose>
+	<refpurpose>file format to define the jobs that fcron should run, and their schedules.</refpurpose>
     </refnamediv>
 
     <refsect1>
@@ -27,7 +27,8 @@ A copy of the license is included in gfdl.sgml.
 	<para>A &fcrontabf; is a file containing all tables used by the
 &fcron;(8) daemon. In other words, it is the means for a user to tell the daemon
 "execute this command at this moment". Each user has their own &fcrontabf;, whose
-commands are executed as their owner (only root can run a job as another using the
+commands are executed on behalf of their owner (in particular with the users
+permissions -- only root can run a job as another using the
 option &optrunas; (see below)).</para>
 	<para>Blank lines, line beginning by a hash sign (#) (which are
 considered comments), leading blanks and tabs are ignored. Each line in a
@@ -522,7 +523,7 @@ abbreviation. The options are (default value in parentheses):</para>
 		    <term>b</term>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
-			<para>Run an &amp;-line at &fcron;'s startup (or system's resume after suspend/hibernation) if it should
+			<para>Run an &amp;-line (i.e. based on date and time) at &fcron;'s startup (or system's resume after suspend/hibernation) if it should
 have run during system down time.</para>
 		    </listitem>
 		</varlistentry>

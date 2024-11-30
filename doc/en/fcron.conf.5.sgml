@@ -34,8 +34,8 @@ A copy of the license is included in gfdl.sgml.
 			</para>
 		</abstract>
 		<para>
-			Blank lines, line beginning by a hash sign (#) (which are
-			considered comments), leading blanks and tabs are ignored. Each line in a
+			Blank lines, lines beginning with a hash sign (#) (which are
+			considered as comments), leading blanks and tabs are ignored. Each line in a
 			&fcron.conf; file is of the form
 			<blockquote>
 				<para>name = value</para>
