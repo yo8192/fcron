@@ -72,7 +72,7 @@ and a list of commands.</para>
 <replaceable>file</replaceable> instead of default config file
 <filename>&etc;/&fcron.conf.location;</filename>. To interact with a running
 &fcron; process, &fcrondyn; must use the same config file as the process. That
-way, several &fcron; processes can run simultaneously on an only system.</para>
+way, several &fcron; processes can run simultaneously on a single system.</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>

@@ -606,7 +606,7 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
                  e = exe_list_next(exe_list)) {
                 if (e->e_line == NULL) {
                     if (is_root) {
-                        send_msg_fd(fd, "job no more in an fcrontab: pid %d",
+                        send_msg_fd(fd, "Job no more in an fcrontab: pid %d",
                                     e->e_job_pid);
                         found = 1;
                     }

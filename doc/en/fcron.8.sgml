@@ -121,9 +121,8 @@ compiled to run in foreground as default.</para>
 		<term><option>--maxserial</option>
 <replaceable>num</replaceable></term>
 		<listitem>
-		  <para>Set to <replaceable>num</replaceable> the maximum number
-		     of serial jobs which can run simultaneously. By default,
-		     this value is set to &serialmaxrunning;.</para>
+		  <para>Run at most <replaceable>num</replaceable> serial jobs
+		     simultaneously. By default, this value is set to &serialmaxrunning;.</para>
 		    <para>&seealso; option &optserial; in &fcrontab;(5).</para>
 		</listitem>
 	    </varlistentry>
@@ -131,8 +130,14 @@ compiled to run in foreground as default.</para>
 		<term><option>-q</option> <replaceable>num</replaceable></term>
 		<term><option>--queuelen</option> <replaceable>num</replaceable></term>
 		<listitem>
-		    <para>Set to n the number of jobs the serial queue and
-the lavg queue can contain.</para>
+		    <para>Sets the sizes of the queues that are used to manage serial
+			jobs and the lavg queue each to <replaceable>num</replaceable>.
+			This means that
+			(A) at most <replaceable>num</replaceable> serial jobs can be
+			in the waiting state and
+			(B) at most <replaceable>num</replaceable> jobs can wait until the
+			system average load drops below a certain value.
+			</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
@@ -145,7 +150,7 @@ the lavg queue can contain.</para>
 <filename>&etc;/&fcron.conf.location;</filename>. To interact with that running
 &fcron; process, &fcrontab; must use the same config file (which is defined by
 &fcrontab;'s option <option>-c</option>). That way, several &fcron; processes
-can run simultaneously on an only system (but each &fcron; process *must* have a
+can run simultaneously on a single system (but each &fcron; process *must* have a
 different spool dir and pid file from the other processes).</para>
 		</listitem>
 	    </varlistentry>
