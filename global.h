@@ -99,9 +99,8 @@
 #include <syslog.h>
 #endif
 
-#ifdef TIME_WITH_SYS_TIME
 #include <time.h>
-#elif HAVE_SYS_TIME_H
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 

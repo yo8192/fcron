@@ -215,9 +215,6 @@
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef uid_t
 
-/* Define as the return type of signal handlers (int or void).  */
-#undef RETSIGTYPE
-
 /* Define if your struct nlist has an n_un member.  */
 #undef NLIST_NAME_UNION
 
@@ -320,9 +317,6 @@
 
 /* Define if you have the strftime function.  */
 #undef HAVE_STRFTIME
-
-/* Define if you have the wait3 system call.  */
-#undef HAVE_WAIT3
 
 /* ****************************************************************** */
 /* *** Headers *** */

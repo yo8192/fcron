@@ -52,7 +52,7 @@ char *rl_cmpl_command_generator(const char *text, int state);
 void info(void);
 void usage(void);
 void xexit(int exit_val);
-RETSIGTYPE sigpipe_handler(int x);
+void sigpipe_handler(int x);
 int interactive_mode(int fd);
 /* returned by parse_cmd() and/or talk_fcron() */
 #define QUIT_CMD 1
@@ -148,7 +148,7 @@ usage(void)
     exit(EXIT_ERR);
 }
 
-RETSIGTYPE
+void
 sigpipe_handler(int x)
     /* handle broken pipes ... */
 {

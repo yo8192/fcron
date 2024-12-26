@@ -532,7 +532,7 @@ wait_chld(void)
 /*      debug("wait_chld"); */
 /*      // */
 
-    while ((pid = wait3(NULL, WNOHANG, NULL)) > 0) {
+    while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
 
         for (e = exe_list_first(exe_list); e != NULL;
              e = exe_list_next(exe_list)) {
@@ -584,7 +584,7 @@ wait_all(int *counter)
 
     debug("Waiting for all jobs");
 
-    while ((*counter > 0) && (pid = wait3(NULL, 0, NULL)) > 0) {
+    while ((*counter > 0) && (pid = waitpid(-1, NULL, 0)) > 0) {
         for (e = exe_list_first(exe_list); e != NULL;
              e = exe_list_next(exe_list)) {
             if (pid == e->e_ctrl_pid) {

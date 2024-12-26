@@ -728,7 +728,7 @@ run_job(struct exe_t *exeent)
                 xclose_check(&(pipe_pid_fd[1]), "child's pipe_pid_fd[1]");
 
                 /* we use a while because of a possible interruption by a signal */
-                while ((pid = wait3(&status, 0, NULL)) > 0) {
+                while ((pid = waitpid(-1, &status, 0)) > 0) {
 #ifdef CHECKRUNJOB
                     debug("run_job(): child: ending job pid %d", pid);
 #endif                          /* CHECKRUNJOB */

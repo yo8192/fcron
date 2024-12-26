@@ -42,12 +42,12 @@ void reset_sig_cont(void);
 void info(void);
 void usage(void);
 void print_schedule(void);
-RETSIGTYPE sighup_handler(int x);
-RETSIGTYPE sigterm_handler(int x);
-RETSIGTYPE sigchild_handler(int x);
-RETSIGTYPE sigusr1_handler(int x);
-RETSIGTYPE sigusr2_handler(int x);
-RETSIGTYPE sigcont_handler(int x);
+void sighup_handler(int x);
+void sigterm_handler(int x);
+void sigchild_handler(int x);
+void sigusr1_handler(int x);
+void sigusr2_handler(int x);
+void sigcont_handler(int x);
 int parseopt(int argc, char *argv[]);
 void get_lock(void);
 int is_system_reboot(void);
@@ -476,7 +476,7 @@ create_spooldir(char *dir)
 }
 
 
-RETSIGTYPE
+void
 sigterm_handler(int x)
   /* exit safely */
 {
@@ -485,7 +485,7 @@ sigterm_handler(int x)
     xexit(EXIT_OK);
 }
 
-RETSIGTYPE
+void
 sighup_handler(int x)
   /* update configuration */
 {
@@ -496,7 +496,7 @@ sighup_handler(int x)
     sig_conf = 1;
 }
 
-RETSIGTYPE
+void
 sigchild_handler(int x)
   /* call wait_chld() to take care of finished jobs */
 {
@@ -506,7 +506,7 @@ sigchild_handler(int x)
 }
 
 
-RETSIGTYPE
+void
 sigusr1_handler(int x)
   /* reload all configurations */
 {
@@ -518,14 +518,14 @@ sigusr1_handler(int x)
 }
 
 
-RETSIGTYPE
+void
 sigusr2_handler(int x)
   /* print schedule and switch on/off debug mode */
 {
     sig_debug = 1;
 }
 
-RETSIGTYPE
+void
 sigcont_handler(int x)
   /* used to notify fcron of a system resume after suspend.
    * However this signal could also be received in other cases. */
