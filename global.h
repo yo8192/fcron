@@ -198,8 +198,8 @@ typedef struct cf_t {
     int cf_running;             /* number of jobs running                    */
     signed char cf_tzdiff;      /* time diff between system and local hour   */
 #ifdef WITH_SELINUX
-    security_context_t cf_user_context;
-    security_context_t cf_file_context;
+    char *cf_user_context;
+    char *cf_file_context;
 #endif
 } cf_t;
 
