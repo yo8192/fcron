@@ -80,7 +80,6 @@ char need_sig = 0;              /* do we need to signal fcron daemon */
 char orig_dir[PATH_LEN];
 cf_t *file_base = NULL;
 char buf[PATH_LEN];
-char file[PATH_LEN];
 
 /* needed by log part : */
 char *prog_name = NULL;
@@ -888,7 +887,7 @@ parseopt(int argc, char *argv[])
                 Set(fcronconf, optarg);
             }
             else {
-                char buf[PATH_LEN];
+                char buf[sizeof(orig_dir)+1+strlen(optarg)+1];
                 snprintf(buf, sizeof(buf), "%s/%s", orig_dir, optarg);
                 Set(fcronconf, buf);
             }
@@ -995,12 +994,12 @@ main(int argc, char **argv)
     const char *const *env;
 #endif
     struct passwd *pass;
+    char *fcrontab_file_path = NULL;
 
     rootuid = get_user_uid_safe(ROOTNAME);
     rootgid = get_group_gid_safe(ROOTGROUP);
 
     memset(buf, 0, sizeof(buf));
-    memset(file, 0, sizeof(file));
 
     if (strrchr(argv[0], '/') == NULL)
         prog_name = argv[0];
@@ -1112,18 +1111,20 @@ main(int argc, char **argv)
         else {
             int fd = -1;
 
-            if (*argv[file_opt] != '/')
+            if (*argv[file_opt] != '/') {
                 /* this is just the file name, not the path : complete it */
-                snprintf(file, sizeof(file), "%s/%s", orig_dir, argv[file_opt]);
+                size_t path_len = strlen(orig_dir) + 1 + strlen(argv[file_opt]) + 1;
+                alloc_safe(path_len, fcrontab_file_path);
+                snprintf(fcrontab_file_path, path_len, "%s/%s", orig_dir, argv[file_opt]);
+            }
             else {
-                strncpy(file, argv[file_opt], sizeof(file) - 1);
-                file[sizeof(file) - 1] = '\0';
+                fcrontab_file_path = strdup(argv[file_opt]);
             }
 
-            fd = open_as_user(file, useruid, usergid, O_RDONLY);
+            fd = open_as_user(fcrontab_file_path, useruid, usergid, O_RDONLY);
             if (fd < 0)
-                die_e("Could not open file %s", file);
-            if (make_file(file, fd) == OK)
+                die_e("Could not open file %s", fcrontab_file_path);
+            if (make_file(fcrontab_file_path, fd) == OK)
                 xexit(EXIT_OK);
             else
                 xexit(EXIT_ERR);
