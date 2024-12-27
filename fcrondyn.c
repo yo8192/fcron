@@ -253,9 +253,10 @@ parse_cmd(char *cmd_str, long int **cmd, int *cmd_len)
                     fprintf(stderr, "  uid = ALL\n");
             }
             else {
-                Write_cmd(user_uid);
+                int_buf = (long int)user_uid;
+                Write_cmd(int_buf);
                 if (debug_opt)
-                    fprintf(stderr, "  uid = %d\n", (int)user_uid);
+                    fprintf(stderr, "  uid = %ld\n", int_buf);
             }
 
         }
