@@ -13,6 +13,22 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
+            <title>From version 3.3.1 to 3.3.2</title>
+            <listitem>
+               <para>Add compilation option (configure's '--with-max-fcrontab-reload-delay-seconds') to allow faster or even instant reload for non-root users (thanks Elliot Wolk).</para>
+            </listitem>
+            <listitem>
+               <para>Added fcron.conf option 'maildisplayname', to configure the displayname fcron uses when sending email. This allows fcron to be configured ot be RFC5322-compliant (thanks Marco Emilio "sphakka" Poleggi)</para>
+            </listitem>
+            <listitem>
+               <para>Fixed fcrondyn output issue where two lines would be joined due to a long shell command.</para>
+            </listitem>
+            <listitem>
+               <para>Improve documentation wording (thanks Michael Kopp)</para>
+            </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
             <title>From version 3.3.0 to 3.3.1</title>
             <listitem>
                <para>Updated SELinux code to stop using deprecated headers (fixes build on more recent systems)</para>
