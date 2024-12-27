@@ -48,6 +48,9 @@ void sigchild_handler(int x);
 void sigusr1_handler(int x);
 void sigusr2_handler(int x);
 void sigcont_handler(int x);
+void set_signal_handler(int signal, void (*handler)(int), bool first_install);
+void install_signal_handler(int signal, void (*handler)(int));
+void reinstall_signal_handler(int signal, void (*handler)(int));
 int parseopt(int argc, char *argv[]);
 void get_lock(void);
 int is_system_reboot(void);
@@ -533,6 +536,56 @@ sigcont_handler(int x)
     sig_cont = 1;
 }
 
+void
+set_signal_handler(int signal, void (*handler)(int), bool first_install)
+    /* (re)install a signal handler, with restartable syscalls retried. */
+{
+#ifdef HAVE_SIGACTION
+    /* The signal handler stays set after the handler is called when set
+       with sigaction(): we only need to install it once. */
+    if (first_install) {
+        struct sigaction act = {0};
+        act.sa_flags = SA_RESTART;
+        act.sa_handler = handler;
+        if (sigaction(signal, &act, NULL) < 0) {
+            die_e("sigaction() failed on signal %d", signal);
+        }
+    }
+#elif defined(HAVE_SIGNAL)
+    /* Some systems reset the handler to SIG_DFL when the handler
+       is called when the handler was set with signal(). So we have to install
+       it (again) every time. */
+    if (signal(signal, handler) == SIG_ERR) {
+        die_e("signal() failed on signal %d", signal);
+    }
+    if (siginterrupt(signal, 0) < 0) {
+        die_e("siginterrupt() failed on signal %d", signal);
+    }
+#elif defined(HAVE_SIGSET)
+    /* The signal handler stays set after the handler is called when set
+       with sigset(): we only need to install it once. */
+    if (first_install) {
+        if (sigset(signal, handler) == -1) {
+            die_e("sigset() failed on signal %d", signal);
+        }
+    }
+#else
+#error "No signal installation function found"
+#endif
+}
+
+void
+install_signal_handler(int signal, void (*handler)(int)) {
+    set_signal_handler(signal, handler, true);
+}
+
+void
+reinstall_signal_handler(int signal, void (*handler)(int))
+    /* reinstall the signal handler, after execution, if needed. */
+{
+    set_signal_handler(signal, handler, false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -652,32 +705,15 @@ main(int argc, char **argv)
 
     explain("%s[%d] " VERSION_QUOTED " started", prog_name, daemon_pid);
 
-#ifdef HAVE_SIGNAL
-    /* FIXME: check for errors */
-    signal(SIGTERM, sigterm_handler);
-    signal(SIGHUP, sighup_handler);
-    siginterrupt(SIGHUP, 0);
-    signal(SIGCHLD, sigchild_handler);
-    siginterrupt(SIGCHLD, 0);
-    signal(SIGUSR1, sigusr1_handler);
-    siginterrupt(SIGUSR1, 0);
-    signal(SIGUSR2, sigusr2_handler);
-    siginterrupt(SIGUSR2, 0);
-    signal(SIGCONT, sigcont_handler);
-    siginterrupt(SIGCONT, 0);
+    install_signal_handler(SIGTERM, sigterm_handler);
+    install_signal_handler(SIGHUP, sighup_handler);
+    install_signal_handler(SIGCHLD, sigchild_handler);
+    install_signal_handler(SIGUSR1, sigusr1_handler);
+    install_signal_handler(SIGUSR2, sigusr2_handler);
+    install_signal_handler(SIGCONT, sigcont_handler);
     /* we don't want SIGPIPE to kill fcron, and don't need to handle it as when ignored
      * write() on a pipe closed at the other end will return EPIPE */
-    signal(SIGPIPE, SIG_IGN);
-#elif HAVE_SIGSET
-    /* FIXME: check for errors */
-    sigset(SIGTERM, sigterm_handler);
-    sigset(SIGHUP, sighup_handler);
-    sigset(SIGCHLD, sigchild_handler);
-    sigset(SIGUSR1, sigusr1_handler);
-    sigset(SIGUSR2, sigusr2_handler);
-    sigset(SIGCONT, sigcont_handler);
-    sigset(SIGPIPE, SIG_IGN);
-#endif
+    install_signal_handler(SIGPIPE, SIG_IGN);
 
     /* initialize job database */
     next_id = 0;
@@ -739,10 +775,7 @@ check_signal()
     if (sig_chld > 0) {
         wait_chld();
         sig_chld = 0;
-#ifdef HAVE_SIGNAL
-        (void)signal(SIGCHLD, sigchild_handler);
-        siginterrupt(SIGCHLD, 0);
-#endif
+        reinstall_signal_handler(SIGCHLD, sigchild_handler);
     }
 
     if (sig_conf > 0) {
@@ -751,19 +784,13 @@ check_signal()
             /* update configuration */
             synchronize_dir(".", 0);
             sig_conf = 0;
-#ifdef HAVE_SIGNAL
-            signal(SIGHUP, sighup_handler);
-            siginterrupt(SIGHUP, 0);
-#endif
+            reinstall_signal_handler(SIGHUP, sighup_handler);
         }
         else {
             /* reload all configuration */
             reload_all(".");
             sig_conf = 0;
-#ifdef HAVE_SIGNAL
-            signal(SIGUSR1, sigusr1_handler);
-            siginterrupt(SIGUSR1, 0);
-#endif
+            reinstall_signal_handler(SIGUSR1, sigusr1_handler);
         }
 
     }
@@ -773,10 +800,7 @@ check_signal()
         debug_opt = (debug_opt > 0) ? 0 : 1;
         explain("debug_opt = %d", debug_opt);
         sig_debug = 0;
-#ifdef HAVE_SIGNAL
-        signal(SIGUSR2, sigusr2_handler);
-        siginterrupt(SIGUSR2, 0);
-#endif
+        reinstall_signal_handler(SIGUSR2, sigusr2_handler);
     }
 
 }
@@ -788,10 +812,7 @@ reset_sig_cont(void)
     if (sig_cont > 0) {
 
         sig_cont = 0;
-#ifdef HAVE_SIGNAL
-        signal(SIGCONT, sigcont_handler);
-        siginterrupt(SIGCONT, 0);
-#endif
+        reinstall_signal_handler(SIGCONT, sigcont_handler);
     }
 }
 

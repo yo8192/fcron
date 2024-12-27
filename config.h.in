@@ -309,6 +309,9 @@
 /* Define if you have the setresuid function.  */
 #undef HAVE_SETRESUID
 
+/* Define if you have the sigaction function.  */
+#undef HAVE_SIGACTION
+
 /* Define if you have the signal function.  */
 #undef HAVE_SIGNAL
 
