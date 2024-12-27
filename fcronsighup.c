@@ -98,7 +98,7 @@ sig_daemon(void)
     if (max_delay_s > 0) {
         time_t now_epoch = 0;
         int delay_s = 0;
-        time_t *target_time_epoch = NULL;
+        time_t target_time_epoch = 0;
         struct tm *target_time_tm = NULL;
         FILE *fp = NULL;
         int fd = 0;
