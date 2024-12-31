@@ -73,7 +73,7 @@ extern mode_t saved_umask;
 extern char *prog_name;
 extern uid_t rootuid;
 extern gid_t rootgid;
-extern char sig_hup;
+extern bool sig_hup;
 extern struct cf_t *file_base;
 extern struct job_t *queue_base;
 extern unsigned long int next_id;

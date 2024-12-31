@@ -32,7 +32,7 @@
 
 /* functions prototypes */
 extern void init_suspend(select_instance * si);
-extern void check_suspend(time_t slept_from, time_t nwt, char *sig_cont,
+extern void check_suspend(time_t slept_from, time_t nwt, bool *sig_cont,
                           select_instance * si);
 
 #endif                          /* __SUSPEND_H__ */

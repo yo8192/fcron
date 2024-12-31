@@ -244,7 +244,7 @@ init_suspend(select_instance * si)
 
 
 void
-check_suspend(time_t slept_from, time_t nwt, char *sig_cont,
+check_suspend(time_t slept_from, time_t nwt, bool *sig_cont,
               select_instance * si)
     /* Check if the machine was suspended (to mem or disk), and if so
      * reschedule jobs accordingly */
@@ -269,7 +269,7 @@ check_suspend(time_t slept_from, time_t nwt, char *sig_cont,
 
 #else                           /* TFD_TIMER_CANCEL_ON_SET */
 
-    if (*sig_cont > 0) {
+    if (*sig_cont == true) {
         debug("We received a SIGCONT, find out the suspend duration");
 
 #endif                          /* TFD_TIMER_CANCEL_ON_SET */

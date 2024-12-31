@@ -44,7 +44,7 @@ void usage(void);
 void print_schedule(void);
 void sighup_handler(int x);
 void sigterm_handler(int x);
-void sigchild_handler(int x);
+void sigchld_handler(int x);
 void sigusr1_handler(int x);
 void sigusr2_handler(int x);
 void sigcont_handler(int x);
@@ -90,11 +90,12 @@ uid_t rootuid = 0;
 gid_t rootgid = 0;
 
 /* have we got a signal ? */
-char sig_conf = 0;              /* is 1 when we got a SIGHUP, 2 for a SIGUSR1 */
-char sig_chld = 0;              /* is 1 when we got a SIGCHLD */
-char sig_debug = 0;             /* is 1 when we got a SIGUSR2 */
-char sig_cont = 0;              /* is 1 when we got a SIGCONT */
-bool sig_term = false;          /* true if we got a SIGTERM */
+bool sig_chld = false;          /* true when we received a SIGCHLD */
+bool sig_cont = false;          /* true when we received a SIGCONT */
+bool sig_hup = false;           /* true when we received a SIGHUP */
+bool sig_term = false;          /* true when we received a SIGTERM */
+bool sig_usr1 = false;          /* true when we received a SIGUSR1 */
+bool sig_usr2 = false;          /* true when we received a SIGUSR2 */
 
 /* jobs database */
 struct cf_t *file_base;         /* point to the first file of the list */
@@ -497,16 +498,16 @@ sighup_handler(int x)
      * In particular, we don't call the synchronize_dir() function directly,
      * because it may cause some problems if this signal is not received during
      * the sleep */
-    sig_conf = 1;
+    sig_hup = true;
 }
 
 void
-sigchild_handler(int x)
+sigchld_handler(int x)
   /* call wait_chld() to take care of finished jobs */
 {
     /* Defer any work outside of the handler, by fear of inadvertently calling
      * a non-async-signal safe function (see the signal-safety(7) man page). */
-    sig_chld = 1;
+    sig_chld = true;
 }
 
 
@@ -519,7 +520,7 @@ sigusr1_handler(int x)
      * In particular, we don't call the synchronize_dir() function directly,
      * because it may cause some problems if this signal is not received during
      * the sleep */
-    sig_conf = 2;
+    sig_usr1 = true;
 }
 
 
@@ -529,7 +530,7 @@ sigusr2_handler(int x)
 {
     /* Defer any work outside of the handler, by fear of inadvertently calling
      * a non-async-signal safe function (see the signal-safety(7) man page). */
-    sig_debug = 1;
+    sig_usr2 = true;
 }
 
 void
@@ -539,7 +540,7 @@ sigcont_handler(int x)
 {
     /* Defer any work outside of the handler, by fear of inadvertently calling
      * a non-async-signal safe function (see the signal-safety(7) man page). */
-    sig_cont = 1;
+    sig_cont = true;
 }
 
 void
@@ -713,7 +714,7 @@ main(int argc, char **argv)
 
     install_signal_handler(SIGTERM, sigterm_handler);
     install_signal_handler(SIGHUP, sighup_handler);
-    install_signal_handler(SIGCHLD, sigchild_handler);
+    install_signal_handler(SIGCHLD, sigchld_handler);
     install_signal_handler(SIGUSR1, sigusr1_handler);
     install_signal_handler(SIGUSR2, sigusr2_handler);
     install_signal_handler(SIGCONT, sigcont_handler);
@@ -772,16 +773,13 @@ main(int argc, char **argv)
 
 void
 check_signal()
-    /* check if a signal has been received and handle it */
+    /* Action any received signals. */
 {
-
-    /* we reinstall the signal handler functions here and not directly in the handlers,
-     * as it is not supported on some systems (HP-UX) and makes fcron crash */
-
-    if (sig_chld > 0) {
+    if (sig_chld == true) {
         wait_chld();
-        sig_chld = 0;
-        reinstall_signal_handler(SIGCHLD, sigchild_handler);
+        sig_chld = false;
+        reinstall_signal_handler(SIGCHLD, sigchld_handler);
+    }
 
     if (sig_term == true) {
         sig_term = false;
@@ -790,28 +788,24 @@ check_signal()
         xexit(EXIT_OK);
     }
 
-    if (sig_conf > 0) {
-
-        if (sig_conf == 1) {
-            /* update configuration */
-            synchronize_dir(".", 0);
-            sig_conf = 0;
-            reinstall_signal_handler(SIGHUP, sighup_handler);
-        }
-        else {
-            /* reload all configuration */
-            reload_all(".");
-            sig_conf = 0;
-            reinstall_signal_handler(SIGUSR1, sigusr1_handler);
-        }
-
+    if (sig_hup == true) {
+        /* update configuration */
+        synchronize_dir(".", 0);
+        sig_hup = false;
+        reinstall_signal_handler(SIGHUP, sighup_handler);
+    }
+    if (sig_usr1 == true) {
+        /* reload all configuration */
+        reload_all(".");
+        sig_usr1 = false;
+        reinstall_signal_handler(SIGUSR1, sigusr1_handler);
     }
 
-    if (sig_debug > 0) {
+    if (sig_usr2 == true) {
         print_schedule();
         debug_opt = (debug_opt > 0) ? 0 : 1;
         explain("debug_opt = %d", debug_opt);
-        sig_debug = 0;
+        sig_usr2 = false;
         reinstall_signal_handler(SIGUSR2, sigusr2_handler);
     }
 
@@ -821,9 +815,8 @@ void
 reset_sig_cont(void)
    /* reinitialize the SIGCONT handler if it was raised */
 {
-    if (sig_cont > 0) {
-
-        sig_cont = 0;
+    if (sig_cont == true) {
+        sig_cont = false;
         reinstall_signal_handler(SIGCONT, sigcont_handler);
     }
 }
