@@ -925,10 +925,10 @@ main_loop()
         check_signal();
         check_suspend(slept_from, nwt, &sig_cont, &main_select);
         reset_sig_cont();
-        debug_print_tstamp("after check_signal and suspend");
+        debug_print_tstamp("    after check_signal and suspend");
 
         test_jobs();
-        debug_print_tstamp("after test_jobs");
+        debug_print_tstamp("    after test_jobs");
 
         while (serial_num > 0 && serial_running < serial_max_running) {
             run_serial_job();
@@ -944,7 +944,7 @@ main_loop()
             /* save all files */
             save_file(NULL);
         }
-        debug_print_tstamp("after save");
+        debug_print_tstamp("    after save");
 #if defined(FCRONDYN) && defined(HAVE_GETTIMEOFDAY)
         /* check if there's a new connection, a new command to answer, etc ... */
         /* we do that *after* other checks, to avoid Denial Of Service attacks */
@@ -952,7 +952,7 @@ main_loop()
 #endif
 
         nwt = check_lavg(save);
-        debug_print_tstamp("after check_lavg");
+        debug_print_tstamp("    after check_lavg");
         debug("next wake time : %s", ctime(&nwt));
 
         check_signal();

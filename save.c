@@ -147,7 +147,7 @@ write_buf_to_disk(int fd, char *write_buf, int *buf_used)
     }
 
     /* */
-    debug("write_buf_to_disk() : written %d/%d, %d (re)try(ies)", written,
+    debug("    write_buf_to_disk() : written %d/%d, %d (re)try(ies)", written,
           to_write, num_retries);
     /* */
 

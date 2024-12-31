@@ -136,7 +136,7 @@ mktime_no_dst(struct tm *t)
 
     ti1 = mktime(&t2);
     /* */
-    debug("after  mktime() : %d:%d isdst:%d ti:%ld\n",
+    debug("    after mktime() : %d:%d isdst:%d ti:%ld\n",
           t2.tm_hour, t2.tm_min, t2.tm_isdst, ti1);
     /* */
 
@@ -695,7 +695,7 @@ set_wday(struct tm *date)
     if (date->tm_wday >= 7)
         date->tm_wday -= 7;
 
-    debug("   dow of %04d-%02d-%02d : %d", (date->tm_year + 1900),
+    debug("    dow of %04d-%02d-%02d : %d", (date->tm_year + 1900),
           (date->tm_mon + 1), date->tm_mday, date->tm_wday);
 
 }
@@ -921,7 +921,7 @@ move_time_to(int where, cl_t * line, struct tm *ftime)
     }
 
     /* */
-    debug("   ignore: %d %d %d %d %d", ignore_mins, ignore_hrs,
+    debug("     ignore: %d %d %d %d %d", ignore_mins, ignore_hrs,
           ignore_days, ignore_mons, ignore_dow);
     /* */
 
