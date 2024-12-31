@@ -347,6 +347,7 @@ insert_nextexe(cl_t * line)
      *  be moved *forward* in the queue) */
     if (jprev == NULL || line->cl_nextexe < jprev->j_line->cl_nextexe) {
         j = queue_base;
+        jprev = NULL;
     }
     else {
         j = jprev;
@@ -516,6 +517,30 @@ add_lavg_job(cl_t * line, int info_fd)
     }
     else
         lavg_entry->l_until = (line->cl_until > 0) ? now + line->cl_until : 0;
+
+    if (debug_opt) {
+        if (lavg_entry->l_until == 0) {
+            send_msg_fd_debug(info_fd,
+                                "   lavg entry added until:none cmd: '%s'",
+                                 line->cl_shell);
+        }
+        else {
+            struct tm ftime;
+            struct tm *ft = localtime(&(lavg_entry->l_until));
+
+            /* localtime() returns a statically allocated struct which might be
+                overwritten by subsequent calls: take a copy.
+                (note: localtime() is used in the debug() function too) */
+            memcpy(&ftime, ft, sizeof(struct tm));
+
+            send_msg_fd_debug(info_fd,
+                                "   lavg entry added until:%04d-%02d-%02d "
+                                "%02d:%02d:%02d (system time) cmd: '%s'",
+                                (ftime.tm_year + 1900), (ftime.tm_mon + 1),
+                                ftime.tm_mday, ftime.tm_hour,
+                                ftime.tm_min, ftime.tm_sec, line->cl_shell);
+        }
+    }
 
 }
 
@@ -1308,9 +1333,9 @@ set_next_exe(cl_t * line, char option, int info_fd)
 
         ft = localtime(&(line->cl_nextexe));
 
-        /* localtime() function seem to return every time the same pointer :
-         * it resets our previous changes, so we need to prevent it
-         * ( localtime() is used in the debug() function) */
+        /* localtime() returns a statically allocated struct which might be
+         * overwritten by subsequent calls: take a copy.
+         * (note: localtime() is used in the debug() function too) */
         memcpy(&ftime, ft, sizeof(struct tm));
 
         send_msg_fd_debug(info_fd,
