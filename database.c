@@ -565,12 +565,12 @@ wait_chld(void)
             if (pid == e->e_ctrl_pid) {
                 if (e->e_line == NULL) {
                     /* the corresponding file has been removed from memory */
-                    debug("Job finished: pid %d", pid);
+                    debug("Child exited: pid %d", pid);
                 }
                 else {
 
                     line = e->e_line;
-/*  		    debug("Job finished: %s", line->cl_shell); */
+                    debug("Child exited (pid %d): %s", pid, line->cl_shell);
                     line->cl_numexe -= 1;
                     line->cl_file->cf_running -= 1;
 
