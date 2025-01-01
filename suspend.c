@@ -304,9 +304,9 @@ check_suspend(time_t slept_from, time_t nwt, bool *sig_cont,
         long int actual_sleep = now - slept_from;
         long int scheduled_sleep = nwt - slept_from;
 
-        explain("suspend/hibernate detected: we woke up after %lus"
-                " instead of %lus. The system was suspended for %lus.",
-                actual_sleep, scheduled_sleep, suspend_duration);
+        explain("suspend/hibernate detected: The system was suspended for "
+        "%lus (and we woke up after %lus instead of our intended %lus sleep).",
+        suspend_duration, actual_sleep, scheduled_sleep);
         reschedule_all_on_resume(suspend_duration);
     }
 }
