@@ -99,7 +99,7 @@ get_string(char *ptr)
 
 
 int
-get_line(char *str, size_t size, FILE * file)
+get_line(char *str, size_t size, FILE *file)
     /* similar to fgets, but increase line if necessary,
      * and continue over an "\" followed by an "\n" char */
 {
@@ -149,7 +149,7 @@ get_line(char *str, size_t size, FILE * file)
 }
 
 void
-init_default_line(cl_t * cl, cf_t * cf)
+init_default_line(cl_t *cl, cf_t *cf)
 /* clear all context/options from cl */
 {
     bzero(cl, sizeof(cl_t));
@@ -295,7 +295,7 @@ read_file(char *filename, int fd)
 }
 
 void
-read_env(char *ptr, cf_t * cf)
+read_env(char *ptr, cf_t *cf)
     /* append env variable list.
      * (remove blanks) */
 {
@@ -500,7 +500,7 @@ get_bool(char *ptr, int *i)
 
 
 char *
-read_opt(char *ptr, cl_t * cl)
+read_opt(char *ptr, cl_t *cl)
     /* read one or several options and fill in the field "option" */
 {
     char opt_name[20];
@@ -1207,7 +1207,7 @@ read_opt(char *ptr, cl_t * cl)
 
 
 char *
-get_time(char *ptr, time_t * time, int zero_allowed)
+get_time(char *ptr, time_t *time, int zero_allowed)
     /* convert time read in string in time_t format */
 {
     time_t sum;
@@ -1262,7 +1262,7 @@ get_time(char *ptr, time_t * time, int zero_allowed)
 
 
 char *
-check_username(char *ptr, cf_t * cf, cl_t * cl)
+check_username(char *ptr, cf_t *cf, cl_t *cl)
     /* check ptr to see if the first word is a username, returns new ptr */
 {
     short int indx = 0;
@@ -1315,7 +1315,7 @@ read_word(char *ptr, char *buf, size_t buf_size)
 }
 
 int
-read_shortcut(char *ptr, cf_t * cf)
+read_shortcut(char *ptr, cf_t *cf)
 /* try to read a shortcut entry, and if it is one then append a line to cf
  * Return 1 if that was a shortcut entry. If it wasn't, return 0 and make sure
  * ptr is back to its orig value. */
@@ -1470,7 +1470,7 @@ read_shortcut(char *ptr, cf_t * cf)
 }
 
 void
-read_freq(char *ptr, cf_t * cf)
+read_freq(char *ptr, cf_t *cf)
     /* read a freq entry, and append a line to cf */
 {
     cl_t *cl = NULL;
@@ -1573,7 +1573,7 @@ read_freq(char *ptr, cf_t * cf)
 
 
 void
-read_arys(char *ptr, cf_t * cf)
+read_arys(char *ptr, cf_t *cf)
     /* read a run freq number plus a normal fcron line */
 {
     cl_t *cl = NULL;
@@ -1663,7 +1663,7 @@ read_arys(char *ptr, cf_t * cf)
 }
 
 void
-read_period(char *ptr, cf_t * cf)
+read_period(char *ptr, cf_t *cf)
     /* read a line to run periodically (i.e. once a day, once a week, etc) */
 {
     cl_t *cl = NULL;
@@ -1887,7 +1887,7 @@ get_num(char *ptr, int *num, int max, short int decimal, const char **names)
 
 
 char *
-read_field(char *ptr, bitstr_t * ary, int max, const char **names)
+read_field(char *ptr, bitstr_t *ary, int max, const char **names)
     /* read a field like "2,5-8,10-20/2,21-30~25" and fill ary */
 {
     int start = 0;

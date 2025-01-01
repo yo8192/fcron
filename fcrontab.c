@@ -887,7 +887,7 @@ parseopt(int argc, char *argv[])
                 Set(fcronconf, optarg);
             }
             else {
-                char buf[sizeof(orig_dir)+1+strlen(optarg)+1];
+                char buf[sizeof(orig_dir) + 1 + strlen(optarg) + 1];
                 snprintf(buf, sizeof(buf), "%s/%s", orig_dir, optarg);
                 Set(fcronconf, buf);
             }
@@ -1105,7 +1105,6 @@ main(int argc, char **argv)
     if (file_opt) {
 
         if (strcmp(argv[file_opt], "-") == 0)
-
             xexit(install_stdin());
 
         else {
@@ -1113,9 +1112,11 @@ main(int argc, char **argv)
 
             if (*argv[file_opt] != '/') {
                 /* this is just the file name, not the path : complete it */
-                size_t path_len = strlen(orig_dir) + 1 + strlen(argv[file_opt]) + 1;
+                size_t path_len =
+                    strlen(orig_dir) + 1 + strlen(argv[file_opt]) + 1;
                 alloc_safe(path_len, fcrontab_file_path);
-                snprintf(fcrontab_file_path, path_len, "%s/%s", orig_dir, argv[file_opt]);
+                snprintf(fcrontab_file_path, path_len, "%s/%s", orig_dir,
+                         argv[file_opt]);
             }
             else {
                 fcrontab_file_path = strdup(argv[file_opt]);

@@ -211,7 +211,7 @@ read_suspend_duration(time_t slept_from)
 }
 
 void
-init_suspend(select_instance * si)
+init_suspend(select_instance *si)
 {
 
 #if defined(CLOCK_BOOTTIME) && defined(CLOCK_MONOTONIC)
@@ -245,7 +245,7 @@ init_suspend(select_instance * si)
 
 void
 check_suspend(time_t slept_from, time_t nwt, bool *sig_cont,
-              select_instance * si)
+              select_instance *si)
     /* Check if the machine was suspended (to mem or disk), and if so
      * reschedule jobs accordingly */
 {
@@ -305,8 +305,8 @@ check_suspend(time_t slept_from, time_t nwt, bool *sig_cont,
         long int scheduled_sleep = nwt - slept_from;
 
         explain("suspend/hibernate detected: The system was suspended for "
-        "%lus (and we woke up after %lus instead of our intended %lus sleep).",
-        suspend_duration, actual_sleep, scheduled_sleep);
+                "%lus (and we woke up after %lus instead of our intended %lus sleep).",
+                suspend_duration, actual_sleep, scheduled_sleep);
         reschedule_all_on_resume(suspend_duration);
     }
 }

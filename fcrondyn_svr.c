@@ -105,7 +105,7 @@ char err_others_nallowed_str[] =
 
 
 void
-fcrondyn_socket_init(select_instance * si)
+fcrondyn_socket_init(select_instance *si)
     /* do everything needed to get a working listening socket */
 {
     struct sockaddr_un addr;
@@ -401,11 +401,12 @@ print_fields(int fd, unsigned char *details)
     Add_field(field_endline);
 
     /* Extra safety (which should be redundant as strncat (used in Add_field
-       and Test_add_field) always null-terminate the string: */
+     * and Test_add_field) always null-terminate the string: */
     fields[sizeof(fields) - 1] = '\0';
 
     /* add +1 to include the final end-of-string "\0" */
-    if (send(fd, fields, (len+1 < sizeof(fields)) ? len+1 : sizeof(fields), 0) < 0)
+    if (send(fd, fields, (len + 1 < sizeof(fields)) ? len + 1 : sizeof(fields),
+             0) < 0)
         error_e("error in send()");
 
 }
@@ -470,25 +471,26 @@ print_line(int fd, struct cl_t *line, unsigned char *details, pid_t pid,
     if (bit_test(details, FIELD_SCHEDULE)) {
         ftime = localtime(&(line->cl_nextexe));
         len +=
-            snprintf(buf + len, sizeof(buf) - len, "|%04d-%02d-%02d %02d:%02d:%02d",
-                     (ftime->tm_year + 1900), (ftime->tm_mon + 1),
-                     ftime->tm_mday, ftime->tm_hour, ftime->tm_min, ftime->tm_sec);
+            snprintf(buf + len, sizeof(buf) - len,
+                     "|%04d-%02d-%02d %02d:%02d:%02d", (ftime->tm_year + 1900),
+                     (ftime->tm_mon + 1), ftime->tm_mday, ftime->tm_hour,
+                     ftime->tm_min, ftime->tm_sec);
     }
     len += snprintf(buf + len, sizeof(buf) - len, "|%s\n", line->cl_shell);
 
     /* snprintf() returns the length of what would have been written (excluding terminating null byte)
-      if not limited by maxlen */
-    if (len+1 > sizeof(buf)) {
+     * if not limited by maxlen */
+    if (len + 1 > sizeof(buf)) {
         /* the shell command string was too long and was truncated */
         strcpy(buf + sizeof(buf) - sizeof(truncated), truncated);
     }
 
     /* as extra safety to make sure the string is always null-terminated
-      (even though snprintf man page suggests it does it already) */
+     * (even though snprintf man page suggests it does it already) */
     buf[sizeof(buf) - 1] = '\0';
 
     /* add +1 to include the final end-of-string "\0" */
-    if (send(fd, buf, (len+1 < sizeof(buf)) ? len+1 : sizeof(buf), 0) < 0) {
+    if (send(fd, buf, (len + 1 < sizeof(buf)) ? len + 1 : sizeof(buf), 0) < 0) {
         error_e("error in send()");
     }
 }
@@ -547,7 +549,8 @@ cmd_ls(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
             getloadavg(lavg, 3);
             i = snprintf(lavg_str, sizeof(lavg_str), "Current load average : "
                          "%.1f, %.1f, %.1f\n", lavg[0], lavg[1], lavg[2]);
-            send(fd, lavg_str, (i+1 < sizeof(lavg_str))? i+1 : sizeof(lavg_str), 0);
+            send(fd, lavg_str,
+                 (i + 1 < sizeof(lavg_str)) ? i + 1 : sizeof(lavg_str), 0);
 
             bit_set(fields, FIELD_LAVG);
         }
@@ -719,7 +722,7 @@ cmd_on_exeq(struct fcrondyn_cl *client, long int *cmd, int fd, int is_root)
 
 
 void
-cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t * e,
+cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t *e,
            int is_root)
 /* change nice value of a running job */
 {
@@ -756,7 +759,7 @@ cmd_renice(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t * e,
 
 
 void
-cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t * e)
+cmd_send_signal(struct fcrondyn_cl *client, long int *cmd, int fd, exe_t *e)
 /* send a signal to a running job */
 {
     if (e->e_job_pid <= 0 || (int)cmd[1] <= 0) {
@@ -860,7 +863,7 @@ exe_cmd(struct fcrondyn_cl *client)
 
 void
 remove_connection(struct fcrondyn_cl **client, struct fcrondyn_cl *prev_client,
-                  select_instance * si)
+                  select_instance *si)
 /* close the connection, remove it from the list
 and make client points to the next entry */
 {
@@ -884,7 +887,7 @@ and make client points to the next entry */
 }
 
 void
-fcrondyn_socket_check(select_instance * si)
+fcrondyn_socket_check(select_instance *si)
     /* check for new connection, command, connection closed */
 {
     int fd = -1, avoid_fd = -1;
@@ -1002,7 +1005,7 @@ fcrondyn_socket_check(select_instance * si)
 
 
 void
-fcrondyn_socket_close(select_instance * si)
+fcrondyn_socket_close(select_instance *si)
     /* close connections, close socket, remove socket file.
      * If si is not NULL, then remove the fds from si's readfds */
 {

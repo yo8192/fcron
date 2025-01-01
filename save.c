@@ -325,7 +325,7 @@ write_file_to_disk(int fd, struct cf_t *file, time_t time_date)
 
 
 int
-save_one_file(cf_t * file, char *filename, uid_t own_uid, gid_t own_gid,
+save_one_file(cf_t *file, char *filename, uid_t own_uid, gid_t own_gid,
               time_t save_date)
 /* save a given file to disk */
 {
@@ -374,7 +374,7 @@ save_one_file(cf_t * file, char *filename, uid_t own_uid, gid_t own_gid,
 
 
 int
-save_file_safe(cf_t * file, char *final_path, char *prog_name, uid_t own_uid,
+save_file_safe(cf_t *file, char *final_path, char *prog_name, uid_t own_uid,
                gid_t own_gid, time_t save_date)
 /* save a file to a temp path, and then rename it (safely) to avoid loss of data
  * if a system crash, hardware failure, etc happens. */

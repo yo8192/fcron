@@ -65,7 +65,7 @@ fifo_list_init(size_t entry_size, int init_size, int grow_size)
 }
 
 fifo_list_entry_t *
-fifo_list_last(fifo_list_t * l)
+fifo_list_last(fifo_list_t *l)
 /* Returns the pointer of the last entry in the list, or NULL if l is empty */
 {
     fifo_list_entry *e = NULL;
@@ -81,7 +81,7 @@ fifo_list_last(fifo_list_t * l)
 }
 
 int
-fifo_list_resize_array(fifo_list_t * l)
+fifo_list_resize_array(fifo_list_t *l)
 /* Resize l's entries_array up to l->max_entries
  * Returns OK on success, ERR if the array is already at maximum size */
 {
@@ -125,7 +125,7 @@ fifo_list_resize_array(fifo_list_t * l)
 
 
 fifo_list_entry_t *
-fifo_list_add(fifo_list_t * l, fifo_list_entry_t * e)
+fifo_list_add(fifo_list_t *l, fifo_list_entry_t *e)
 /* Add one entry to the list
  * Returns a pointer to the added element, or NULL if list is already at max size */
 {
@@ -150,7 +150,7 @@ fifo_list_add(fifo_list_t * l, fifo_list_entry_t * e)
 }
 
 fifo_list_entry_t *
-fifo_list_first(fifo_list_t * l)
+fifo_list_first(fifo_list_t *l)
 /* Return the first entry of the list (then fifo_list_next() can be used) */
 {
     /* sanity check */
@@ -167,7 +167,7 @@ fifo_list_first(fifo_list_t * l)
 }
 
 fifo_list_entry_t *
-fifo_list_next(fifo_list_t * l)
+fifo_list_next(fifo_list_t *l)
 /* Return the entry after e */
 {
     /* // WHAT IF I CALL _ADD() (+RESIZE?) OR _REMOVE() BETWEEN TWO _NEXT CALLS? */
@@ -203,7 +203,7 @@ fifo_list_next(fifo_list_t * l)
 }
 
 void
-fifo_list_end_iteration(fifo_list_t * list)
+fifo_list_end_iteration(fifo_list_t *list)
     /* Stop an iteration before _next() reached the end of the list by itself */
 {
     list->cur_entry = NULL;
@@ -212,7 +212,7 @@ fifo_list_end_iteration(fifo_list_t * list)
 
 
 void
-fifo_list_remove_first(fifo_list_t * l)
+fifo_list_remove_first(fifo_list_t *l)
 {
     /* // MANAGE L->NEXT_ENTRY (+ SPECIAL CASE FIRST/LAST ENTRY) */
     fifo_list_entry_t *last = NULL;
@@ -236,7 +236,7 @@ fifo_list_remove_first(fifo_list_t * l)
 }
 
 fifo_list_t *
-fifo_list_destroy(fifo_list_t * list)
+fifo_list_destroy(fifo_list_t *list)
     /* free() the memory allocated for list and returns NULL */
 {
     if (list == NULL)

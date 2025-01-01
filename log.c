@@ -246,7 +246,7 @@ xlog_e(int priority, int fd, char *fmt, va_list args)
 
 /* write a message to the file specified by logfile. */
 static void
-print_line_prefix(FILE * logfile, int priority)
+print_line_prefix(FILE *logfile, int priority)
 {
     time_t t = time(NULL);
     struct tm *ft;
@@ -285,7 +285,7 @@ print_line_prefix(FILE * logfile, int priority)
 /* Same as log_syslog(), but also appends an error description corresponding
  * to the pam_error. */
 static void
-log_pame(int priority, pam_handle_t * pamh, int pamerrno, char *fmt,
+log_pame(int priority, pam_handle_t *pamh, int pamerrno, char *fmt,
          va_list args)
 {
     char *msg;
@@ -411,7 +411,7 @@ error_e(char *fmt, ...)
 #ifdef HAVE_LIBPAM
 /* Log a "complain" level message, with a PAM error description */
 void
-error_pame(pam_handle_t * pamh, int pamerrno, char *fmt, ...)
+error_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...)
 {
     va_list args;
 
@@ -473,7 +473,7 @@ die_e(char *fmt, ...)
 #ifdef HAVE_LIBPAM
 /* Log a "complain" level message, with a PAM error description, and exit */
 void
-die_pame(pam_handle_t * pamh, int pamerrno, char *fmt, ...)
+die_pame(pam_handle_t *pamh, int pamerrno, char *fmt, ...)
 {
     va_list args;
 

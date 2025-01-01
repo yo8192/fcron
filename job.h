@@ -25,7 +25,7 @@
 #ifndef __JOB_H__
 #define __JOB_H__
 
-#define MAIL_LINE_LEN_MAX 998 /* RFC5322's max line length */
+#define MAIL_LINE_LEN_MAX 998   /* RFC5322's max line length */
 #define FROM_HEADER_KEY "From: "
 
 /* functions prototypes */

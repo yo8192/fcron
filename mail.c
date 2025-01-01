@@ -25,8 +25,8 @@
 #include "fcron.h"
 #include "mail.h"
 
-char
-*format_maildisplayname(char *displayname_conf)
+char *
+format_maildisplayname(char *displayname_conf)
     /* Format the input string `conf_value` according to RFC5322 sec. 3.2.3.
      * <https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3>.
      * Returns: either the formatted displayname (possibly unchanged or empty)
@@ -35,13 +35,15 @@ char
 {
     bool need_quotes = false;
     char c = '\0';
-    char *ipos = NULL;  /* Input position */
+    char *ipos = NULL;          /* Input position */
     char *output = NULL, *quoted_output = NULL;
 
     const uint buf_len = MAIL_FROM_VALUE_LEN_MAX;
-    uint cwritten = 0;  /* how many chars we have written */
+    uint cwritten = 0;          /* how many chars we have written */
 
-    if (strlen(displayname_conf) == 0) return strdup2("");
+    if (strlen(displayname_conf) == 0) {
+        return strdup2("");
+    }
 
     output = (char *)alloc_safe(buf_len * sizeof(char), "output buffer");
 
@@ -66,10 +68,12 @@ char
     }
 
     if (need_quotes) {
-        quoted_output = (char *)alloc_safe(buf_len * sizeof(char), "quoted output buffer");
+        quoted_output =
+            (char *)alloc_safe(buf_len * sizeof(char), "quoted output buffer");
         int needed_len = snprintf(quoted_output, buf_len, "\"%s\"", output);
-        if (needed_len >= buf_len){
-            error("Formatted 'displayname' too long: length:%u > max:%u chars", needed_len, buf_len);
+        if (needed_len >= buf_len) {
+            error("Formatted 'displayname' too long: length:%u > max:%u chars",
+                  needed_len, buf_len);
             Free_safe(output);
             Free_safe(quoted_output);
             return NULL;
@@ -94,7 +98,7 @@ make_mailbox_addr(char *displayname_conf, char *mail_from, char *hostname)
     uint written = 0;
     bool need_anglebrackets = false;
 
-    const uint buf_len = MAIL_FROM_VALUE_LEN_MAX+1;
+    const uint buf_len = MAIL_FROM_VALUE_LEN_MAX + 1;
 
     buf = (char *)alloc_safe(buf_len * sizeof(char), "mailbox addr buffer");
 

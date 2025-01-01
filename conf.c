@@ -436,7 +436,7 @@ read_type(int fd, short int *type, short int *size)
         }
 
 int
-read_file(const char *file_name, cf_t * cf, int is_system_startup)
+read_file(const char *file_name, cf_t *cf, int is_system_startup)
     /* read a formated fcrontab.
      * return ERR on error, OK otherwise */
 {
@@ -559,7 +559,7 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
 
         /* if we get here, sec_class and access_vec are both defined */
         retval = security_compute_av(cf->cf_user_context, cf->cf_file_context,
-                                sec_class, access_vec, &avd);
+                                     sec_class, access_vec, &avd);
 
         if (retval || ((access_vec & avd.allowed) != access_vec)) {
             syslog(LOG_ERR, "ENTRYPOINT FAILED for Linux user '%s' "
@@ -827,7 +827,7 @@ read_file(const char *file_name, cf_t * cf, int is_system_startup)
 
 
 int
-add_line_to_file(cl_t * cl, cf_t * cf, uid_t runas, char *runas_str,
+add_line_to_file(cl_t *cl, cf_t *cf, uid_t runas, char *runas_str,
                  time_t t_save, int is_system_startup)
     /* check if the line is valid, and if yes, add it to the file cf */
 {
@@ -1010,7 +1010,7 @@ delete_file(const char *user_name)
 
 
 void
-save_file(cf_t * arg_file)
+save_file(cf_t *arg_file)
 /* Store the informations relatives to the executions
  * of tasks at a defined frequency of system's running time */
 {

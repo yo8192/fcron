@@ -414,7 +414,6 @@ my_setenv_overwrite(const char *name, const char *value)
     char buf[PATH_LEN];
 
     snprintf(buf, sizeof(buf) - 1, "%s=%s", name, value)
-
         /* The final \0 may not have been copied because of lack of space:
          * add it to make sure */
         buf[sizeof(buf) - 1] = '\0';

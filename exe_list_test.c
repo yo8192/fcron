@@ -10,14 +10,14 @@ pid_t daemon_pid = 0;
 uid_t rootuid = 0;
 
 void
-print_cur(exe_t * e)
+print_cur(exe_t *e)
 {
     printf("Current entry's shell command: %s\n",
            e ? e->e_line->cl_shell : "NULL");
 }
 
 void
-print_list(exe_list_t * list)
+print_list(exe_list_t *list)
 {
     exe_t *e = NULL;
     printf("Current list:\n");

@@ -83,7 +83,7 @@ usage()
 
 
 char *
-read_str(FILE * f, char *buf, int max)
+read_str(FILE *f, char *buf, int max)
     /* return a pointer to string read from file f
      * if it is non-zero length */
 {
@@ -103,7 +103,7 @@ read_str(FILE * f, char *buf, int max)
 
 
 void
-delete_file(cf_t * file)
+delete_file(cf_t *file)
     /* free a file if user_name is not null 
      *   otherwise free all files */
 {

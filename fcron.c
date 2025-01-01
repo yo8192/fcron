@@ -547,11 +547,12 @@ void
 set_signal_handler(int signal, void (*handler)(int), bool first_install)
     /* (re)install a signal handler, with restartable syscalls retried. */
 {
+/* *INDENT-OFF* */
 #ifdef HAVE_SIGACTION
     /* The signal handler stays set after the handler is called when set
-       with sigaction(): we only need to install it once. */
+     * with sigaction(): we only need to install it once. */
     if (first_install) {
-        struct sigaction act = {0};
+        struct sigaction act = { 0 };
         act.sa_flags = SA_RESTART;
         act.sa_handler = handler;
         if (sigaction(signal, &act, NULL) < 0) {
@@ -560,8 +561,8 @@ set_signal_handler(int signal, void (*handler)(int), bool first_install)
     }
 #elif defined(HAVE_SIGNAL)
     /* Some systems reset the handler to SIG_DFL when the handler
-       is called when the handler was set with signal(). So we have to install
-       it (again) every time. */
+     * is called when the handler was set with signal(). So we have to install
+     * it (again) every time. */
     if (signal(signal, handler) == SIG_ERR) {
         die_e("signal() failed on signal %d", signal);
     }
@@ -570,7 +571,7 @@ set_signal_handler(int signal, void (*handler)(int), bool first_install)
     }
 #elif defined(HAVE_SIGSET)
     /* The signal handler stays set after the handler is called when set
-       with sigset(): we only need to install it once. */
+     * with sigset(): we only need to install it once. */
     if (first_install) {
         if (sigset(signal, handler) == -1) {
             die_e("sigset() failed on signal %d", signal);
@@ -579,10 +580,12 @@ set_signal_handler(int signal, void (*handler)(int), bool first_install)
 #else
 #error "No signal installation function found"
 #endif
+/* *INDENT-ON* */
 }
 
 void
-install_signal_handler(int signal, void (*handler)(int)) {
+install_signal_handler(int signal, void (*handler)(int))
+{
     set_signal_handler(signal, handler, true);
 }
 

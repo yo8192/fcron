@@ -174,7 +174,7 @@ mktime_no_dst(struct tm *t)
 
 
 void
-run_normal_job(cl_t * line, int info_fd)
+run_normal_job(cl_t *line, int info_fd)
 /* run a job, and write "log" on info_fd if positive */
 {
 
@@ -192,7 +192,7 @@ run_normal_job(cl_t * line, int info_fd)
 }
 
 void
-run_lavg_job(lavg_t * l)
+run_lavg_job(lavg_t *l)
 {
 
     run_queue_job(l->l_line);
@@ -227,7 +227,7 @@ run_serial_job(void)
 
 
 void
-run_queue_job(cl_t * line)
+run_queue_job(cl_t *line)
     /* run a job */
 {
 
@@ -254,7 +254,7 @@ is_loop_in_queue(void)
      * Return 1 if there is a loop, 0 otherwise.
      * Only intended to be used when running in debug mode really. */
 {
-    const int max_entries = 1000000 ;
+    const int max_entries = 1000000;
     int i = 0;
     struct job_t *j;
 
@@ -272,7 +272,7 @@ is_loop_in_queue(void)
 }
 
 job_t *
-job_queue_remove(cl_t * line)
+job_queue_remove(cl_t *line)
     /* remove a job from the queue list
      * returns a pointer to the previous entry,
      * or NULL if the line either wasn't in the queue or was the first entry */
@@ -303,8 +303,8 @@ job_queue_remove(cl_t * line)
             Free_safe(j);
 
             if (debug_opt && is_loop_in_queue()) {
-                error("Loop found in job queue after removing line '%s': aborting.",
-                      line->cl_shell);
+                error("Loop found in job queue after removing line '%s': "
+                      "aborting.", line->cl_shell);
                 abort();
             }
 
@@ -317,7 +317,7 @@ job_queue_remove(cl_t * line)
 }
 
 void
-insert_nextexe(cl_t * line)
+insert_nextexe(cl_t *line)
     /* insert a job at the right position in the job queue */
 {
     struct job_t *newjob = NULL;
@@ -325,8 +325,8 @@ insert_nextexe(cl_t * line)
     struct job_t *jprev = NULL;
 
     if (debug_opt && is_loop_in_queue()) {
-        error("Detected loop in queue_base before adding job '%s' to the queue: aborting.",
-              line->cl_shell);
+        error("Detected loop in queue_base before adding job '%s' "
+              "to the queue: aborting.", line->cl_shell);
         abort();
     }
 
@@ -370,15 +370,15 @@ insert_nextexe(cl_t * line)
     }
 
     if (debug_opt && is_loop_in_queue()) {
-        error("Detected loop in queue_base after adding job '%s' to the queue: aborting.",
-               line->cl_shell);
+        error("Detected loop in queue_base after adding job '%s' to the queue:"
+              " aborting.", line->cl_shell);
         abort();
     }
 
 }
 
 void
-add_serial_job(cl_t * line, int info_fd)
+add_serial_job(cl_t *line, int info_fd)
     /* add the next queued job in serial queue */
 {
     short int i;
@@ -443,7 +443,7 @@ add_serial_job(cl_t * line, int info_fd)
 
 
 void
-add_lavg_job(cl_t * line, int info_fd)
+add_lavg_job(cl_t *line, int info_fd)
     /* add the next queued job in lavg queue */
     /* WARNING : must be run before a set_next_exe() to get the strict option
      * working correctly */
@@ -521,24 +521,24 @@ add_lavg_job(cl_t * line, int info_fd)
     if (debug_opt) {
         if (lavg_entry->l_until == 0) {
             send_msg_fd_debug(info_fd,
-                                "   lavg entry added until:none cmd: '%s'",
-                                 line->cl_shell);
+                              "   lavg entry added until:none cmd: '%s'",
+                              line->cl_shell);
         }
         else {
             struct tm ftime;
             struct tm *ft = localtime(&(lavg_entry->l_until));
 
             /* localtime() returns a statically allocated struct which might be
-                overwritten by subsequent calls: take a copy.
-                (note: localtime() is used in the debug() function too) */
+             * overwritten by subsequent calls: take a copy.
+             * (note: localtime() is used in the debug() function too) */
             memcpy(&ftime, ft, sizeof(struct tm));
 
             send_msg_fd_debug(info_fd,
-                                "   lavg entry added until:%04d-%02d-%02d "
-                                "%02d:%02d:%02d (system time) cmd: '%s'",
-                                (ftime.tm_year + 1900), (ftime.tm_mon + 1),
-                                ftime.tm_mday, ftime.tm_hour,
-                                ftime.tm_min, ftime.tm_sec, line->cl_shell);
+                              "   lavg entry added until:%04d-%02d-%02d "
+                              "%02d:%02d:%02d (system time) cmd: '%s'",
+                              (ftime.tm_year + 1900), (ftime.tm_mon + 1),
+                              ftime.tm_mday, ftime.tm_hour,
+                              ftime.tm_min, ftime.tm_sec, line->cl_shell);
         }
     }
 
@@ -702,7 +702,7 @@ set_wday(struct tm *date)
 
 
 void
-goto_beginning_next_period_periodical(cl_t * line, struct tm *ftime)
+goto_beginning_next_period_periodical(cl_t *line, struct tm *ftime)
     /* From ftime, search the first/nearest time and date of the line's next
      * period of execution.
      *
@@ -853,7 +853,7 @@ goto_beginning_next_period_periodical(cl_t * line, struct tm *ftime)
 
 
 void
-move_time_to(int where, cl_t * line, struct tm *ftime)
+move_time_to(int where, cl_t *line, struct tm *ftime)
     /* IF WHERE == BEGIN_NEXT_PERIOD: from ftime, search the first/nearest time and date
      * of the line's next period of execution.
      * IF WHERE == END_OF_INTERVAL: search the last time and date
@@ -1039,7 +1039,7 @@ move_time_to(int where, cl_t * line, struct tm *ftime)
 
 
 void
-set_next_exe(cl_t * line, char option, int info_fd)
+set_next_exe(cl_t *line, char option, int info_fd)
   /* set the cl_nextexe of a given cl_t and insert it in the queue */
 {
 
@@ -1354,7 +1354,7 @@ set_next_exe(cl_t * line, char option, int info_fd)
 }
 
 void
-set_next_exe_notrun(cl_t * line, char context)
+set_next_exe_notrun(cl_t *line, char context)
     /* set the time of the next execution and send a mail to tell user his job
      * has not run if necessary */
 {
@@ -1631,7 +1631,7 @@ set_next_exe_startup(struct cl_t *cl, const int context,
 
 
 void
-mail_notrun_time_t(cl_t * line, char context, time_t since_time_t)
+mail_notrun_time_t(cl_t *line, char context, time_t since_time_t)
 /* Same as mail_notrun() but with 'since' defined as a time_t instead of a struct tm */
 {
     struct tm *since2 = NULL;
@@ -1651,7 +1651,7 @@ mail_notrun_time_t(cl_t * line, char context, time_t since_time_t)
 }
 
 void
-mail_notrun(cl_t * line, char context, struct tm *since)
+mail_notrun(cl_t *line, char context, struct tm *since)
     /* send a mail to tell user a job has not run (and why) */
 {
     int pid = 0;

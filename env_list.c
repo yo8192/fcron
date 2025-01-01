@@ -39,7 +39,7 @@ env_list_init(void)
 }
 
 env_list_t *
-env_list_copy(env_list_t * list)
+env_list_copy(env_list_t *list)
 {
     env_list_t *new_list = NULL;
     env_t *e = NULL;
@@ -57,7 +57,7 @@ env_list_copy(env_list_t * list)
 }
 
 env_t *
-env_list_setenv(env_list_t * list, char *name, char *value, int overwrite)
+env_list_setenv(env_list_t *list, char *name, char *value, int overwrite)
 {
     env_t e = { NULL };
     env_t *c = NULL;
@@ -89,7 +89,7 @@ env_list_setenv(env_list_t * list, char *name, char *value, int overwrite)
 }
 
 env_t *
-env_list_putenv(env_list_t * list, char *envvar, int overwrite)
+env_list_putenv(env_list_t *list, char *envvar, int overwrite)
 {
     env_t e = { NULL };
     env_t *c = NULL;
@@ -120,7 +120,7 @@ env_list_putenv(env_list_t * list, char *envvar, int overwrite)
 }
 
 char *
-env_list_getenv(env_list_t * list, char *name)
+env_list_getenv(env_list_t *list, char *name)
 {
     env_t *c = NULL;
 
@@ -141,25 +141,25 @@ env_list_getenv(env_list_t * list, char *name)
 }
 
 env_t *
-env_list_first(env_list_t * list)
+env_list_first(env_list_t *list)
 {
     return (env_t *) u_list_first((u_list_t *) list);
 }
 
 env_t *
-env_list_next(env_list_t * list)
+env_list_next(env_list_t *list)
 {
     return (env_t *) u_list_next((u_list_t *) list);
 }
 
 void
-env_list_end_iteration(env_list_t * list)
+env_list_end_iteration(env_list_t *list)
 {
     u_list_end_iteration((u_list_t *) list);
 }
 
 env_list_t *
-env_list_destroy(env_list_t * list)
+env_list_destroy(env_list_t *list)
     /* free() the memory allocated for list and returns NULL */
 {
     env_t *c = NULL;
@@ -175,7 +175,7 @@ env_list_destroy(env_list_t * list)
 }
 
 char **
-env_list_export_envp(env_list_t * list)
+env_list_export_envp(env_list_t *list)
 /* export list data as a char **envp structure to use as an argument of execle() */
 {
     env_t *c = NULL;

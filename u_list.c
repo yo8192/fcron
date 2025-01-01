@@ -65,7 +65,7 @@ u_list_init(size_t entry_size, int init_size, int grow_size)
 }
 
 u_list_t *
-u_list_copy(u_list_t * list)
+u_list_copy(u_list_t *list)
 {
     u_list_t *new_list = NULL;
 
@@ -87,7 +87,7 @@ u_list_copy(u_list_t * list)
 
 
 int
-u_list_resize_array(u_list_t * l)
+u_list_resize_array(u_list_t *l)
 /* Resize l's entries_array up to l->max_entries
  * Returns OK on success, ERR if the array is already at maximum size */
 {
@@ -130,7 +130,7 @@ u_list_resize_array(u_list_t * l)
 }
 
 u_list_entry_t *
-u_list_last(u_list_t * l)
+u_list_last(u_list_t *l)
 /* Returns the pointer of the last entry in the list, or NULL if l is empty */
 {
     if (l->num_entries <= 0)
@@ -141,7 +141,7 @@ u_list_last(u_list_t * l)
 }
 
 u_list_entry_t *
-u_list_add(u_list_t * l, u_list_entry_t * e)
+u_list_add(u_list_t *l, u_list_entry_t *e)
 /* Add one entry to the list
  * Returns a pointer to the added element, or NULL if list is already at max size */
 {
@@ -166,7 +166,7 @@ u_list_add(u_list_t * l, u_list_entry_t * e)
 }
 
 int
-u_list_is_iterating(u_list_t * l)
+u_list_is_iterating(u_list_t *l)
 {
     /* sanity check */
     if (l == NULL)
@@ -176,7 +176,7 @@ u_list_is_iterating(u_list_t * l)
 }
 
 u_list_entry_t *
-u_list_first(u_list_t * l)
+u_list_first(u_list_t *l)
 /* Return the first entry of the list (then u_list_next() can be used) */
 {
     /* sanity check */
@@ -193,7 +193,7 @@ u_list_first(u_list_t * l)
 }
 
 u_list_entry_t *
-u_list_next(u_list_t * l)
+u_list_next(u_list_t *l)
 /* Return the entry after e */
 {
     /* sanity checks */
@@ -227,7 +227,7 @@ u_list_next(u_list_t * l)
 }
 
 void
-u_list_end_iteration(u_list_t * list)
+u_list_end_iteration(u_list_t *list)
     /* Stop an iteration before _next() reached the end of the list by itself */
 {
     list->cur_entry = NULL;
@@ -236,7 +236,7 @@ u_list_end_iteration(u_list_t * list)
 
 
 void
-u_list_remove_cur(u_list_t * l)
+u_list_remove_cur(u_list_t *l)
 {
     u_list_entry_t *last = NULL;
 
@@ -259,7 +259,7 @@ u_list_remove_cur(u_list_t * l)
 }
 
 u_list_t *
-u_list_destroy(u_list_t * list)
+u_list_destroy(u_list_t *list)
     /* free() the memory allocated for list and returns NULL */
 {
     if (list == NULL)

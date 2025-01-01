@@ -46,8 +46,8 @@ void become_user(struct cl_t *cl, struct passwd *pas, char *home);
 
 #ifdef HAVE_LIBPAM
 void
-die_mail_pame(cl_t * cl, int pamerrno, struct passwd *pas, char *str,
-              env_list_t * env)
+die_mail_pame(cl_t *cl, int pamerrno, struct passwd *pas, char *str,
+              env_list_t *env)
 /* log an error in syslog, mail user if necessary, and die */
 {
     char buf[MAX_MSG];
@@ -279,7 +279,7 @@ sig_dfl(void)
 }
 
 FILE *
-create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
+create_mail(cl_t *line, char *subject, char *content_type, char *encoding,
             char **env)
     /* create a temp file and write in it a mail header */
 {
@@ -321,20 +321,22 @@ create_mail(cl_t * line, char *subject, char *content_type, char *encoding,
 #endif                          /* HAVE_GETHOSTNAME */
 
     /* write mail header. Global 'maildisplayname' comes from fcronconf.h */
-    if (maildisplayname[0] != '\0'){
+    if (maildisplayname[0] != '\0') {
         /* New behavior -- RFC-compliant */
-        mailbox_addr = make_mailbox_addr(maildisplayname, mailfrom, hostname_from);
-        if (! mailbox_addr) {
+        mailbox_addr =
+            make_mailbox_addr(maildisplayname, mailfrom, hostname_from);
+        if (!mailbox_addr) {
             warn("could not make the mailbox address");
         }
     }
     if (mailbox_addr) {
-        fprintf(mailf, FROM_HEADER_KEY"%s\n", mailbox_addr);
+        fprintf(mailf, FROM_HEADER_KEY "%s\n", mailbox_addr);
         Free_safe(mailbox_addr);
     }
     else {
         /* Old behavior */
-        fprintf(mailf, FROM_HEADER_KEY"%s%s (fcron)\n", mailfrom, hostname_from);
+        fprintf(mailf, FROM_HEADER_KEY "%s%s (fcron)\n", mailfrom,
+                hostname_from);
     }
 
     fprintf(mailf, "To: %s%s\n", line->cl_mailto, hostname_to);
@@ -483,7 +485,7 @@ write_pipe(int fd, void *buf, size_t size)
 }
 
 void
-run_job_grand_child_setup_stderr_stdout(cl_t * line, int *pipe_fd)
+run_job_grand_child_setup_stderr_stdout(cl_t *line, int *pipe_fd)
     /* setup stderr and stdout correctly so as the mail containing
      * the output of the job can be send at the end of the job.
      * Close the pipe (both ways). */
@@ -518,7 +520,7 @@ run_job_grand_child_setup_stderr_stdout(cl_t * line, int *pipe_fd)
 }
 
 void
-run_job_grand_child_setup_nice(cl_t * line)
+run_job_grand_child_setup_nice(cl_t *line)
     /* set the nice value for the job */
 {
     if (line->cl_nice != 0) {
@@ -783,8 +785,7 @@ run_job(struct exe_t *exeent)
 }
 
 void
-end_job(cl_t * line, int status, FILE * mailf, short mailpos,
-        char **sendmailenv)
+end_job(cl_t *line, int status, FILE *mailf, short mailpos, char **sendmailenv)
     /* if task have made some output, mail it to user */
 {
 
@@ -870,7 +871,7 @@ end_job(cl_t * line, int status, FILE * mailf, short mailpos,
 }
 
 void
-launch_mailer(cl_t * line, FILE * mailf, char **sendmailenv)
+launch_mailer(cl_t *line, FILE *mailf, char **sendmailenv)
     /* mail the output of a job to user */
 {
 #ifdef USE_SENDMAIL

@@ -26,7 +26,7 @@
 #include "mem.h"
 
 cl_t *
-dups_cl(cl_t * orig)
+dups_cl(cl_t *orig)
     /* Duplicate a line, including the strings it points to. */
 {
     cl_t *cl = NULL;
@@ -63,7 +63,7 @@ dups_cl(cl_t * orig)
 }
 
 void
-free_line(cl_t * cl)
+free_line(cl_t *cl)
     /* free a line, including its fields */
 {
     if (cl != NULL) {

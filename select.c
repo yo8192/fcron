@@ -39,7 +39,7 @@ select_init(struct select_instance *si)
 }
 
 void
-select_add_read(select_instance * si, int fd)
+select_add_read(select_instance *si, int fd)
     /* Add a fd to the read set */
 {
     FD_SET(fd, &si->__readfds_master);
@@ -51,7 +51,7 @@ select_add_read(select_instance * si, int fd)
 }
 
 void
-select_rm_read(select_instance * si, int fd)
+select_rm_read(select_instance *si, int fd)
     /* remove a fd to the read set */
 {
     FD_CLR(fd, &si->__readfds_master);
