@@ -13,6 +13,25 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
+            <title>From version 3.3.2 to 3.3.3</title>
+            <listitem>
+               <para>Fixed infinite loop when an lavg job reaches its 'until' deadline and gets rescheduled as the next job to run.</para>
+            </listitem>
+            <listitem>
+               <para>Improved signal safety.</para>
+            </listitem>
+            <listitem>
+               <para>Improved log messages for: indentation, resume after suspend, child task completion.</para>
+            </listitem>
+            <listitem>
+               <para>Fixed compilation warnings: SELinux, signal handling.</para>
+            </listitem>
+            <listitem>
+               <para>Updated copyright years.</para>
+            </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
             <title>From version 3.3.1 to 3.3.2</title>
             <listitem>
                <para>Add compilation option (configure's '--with-max-fcrontab-reload-delay-seconds') to allow faster or even instant reload for non-root users (thanks Elliot Wolk).</para>

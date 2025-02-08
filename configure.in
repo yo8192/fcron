@@ -11,7 +11,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_PREREQ([2.71])
 m4_include([m4/ax_lib_readline.m4])
 
-vers="3.3.3pre"
+vers="3.3.3"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
