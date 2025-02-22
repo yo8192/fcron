@@ -160,14 +160,12 @@ A copy of the license is included in gfdl.sgml.
 					<listitem>
 						<para>
 							Display name for the "From: " header of mails sent
-							by us. N.B. &fcron has been following Vixie cron's
+							by us. Note that in the past, &fcron was following Vixie cron's
 							default email header format which is not fully
 							compliant with RFC 5322 (see <ulink
 							url="https://github.com/yo8192/fcron/issues/15">Issue
-							#15 </ulink>).  During this transition phase, to
-							achieve full RFC compliance, you may set a display
-							name. Leaving it empty will preserve the old
-							behavior.
+							#15 </ulink>). fcron will revert to this old behaviour when
+							this option is set to an empty string.
 						</para>
 					</listitem>
 				</varlistentry>

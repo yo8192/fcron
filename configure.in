@@ -180,7 +180,9 @@ AC_ARG_ENABLE(checks,
   esac
 ])
 
-MAILDISPLAYNAME=""
+dnl Set a non-empty value to use a RFC5322-compliant "From" email header,
+dnl or set to empty string to keep the previous non RFC5322-compliant one.
+MAILDISPLAYNAME="Fcron Daemon"
 AC_MSG_CHECKING([mail display name])
 AC_MSG_RESULT([$MAILDISPLAYNAME])
 AC_SUBST([MAILDISPLAYNAME])
