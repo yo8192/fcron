@@ -41,7 +41,7 @@ jobs:
         retention-days: 7 # optional, default is 1
 
     - name: Deploy GitHub Pages site
-      uses: actions/deploy-pages@v1.2.9
+      uses: actions/deploy-pages@v4
       #with:
         # Should this action only emit build telemetry instead of deploying the build artifact?
         #emit_telemetry: # optional, default is false
