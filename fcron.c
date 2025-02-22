@@ -584,7 +584,7 @@ set_signal_handler(int signal, void (*handler)(int), bool first_install)
 }
 
 void
-install_signal_handler(int signal, void (*handler)(int))
+install_signal_handler(int signal, void(*handler)(int))
 {
     set_signal_handler(signal, handler, true);
 }

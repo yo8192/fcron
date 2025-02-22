@@ -185,7 +185,8 @@ run_normal_job(cl_t *line, int info_fd)
         send_msg_fd(info_fd, "Job '%s' started.", line->cl_shell);
     }
     else {
-        warn_fd(info_fd, "    Skipping execution of already running job: %s's '%s'",
+        warn_fd(info_fd,
+                "    Skipping execution of already running job: %s's '%s'",
                 line->cl_file->cf_user, line->cl_shell);
     }
 
@@ -1523,14 +1524,19 @@ set_next_exe_startup(struct cl_t *cl, const int context,
                 else {
                     /* run bootrun jobs */
                     cl->cl_remain = cl->cl_runfreq;
-                    debug("   bootrun job should have run during down time '%s'", cl->cl_shell);
+                    debug
+                        ("   bootrun job should have run during down time '%s'",
+                         cl->cl_shell);
                     if (!is_lavg(cl->cl_option)) {
-                        explain("   Adding bootrun job to the serial queue: '%s'", cl->cl_shell);
+                        explain
+                            ("   Adding bootrun job to the serial queue: '%s'",
+                             cl->cl_shell);
                         set_serial_once(cl->cl_option);
                         add_serial_job(cl, -1);
                     }
                     else {
-                        explain("   Adding bootrun job to the lavg queue: '%s'", cl->cl_shell);
+                        explain("   Adding bootrun job to the lavg queue: '%s'",
+                                cl->cl_shell);
                         add_lavg_job(cl, -1);
                     }
                 }
