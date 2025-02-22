@@ -523,8 +523,10 @@ abbreviation. The options are (default value in parentheses):</para>
 		    <term>b</term>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
-			<para>Run an &amp;-line (i.e. based on date and time) at &fcron;'s startup (or system's resume after suspend/hibernation) if it should
-have run during system down time.</para>
+			<para>Run an &amp;-line (i.e. based on date and time) at &fcron;'s startup (or system's
+			resume after suspend/hibernation) if it should have run during system down time.
+			More precisely, such jobs will be added to the lavg queue (if one of the lavg option was set)
+			or the serial queue to avoid too many jobs starting at the same time on fcron's startup.</para>
 		    </listitem>
 		</varlistentry>
 
