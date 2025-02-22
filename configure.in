@@ -484,7 +484,7 @@ WARNING :
   AC_MSG_RESULT(no)
 )
 
-max_fcrontab_reload_delay_seconds=60
+max_fcrontab_reload_delay_seconds=5
 AC_MSG_CHECKING(max fcrontab reload delay seconds)
 AC_ARG_WITH(max-fcrontab-reload-delay-seconds,
 [  --with-max-fcrontab-reload-delay-seconds=INTEGER
