@@ -31,7 +31,7 @@ jobs:
       run: make updatedoc
 
     - name: Upload GitHub Pages artifact
-      uses: actions/upload-pages-artifact@v2.0.0
+      uses: actions/upload-pages-artifact@v3
       with:
         # Artifact name
         #name: # optional, default is github-pages
