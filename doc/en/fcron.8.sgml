@@ -136,7 +136,7 @@ compiled to run in foreground as default.</para>
 			(A) at most <replaceable>num</replaceable> serial jobs can be
 			in the waiting state and
 			(B) at most <replaceable>num</replaceable> jobs can wait until the
-			system average load drops below a certain value.
+			system average load drops below a set value.
 			</para>
 		</listitem>
 	    </varlistentry>
@@ -262,7 +262,7 @@ also toggles on/off the printing on debug info on syslog.</para>
 		<term><constant>SIGHUP</constant></term>
 		<listitem>
 		    <para>Tell &fcron; to check if there is any configuration
-update (this signal is used by &fcrontab;(5))</para>
+update (this signal is used by <link linkend="fcrontab.1">&fcrontab;(1)</link>)</para>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>

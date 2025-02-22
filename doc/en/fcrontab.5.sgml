@@ -836,7 +836,7 @@ linkend="uptent">lines based on elapsed system up time</link>).</para>
 		    <listitem>
 			<para><emphasis><type>boolean</type></emphasis>(<constant>false</constant>)</para>
 			<para>&Fcron; runs at most &serialmaxrunning; serial
-jobs (ie. for which the option serial is set to true), and the same number of lavg serial jobs (ie. for which both option serial and lavg (or lavg1 or lavg5 or lavg15) are set to true) simultaneously. This value may be modified by &fcron;'s option <option>-m</option>. This option is especially useful when used with big jobs in order to limit the system overload.</para>
+jobs (ie. for which the option serial is set to true), and the same number of lavg serial jobs (ie. for which both option serial and lavg (or lavg1 or lavg5 or lavg15) are set to true) simultaneously. This value may be modified by &fcron;'s option <option>-m</option>. This option is especially useful when used with resource-intensive jobs in order to limit the system overload.</para>
 			<para>&seealso; options &optserialonce;,
 &optlavg;.</para>
 		    </listitem>
