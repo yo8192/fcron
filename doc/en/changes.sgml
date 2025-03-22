@@ -13,6 +13,19 @@ A copy of the license is included in gfdl.sgml.
       <title>Changes</title>
 
       <itemizedlist>
+            <title>From version 3.3.3 to 3.4.0</title>
+            <listitem>
+               <para>Changed the default "From" header of emails sent by fcron, to be RFC5322-compliant. This is done (and can be reverted if needed) via the new fcron.conf option maildisplayname.</para>
+            </listitem>
+            <listitem>
+               <para>Changed the default fcron reload delay from 60s to 5s.</para>
+            </listitem>
+            <listitem>
+               <para>Better doc and logging on bootrun jobs.</para>
+            </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
             <title>From version 3.3.2 to 3.3.3</title>
             <listitem>
                <para>Fixed infinite loop when an lavg job reaches its 'until' deadline and gets rescheduled as the next job to run.</para>
