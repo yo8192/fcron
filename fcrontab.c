@@ -1114,7 +1114,7 @@ main(int argc, char **argv)
                 /* this is just the file name, not the path : complete it */
                 size_t path_len =
                     strlen(orig_dir) + 1 + strlen(argv[file_opt]) + 1;
-                alloc_safe(path_len, fcrontab_file_path);
+                fcrontab_file_path = alloc_safe(path_len, "fcrontab_file_path");
                 snprintf(fcrontab_file_path, path_len, "%s/%s", orig_dir,
                          argv[file_opt]);
             }
