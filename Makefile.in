@@ -123,9 +123,23 @@ fcronsighup: $(OBJSIG)
 convert-fcrontab: $(OBJCONV)
 	$(CC) $(CFLAGS) -o $@ $(OBJCONV) $(LIBS)
 
+%.o: $(SRCDIR)/%.c $(HEADERSALL) $(SRCDIR)/%.h
+	$(CC) $(CFLAGS) -DPIDFILE="\"${PIDFILE}\"" -DREBOOT_LOCK="\"${REBOOT_LOCK}\"" \
+	-DSUSPEND_FILE="\"${SUSPEND_FILE}\"" -DFIFOFILE="\"${FIFOFILE}\"" -DETC="\"${ETC}\"" \
+	-DFCRON_SHELL="\"${FCRON_SHELL}\"" -DFCRON_CONF="\"${FCRON_CONF}\"" \
+	-DFCRONTABS="\"${FCRONTABS}\"" \
+	-DFCRON_ALLOW="\"${FCRON_ALLOW}\"" -DFCRON_DENY="\"${FCRON_DENY}\"" \
+	-DFCRON_SHELL="\"${FCRON_SHELL}\"" -DSENDMAIL="\"${SENDMAIL}\"" \
+	-DFCRON_EDITOR="\"${FCRON_EDITOR}\"" \-DMAILDISPLAYNAME="\"${MAILDISPLAYNAME}\"" -DBINDIREX="\"${DESTBIN}\"" \
+	-c $<
+
+# All for main() to be replaced by cmocka:
 $(TESTS_DIR)/%.test.o: %.o
-	# All for main() to be replaced by cmocka:
+	@mkdir -p $(TESTS_DIR)/
 	objcopy $< --globalize-symbol=main --weaken-symbol=main $@
+
+$(TESTS_DIR)/%.o: $(SRCDIR)/$(TESTS_DIR)/%.c
+	$(CC) $(CFLAGS) -o $@ -c $< -Wno-implicit-function-declaration -Wno-unused-variable
 
 $(TESTS_DIR)/fcrondyn_svr_test: $(OBJSD_NO_MAIN) $(TESTS_DIR)/fcron.test.o $(TESTS_DIR)/fcrondyn_svr_test.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS) -lcmocka -Wno-implicit-function-declaration -Wl,--wrap=send
@@ -140,19 +154,6 @@ $(TESTS_DIR)/mail_test: $(OBJSD_NO_MAIN) $(TESTS_DIR)/fcron.test.o $(TESTS_DIR)/
 	$@
 
 tests: $(TESTS)
-
-$(TESTS_DIR)/%.o: $(TESTS_DIR)/%.c
-	$(CC) $(CFLAGS) -o $@ -c $< -Wno-implicit-function-declaration -Wno-unused-variable
-
-%.o: $(SRCDIR)/%.c $(HEADERSALL) $(SRCDIR)/%.h
-	$(CC) $(CFLAGS) -DPIDFILE="\"${PIDFILE}\"" -DREBOOT_LOCK="\"${REBOOT_LOCK}\"" \
-	-DSUSPEND_FILE="\"${SUSPEND_FILE}\"" -DFIFOFILE="\"${FIFOFILE}\"" -DETC="\"${ETC}\"" \
-	-DFCRON_SHELL="\"${FCRON_SHELL}\"" -DFCRON_CONF="\"${FCRON_CONF}\"" \
-	-DFCRONTABS="\"${FCRONTABS}\"" \
-	-DFCRON_ALLOW="\"${FCRON_ALLOW}\"" -DFCRON_DENY="\"${FCRON_DENY}\"" \
-	-DFCRON_SHELL="\"${FCRON_SHELL}\"" -DSENDMAIL="\"${SENDMAIL}\"" \
-	-DFCRON_EDITOR="\"${FCRON_EDITOR}\"" \-DMAILDISPLAYNAME="\"${MAILDISPLAYNAME}\"" -DBINDIREX="\"${DESTBIN}\"" \
-	-c $<
 
 initscripts:
 	@(if test ! -d script; then mkdir script ; fi ; \
