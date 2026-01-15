@@ -174,10 +174,10 @@ xexit(int exit_val)
 
 #ifdef HAVE_LIBPAM
     /* we need those rights for pam to close properly */
-    if (geteuid() != fcrontab_uid && seteuid(fcrontab_uid) != 0)
-        die_e("could not change euid to %d", fcrontab_uid);
     if (getegid() != fcrontab_gid && setegid(fcrontab_gid) != 0)
         die_e("could not change egid to %d", fcrontab_gid);
+    if (geteuid() != fcrontab_uid && seteuid(fcrontab_uid) != 0)
+        die_e("could not change euid to %d", fcrontab_uid);
     pam_setcred(pamh, PAM_DELETE_CRED | PAM_SILENT);
     pam_end(pamh, pam_close_session(pamh, PAM_SILENT));
 #endif
@@ -1032,8 +1032,8 @@ main(int argc, char **argv)
 #ifdef USE_SETE_ID
     /* drop any privilege we may have: we will only get them back
      * temporarily every time we need it. */
-    seteuid_safe(useruid);
     setegid_safe(usergid);
+    seteuid_safe(useruid);
 #endif
 
 #ifdef HAVE_LIBPAM
