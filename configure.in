@@ -398,26 +398,6 @@ PROC=$proc
 AC_DEFINE_UNQUOTED(PROC, "$proc")
 fi
 
-docdir="${datadir}/doc"
-AC_MSG_CHECKING(location of doc directory)
-AC_ARG_WITH(docdir,
-[  --with-docdir=PATH	Directory containing documentation.],
-[ case "$withval" in
-  no)
-    AC_MSG_ERROR(Need DOCDIR.)
-    ;;
-  yes)
-    ;;
-  *)
-    docdir="$withval"
-    ;;
-  esac ])
-
-AC_MSG_RESULT($docdir)
-DOCDIR="$docdir"
-AC_SUBST(DOCDIR)
-
-
 dnl systemd init system
 SYSTEMD_DIR="no"
 
