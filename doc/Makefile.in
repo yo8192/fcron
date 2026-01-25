@@ -13,6 +13,7 @@
 
 SRCDIR		= @srcdir@
 
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
 prefix		= @prefix@
 datarootdir	= @datarootdir@
 DESTMAN		= @mandir@
