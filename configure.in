@@ -5,13 +5,14 @@ dnl ---------------------------------------------------------------------
 dnl Initial settings
 dnl ---------------------------------------------------------------------
 
-AC_INIT
+AC_INIT([fcron], [3.4.1pre])
 AC_CONFIG_SRCDIR([allow.c])
 AC_CONFIG_HEADERS([config.h])
 AC_PREREQ([2.71])
 m4_include([m4/ax_lib_readline.m4])
 
-vers="3.4.1pre"
+dnl TODO cleanup these vars
+vers="${PACKAGE_VERSION}"
 vers_quoted="\"$vers\""
 AC_DEFINE_UNQUOTED(VERSION, $vers)
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
