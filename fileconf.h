@@ -21,6 +21,7 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
+#include "global.h"
 
 #ifndef __FILECONF_H__
 #define __FILECONF_H__
@@ -29,5 +30,11 @@
 extern int read_file(char *filename, int fd);
 extern void delete_file(const char *user_name);
 extern int save_file(char *path);
+
+/* for tests */
+int read_shortcut(char *, cf_t *);
+void read_arys(char *, cf_t *);
+void read_freq(char *, cf_t *);
+void read_period(char *, cf_t *);
 
 #endif                          /* __FILECONF_H__ */
