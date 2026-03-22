@@ -11,13 +11,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_PREREQ([2.71])
 m4_include([m4/ax_lib_readline.m4])
 
-dnl TODO cleanup these vars
-vers="${PACKAGE_VERSION}"
-vers_quoted="\"$vers\""
-AC_DEFINE_UNQUOTED(VERSION, $vers)
-AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
-VERSION="$vers"
-AC_SUBST(VERSION)
+AC_DEFINE_UNQUOTED(VERSION_QUOTED, "\"${PACKAGE_VERSION}\"")
 
 copyright_quoted="\"2000-2025\""
 AC_DEFINE_UNQUOTED(COPYRIGHT_QUOTED, $copyright_quoted)

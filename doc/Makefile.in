@@ -34,7 +34,7 @@ ANSWERALL	= @ANSWERALL@
 ####################################
 STYLESHEET = stylesheets/fcron-doc.dsl
 MODFILE = fcron-doc.mod
-VERSION = @VERSION@
+VERSION = @PACKAGE_VERSION@
 SGMLFILES = fcron-doc.sgml readme.sgml relnotes.sgml changes.sgml faq.sgml thanks.sgml todo.sgml fcron.8.sgml fcrontab.1.sgml install.sgml fcron.conf.5.sgml fcrontab.5.sgml fcrondyn.1.sgml fdl.sgml gpl.sgml 
 TXTFILES = readme install thanks faq gpl todo relnotes changes
 MANPAGES = fcron.8 fcron.conf.5 fcrontab.1 fcrontab.5 fcrondyn.1
@@ -62,10 +62,10 @@ doc-if-none:
 # and not a tarball)
 # The reason we don't try to generate the doc everytime is that we want the user
 # to be able to compile and install fcron without needing all the tools required
-# to generate the documentations.
+# to generate the documentations.
 #
 # "make doc" will be called once at max, as all the tests will 
-# succeed after the first time "make doc" is called
+# succeed after the first time "make doc" is called
 	@(for i in $(LANGUAGES); \
 	do \
 		test -f $(SRCDIR)/$$i/HTML/index.html || $(MAKE) doc ; \
