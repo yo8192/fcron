@@ -68,9 +68,9 @@ const char *mons_ary[] = {
 
 char *
 get_string(char *ptr)
-    /* read string pointed by ptr, remove blanks and manage
-     * string placed in quotes */
-    /* return NULL on mismatched quotes */
+    /* Read string pointed by ptr, remove blanks and starting/ending quotes. */
+    /* ptr must not be NULL, and a string starting by quote must end with it too. */
+    /* Return a pointer to a new string, or NULL on mismatched quotes. */
 {
     char quote = 0;
     int length = 0;
@@ -100,8 +100,10 @@ get_string(char *ptr)
 
 char *
 get_command(char *ptr)
-    /* read a shell command from ptr to the end of the (logical) line,
-     * removing trailing blanks */
+    /* Read a shell command from ptr to the end of the (logical) line,
+     * removing trailing blanks. */
+    /* ptr must not be NULL. */
+    /* Return a pointer to a new string. */
 {
     remove_blanks(ptr);
     return strdup2(ptr);

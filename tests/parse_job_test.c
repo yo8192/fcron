@@ -1,7 +1,12 @@
+#include <stdarg.h>
+#include <stddef.h>
+#include <setjmp.h>             /* setjmp.h is needed by cmocka.h */
 #include <cmocka.h>
 
+#include "../fcrontab.h"
 #include "../mem.h"
 #include "../fileconf.h"
+
 
 #define TestParser(PARSER, DESC, LINE, EXPECTED_COMMAND) \
 { \
@@ -20,13 +25,11 @@
 static void
 test_read_arys_shell_parser(void **state)
 {
-    (void)state; /* unused */
     TestArysParser("example 1",
                    "& 05,35 12-14 * * * mycommand -u me -o file ",
                    "mycommand -u me -o file");
     TestArysParser("quoted command",
-                   "* * * * * \"/root/my script\"",
-                   "\"/root/my script\"");
+                   "* * * * * \"/root/my script\"", "\"/root/my script\"");
     TestArysParser("Hourly Git Maintenance",
                    "32 1-23 * * * \"/usr/libexec/git-core/git\" --exec-path=\"/usr/libexec/git-core\" -c credential.interactive=false -c core.askPass=true  for-each-repo --keep-going --config=maintenance.repo maintenance run --schedule=hourly",
                    "\"/usr/libexec/git-core/git\" --exec-path=\"/usr/libexec/git-core\" -c credential.interactive=false -c core.askPass=true  for-each-repo --keep-going --config=maintenance.repo maintenance run --schedule=hourly");
@@ -41,70 +44,47 @@ test_read_arys_shell_parser(void **state)
 static void
 test_read_freq_shell_parser(void **state)
 {
-    (void)state; /* unused */
-    TestFreqParser("example 1",
-                   "@ 30 getmails -all",
-                   "getmails -all");
+    TestFreqParser("example 1", "@ 30 getmails -all", "getmails -all");
     TestFreqParser("example 2",
                    "@mailto(root),forcemail 2d /etc/security/msec/cron-sh/security.sh",
                    "/etc/security/msec/cron-sh/security.sh");
     TestFreqParser("quoted command",
-                   "@ 12h02 \"/root/my script\"",
-                   "\"/root/my script\"");
-    TestFreqParser("internal quotes",
-                   "@ 3d echo \"hi\"",
-                   "echo \"hi\"");
-    TestFreqParser("blanks",
-                   "@ 3w2d5h1 true  ",
-                   "true");
+                   "@ 12h02 \"/root/my script\"", "\"/root/my script\"");
+    TestFreqParser("internal quotes", "@ 3d echo \"hi\"", "echo \"hi\"");
+    TestFreqParser("blanks", "@ 3w2d5h1 true  ", "true");
 }
 
 static void
 test_read_period_shell_parser(void **state)
 {
-    (void)state; /* unused */
     TestPeriodParser("example 1",
                      "%nightly,mail(no) * 21-23,3-5 echo \"a nigthly entry\"",
                      "echo \"a nigthly entry\"");
     TestPeriodParser("example 2",
-                     "%hours * 0-22 * * * echo \"Ok.\"",
-                     "echo \"Ok.\"");
+                     "%hours * 0-22 * * * echo \"Ok.\"", "echo \"Ok.\"");
     TestPeriodParser("quoted command",
-                     "%hourly 31 \"/root/my script\"",
-                     "\"/root/my script\"");
+                     "%hourly 31 \"/root/my script\"", "\"/root/my script\"");
     TestPeriodParser("internal quotes",
-                     "%middaily 21 7-10 echo \"hi\"",
-                     "echo \"hi\"");
-    TestPeriodParser("blanks",
-                     "%monthly 59 4 12 true  ",
-                     "true");
+                     "%middaily 21 7-10 echo \"hi\"", "echo \"hi\"");
+    TestPeriodParser("blanks", "%monthly 59 4 12 true  ", "true");
 }
 
 static void
 test_read_shortcut_shell_parser(void **state)
 {
-    (void)state; /* unused */
     TestShortcutParser("example 1",
-                       "@hourly check_laptop_logs.sh",
-                       "check_laptop_logs.sh");
+                       "@hourly check_laptop_logs.sh", "check_laptop_logs.sh");
     TestShortcutParser("example 2",
-                       "@daily check_web_server.sh",
-                       "check_web_server.sh");
+                       "@daily check_web_server.sh", "check_web_server.sh");
     TestShortcutParser("example 3",
-                       "@daily check_file_server.sh",
-                       "check_file_server.sh");
+                       "@daily check_file_server.sh", "check_file_server.sh");
     TestShortcutParser("example 4",
                        "@monthly compress_home_made_app_log_files.sh",
                        "compress_home_made_app_log_files.sh");
     TestShortcutParser("quoted command",
-                       "@weekly \"/root/my script\"",
-                       "\"/root/my script\"");
-    TestShortcutParser("internal quotes",
-                       "@reboot echo \"hi\"",
-                       "echo \"hi\"");
-    TestShortcutParser("quoted command",
-                       "@yearly true   ",
-                       "true");
+                       "@weekly \"/root/my script\"", "\"/root/my script\"");
+    TestShortcutParser("internal quotes", "@reboot echo \"hi\"", "echo \"hi\"");
+    TestShortcutParser("quoted command", "@yearly true   ", "true");
 }
 
 int

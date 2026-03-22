@@ -21,8 +21,6 @@
  *  `LICENSE' that comes with the fcron source distribution.
  */
 
-#include "global.h"
-
 #ifndef __FILECONF_H__
 #define __FILECONF_H__
 
