@@ -5,18 +5,13 @@ dnl ---------------------------------------------------------------------
 dnl Initial settings
 dnl ---------------------------------------------------------------------
 
-AC_INIT
+AC_INIT([fcron], [3.4.1pre])
 AC_CONFIG_SRCDIR([allow.c])
 AC_CONFIG_HEADERS([config.h])
 AC_PREREQ([2.71])
 m4_include([m4/ax_lib_readline.m4])
 
-vers="3.4.1pre"
-vers_quoted="\"$vers\""
-AC_DEFINE_UNQUOTED(VERSION, $vers)
-AC_DEFINE_UNQUOTED(VERSION_QUOTED, $vers_quoted)
-VERSION="$vers"
-AC_SUBST(VERSION)
+AC_DEFINE_UNQUOTED(VERSION_QUOTED, "${PACKAGE_VERSION}")
 
 copyright_quoted="\"2000-2025\""
 AC_DEFINE_UNQUOTED(COPYRIGHT_QUOTED, $copyright_quoted)
@@ -397,26 +392,6 @@ AC_MSG_RESULT($proc)
 PROC=$proc
 AC_DEFINE_UNQUOTED(PROC, "$proc")
 fi
-
-docdir="${datadir}/doc"
-AC_MSG_CHECKING(location of doc directory)
-AC_ARG_WITH(docdir,
-[  --with-docdir=PATH	Directory containing documentation.],
-[ case "$withval" in
-  no)
-    AC_MSG_ERROR(Need DOCDIR.)
-    ;;
-  yes)
-    ;;
-  *)
-    docdir="$withval"
-    ;;
-  esac ])
-
-AC_MSG_RESULT($docdir)
-DOCDIR="$docdir"
-AC_SUBST(DOCDIR)
-
 
 dnl systemd init system
 SYSTEMD_DIR="no"
