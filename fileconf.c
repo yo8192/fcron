@@ -27,6 +27,7 @@
 #include "fileconf.h"
 
 char *get_string(char *ptr);
+char *get_command(char *ptr);
 int get_line(char *str, size_t size, FILE * file);
 void init_default_line(cl_t * cl, cf_t * cf);
 char *get_time(char *ptr, time_t * time, int zero_allowed);
@@ -67,9 +68,9 @@ const char *mons_ary[] = {
 
 char *
 get_string(char *ptr)
-    /* read string pointed by ptr, remove blanks and manage
-     * string placed in quotes */
-    /* return NULL on mismatched quotes */
+    /* Read string pointed by ptr, remove blanks and starting/ending quotes. */
+    /* ptr must not be NULL, and a string starting by quote must end with it too. */
+    /* Return a pointer to a new string, or NULL on mismatched quotes. */
 {
     char quote = 0;
     int length = 0;
@@ -97,6 +98,16 @@ get_string(char *ptr)
 
 }
 
+char *
+get_command(char *ptr)
+    /* Read a shell command from ptr to the end of the (logical) line,
+     * removing trailing blanks. */
+    /* ptr must not be NULL. */
+    /* Return a pointer to a new string. */
+{
+    remove_blanks(ptr);
+    return strdup2(ptr);
+}
 
 int
 get_line(char *str, size_t size, FILE *file)
@@ -1438,12 +1449,8 @@ read_shortcut(char *ptr, cf_t *cf)
     /* check for inline runas */
     ptr = check_username(ptr, cf, cl);
 
-    /* get cl_shell field ( remove trailing blanks ) */
-    if ((cl->cl_shell = get_string(ptr)) == NULL) {
-        fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
-                file_name, line);
-        goto exiterr;
-    }
+    /* get cl_shell field */
+    cl->cl_shell = get_command(ptr);
     if (strcmp(cl->cl_shell, "\0") == 0) {
         fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
                 file_name, line);
@@ -1526,12 +1533,8 @@ read_freq(char *ptr, cf_t *cf)
     /* check for inline runas */
     ptr = check_username(ptr, cf, cl);
 
-    /* get cl_shell field ( remove trailing blanks ) */
-    if ((cl->cl_shell = get_string(ptr)) == NULL) {
-        fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
-                file_name, line);
-        goto exiterr;
-    }
+    /* get cl_shell field */
+    cl->cl_shell = get_command(ptr);
     if (strcmp(cl->cl_shell, "\0") == 0) {
         fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
                 file_name, line);
@@ -1630,12 +1633,8 @@ read_arys(char *ptr, cf_t *cf)
     /* check for inline runas */
     ptr = check_username(ptr, cf, cl);
 
-    /* get the shell command (remove trailing blanks) */
-    if ((cl->cl_shell = get_string(ptr)) == NULL) {
-        fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
-                file_name, line);
-        goto exiterr;
-    }
+    /* get the shell command */
+    cl->cl_shell = get_command(ptr);
     if (strcmp(cl->cl_shell, "\0") == 0) {
         fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
                 file_name, line);
@@ -1734,12 +1733,8 @@ read_period(char *ptr, cf_t *cf)
     /* check for inline runas */
     ptr = check_username(ptr, cf, cl);
 
-    /* get the shell command (remove trailing blanks) */
-    if ((cl->cl_shell = get_string(ptr)) == NULL) {
-        fprintf(stderr, "%s:%d: Mismatched quotes: skipping line.\n",
-                file_name, line);
-        goto exiterr;
-    }
+    /* get the shell command */
+    cl->cl_shell = get_command(ptr);
     if (strcmp(cl->cl_shell, "\0") == 0) {
         fprintf(stderr, "%s:%d: No shell command: skipping line.\n",
                 file_name, line);

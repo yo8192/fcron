@@ -313,8 +313,9 @@ rename_as_user(const char *oldpath, const char *newpath, uid_t renameuid,
 
 int
 remove_blanks(char *str)
-    /* remove blanks at the the end of str */
-    /* return the length of the new string */
+    /* Remove blanks at the the end of str by NULL-terminating the string before them. */
+    /* The pointer str must not be NULL. */
+    /* Return the length of the shortened string. */
 {
     char *c = str;
 

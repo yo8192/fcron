@@ -85,7 +85,7 @@ OBJCONV       := convert-fcrontab.o cl.o subs.o mem.o save.o log.o u_list.o env_
 OBJSIG        := fcronsighup.o subs.o mem.o log.o allow.o fcronconf.o mail.o filesubs.o
 HEADERSALL    := config.h $(SRCDIR)/global.h $(SRCDIR)/cl.h $(SRCDIR)/log.h $(SRCDIR)/subs.h $(SRCDIR)/mem.h $(SRCDIR)/save.h $(SRCDIR)/option.h $(SRCDIR)/dyncom.h $(SRCDIR)/mail.h
 TESTS_DIR     := tests
-TESTS         := $(addprefix ${TESTS_DIR}/,fcrondyn_svr_test exe_list_test mail_test)
+TESTS         := $(addprefix ${TESTS_DIR}/,fcrondyn_svr_test exe_list_test mail_test parse_job_test)
 
 # this is a regular expression :
 # do not ci automaticaly generated files and doc (done by doc's Makefile)
@@ -150,6 +150,10 @@ $(TESTS_DIR)/exe_list_test: $(OBJSD_NO_MAIN) $(TESTS_DIR)/fcron.test.o $(TESTS_D
 	$@
 
 $(TESTS_DIR)/mail_test: $(OBJSD_NO_MAIN) $(TESTS_DIR)/fcron.test.o $(TESTS_DIR)/mail_test.o
+	$(CC) $(CFLAGS) -o $@  $^ $(LIBS) -lcmocka -Wno-implicit-function-declaration
+	$@
+
+$(TESTS_DIR)/parse_job_test: $(filter-out fcrontab.o,$(OBJSTAB)) $(TESTS_DIR)/fcrontab.test.o $(TESTS_DIR)/parse_job_test.o
 	$(CC) $(CFLAGS) -o $@  $^ $(LIBS) -lcmocka -Wno-implicit-function-declaration
 	$@
 
