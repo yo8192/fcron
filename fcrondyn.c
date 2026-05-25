@@ -799,8 +799,9 @@ parseopt(int argc, char *argv[])
     }
 
     if (optind < argc) {
-        for (i = optind; i <= argc; i++)
-            fprintf(stderr, "Unknown argument \"%s\"", argv[i]);
+        for (i = optind; i < argc; i++)
+            fprintf(stderr, "ERROR: Unknown argument \"%s\"\n", argv[i]);
+        fprintf(stderr, "\n");
         usage();
     }
 }
