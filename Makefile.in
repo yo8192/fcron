@@ -71,7 +71,7 @@ OPTION        :=
 # Should not be changed under this #
 ####################################
 
-VERSION       := @VERSION@
+VERSION       := @PACKAGE_VERSION@
 CFLAGS        += $(OPTIM) $(OPTION) $(DEFS) $(CPPFLAGS) $(LDFLAGS)
 ifeq ($(FCRONDYN), 1)
 	LIBOBJS   := $(LIBOBJS)

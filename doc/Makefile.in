@@ -13,10 +13,11 @@
 
 SRCDIR		= @srcdir@
 
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
 prefix		= @prefix@
 datarootdir	= @datarootdir@
 DESTMAN		= @mandir@
-DESTDOC		= @DOCDIR@
+DESTDOC		= @docdir@
 
 INSTALL		= @INSTALL@
 JADE 		= @JADE@
@@ -33,7 +34,7 @@ ANSWERALL	= @ANSWERALL@
 ####################################
 STYLESHEET = stylesheets/fcron-doc.dsl
 MODFILE = fcron-doc.mod
-VERSION = @VERSION@
+VERSION = @PACKAGE_VERSION@
 SGMLFILES = fcron-doc.sgml readme.sgml relnotes.sgml changes.sgml faq.sgml thanks.sgml todo.sgml fcron.8.sgml fcrontab.1.sgml install.sgml fcron.conf.5.sgml fcrontab.5.sgml fcrondyn.1.sgml fdl.sgml gpl.sgml 
 TXTFILES = readme install thanks faq gpl todo relnotes changes
 MANPAGES = fcron.8 fcron.conf.5 fcrontab.1 fcrontab.5 fcrondyn.1
@@ -61,10 +62,10 @@ doc-if-none:
 # and not a tarball)
 # The reason we don't try to generate the doc everytime is that we want the user
 # to be able to compile and install fcron without needing all the tools required
-# to generate the documentations.
+# to generate the documentations.
 #
 # "make doc" will be called once at max, as all the tests will 
-# succeed after the first time "make doc" is called
+# succeed after the first time "make doc" is called
 	@(for i in $(LANGUAGES); \
 	do \
 		test -f $(SRCDIR)/$$i/HTML/index.html || $(MAKE) doc ; \
@@ -134,11 +135,11 @@ install-staged: doc-if-none clean
 		done ; \
 	done )
 
-	@(echo "Installing documentation files in $(DESTDIR)$(DESTDOC)/fcron-$(VERSION)...")
-	@(if test ! -d $(DESTDIR)$(DESTDOC)/fcron-$(VERSION); then $(INSTALL) -m 755 -d $(DESTDIR)$(DESTDOC)/fcron-$(VERSION) ; fi)
+	@(echo "Installing documentation files in $(DESTDIR)$(DESTDOC)...")
+	@(if test ! -d $(DESTDIR)$(DESTDOC); then $(INSTALL) -m 755 -d $(DESTDIR)$(DESTDOC) ; fi)
 
 	@(for l in $(LANGUAGES); do \
-		DIR=$(DESTDIR)$(DESTDOC)/fcron-$(VERSION) ; \
+		DIR=$(DESTDIR)$(DESTDOC) ; \
 		if test ! -d $$DIR/$$l; then \
 	$(INSTALL) -m 755 -d $$DIR/$$l ; \
 		fi ; \
@@ -173,10 +174,8 @@ perms:
 	done
 	chown $(ROOTNAME) $(DESTDIR)$(DESTDOC)
 	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTDOC)
-	chown $(ROOTNAME) $(DESTDIR)$(DESTDOC)/fcron-$(VERSION) 
-	chgrp $(ROOTGROUP) $(DESTDIR)$(DESTDOC)/fcron-$(VERSION) 
 	for l in $(LANGUAGES); do \
-		DIR=$(DESTDIR)$(DESTDOC)/fcron-$(VERSION)/$$l ; \
+		DIR=$(DESTDIR)$(DESTDOC)/$$l ; \
 		chown $(ROOTNAME) $$DIR ; \
 		chgrp $(ROOTGROUP) $$DIR ; \
 		for i in txt HTML; do \
@@ -189,7 +188,7 @@ perms:
 
 
 uninstall:
-	rm -fR $(DESTDOC)/fcron-$(VERSION)
+	rm -fR $(DESTDOC)
 	@(echo "Removing man pages ...")
 	@(for l in $(LANGUAGES); do \
 		if test "x$$l" = "xen"; then \
