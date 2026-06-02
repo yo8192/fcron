@@ -63,6 +63,10 @@ them, renice a running job, send a signal to a running job, etc.</para>
 		    <para>Run <replaceable>command</replaceable> and returns
 immediately. <link linkend="fcrondyn.1.cmd.descp">See below</link> for syntax
 and a list of commands.</para>
+			<note>
+                <para>If the <replaceable>command</replaceable> string consists of multiple
+                words or contains spaces, you must enclose it in quotes in your shell.</para>
+            </note>
 		</listitem>
 	    </varlistentry>
 	    <varlistentry>
