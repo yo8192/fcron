@@ -428,9 +428,20 @@ print_line(int fd, struct cl_t *line, unsigned char *details, pid_t pid,
         if (is_lavg(line->cl_option))
             i += snprintf(opt + i, sizeof(opt) - i, "L%.*s",
                           (is_lavg_sev(line->cl_option)) ? 0 : 1, "O");
-        if (is_serial(line->cl_option))
+        if (is_serial_once(line->cl_option)) {
+            /* will be added to the serial queue as a one-off (temporary) */
+            i += snprintf(opt + i, sizeof(opt) - i, "ST");
+        }
+        else if (is_serial(line->cl_option)) {
+            char *suffix = NULL;
+            if (!is_serial_sev(line->cl_option)) {
+                /* Can only be added to the serial queue at most once */
+                 suffix = "O";
+            }
+
             i += snprintf(opt + i, sizeof(opt) - i, "%.*sS%.*s", i, ",",
-                          (is_serial_sev(line->cl_option)) ? 0 : 1, "O");
+                          suffix ? 1 : 0, suffix);
+        }
         if (is_exe_sev(line->cl_option))
             i += snprintf(opt + i, sizeof(opt) - i, "%.*sES", i, ",");
 

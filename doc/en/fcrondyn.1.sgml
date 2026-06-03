@@ -276,9 +276,54 @@ job. <emphasis><type>jobid</type></emphasis> is the one given by
 	    <varlistentry>
 		<term>OPTIONS</term>
 		<listitem>
-		    <para>List of main options which are set for the task.
-		     L for the jobs which run only under a given system Load average (option &optlavg;, &optlavg1;, &optlavg5; and &optlavg15;), LO (Load average Once) if only at most one instance of the task can be in the load average queue at a given time (option &optlavgonce;), S for serialized jobs (option &optserial;), SO for the jobs which will be serialized only for the next execution (Serial Once), and ES if several instances of the same job can run simultaneously (option &optexesev;).</para>
-		</listitem>
+
+			<para>List of main options which are set for the task:</para>
+
+			<variablelist>
+			<varlistentry>
+				<term>L</term>
+				<listitem>
+				<para>Job which runs only under a given system Load average (option &optlavg;, &optlavg1;, &optlavg5;, and &optlavg15;).</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term>LO</term>
+				<listitem>
+				<para>Load average Once - if only at most one instance of the task can be in the load average queue at a given time (option &optlavgonce;).</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term>S</term>
+				<listitem>
+				<para>For serialized jobs (option &optserial;).</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term>ST</term>
+				<listitem>
+				<para>Serial Temporary - For the jobs which will be serialized only for the next execution (e.g. because of &optbootrun;).</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term>SO</term>
+				<listitem>
+				<para>Serial Once - if only at most one instance of the task can be in the serial queue at a given time (option &optserialonce;).</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term>ES</term>
+				<listitem>
+				<para>If several instances of the same job can run simultaneously (option &optexesev;).</para>
+				</listitem>
+			</varlistentry>
+			</variablelist>
+
+			</listitem>
 	    </varlistentry>
 	    <varlistentry>
 		<term>LAVG</term>
@@ -376,4 +421,3 @@ mode: sgml
 sgml-parent-document:("fcron-doc.sgml" "book" "chapter" "sect1" "")
 End:
 -->
-
