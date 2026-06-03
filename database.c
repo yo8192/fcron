@@ -388,7 +388,7 @@ add_serial_job(cl_t *line, int info_fd)
      * (we consider serial jobs currently running as in the queue) */
     if ((is_serial_sev(line->cl_option) && line->cl_numexe >= UCHAR_MAX) ||
         (!is_serial_sev(line->cl_option) && line->cl_numexe > 0)) {
-        send_msg_fd_debug(info_fd, "already in serial queue '%s'",
+        send_msg_fd_debug(info_fd, "already in serial queue (or running) '%s'",
                           line->cl_shell);
         return;
     }

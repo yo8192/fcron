@@ -211,8 +211,8 @@
 
 
 /*
-  bit 6 : set to 1 : job is being serialized once
-          set to 0 : job is not being serialized once
+  bit 6 : set to 1 : job is being serialized as a one-off
+          set to 0 : job is not being serialized as a one-off
 */
 #define	is_serial_once(opt) \
 	(_bit_test(opt, 6))
@@ -271,6 +271,7 @@
 
 
 /*
+  WARNING: inverted bit (set_() clears the bit, and clear_() sets the bit)
   bit 11 : set to 1 : can only be put once in serial queue simultaneously
            set to 0 : can be put several times in serial queue simultaneously
 */
@@ -283,8 +284,8 @@
 
 
 /*
-  bit 12 : set to 1 : can only be put once in lavg queue simultaneously
-           set to 0 : can be put several times in lavg queue simultaneously
+  bit 12 : set to 1 : can be put several times in lavg queue simultaneously
+           set to 0 : can only be put once in lavg queue simultaneously
 */
 #define	is_lavg_sev(opt) \
 	(_bit_test(opt, 12))
@@ -379,6 +380,7 @@
 
 
 /*
+  WARNING: inverted bit (set_() clears the bit, and clear_() sets the bit)
   bit 20 : set to 1 : let the job in the %-queue if interval is exceeded
            set to 0 : remove %-job from lavg queue if interval is exceeded
 */
