@@ -114,6 +114,7 @@ fcron-doc.mod: fcron-doc.mod.in ../configure.in
 	@(echo ; echo "Building $(@D)...")
 	@(rm -fR $(@D)/*.html)
 	@(cd $(@D)/../ ; $(JADE) -D ../ -D ./ -t sgml -i html -d ../${STYLESHEET}\#html fcron-doc.sgml)
+	@(cd $(@D) && python3 ../../inject_selflinks.py)
 
 install: install-staged perms
 
