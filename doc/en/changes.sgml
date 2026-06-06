@@ -1,6 +1,6 @@
 <!-- 
 Fcron documentation
-Copyright 2000-2025 Thibault Godouet <fcron@free.fr>
+Copyright 2000-2026 Thibault Godouet <fcron@free.fr>
 Permission is granted to copy, distribute and/or modify this
 document under the terms of the GNU Free Documentation License,
 Version 1.1 or any later version published by the Free Software
@@ -11,6 +11,25 @@ A copy of the license is included in gfdl.sgml.
 
    <sect1 id="changes">
       <title>Changes</title>
+
+      <itemizedlist>
+            <title>From version 3.4.0 to 3.4.1</title>
+            <listitem>
+               <para>Fixed bug in fcrontab whereby some commands starting with a (double)quote would be incorrectly rejected (thanks D. Ben Knoble).</para>
+            </listitem>
+            <listitem>
+               <para>Use standard autoconf --docdir (thanks Alexey Sokolov).</para>
+            </listitem>
+            <listitem>
+               <para>Small improvements to fcrondyn's output and error messages.</para>
+            </listitem>
+            <listitem>
+               <para>Fixed/improved unit tests.</para>
+            </listitem>
+            <listitem>
+               <para>Added self-links to the HTML doc pages.</para>
+            </listitem>
+      </itemizedlist>
 
       <itemizedlist>
             <title>From version 3.3.3 to 3.4.0</title>

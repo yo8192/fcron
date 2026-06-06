@@ -5,7 +5,7 @@ dnl ---------------------------------------------------------------------
 dnl Initial settings
 dnl ---------------------------------------------------------------------
 
-AC_INIT([fcron], [3.4.1pre])
+AC_INIT([fcron], [3.4.1])
 AC_CONFIG_SRCDIR([allow.c])
 AC_CONFIG_HEADERS([config.h])
 AC_PREREQ([2.71])
@@ -13,7 +13,7 @@ m4_include([m4/ax_lib_readline.m4])
 
 AC_DEFINE_UNQUOTED(VERSION_QUOTED, "${PACKAGE_VERSION}")
 
-copyright_quoted="\"2000-2025\""
+copyright_quoted="\"2000-2026\""
 AC_DEFINE_UNQUOTED(COPYRIGHT_QUOTED, $copyright_quoted)
 
 
