@@ -110,8 +110,8 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
         va_end(ap);
     }
 
-    seteuid_safe(openuid);
     setegid_safe(opengid);
+    seteuid_safe(openuid);
 
     if (flags & O_CREAT) {
         fd = open(pathname, flags, mode);
@@ -122,8 +122,8 @@ open_as_user(const char *pathname, uid_t openuid, gid_t opengid, int flags, ...)
     saved_errno = errno;
 
     /* change the effective uid/gid back to original values */
-    seteuid_safe(orig_euid);
     setegid_safe(orig_egid);
+    seteuid_safe(orig_euid);
 
     /* if open() didn't fail make sure we opened a 'normal' file */
     if (fd >= 0) {
