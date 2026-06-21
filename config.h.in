@@ -240,6 +240,12 @@
 /* Define if you have the flock function.  */
 #undef HAVE_FLOCK
 
+/* Define if you have the fdatasync function.  */
+#undef HAVE_FDATASYNC
+
+/* Define if the headers actually declare the fdatasync function.  */
+#undef HAVE_DECL_FDATASYNC
+
 /* Define if you have the lockf function.  */
 #undef HAVE_LOCKF
 
