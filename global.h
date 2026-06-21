@@ -168,6 +168,14 @@
 #endif
 
 /* macros */
+/* macOS has an fdatasync to link against, but doesn't declare or document it.
+ * Apple Clang suppresses the warning/error when calling it, which causes
+ * HAVE_FDATASYNC to be defined. But other compilers (including upstream Clang)
+ * don't. So we have to check both to see if we can safely use it. */
+#if !defined(HAVE_FDATASYNC) || !HAVE_DECL_FDATASYNC
+#define fdatasync(arg) fsync(arg)
+#endif
+
 #ifndef HAVE_SETEUID
 #define seteuid(arg) setresuid(-1,(arg),-1)
 #endif

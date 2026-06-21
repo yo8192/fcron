@@ -106,6 +106,8 @@ fi
 AC_CHECK_FUNCS(getcwd gettimeofday mktime putenv strerror setenv unsetenv gethostname)
 AC_CHECK_FUNCS(getopt_long)
 AC_CHECK_FUNCS(mkstemp)
+AC_CHECK_FUNCS(fdatasync)
+AC_CHECK_DECLS(fdatasync)
 AC_CHECK_FUNCS(flock lockf)
 AC_CHECK_FUNCS(setlinebuf)
 AC_CHECK_FUNCS(sigaction)
