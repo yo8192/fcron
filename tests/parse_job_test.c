@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>             /* setjmp.h is needed by cmocka.h */
+#include <stdint.h>             /* stdint.h is needed by cmocka.h */
 #include <cmocka.h>
 
 #include "../fcrontab.h"
